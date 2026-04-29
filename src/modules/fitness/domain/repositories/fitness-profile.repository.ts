@@ -20,6 +20,7 @@ export interface CreateFitnessProfileRepositoryInput {
 }
 
 export interface FitnessProfileRepository {
+  findById(fitnessProfileId: string): Promise<FitnessProfile | null>;
   findActiveByUserProfileId(userProfileId: string): Promise<FitnessProfile | null>;
   create(input: CreateFitnessProfileRepositoryInput): Promise<FitnessProfile>;
 }

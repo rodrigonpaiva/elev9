@@ -24,6 +24,16 @@ export class MongooseFitnessProfileRepository implements FitnessProfileRepositor
     private readonly fitnessProfileModel: Model<FitnessProfileSchemaClass>,
   ) {}
 
+  async findById(fitnessProfileId: string): Promise<FitnessProfile | null> {
+    const document = await this.fitnessProfileModel.findById(fitnessProfileId).exec();
+
+    if (!document) {
+      return null;
+    }
+
+    return this.toEntity(document as FitnessProfileDocument);
+  }
+
   async findActiveByUserProfileId(
     userProfileId: string,
   ): Promise<FitnessProfile | null> {
