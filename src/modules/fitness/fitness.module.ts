@@ -10,6 +10,7 @@ import {
 } from "../users/infrastructure/mongoose/user-profile.schema";
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
 import { CreateFitnessProfileUseCase } from "./application/use-cases/create-fitness-profile/create-fitness-profile.use-case";
+import { GetMyFitnessProfileUseCase } from "./application/use-cases/get-my-fitness-profile/get-my-fitness-profile.use-case";
 import { FITNESS_PROFILE_REPOSITORY } from "./domain/repositories/fitness-profile.repository";
 import {
   FITNESS_PROFILE_MODEL_NAME,
@@ -36,6 +37,7 @@ import { FitnessController } from "./presentation/http/fitness.controller";
   providers: [
     AuthSessionGuard,
     CreateFitnessProfileUseCase,
+    GetMyFitnessProfileUseCase,
     {
       provide: USER_PROFILE_REPOSITORY,
       useClass: MongooseUserProfileRepository,
