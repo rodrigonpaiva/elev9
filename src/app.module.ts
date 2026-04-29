@@ -3,6 +3,7 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { AuthModule } from "./modules/auth/auth.module";
+import { UsersModule } from "./modules/users/users.module";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ function getMongoDbUri(): string {
   imports: [
     MongooseModule.forRoot(getMongoDbUri()),
     AuthModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
