@@ -39,6 +39,7 @@ describe("LogWorkoutUseCase", () => {
 
     workoutLogRepository = {
       findByTrainingPlanDayAndDate: jest.fn(),
+      findByTrainingPlanIdsAndDateRange: jest.fn(),
       create: jest.fn(),
     };
 

@@ -21,6 +21,7 @@ import {
   UserProfileSchema,
 } from "../users/infrastructure/mongoose/user-profile.schema";
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
+import { GetProgressSummaryUseCase } from "./application/use-cases/get-progress-summary/get-progress-summary.use-case";
 import { LogWorkoutUseCase } from "./application/use-cases/log-workout/log-workout.use-case";
 import { WORKOUT_LOG_REPOSITORY } from "./domain/repositories/workout-log.repository";
 import { CLOCK } from "./domain/services/clock.service";
@@ -57,6 +58,7 @@ import { ProgressController } from "./presentation/http/progress.controller";
   controllers: [ProgressController],
   providers: [
     AuthSessionGuard,
+    GetProgressSummaryUseCase,
     LogWorkoutUseCase,
     {
       provide: CLOCK,

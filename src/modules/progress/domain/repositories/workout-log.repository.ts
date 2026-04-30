@@ -19,6 +19,11 @@ export interface WorkoutLogRepository {
     workoutDayIndex: number;
     date: string;
   }): Promise<WorkoutLog | null>;
+  findByTrainingPlanIdsAndDateRange(input: {
+    trainingPlanIds: string[];
+    startDate: string;
+    endDate: string;
+  }): Promise<WorkoutLog[]>;
   create(input: CreateWorkoutLogRepositoryInput): Promise<WorkoutLog>;
 }
 

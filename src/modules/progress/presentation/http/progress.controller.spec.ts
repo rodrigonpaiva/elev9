@@ -6,6 +6,11 @@ import {
 } from "@nestjs/common";
 
 import {
+  GET_PROGRESS_SUMMARY_ERROR_CODES,
+  GetProgressSummaryError,
+} from "../../application/use-cases/get-progress-summary/get-progress-summary.errors";
+import { GetProgressSummaryUseCase } from "../../application/use-cases/get-progress-summary/get-progress-summary.use-case";
+import {
   LOG_WORKOUT_ERROR_CODES,
   LogWorkoutError,
 } from "../../application/use-cases/log-workout/log-workout.errors";
@@ -14,14 +19,21 @@ import { ProgressController } from "./progress.controller";
 
 describe("ProgressController", () => {
   let logWorkoutUseCase: jest.Mocked<LogWorkoutUseCase>;
+  let getProgressSummaryUseCase: jest.Mocked<GetProgressSummaryUseCase>;
   let controller: ProgressController;
 
   beforeEach(() => {
     logWorkoutUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<LogWorkoutUseCase>;
+    getProgressSummaryUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetProgressSummaryUseCase>;
 
-    controller = new ProgressController(logWorkoutUseCase);
+    controller = new ProgressController(
+      logWorkoutUseCase,
+      getProgressSummaryUseCase,
+    );
   });
 
   it("returns the safe response on success", async () => {
@@ -175,6 +187,109 @@ describe("ProgressController", () => {
             { name: "push_up", setsDone: 4, repsDone: 12 },
           ],
         },
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("returns the safe summary response on success", async () => {
+    getProgressSummaryUseCase.execute.mockResolvedValue({
+      summary: {
+        period: "week",
+        workoutsCompleted: 3,
+        totalDurationMinutes: 155,
+        averageDurationMinutes: 51.67,
+        lastWorkoutDate: "2026-04-30",
+      },
+    });
+
+    const result = await controller.getSummary(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      {
+        period: "week",
+      },
+      {},
+    );
+
+    expect(result).toEqual({
+      summary: {
+        period: "week",
+        workoutsCompleted: 3,
+        totalDurationMinutes: 155,
+        averageDurationMinutes: 51.67,
+        lastWorkoutDate: "2026-04-30",
+      },
+    });
+  });
+
+  it("maps invalid query period to HTTP 400", async () => {
+    getProgressSummaryUseCase.execute.mockRejectedValue(
+      new GetProgressSummaryError(
+        GET_PROGRESS_SUMMARY_ERROR_CODES.INVALID_INPUT,
+        "Invalid progress summary input.",
+      ),
+    );
+
+    await expect(
+      controller.getSummary(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        {
+          period: "year" as "week",
+        },
+        {},
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("maps missing fitness profile to HTTP 404", async () => {
+    getProgressSummaryUseCase.execute.mockRejectedValue(
+      new GetProgressSummaryError(
+        GET_PROGRESS_SUMMARY_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
+        "Fitness profile not found.",
+      ),
+    );
+
+    await expect(
+      controller.getSummary(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        {},
+        {},
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("maps invalid session on summary to HTTP 401", async () => {
+    getProgressSummaryUseCase.execute.mockRejectedValue(
+      new GetProgressSummaryError(
+        GET_PROGRESS_SUMMARY_ERROR_CODES.INVALID_SESSION,
+        "Invalid session.",
+      ),
+    );
+
+    await expect(
+      controller.getSummary(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        {},
+        {},
       ),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
