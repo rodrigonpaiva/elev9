@@ -29,6 +29,7 @@ describe("CreateTrainingPlanUseCase", () => {
     };
 
     trainingPlanRepository = {
+      findById: jest.fn(),
       findActiveByFitnessProfileId: jest.fn(),
       create: jest.fn(),
     };

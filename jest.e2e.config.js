@@ -3,7 +3,7 @@ module.exports = {
   moduleFileExtensions: ["js", "json", "ts"],
   rootDir: ".",
   testEnvironment: "node",
-  testRegex: ".*\\.spec\\.ts$",
+  testRegex: ".*\\.e2e-spec\\.ts$",
   transform: {
     "^.+\\.(t|j)s$": [
       "ts-jest",
@@ -12,8 +12,5 @@ module.exports = {
       },
     ],
   },
-  collectCoverageFrom: ["src/**/*.ts"],
-  coverageDirectory: "coverage",
-  roots: ["<rootDir>/src", "<rootDir>/test"],
-  testPathIgnorePatterns: ["/node_modules/", "/test/e2e/"],
+  roots: ["<rootDir>/test"],
 };

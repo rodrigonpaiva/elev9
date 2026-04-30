@@ -24,6 +24,16 @@ export class MongooseTrainingPlanRepository implements TrainingPlanRepository {
     private readonly trainingPlanModel: Model<TrainingPlanSchemaClass>,
   ) {}
 
+  async findById(trainingPlanId: string): Promise<TrainingPlan | null> {
+    const document = await this.trainingPlanModel.findById(trainingPlanId).exec();
+
+    if (!document) {
+      return null;
+    }
+
+    return this.toEntity(document as TrainingPlanDocument);
+  }
+
   async findActiveByFitnessProfileId(
     fitnessProfileId: string,
   ): Promise<TrainingPlan | null> {

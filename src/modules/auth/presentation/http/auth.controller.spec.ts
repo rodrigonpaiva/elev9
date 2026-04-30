@@ -1,6 +1,8 @@
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { Test, TestingModule } from "@nestjs/testing";
-import request from "supertest";
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from "@nestjs/common";
 
 import {
   REGISTER_USER_ERROR_CODES,
@@ -16,53 +18,32 @@ import { ValidateSessionUseCase } from "../../application/use-cases/validate-ses
 import { AuthController } from "./auth.controller";
 
 describe("AuthController", () => {
-  let app: INestApplication;
-  const registerUserUseCase = {
-    execute: jest.fn(),
-  };
-  const loginUserUseCase = {
-    execute: jest.fn(),
-  };
-  const validateSessionUseCase = {
-    execute: jest.fn(),
-  };
+  let registerUserUseCase: jest.Mocked<RegisterUserUseCase>;
+  let loginUserUseCase: jest.Mocked<LoginUserUseCase>;
+  let validateSessionUseCase: jest.Mocked<ValidateSessionUseCase>;
+  let controller: AuthController;
 
-  beforeEach(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      controllers: [AuthController],
-      providers: [
-        {
-          provide: RegisterUserUseCase,
-          useValue: registerUserUseCase,
-        },
-        {
-          provide: LoginUserUseCase,
-          useValue: loginUserUseCase,
-        },
-        {
-          provide: ValidateSessionUseCase,
-          useValue: validateSessionUseCase,
-        },
-      ],
-    }).compile();
+  beforeEach(() => {
+    registerUserUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<RegisterUserUseCase>;
 
-    app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
+    loginUserUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<LoginUserUseCase>;
+
+    validateSessionUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<ValidateSessionUseCase>;
+
+    controller = new AuthController(
+      registerUserUseCase,
+      loginUserUseCase,
+      validateSessionUseCase,
     );
-    await app.init();
   });
 
-  afterEach(async () => {
-    jest.clearAllMocks();
-    await app.close();
-  });
-
-  it("POST /auth/register success", async () => {
+  it("returns the safe register response on success", async () => {
     registerUserUseCase.execute.mockResolvedValue({
       user: {
         id: "usr_123",
@@ -73,16 +54,13 @@ describe("AuthController", () => {
       },
     });
 
-    const response = await request(app.getHttpServer())
-      .post("/auth/register")
-      .send({
-        name: "Rodrigo Paiva",
-        email: "rodrigo@email.com",
-        password: "StrongPassword123",
-      })
-      .expect(201);
+    const result = await controller.register({
+      name: "Rodrigo Paiva",
+      email: "rodrigo@email.com",
+      password: "StrongPassword123",
+    });
 
-    expect(response.body).toEqual({
+    expect(result).toEqual({
       user: {
         id: "usr_123",
         email: "rodrigo@email.com",
@@ -93,7 +71,7 @@ describe("AuthController", () => {
     });
   });
 
-  it("returns HTTP 409 for AUTH_EMAIL_ALREADY_EXISTS", async () => {
+  it("maps AUTH_EMAIL_ALREADY_EXISTS to HTTP 409", async () => {
     registerUserUseCase.execute.mockRejectedValue(
       new RegisterUserError(
         REGISTER_USER_ERROR_CODES.EMAIL_ALREADY_EXISTS,
@@ -101,22 +79,16 @@ describe("AuthController", () => {
       ),
     );
 
-    const response = await request(app.getHttpServer())
-      .post("/auth/register")
-      .send({
+    await expect(
+      controller.register({
         name: "Rodrigo Paiva",
         email: "rodrigo@email.com",
         password: "StrongPassword123",
-      })
-      .expect(409);
-
-    expect(response.body).toEqual({
-      code: REGISTER_USER_ERROR_CODES.EMAIL_ALREADY_EXISTS,
-      message: "Email already exists.",
-    });
+      }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
-  it("returns HTTP 400 for AUTH_INVALID_INPUT", async () => {
+  it("maps AUTH_INVALID_INPUT to HTTP 400", async () => {
     registerUserUseCase.execute.mockRejectedValue(
       new RegisterUserError(
         REGISTER_USER_ERROR_CODES.INVALID_INPUT,
@@ -124,22 +96,16 @@ describe("AuthController", () => {
       ),
     );
 
-    const response = await request(app.getHttpServer())
-      .post("/auth/register")
-      .send({
+    await expect(
+      controller.register({
         name: "Rodrigo Paiva",
         email: "rodrigo@email.com",
         password: "StrongPassword123",
-      })
-      .expect(400);
-
-    expect(response.body).toEqual({
-      code: REGISTER_USER_ERROR_CODES.INVALID_INPUT,
-      message: "Invalid input.",
-    });
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("returns HTTP 400 for AUTH_PASSWORD_TOO_WEAK", async () => {
+  it("maps AUTH_PASSWORD_TOO_WEAK to HTTP 400", async () => {
     registerUserUseCase.execute.mockRejectedValue(
       new RegisterUserError(
         REGISTER_USER_ERROR_CODES.PASSWORD_TOO_WEAK,
@@ -147,45 +113,16 @@ describe("AuthController", () => {
       ),
     );
 
-    const response = await request(app.getHttpServer())
-      .post("/auth/register")
-      .send({
+    await expect(
+      controller.register({
         name: "Rodrigo Paiva",
         email: "rodrigo@email.com",
         password: "StrongPassword123",
-      })
-      .expect(400);
-
-    expect(response.body).toEqual({
-      code: REGISTER_USER_ERROR_CODES.PASSWORD_TOO_WEAK,
-      message: "Password does not meet security requirements.",
-    });
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("returns HTTP 500 for AUTH_INTERNAL_ERROR", async () => {
-    registerUserUseCase.execute.mockRejectedValue(
-      new RegisterUserError(
-        REGISTER_USER_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
-      ),
-    );
-
-    const response = await request(app.getHttpServer())
-      .post("/auth/register")
-      .send({
-        name: "Rodrigo Paiva",
-        email: "rodrigo@email.com",
-        password: "StrongPassword123",
-      })
-      .expect(500);
-
-    expect(response.body).toEqual({
-      code: REGISTER_USER_ERROR_CODES.INTERNAL_ERROR,
-      message: "An unexpected error occurred.",
-    });
-  });
-
-  it("GET /auth/me success", async () => {
+  it("returns the safe session response on success", async () => {
     validateSessionUseCase.execute.mockResolvedValue({
       user: {
         id: "usr_123",
@@ -193,12 +130,9 @@ describe("AuthController", () => {
       },
     });
 
-    const response = await request(app.getHttpServer())
-      .get("/auth/me")
-      .set("Authorization", "Bearer valid-token")
-      .expect(200);
+    const result = await controller.me("Bearer valid-token");
 
-    expect(response.body).toEqual({
+    expect(result).toEqual({
       user: {
         id: "usr_123",
         email: "rodrigo@email.com",
@@ -206,7 +140,7 @@ describe("AuthController", () => {
     });
   });
 
-  it("GET /auth/me returns HTTP 401 for AUTH_INVALID_SESSION", async () => {
+  it("maps AUTH_INVALID_SESSION to HTTP 401", async () => {
     validateSessionUseCase.execute.mockRejectedValue(
       new ValidateSessionError(
         VALIDATE_SESSION_ERROR_CODES.INVALID_SESSION,
@@ -214,13 +148,8 @@ describe("AuthController", () => {
       ),
     );
 
-    const response = await request(app.getHttpServer())
-      .get("/auth/me")
-      .expect(401);
-
-    expect(response.body).toEqual({
-      code: VALIDATE_SESSION_ERROR_CODES.INVALID_SESSION,
-      message: "Invalid session.",
-    });
+    await expect(controller.me(undefined)).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
   });
 });

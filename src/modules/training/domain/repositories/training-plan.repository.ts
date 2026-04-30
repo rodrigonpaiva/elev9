@@ -16,6 +16,7 @@ export interface CreateTrainingPlanRepositoryInput {
 }
 
 export interface TrainingPlanRepository {
+  findById(trainingPlanId: string): Promise<TrainingPlan | null>;
   findActiveByFitnessProfileId(
     fitnessProfileId: string,
   ): Promise<TrainingPlan | null>;

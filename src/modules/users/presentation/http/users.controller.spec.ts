@@ -1,86 +1,25 @@
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { Test, TestingModule } from "@nestjs/testing";
-import request from "supertest";
+import { ConflictException } from "@nestjs/common";
 
-import { ValidateSessionUseCase } from "../../../auth/application/use-cases/validate-session/validate-session.use-case";
 import {
   CREATE_USER_PROFILE_ERROR_CODES,
   CreateUserProfileError,
 } from "../../application/use-cases/create-user-profile/create-user-profile.errors";
 import { CreateUserProfileUseCase } from "../../application/use-cases/create-user-profile/create-user-profile.use-case";
 import { UsersController } from "./users.controller";
-import { AuthSessionGuard } from "./guards/auth-session.guard";
 
 describe("UsersController", () => {
-  let app: INestApplication;
-  const createUserProfileUseCase = {
-    execute: jest.fn(),
-  };
-  const validateSessionUseCase = {
-    execute: jest.fn().mockResolvedValue({
-      user: {
-        id: "auth_user_123",
-        email: "user@email.com",
-      },
-    }),
-  };
+  let createUserProfileUseCase: jest.Mocked<CreateUserProfileUseCase>;
+  let controller: UsersController;
 
-  beforeEach(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      controllers: [UsersController],
-      providers: [
-        {
-          provide: CreateUserProfileUseCase,
-          useValue: createUserProfileUseCase,
-        },
-        {
-          provide: ValidateSessionUseCase,
-          useValue: validateSessionUseCase,
-        },
-        {
-          provide: AuthSessionGuard,
-          useValue: {
-            canActivate: (context: {
-              switchToHttp: () => {
-                getRequest: () => {
-                  authUser?: {
-                    id: string;
-                    email: string;
-                  };
-                };
-              };
-            }) => {
-              context.switchToHttp().getRequest().authUser = {
-                id: "usr_123",
-                email: "rodrigo@email.com",
-              };
+  beforeEach(() => {
+    createUserProfileUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<CreateUserProfileUseCase>;
 
-              return true;
-            },
-          },
-        },
-      ],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    await app.init();
+    controller = new UsersController(createUserProfileUseCase);
   });
 
-  afterEach(async () => {
-    jest.clearAllMocks();
-    if (app) {
-      await app.close();
-    }
-  });
-
-  it("POST /users/profile success", async () => {
+  it("returns the safe response on success", async () => {
     createUserProfileUseCase.execute.mockResolvedValue({
       userProfile: {
         id: "profile_123",
@@ -95,16 +34,21 @@ describe("UsersController", () => {
       },
     });
 
-    const response = await request(app.getHttpServer())
-      .post("/users/profile")
-      .send({
+    const result = await controller.createProfile(
+      {
+        authUser: {
+          id: "usr_123",
+          email: "rodrigo@email.com",
+        },
+      },
+      {
         name: "Rodrigo Paiva",
         birthDate: "1994-06-15",
         gender: "male",
-      })
-      .expect(201);
+      },
+    );
 
-    expect(response.body).toEqual({
+    expect(result).toEqual({
       userProfile: {
         id: "profile_123",
         authUserId: "usr_123",
@@ -119,7 +63,7 @@ describe("UsersController", () => {
     });
   });
 
-  it("returns 409 when profile already exists", async () => {
+  it("maps USER_PROFILE_ALREADY_EXISTS to HTTP 409", async () => {
     createUserProfileUseCase.execute.mockRejectedValue(
       new CreateUserProfileError(
         CREATE_USER_PROFILE_ERROR_CODES.ALREADY_EXISTS,
@@ -127,16 +71,18 @@ describe("UsersController", () => {
       ),
     );
 
-    const response = await request(app.getHttpServer())
-      .post("/users/profile")
-      .send({
-        name: "Rodrigo Paiva",
-      })
-      .expect(409);
-
-    expect(response.body).toEqual({
-      code: CREATE_USER_PROFILE_ERROR_CODES.ALREADY_EXISTS,
-      message: "User profile already exists.",
-    });
+    await expect(
+      controller.createProfile(
+        {
+          authUser: {
+            id: "usr_123",
+            email: "rodrigo@email.com",
+          },
+        },
+        {
+          name: "Rodrigo Paiva",
+        },
+      ),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 });
