@@ -16,6 +16,7 @@ import {
 } from "../users/infrastructure/mongoose/user-profile.schema";
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
 import { CreateTrainingPlanUseCase } from "./application/use-cases/create-training-plan/create-training-plan.use-case";
+import { GetMyTrainingPlanUseCase } from "./application/use-cases/get-my-training-plan/get-my-training-plan.use-case";
 import { TRAINING_PLAN_REPOSITORY } from "./domain/repositories/training-plan.repository";
 import { MongooseTrainingPlanRepository } from "./infrastructure/mongoose/mongoose-training-plan.repository";
 import {
@@ -46,6 +47,7 @@ import { TrainingController } from "./presentation/http/training.controller";
   providers: [
     AuthSessionGuard,
     CreateTrainingPlanUseCase,
+    GetMyTrainingPlanUseCase,
     {
       provide: USER_PROFILE_REPOSITORY,
       useClass: MongooseUserProfileRepository,
