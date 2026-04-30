@@ -3,6 +3,7 @@ import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
 import { AuthModule } from "./modules/auth/auth.module";
+import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { FitnessModule } from "./modules/fitness/fitness.module";
 import { ProgressModule } from "./modules/progress/progress.module";
 import { TrainingModule } from "./modules/training/training.module";
@@ -24,6 +25,7 @@ function getMongoDbUri(): string {
   imports: [
     MongooseModule.forRoot(getMongoDbUri()),
     AuthModule,
+    DashboardModule,
     FitnessModule,
     ProgressModule,
     TrainingModule,
