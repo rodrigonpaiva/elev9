@@ -190,6 +190,12 @@ export function DashboardScreen() {
 
       {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
+      <Button
+        label="View History"
+        onPress={() => navigation.navigate("WorkoutHistory")}
+        variant="secondary"
+        style={styles.fullButton}
+      />
       <Button label="Refresh" onPress={() => void loadDashboard()} style={styles.fullButton} />
       <Button
         label="Logout"

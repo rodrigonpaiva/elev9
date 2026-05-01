@@ -1,7 +1,12 @@
 import { Platform } from "react-native";
 
 import { createApiClient } from "@elev9/api-client";
-import type { LogWorkoutRequest, LogWorkoutResponse } from "@elev9/types";
+import { ApiClientError } from "@elev9/api-client";
+import type {
+  LogWorkoutRequest,
+  LogWorkoutResponse,
+  WorkoutHistoryResponse,
+} from "@elev9/types";
 
 import { getAccessToken } from "../storage/token-storage";
 
@@ -26,47 +31,64 @@ export const apiClient = createApiClient({
   getAccessToken,
 });
 
+async function requestJson<T>(input: {
+  path: string;
+  method: "GET" | "POST";
+  body?: unknown;
+}): Promise<T> {
+  const token = await getAccessToken();
+
+  const response = await fetch(`${baseUrl}${input.path}`, {
+    method: input.method,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...(input.body !== undefined ? { body: JSON.stringify(input.body) } : {}),
+  });
+
+  const text = await response.text();
+  const payload = text ? (JSON.parse(text) as unknown) : null;
+
+  if (!response.ok) {
+    const errorPayload =
+      typeof payload === "object" && payload !== null
+        ? (payload as Record<string, unknown>)
+        : {};
+
+    throw new ApiClientError({
+      code: typeof errorPayload.code === "string" ? errorPayload.code : "API_ERROR",
+      message:
+        typeof errorPayload.message === "string"
+          ? errorPayload.message
+          : "API request failed.",
+      status: response.status,
+      details:
+        typeof errorPayload.details === "object" && errorPayload.details !== null
+          ? (errorPayload.details as Record<string, unknown>)
+          : undefined,
+    });
+  }
+
+  return payload as T;
+}
+
 export const mobileApiClient = {
   ...apiClient,
   progress: {
     ...apiClient.progress,
     async logWorkout(input: LogWorkoutRequest): Promise<LogWorkoutResponse> {
-      const token = await getAccessToken();
-
-      const response = await fetch(`${baseUrl}/progress/workout-logs`, {
+      return requestJson<LogWorkoutResponse>({
+        path: "/progress/workout-logs",
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(input),
+        body: input,
       });
-
-      const text = await response.text();
-      const payload = text ? (JSON.parse(text) as unknown) : null;
-
-      if (!response.ok) {
-        const { ApiClientError } = await import("@elev9/api-client");
-        const errorPayload =
-          typeof payload === "object" && payload !== null
-            ? (payload as Record<string, unknown>)
-            : {};
-
-        throw new ApiClientError({
-          code: typeof errorPayload.code === "string" ? errorPayload.code : "API_ERROR",
-          message:
-            typeof errorPayload.message === "string"
-              ? errorPayload.message
-              : "API request failed.",
-          status: response.status,
-          details:
-            typeof errorPayload.details === "object" && errorPayload.details !== null
-              ? (errorPayload.details as Record<string, unknown>)
-              : undefined,
-        });
-      }
-
-      return payload as LogWorkoutResponse;
+    },
+    async getWorkoutHistory(limit = 20): Promise<WorkoutHistoryResponse> {
+      return requestJson<WorkoutHistoryResponse>({
+        path: `/progress/workout-logs?limit=${limit}`,
+        method: "GET",
+      });
     },
   },
 };

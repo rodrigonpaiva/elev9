@@ -8,11 +8,13 @@ import { Text } from "@elev9/ui";
 import { useAuth } from "../auth/auth-provider";
 import { DashboardScreen } from "../screens/dashboard-screen";
 import { LoginScreen } from "../screens/login-screen";
+import { WorkoutHistoryScreen } from "../screens/workout-history-screen";
 import { WorkoutScreen } from "../screens/workout-screen";
 
 export type RootStackParamList = {
   Login: undefined;
   Dashboard: undefined;
+  WorkoutHistory: undefined;
   Workout: {
     trainingPlanId: string;
     workout: TodayWorkout;
@@ -42,6 +44,19 @@ export function AppNavigator() {
               name="Dashboard"
               component={DashboardScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="WorkoutHistory"
+              component={WorkoutHistoryScreen}
+              options={{
+                headerShown: true,
+                title: "Workout History",
+                headerStyle: {
+                  backgroundColor: "#020617",
+                },
+                headerTintColor: "#f8fafc",
+                headerShadowVisible: false,
+              }}
             />
             <Stack.Screen
               name="Workout"
