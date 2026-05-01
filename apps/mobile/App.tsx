@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Text, View } from "react-native";
 
 import { AuthProvider } from "./src/auth/auth-provider";
 import { AppNavigator } from "./src/navigation/app-navigator";
@@ -50,14 +50,11 @@ class AppErrorBoundary extends Component<
 }
 
 function AppBootstrap() {
-  console.log("App rendered");
-
   return (
     <View
       style={{
         flex: 1,
-        minHeight: "100%",
-        backgroundColor: "#ecfeff",
+        backgroundColor: "#f3f7fb",
       }}
     >
       <AuthProvider>

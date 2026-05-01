@@ -5,11 +5,16 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.elev9mobile"
     },
-    "android": {},
+    "android": {
+      "package": "com.anonymous.elev9mobile"
+    },
     "web": {
       "bundler": "metro"
     }

@@ -2,10 +2,12 @@ import type { PropsWithChildren } from "react";
 import {
   Platform,
   ScrollView,
+  StyleSheet,
   View,
-  type ViewStyle,
   type ScrollViewProps,
+  type StyleProp,
   type ViewProps,
+  type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,52 +17,66 @@ export type ScreenProps = PropsWithChildren<{
   scroll?: boolean;
   scrollProps?: ScrollViewProps;
   viewProps?: ViewProps;
+  style?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
 }>;
 
 export function Screen({
   children,
-  className,
-  contentClassName,
   scroll = false,
   scrollProps,
   viewProps,
+  style,
+  contentStyle,
 }: ScreenProps) {
-  const rootStyle: ViewStyle = {
-    flex: 1 as const,
-    backgroundColor: "#f8fafc",
-    borderWidth: 1,
-    borderColor: "#cbd5e1",
-  };
+  const rootStyle = [
+    styles.root,
+    Platform.OS === "web" ? styles.rootWeb : null,
+    style,
+  ];
 
-  const contentMinHeightStyle: ViewStyle | undefined =
-    Platform.OS === "web"
-      ? {
-          minHeight: "100%" as unknown as ViewStyle["minHeight"],
-        }
-      : undefined;
-
-  return (
-    <SafeAreaView
-      className={`flex-1 bg-white ${className ?? ""}`.trim()}
-      style={rootStyle}
-    >
-      {scroll ? (
+  if (scroll) {
+    return (
+      <SafeAreaView style={rootStyle}>
         <ScrollView
-          contentContainerClassName={`flex-grow px-5 py-4 ${contentClassName ?? ""}`.trim()}
-          style={{ flex: 1 }}
+          style={styles.scroll}
+          contentContainerStyle={[styles.scrollContent, contentStyle]}
           {...scrollProps}
         >
           {children}
         </ScrollView>
-      ) : (
-        <View
-          className={`flex-1 px-5 py-4 ${contentClassName ?? ""}`.trim()}
-          style={contentMinHeightStyle}
-          {...viewProps}
-        >
-          {children}
-        </View>
-      )}
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={rootStyle}>
+      <View style={[styles.content, contentStyle, viewProps?.style]} {...viewProps}>
+        {children}
+      </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: "#f3f7fb",
+  },
+  rootWeb: {
+    minHeight: "100%" as unknown as ViewStyle["minHeight"],
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+  },
+});

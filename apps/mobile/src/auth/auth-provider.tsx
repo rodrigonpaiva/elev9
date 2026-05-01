@@ -29,8 +29,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
 
-  console.log("AuthProvider mounted");
-
   useEffect(() => {
     let isMounted = true;
 
@@ -53,10 +51,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isMounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    console.log(`AuthProvider state: ${status}`);
-  }, [status]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

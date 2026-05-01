@@ -1,4 +1,12 @@
-import { TextInput, type TextInputProps, View } from "react-native";
+import {
+  StyleSheet,
+  TextInput,
+  View,
+  type StyleProp,
+  type TextInputProps,
+  type TextStyle,
+  type ViewStyle,
+} from "react-native";
 
 import { Text } from "./Text";
 
@@ -6,25 +14,48 @@ export type InputProps = TextInputProps & {
   className?: string;
   errorMessage?: string | null;
   label?: string;
+  containerStyle?: StyleProp<ViewStyle>;
+  inputStyle?: StyleProp<TextStyle>;
 };
 
 export function Input({
-  className,
   errorMessage,
   label,
+  containerStyle,
+  inputStyle,
   ...props
 }: InputProps) {
   return (
-    <View className="gap-2">
+    <View style={[styles.container, containerStyle]}>
       {label ? <Text variant="label">{label}</Text> : null}
       <TextInput
-        className={`rounded-2xl border border-mist bg-white px-4 py-4 text-base text-ink ${className ?? ""}`.trim()}
         placeholderTextColor="#94a3b8"
+        style={[styles.input, inputStyle]}
         {...props}
       />
-      {errorMessage ? (
-        <Text className="text-sm text-danger">{errorMessage}</Text>
-      ) : null}
+      {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    gap: 8,
+  },
+  input: {
+    minHeight: 56,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#dbe4ef",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: "#0f172a",
+  },
+  error: {
+    color: "#dc2626",
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});

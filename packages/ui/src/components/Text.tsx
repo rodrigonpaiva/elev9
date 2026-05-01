@@ -1,5 +1,11 @@
 import type { PropsWithChildren } from "react";
-import { Text as NativeText, type TextProps as NativeTextProps } from "react-native";
+import {
+  StyleSheet,
+  Text as NativeText,
+  type StyleProp,
+  type TextProps as NativeTextProps,
+  type TextStyle,
+} from "react-native";
 
 type TextVariant = "body" | "label" | "title" | "headline";
 
@@ -7,34 +13,56 @@ export type TextProps = PropsWithChildren<
   NativeTextProps & {
     className?: string;
     variant?: TextVariant;
+    style?: StyleProp<TextStyle>;
   }
 >;
 
 export function Text({
   children,
-  className,
   variant = "body",
+  style,
   ...props
 }: TextProps) {
   return (
-    <NativeText
-      className={`${variantClassName(variant)} text-ink ${className ?? ""}`.trim()}
-      {...props}
-    >
+    <NativeText style={[styles.base, variantStyleMap[variant], style]} {...props}>
       {children}
     </NativeText>
   );
 }
 
-function variantClassName(variant: TextVariant): string {
-  switch (variant) {
-    case "headline":
-      return "text-3xl font-extrabold tracking-tight";
-    case "title":
-      return "text-xl font-bold";
-    case "label":
-      return "text-sm font-semibold uppercase tracking-wide text-slate";
-    default:
-      return "text-base";
-  }
-}
+const styles = StyleSheet.create({
+  base: {
+    color: "#0f172a",
+  },
+  body: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: "400",
+  },
+  label: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    color: "#475569",
+  },
+  title: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "700",
+  },
+  headline: {
+    fontSize: 34,
+    lineHeight: 38,
+    fontWeight: "800",
+    letterSpacing: -0.8,
+  },
+});
+
+const variantStyleMap: Record<TextVariant, TextStyle> = {
+  body: styles.body,
+  label: styles.label,
+  title: styles.title,
+  headline: styles.headline,
+};

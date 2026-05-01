@@ -1,6 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { Text } from "@elev9/ui";
 
@@ -17,22 +17,12 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function AppNavigator() {
   const { status } = useAuth();
-  console.log("Navigator rendered");
 
   if (status === "loading") {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#ffffff",
-          paddingHorizontal: 24,
-          minHeight: "100%",
-        }}
-      >
+      <View style={styles.loading}>
         <ActivityIndicator color="#0f766e" />
-        <Text className="mt-4 text-slate">Loading Elev9...</Text>
+        <Text style={styles.loadingText}>Loading Elev9...</Text>
       </View>
     );
   }
@@ -41,11 +31,33 @@ export function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator>
         {status === "authenticated" ? (
-          <Stack.Screen name="Dashboard" component={DashboardScreen} />
+          <Stack.Screen
+            name="Dashboard"
+            component={DashboardScreen}
+            options={{ headerShown: false }}
+          />
         ) : (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
         )}
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f3f7fb",
+    paddingHorizontal: 24,
+  },
+  loadingText: {
+    marginTop: 14,
+    color: "#475569",
+  },
+});

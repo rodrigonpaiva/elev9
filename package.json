@@ -18,7 +18,9 @@
     "mobile:ios": "nx run mobile:run-ios --outputStyle=stream",
     "test": "nx test api --outputStyle=stream",
     "test:watch": "nx run api:test:watch --outputStyle=stream",
-    "test:e2e": "nx run api:test:e2e --outputStyle=stream"
+    "test:e2e": "nx run api:test:e2e --outputStyle=stream",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
