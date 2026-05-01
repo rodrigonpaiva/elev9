@@ -1,0 +1,21 @@
+{
+  "run": {
+    "command": "nx test api --outputStyle=stream",
+    "startTime": "2026-04-30T18:58:58.800Z",
+    "endTime": "2026-04-30T18:59:05.057Z",
+    "inner": false
+  },
+  "tasks": [
+    {
+      "taskId": "api:test",
+      "target": "test",
+      "projectName": "api",
+      "hash": "16407858086266959241",
+      "startTime": "2026-04-30T18:58:58.846Z",
+      "endTime": "2026-04-30T18:59:05.054Z",
+      "params": "",
+      "cacheStatus": "cache-miss",
+      "status": 0
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+> tsc -p packages/api-client/tsconfig.json
+

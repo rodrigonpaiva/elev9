@@ -1,19 +1,19 @@
 /** @type {import('jest').Config} */
 module.exports = {
   moduleFileExtensions: ["js", "json", "ts"],
-  rootDir: ".",
+  rootDir: __dirname,
   testEnvironment: "node",
   testRegex: ".*\\.spec\\.ts$",
   transform: {
     "^.+\\.(t|j)s$": [
       "ts-jest",
       {
-        tsconfig: "tsconfig.spec.json",
+        tsconfig: "<rootDir>/tsconfig.spec.json",
       },
     ],
   },
-  collectCoverageFrom: ["src/**/*.ts"],
-  coverageDirectory: "coverage",
+  collectCoverageFrom: ["<rootDir>/src/**/*.ts"],
+  coverageDirectory: "<rootDir>/coverage",
   roots: ["<rootDir>/src", "<rootDir>/test"],
   testPathIgnorePatterns: ["/node_modules/", "/test/e2e/"],
 };

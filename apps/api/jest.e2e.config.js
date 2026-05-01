@@ -1,14 +1,14 @@
 /** @type {import('jest').Config} */
 module.exports = {
   moduleFileExtensions: ["js", "json", "ts"],
-  rootDir: ".",
+  rootDir: __dirname,
   testEnvironment: "node",
   testRegex: ".*\\.e2e-spec\\.ts$",
   transform: {
     "^.+\\.(t|j)s$": [
       "ts-jest",
       {
-        tsconfig: "tsconfig.spec.json",
+        tsconfig: "<rootDir>/tsconfig.spec.json",
       },
     ],
   },

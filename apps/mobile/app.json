@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Elev9",
+    "slug": "elev9-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {},
+    "web": {}
+  }
+}
