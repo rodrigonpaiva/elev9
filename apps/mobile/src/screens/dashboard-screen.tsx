@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   Pressable,
+  RefreshControl,
   StyleSheet,
   View,
 } from "react-native";
@@ -25,10 +26,15 @@ export function DashboardScreen() {
     useState<DashboardHomeResponse["dashboard"] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const entrance = useRef(new Animated.Value(0)).current;
 
-  const loadDashboard = useCallback(async () => {
-    setIsLoading(true);
+  const loadDashboard = useCallback(async (options?: { refresh?: boolean }) => {
+    if (options?.refresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
     setErrorMessage(null);
 
     try {
@@ -49,7 +55,11 @@ export function DashboardScreen() {
         setErrorMessage("Unable to load dashboard.");
       }
     } finally {
-      setIsLoading(false);
+      if (options?.refresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   }, [signOut]);
 
@@ -103,7 +113,19 @@ export function DashboardScreen() {
   const todayWorkout = trainingPlan?.todayWorkout;
 
   return (
-    <Screen contentStyle={styles.scrollContent} scroll>
+    <Screen
+      contentStyle={styles.scrollContent}
+      scroll
+      scrollProps={{
+        refreshControl: (
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => void loadDashboard({ refresh: true })}
+            tintColor={colors.primary}
+          />
+        ),
+      }}
+    >
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 0)]}>
         <Card style={styles.heroCard}>
           <Text style={styles.eyebrow}>Elev9 Home</Text>
@@ -118,15 +140,37 @@ export function DashboardScreen() {
 
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 1)]}>
         <Card style={styles.sectionCard}>
-          <Text variant="title">Fitness Profile</Text>
-          <Text style={styles.metricLabel}>Primary goal</Text>
-          <Text style={styles.metricValue}>
-            Goal: {dashboard.fitnessProfile?.goal ?? "Not created yet"}
-          </Text>
-          <Text style={styles.metricLabel}>Activity level</Text>
-          <Text style={styles.metricValue}>
-            Activity: {dashboard.fitnessProfile?.activityLevel ?? "Not created yet"}
-          </Text>
+          <Text variant="title">Weekly Progress</Text>
+          <View style={styles.metricsGrid}>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricLabel}>Weekly workouts</Text>
+              <Text style={styles.metricHighlight}>
+                {dashboard.progressSummary.workoutsCompleted}
+              </Text>
+            </View>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricLabel}>Total minutes</Text>
+              <Text style={styles.metricHighlight}>
+                {dashboard.progressSummary.totalDurationMinutes}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.metricsGrid}>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricLabel}>Last workout</Text>
+              <Text style={styles.metricSecondary}>
+                {dashboard.progressSummary.lastWorkoutDate
+                  ? formatDashboardDate(dashboard.progressSummary.lastWorkoutDate)
+                  : "No activity yet"}
+              </Text>
+            </View>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricLabel}>Fitness goal</Text>
+              <Text style={styles.metricSecondary}>
+                {dashboard.fitnessProfile?.goal ?? "Not created yet"}
+              </Text>
+            </View>
+          </View>
         </Card>
       </Animated.View>
 
@@ -172,31 +216,39 @@ export function DashboardScreen() {
 
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 3)]}>
         <Card style={styles.sectionCard}>
-          <Text variant="title">Weekly Summary</Text>
-          <Text style={styles.metricValue}>
-            Completed: {dashboard.progressSummary.workoutsCompleted}
-          </Text>
-          <Text style={styles.metricValue}>
-            Total Minutes: {dashboard.progressSummary.totalDurationMinutes}
-          </Text>
-          <Text style={styles.metricValue}>
-            Average Minutes: {dashboard.progressSummary.averageDurationMinutes}
-          </Text>
-          <Text style={styles.metricValue}>
-            Last Workout: {dashboard.progressSummary.lastWorkoutDate ?? "No activity yet"}
-          </Text>
+          <Text variant="title">Quick Actions</Text>
+          <View style={styles.actionsGroup}>
+            <Button
+              label="Start Workout"
+              onPress={() =>
+                trainingPlan && todayWorkout
+                  ? navigation.navigate("Workout", {
+                      trainingPlanId: trainingPlan.id,
+                      workout: todayWorkout as TodayWorkout,
+                    })
+                  : undefined
+              }
+              disabled={!trainingPlan || !todayWorkout}
+              style={styles.fullButton}
+            />
+            <Button
+              label="View History"
+              onPress={() => navigation.navigate("WorkoutHistory")}
+              variant="secondary"
+              style={styles.fullButton}
+            />
+            <Button
+              label="Refresh Dashboard"
+              onPress={() => void loadDashboard({ refresh: true })}
+              variant="secondary"
+              style={styles.fullButton}
+            />
+          </View>
         </Card>
       </Animated.View>
 
       {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
-      <Button
-        label="View History"
-        onPress={() => navigation.navigate("WorkoutHistory")}
-        variant="secondary"
-        style={styles.fullButton}
-      />
-      <Button label="Refresh" onPress={() => void loadDashboard()} style={styles.fullButton} />
       <Button
         label="Logout"
         onPress={() => void signOut()}
@@ -248,6 +300,19 @@ const styles = StyleSheet.create({
   sectionCard: {
     gap: 10,
   },
+  metricsGrid: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  metricCard: {
+    flex: 1,
+    gap: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: "#0b1220",
+    padding: 14,
+  },
   metricLabel: {
     fontSize: 12,
     fontWeight: "700",
@@ -257,6 +322,18 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     color: colors.text,
+  },
+  metricHighlight: {
+    color: colors.primary,
+    fontSize: 28,
+    lineHeight: 32,
+    fontWeight: "800",
+  },
+  metricSecondary: {
+    color: colors.text,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "600",
   },
   workoutTitle: {
     fontSize: 18,
@@ -287,6 +364,9 @@ const styles = StyleSheet.create({
   mutedText: {
     color: colors.mutedText,
   },
+  actionsGroup: {
+    gap: 12,
+  },
   fullButton: {
     width: "100%",
   },
@@ -304,4 +384,15 @@ function animatedStyle(value: Animated.Value, index: number) {
       },
     ],
   };
+}
+
+function formatDashboardDate(value: string): string {
+  const date = new Date(`${value}T00:00:00.000Z`);
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
 }
