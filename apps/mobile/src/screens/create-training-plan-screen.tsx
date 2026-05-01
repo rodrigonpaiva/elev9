@@ -14,7 +14,7 @@ export function CreateTrainingPlanScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "CreateTrainingPlan">>();
-  const { fitnessProfileId } = route.params;
+  const { fitnessProfileId, goal, activityLevel } = route.params;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,7 +24,7 @@ export function CreateTrainingPlanScreen() {
 
     try {
       await mobileApiClient.training.createPlan({ fitnessProfileId });
-      navigation.replace("Dashboard");
+      navigation.replace("MainTabs");
     } catch (error) {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
@@ -52,9 +52,24 @@ export function CreateTrainingPlanScreen() {
         <Card style={styles.card}>
           <Text variant="title">Ready to train</Text>
           <Text style={styles.subtitle}>
-            This will generate your first active plan so your dashboard can show
-            today&apos;s workout and progress.
+            This plan is generated with simple coaching rules based on your
+            fitness profile, so you can start quickly and refine later.
           </Text>
+
+          {goal || activityLevel ? (
+            <View style={styles.summaryBox}>
+              {goal ? (
+                <Text style={styles.summaryText}>
+                  Goal: {formatLabel(goal)}
+                </Text>
+              ) : null}
+              {activityLevel ? (
+                <Text style={styles.summaryText}>
+                  Activity: {formatLabel(activityLevel)}
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
 
           {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
@@ -98,6 +113,18 @@ const styles = StyleSheet.create({
   card: {
     gap: 18,
   },
+  summaryBox: {
+    gap: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: "#0b1220",
+    padding: 14,
+  },
+  summaryText: {
+    color: colors.text,
+    fontWeight: "600",
+  },
   error: {
     color: "#fca5a5",
   },
@@ -105,3 +132,10 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 });
+
+function formatLabel(value: string): string {
+  return value
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}

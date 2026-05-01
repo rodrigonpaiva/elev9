@@ -37,6 +37,30 @@ export function CreateFitnessProfileScreen() {
       weight,
       days,
       minutes,
+      heightError:
+        heightCm.length === 0
+          ? null
+          : !Number.isInteger(height) || height < 100 || height > 250
+            ? "Use an integer between 100 and 250."
+            : null,
+      weightError:
+        weightKg.length === 0
+          ? null
+          : Number.isNaN(weight) || weight < 30 || weight > 300
+            ? "Use a value between 30 and 300."
+            : null,
+      daysError:
+        daysPerWeek.length === 0
+          ? null
+          : !Number.isInteger(days) || days < 1 || days > 7
+            ? "Choose between 1 and 7 days."
+            : null,
+      minutesError:
+        minutesPerSession.length === 0
+          ? null
+          : !Number.isInteger(minutes) || minutes < 10 || minutes > 180
+            ? "Choose between 10 and 180 minutes."
+            : null,
       isValid:
         Number.isInteger(height) &&
         height >= 100 &&
@@ -76,6 +100,8 @@ export function CreateFitnessProfileScreen() {
 
       navigation.replace("CreateTrainingPlan", {
         fitnessProfileId: response.fitnessProfile.id,
+        goal,
+        activityLevel,
       });
     } catch (error) {
       if (error instanceof ApiClientError) {
@@ -102,7 +128,38 @@ export function CreateFitnessProfileScreen() {
         </View>
 
         <Card style={styles.card}>
-          <Text variant="title">Goal</Text>
+          <View style={styles.sectionHeader}>
+            <Text variant="title">Body metrics</Text>
+            <Text style={styles.sectionSubtitle}>
+              Use simple estimates if needed. You can refine these later.
+            </Text>
+          </View>
+
+          <View style={styles.row}>
+            <Input
+              label="Height (cm)"
+              keyboardType="number-pad"
+              value={heightCm}
+              onChangeText={setHeightCm}
+              containerStyle={styles.halfField}
+              errorMessage={validation.heightError}
+            />
+            <Input
+              label="Weight (kg)"
+              keyboardType="decimal-pad"
+              value={weightKg}
+              onChangeText={setWeightKg}
+              containerStyle={styles.halfField}
+              errorMessage={validation.weightError}
+            />
+          </View>
+
+          <View style={styles.sectionHeader}>
+            <Text variant="title">Goal</Text>
+            <Text style={styles.sectionSubtitle}>
+              Pick the outcome you want to prioritize first.
+            </Text>
+          </View>
           <View style={styles.optionsGroup}>
             {(["gain_muscle", "lose_weight", "maintain"] as FitnessProfileGoal[]).map(
               (option) => (
@@ -117,7 +174,12 @@ export function CreateFitnessProfileScreen() {
             )}
           </View>
 
-          <Text variant="title">Activity level</Text>
+          <View style={styles.sectionHeader}>
+            <Text variant="title">Activity</Text>
+            <Text style={styles.sectionSubtitle}>
+              This helps balance your training volume and weekly structure.
+            </Text>
+          </View>
           <View style={styles.optionsGroup}>
             {(["low", "medium", "high"] as FitnessProfileActivityLevel[]).map(
               (option) => (
@@ -132,21 +194,11 @@ export function CreateFitnessProfileScreen() {
             )}
           </View>
 
-          <View style={styles.row}>
-            <Input
-              label="Height (cm)"
-              keyboardType="number-pad"
-              value={heightCm}
-              onChangeText={setHeightCm}
-              containerStyle={styles.halfField}
-            />
-            <Input
-              label="Weight (kg)"
-              keyboardType="decimal-pad"
-              value={weightKg}
-              onChangeText={setWeightKg}
-              containerStyle={styles.halfField}
-            />
+          <View style={styles.sectionHeader}>
+            <Text variant="title">Training availability</Text>
+            <Text style={styles.sectionSubtitle}>
+              Define how often and how long you can realistically train.
+            </Text>
           </View>
 
           <View style={styles.row}>
@@ -156,6 +208,7 @@ export function CreateFitnessProfileScreen() {
               value={daysPerWeek}
               onChangeText={setDaysPerWeek}
               containerStyle={styles.halfField}
+              errorMessage={validation.daysError}
             />
             <Input
               label="Minutes / session"
@@ -163,6 +216,7 @@ export function CreateFitnessProfileScreen() {
               value={minutesPerSession}
               onChangeText={setMinutesPerSession}
               containerStyle={styles.halfField}
+              errorMessage={validation.minutesError}
             />
           </View>
 
@@ -214,6 +268,12 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: 16,
+  },
+  sectionHeader: {
+    gap: 6,
+  },
+  sectionSubtitle: {
+    color: colors.mutedText,
   },
   optionsGroup: {
     gap: 10,

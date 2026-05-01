@@ -9,10 +9,9 @@ import { useAuth } from "../auth/auth-provider";
 import { CreateFitnessProfileScreen } from "../screens/create-fitness-profile-screen";
 import { CreateProfileScreen } from "../screens/create-profile-screen";
 import { CreateTrainingPlanScreen } from "../screens/create-training-plan-screen";
-import { DashboardScreen } from "../screens/dashboard-screen";
 import { HomeResolverScreen } from "../screens/home-resolver-screen";
 import { LoginScreen } from "../screens/login-screen";
-import { WorkoutHistoryScreen } from "../screens/workout-history-screen";
+import { MainTabsScreen } from "../screens/main-tabs-screen";
 import { WorkoutScreen } from "../screens/workout-screen";
 
 export type RootStackParamList = {
@@ -22,9 +21,10 @@ export type RootStackParamList = {
   CreateFitnessProfile: undefined;
   CreateTrainingPlan: {
     fitnessProfileId: string;
+    goal?: "lose_weight" | "gain_muscle" | "maintain";
+    activityLevel?: "low" | "medium" | "high";
   };
-  Dashboard: undefined;
-  WorkoutHistory: undefined;
+  MainTabs: undefined;
   Workout: {
     trainingPlanId: string;
     workout: TodayWorkout;
@@ -39,7 +39,7 @@ export function AppNavigator() {
   if (status === "loading") {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color="#0f766e" />
+        <ActivityIndicator color="#22c55e" />
         <Text style={styles.loadingText}>Loading Elev9...</Text>
       </View>
     );
@@ -71,22 +71,9 @@ export function AppNavigator() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
-              name="Dashboard"
-              component={DashboardScreen}
+              name="MainTabs"
+              component={MainTabsScreen}
               options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="WorkoutHistory"
-              component={WorkoutHistoryScreen}
-              options={{
-                headerShown: true,
-                title: "Workout History",
-                headerStyle: {
-                  backgroundColor: "#020617",
-                },
-                headerTintColor: "#f8fafc",
-                headerShadowVisible: false,
-              }}
             />
             <Stack.Screen
               name="Workout"
@@ -119,11 +106,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#f3f7fb",
+    backgroundColor: "#020617",
     paddingHorizontal: 24,
   },
   loadingText: {
     marginTop: 14,
-    color: "#475569",
+    color: "#94a3b8",
   },
 });

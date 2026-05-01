@@ -18,6 +18,12 @@ export function CreateProfileScreen() {
 
   const trimmedName = name.trim();
   const isValid = trimmedName.length >= 2 && trimmedName.length <= 80;
+  const nameError =
+    name.length === 0
+      ? null
+      : !isValid
+        ? "Enter a name between 2 and 80 characters."
+        : null;
 
   async function handleCreateProfile() {
     if (!isValid) {
@@ -58,11 +64,18 @@ export function CreateProfileScreen() {
         </View>
 
         <Card style={styles.card}>
+          <View style={styles.sectionHeader}>
+            <Text variant="title">Profile details</Text>
+            <Text style={styles.sectionSubtitle}>
+              This is the name that will appear in your dashboard.
+            </Text>
+          </View>
           <Input
             label="Name"
             placeholder="Your name"
             value={name}
             onChangeText={setName}
+            errorMessage={nameError}
           />
 
           {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
@@ -107,6 +120,12 @@ const styles = StyleSheet.create({
   },
   card: {
     gap: 18,
+  },
+  sectionHeader: {
+    gap: 6,
+  },
+  sectionSubtitle: {
+    color: colors.mutedText,
   },
   error: {
     color: "#fca5a5",

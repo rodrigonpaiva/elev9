@@ -37,11 +37,13 @@ export function HomeResolverScreen() {
       if (!dashboard.trainingPlan) {
         navigation.replace("CreateTrainingPlan", {
           fitnessProfileId: dashboard.fitnessProfile.id,
+          goal: dashboard.fitnessProfile.goal,
+          activityLevel: dashboard.fitnessProfile.activityLevel,
         });
         return;
       }
 
-      navigation.replace("Dashboard");
+      navigation.replace("MainTabs");
     } catch (error) {
       if (
         error instanceof ApiClientError &&

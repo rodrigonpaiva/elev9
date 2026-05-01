@@ -11,14 +11,30 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ApiClientError } from "@elev9/api-client";
-import { Button, Card, colors, Screen, Text } from "@elev9/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Screen,
+  SectionHeader,
+  Text,
+} from "@elev9/ui";
 import type { DashboardHomeResponse, TodayWorkout } from "@elev9/types";
 
 import { apiClient } from "../api/client";
 import { useAuth } from "../auth/auth-provider";
 import type { RootStackParamList } from "../navigation/app-navigator";
 
-export function DashboardScreen() {
+type DashboardScreenProps = {
+  onOpenHistory?: () => void;
+  showLogout?: boolean;
+};
+
+export function DashboardScreen({
+  onOpenHistory,
+  showLogout = false,
+}: DashboardScreenProps) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut } = useAuth();
@@ -128,19 +144,22 @@ export function DashboardScreen() {
     >
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 0)]}>
         <Card style={styles.heroCard}>
-          <Text style={styles.eyebrow}>Elev9 Home</Text>
+          <Badge variant="primary" label="Elev9 Home" />
           <Text variant="headline" style={styles.heroTitle}>
             Welcome, {dashboard.user.name}
           </Text>
           <Text style={styles.heroSubtitle}>
-            Your home dashboard for training and progress.
+            Stay consistent with today&apos;s plan and your weekly momentum.
           </Text>
         </Card>
       </Animated.View>
 
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 1)]}>
         <Card style={styles.sectionCard}>
-          <Text variant="title">Weekly Progress</Text>
+          <SectionHeader
+            title="Weekly Progress"
+            subtitle="A quick view of your recent training output."
+          />
           <View style={styles.metricsGrid}>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Weekly workouts</Text>
@@ -176,7 +195,14 @@ export function DashboardScreen() {
 
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 2)]}>
         <Card style={styles.sectionCard}>
-          <Text variant="title">Today&apos;s Workout</Text>
+          <SectionHeader
+            title="Today&apos;s Workout"
+            subtitle={
+              trainingPlan && todayWorkout
+                ? "Ready when you are."
+                : "No workout is scheduled for today."
+            }
+          />
           {trainingPlan && todayWorkout ? (
             <Pressable
               onPress={() =>
@@ -188,16 +214,12 @@ export function DashboardScreen() {
               style={styles.workoutPressable}
             >
               <View style={styles.workoutContent}>
-                <Text style={styles.workoutTitle}>{todayWorkout.title}</Text>
-                <Text style={styles.metricValue}>
-                  Focus: {todayWorkout.focus}
-                </Text>
-                <Text style={styles.metricValue}>
-                  Format: {todayWorkout.format}
-                </Text>
-                <Text style={styles.metricValue}>
-                  Intensity: {todayWorkout.intensity}
-                </Text>
+                <View style={styles.workoutHeader}>
+                  <Text style={styles.workoutTitle}>{todayWorkout.title}</Text>
+                  <Badge label={todayWorkout.intensity} variant="muted" />
+                </View>
+                <Text style={styles.metricValue}>Focus: {todayWorkout.focus}</Text>
+                <Text style={styles.metricValue}>Format: {todayWorkout.format}</Text>
                 <Text style={styles.metricValue}>
                   Exercises: {todayWorkout.exercises.length}
                 </Text>
@@ -216,7 +238,10 @@ export function DashboardScreen() {
 
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 3)]}>
         <Card style={styles.sectionCard}>
-          <Text variant="title">Quick Actions</Text>
+          <SectionHeader
+            title="Quick Actions"
+            subtitle="Jump into the most useful parts of the app."
+          />
           <View style={styles.actionsGroup}>
             <Button
               label="Start Workout"
@@ -233,7 +258,7 @@ export function DashboardScreen() {
             />
             <Button
               label="View History"
-              onPress={() => navigation.navigate("WorkoutHistory")}
+              onPress={() => onOpenHistory?.()}
               variant="secondary"
               style={styles.fullButton}
             />
@@ -249,12 +274,14 @@ export function DashboardScreen() {
 
       {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
-      <Button
-        label="Logout"
-        onPress={() => void signOut()}
-        variant="secondary"
-        style={styles.fullButton}
-      />
+      {showLogout ? (
+        <Button
+          label="Logout"
+          onPress={() => void signOut()}
+          variant="secondary"
+          style={styles.fullButton}
+        />
+      ) : null}
     </Screen>
   );
 }
@@ -282,14 +309,7 @@ const styles = StyleSheet.create({
   heroCard: {
     backgroundColor: colors.surface,
     borderColor: colors.border,
-    gap: 8,
-  },
-  eyebrow: {
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 1.1,
-    textTransform: "uppercase",
-    color: colors.primary,
+    gap: 10,
   },
   heroTitle: {
     color: colors.text,
@@ -346,6 +366,12 @@ const styles = StyleSheet.create({
   },
   workoutContent: {
     gap: 8,
+  },
+  workoutHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
   },
   fallbackBox: {
     gap: 6,
