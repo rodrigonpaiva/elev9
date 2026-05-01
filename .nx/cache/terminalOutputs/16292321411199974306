@@ -1,8 +1,0 @@
-> node dist/apps/api/main.js
-
-(node:18065) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
-(Use `node --trace-warnings ...` to show where the warning was created)
-[Nest] 18065  - 04/30/2026, 8:28:37 PM     LOG [NestFactory] Starting Nest application...
-[Nest] 18065  - 04/30/2026, 8:28:37 PM     LOG [InstanceLoader] AppModule dependencies initialized +35ms
-[Nest] 18065  - 04/30/2026, 8:28:37 PM     LOG [InstanceLoader] MongooseModule dependencies initialized +0ms
-[Nest] 18065  - 04/30/2026, 8:28:37 PM     LOG [InstanceLoader] JwtModule dependencies initialized +0ms
