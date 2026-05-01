@@ -6,13 +6,23 @@ import type { TodayWorkout } from "@elev9/types";
 import { Text } from "@elev9/ui";
 
 import { useAuth } from "../auth/auth-provider";
+import { CreateFitnessProfileScreen } from "../screens/create-fitness-profile-screen";
+import { CreateProfileScreen } from "../screens/create-profile-screen";
+import { CreateTrainingPlanScreen } from "../screens/create-training-plan-screen";
 import { DashboardScreen } from "../screens/dashboard-screen";
+import { HomeResolverScreen } from "../screens/home-resolver-screen";
 import { LoginScreen } from "../screens/login-screen";
 import { WorkoutHistoryScreen } from "../screens/workout-history-screen";
 import { WorkoutScreen } from "../screens/workout-screen";
 
 export type RootStackParamList = {
   Login: undefined;
+  HomeResolver: undefined;
+  CreateProfile: undefined;
+  CreateFitnessProfile: undefined;
+  CreateTrainingPlan: {
+    fitnessProfileId: string;
+  };
   Dashboard: undefined;
   WorkoutHistory: undefined;
   Workout: {
@@ -40,6 +50,26 @@ export function AppNavigator() {
       <Stack.Navigator>
         {status === "authenticated" ? (
           <>
+            <Stack.Screen
+              name="HomeResolver"
+              component={HomeResolverScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CreateProfile"
+              component={CreateProfileScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CreateFitnessProfile"
+              component={CreateFitnessProfileScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CreateTrainingPlan"
+              component={CreateTrainingPlanScreen}
+              options={{ headerShown: false }}
+            />
             <Stack.Screen
               name="Dashboard"
               component={DashboardScreen}

@@ -3,8 +3,12 @@ import { Platform } from "react-native";
 import { createApiClient } from "@elev9/api-client";
 import { ApiClientError } from "@elev9/api-client";
 import type {
+  CreateUserProfileRequest,
+  FitnessProfileResponse,
   LogWorkoutRequest,
   LogWorkoutResponse,
+  TrainingPlanResponse,
+  UserProfileResponse,
   WorkoutHistoryResponse,
 } from "@elev9/types";
 
@@ -75,6 +79,48 @@ async function requestJson<T>(input: {
 
 export const mobileApiClient = {
   ...apiClient,
+  users: {
+    async createProfile(
+      input: CreateUserProfileRequest,
+    ): Promise<UserProfileResponse> {
+      return requestJson<UserProfileResponse>({
+        path: "/users/profile",
+        method: "POST",
+        body: input,
+      });
+    },
+  },
+  fitness: {
+    ...apiClient.fitness,
+    async createProfile(input: {
+      heightCm: number;
+      weightKg: number;
+      goal: "lose_weight" | "gain_muscle" | "maintain";
+      activityLevel: "low" | "medium" | "high";
+      trainingAvailability: {
+        daysPerWeek: number;
+        minutesPerSession: number;
+      };
+    }): Promise<FitnessProfileResponse> {
+      return requestJson<FitnessProfileResponse>({
+        path: "/fitness/profile",
+        method: "POST",
+        body: input,
+      });
+    },
+  },
+  training: {
+    ...apiClient.training,
+    async createPlan(input: {
+      fitnessProfileId: string;
+    }): Promise<TrainingPlanResponse> {
+      return requestJson<TrainingPlanResponse>({
+        path: "/training/plans",
+        method: "POST",
+        body: input,
+      });
+    },
+  },
   progress: {
     ...apiClient.progress,
     async logWorkout(input: LogWorkoutRequest): Promise<LogWorkoutResponse> {
