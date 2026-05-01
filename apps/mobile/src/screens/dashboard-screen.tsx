@@ -1,14 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Animated, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Animated,
+  Pressable,
+  StyleSheet,
+  View,
+} from "react-native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import { ApiClientError } from "@elev9/api-client";
 import { Button, Card, colors, Screen, Text } from "@elev9/ui";
-import type { DashboardHomeResponse } from "@elev9/types";
+import type { DashboardHomeResponse, TodayWorkout } from "@elev9/types";
 
 import { apiClient } from "../api/client";
 import { useAuth } from "../auth/auth-provider";
+import type { RootStackParamList } from "../navigation/app-navigator";
 
 export function DashboardScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut } = useAuth();
   const [dashboard, setDashboard] =
     useState<DashboardHomeResponse["dashboard"] | null>(null);
@@ -42,9 +53,11 @@ export function DashboardScreen() {
     }
   }, [signOut]);
 
-  useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadDashboard();
+    }, [loadDashboard]),
+  );
 
   useEffect(() => {
     if (!isLoading) {
@@ -86,84 +99,93 @@ export function DashboardScreen() {
     );
   }
 
+  const trainingPlan = dashboard.trainingPlan;
+  const todayWorkout = trainingPlan?.todayWorkout;
+
   return (
     <Screen contentStyle={styles.scrollContent} scroll>
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 0)]}>
-      <Card style={styles.heroCard}>
-        <Text style={styles.eyebrow}>
-          Elev9 Home
-        </Text>
-        <Text variant="headline" style={styles.heroTitle}>
-          Welcome, {dashboard.user.name}
-        </Text>
-        <Text style={styles.heroSubtitle}>
-          Your home dashboard for training and progress.
-        </Text>
-      </Card>
+        <Card style={styles.heroCard}>
+          <Text style={styles.eyebrow}>Elev9 Home</Text>
+          <Text variant="headline" style={styles.heroTitle}>
+            Welcome, {dashboard.user.name}
+          </Text>
+          <Text style={styles.heroSubtitle}>
+            Your home dashboard for training and progress.
+          </Text>
+        </Card>
       </Animated.View>
 
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 1)]}>
-      <Card style={styles.sectionCard}>
-        <Text variant="title">Fitness Profile</Text>
-        <Text style={styles.metricLabel}>Primary goal</Text>
-        <Text style={styles.metricValue}>
-          Goal: {dashboard.fitnessProfile?.goal ?? "Not created yet"}
-        </Text>
-        <Text style={styles.metricLabel}>Activity level</Text>
-        <Text style={styles.metricValue}>
-          Activity: {dashboard.fitnessProfile?.activityLevel ?? "Not created yet"}
-        </Text>
-      </Card>
+        <Card style={styles.sectionCard}>
+          <Text variant="title">Fitness Profile</Text>
+          <Text style={styles.metricLabel}>Primary goal</Text>
+          <Text style={styles.metricValue}>
+            Goal: {dashboard.fitnessProfile?.goal ?? "Not created yet"}
+          </Text>
+          <Text style={styles.metricLabel}>Activity level</Text>
+          <Text style={styles.metricValue}>
+            Activity: {dashboard.fitnessProfile?.activityLevel ?? "Not created yet"}
+          </Text>
+        </Card>
       </Animated.View>
 
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 2)]}>
-      <Card style={styles.sectionCard}>
-        <Text variant="title">Today&apos;s Workout</Text>
-        {dashboard.trainingPlan?.todayWorkout ? (
-          <View style={{ gap: 8 }}>
-            <Text style={styles.workoutTitle}>
-              {dashboard.trainingPlan.todayWorkout.title}
-            </Text>
-            <Text style={styles.metricValue}>
-              Focus: {dashboard.trainingPlan.todayWorkout.focus}
-            </Text>
-            <Text style={styles.metricValue}>
-              Format: {dashboard.trainingPlan.todayWorkout.format}
-            </Text>
-            <Text style={styles.metricValue}>
-              Intensity: {dashboard.trainingPlan.todayWorkout.intensity}
-            </Text>
-            <Text style={styles.metricValue}>
-              Exercises: {dashboard.trainingPlan.todayWorkout.exercises.length}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.fallbackBox}>
-            <Text style={styles.metricValue}>No training today</Text>
-            <Text style={styles.fallbackText}>
-              Your current plan does not include a session for today.
-            </Text>
-          </View>
-        )}
-      </Card>
+        <Card style={styles.sectionCard}>
+          <Text variant="title">Today&apos;s Workout</Text>
+          {trainingPlan && todayWorkout ? (
+            <Pressable
+              onPress={() =>
+                navigation.navigate("Workout", {
+                  trainingPlanId: trainingPlan.id,
+                  workout: todayWorkout as TodayWorkout,
+                })
+              }
+              style={styles.workoutPressable}
+            >
+              <View style={styles.workoutContent}>
+                <Text style={styles.workoutTitle}>{todayWorkout.title}</Text>
+                <Text style={styles.metricValue}>
+                  Focus: {todayWorkout.focus}
+                </Text>
+                <Text style={styles.metricValue}>
+                  Format: {todayWorkout.format}
+                </Text>
+                <Text style={styles.metricValue}>
+                  Intensity: {todayWorkout.intensity}
+                </Text>
+                <Text style={styles.metricValue}>
+                  Exercises: {todayWorkout.exercises.length}
+                </Text>
+              </View>
+            </Pressable>
+          ) : (
+            <View style={styles.fallbackBox}>
+              <Text style={styles.metricValue}>No training today</Text>
+              <Text style={styles.fallbackText}>
+                Your current plan does not include a session for today.
+              </Text>
+            </View>
+          )}
+        </Card>
       </Animated.View>
 
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 3)]}>
-      <Card style={styles.sectionCard}>
-        <Text variant="title">Weekly Summary</Text>
-        <Text style={styles.metricValue}>
-          Completed: {dashboard.progressSummary.workoutsCompleted}
-        </Text>
-        <Text style={styles.metricValue}>
-          Total Minutes: {dashboard.progressSummary.totalDurationMinutes}
-        </Text>
-        <Text style={styles.metricValue}>
-          Average Minutes: {dashboard.progressSummary.averageDurationMinutes}
-        </Text>
-        <Text style={styles.metricValue}>
-          Last Workout: {dashboard.progressSummary.lastWorkoutDate ?? "No activity yet"}
-        </Text>
-      </Card>
+        <Card style={styles.sectionCard}>
+          <Text variant="title">Weekly Summary</Text>
+          <Text style={styles.metricValue}>
+            Completed: {dashboard.progressSummary.workoutsCompleted}
+          </Text>
+          <Text style={styles.metricValue}>
+            Total Minutes: {dashboard.progressSummary.totalDurationMinutes}
+          </Text>
+          <Text style={styles.metricValue}>
+            Average Minutes: {dashboard.progressSummary.averageDurationMinutes}
+          </Text>
+          <Text style={styles.metricValue}>
+            Last Workout: {dashboard.progressSummary.lastWorkoutDate ?? "No activity yet"}
+          </Text>
+        </Card>
       </Animated.View>
 
       {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
@@ -235,6 +257,12 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontWeight: "700",
     color: colors.text,
+  },
+  workoutPressable: {
+    borderRadius: 18,
+  },
+  workoutContent: {
+    gap: 8,
   },
   fallbackBox: {
     gap: 6,

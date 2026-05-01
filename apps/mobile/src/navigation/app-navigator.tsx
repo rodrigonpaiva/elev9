@@ -2,15 +2,21 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
+import type { TodayWorkout } from "@elev9/types";
 import { Text } from "@elev9/ui";
 
 import { useAuth } from "../auth/auth-provider";
 import { DashboardScreen } from "../screens/dashboard-screen";
 import { LoginScreen } from "../screens/login-screen";
+import { WorkoutScreen } from "../screens/workout-screen";
 
-type RootStackParamList = {
+export type RootStackParamList = {
   Login: undefined;
   Dashboard: undefined;
+  Workout: {
+    trainingPlanId: string;
+    workout: TodayWorkout;
+  };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -31,11 +37,26 @@ export function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator>
         {status === "authenticated" ? (
-          <Stack.Screen
-            name="Dashboard"
-            component={DashboardScreen}
-            options={{ headerShown: false }}
-          />
+          <>
+            <Stack.Screen
+              name="Dashboard"
+              component={DashboardScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Workout"
+              component={WorkoutScreen}
+              options={{
+                headerShown: true,
+                title: "Workout",
+                headerStyle: {
+                  backgroundColor: "#020617",
+                },
+                headerTintColor: "#f8fafc",
+                headerShadowVisible: false,
+              }}
+            />
+          </>
         ) : (
           <Stack.Screen
             name="Login"

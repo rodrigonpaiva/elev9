@@ -39,3 +39,7 @@ export type DashboardHomeResponse = {
     };
   };
 };
+
+export type TodayWorkout = NonNullable<
+  NonNullable<DashboardHomeResponse["dashboard"]["trainingPlan"]>["todayWorkout"]
+>;

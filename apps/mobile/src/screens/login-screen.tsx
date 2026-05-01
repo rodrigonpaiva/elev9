@@ -5,7 +5,6 @@ import { ApiClientError } from "@elev9/api-client";
 import { Button, Card, Input, Screen, Text } from "@elev9/ui";
 import { colors } from "@elev9/ui";
 
-import { currentApiBaseUrl } from "../api/client";
 import { useAuth } from "../auth/auth-provider";
 
 export function LoginScreen() {
@@ -106,9 +105,6 @@ export function LoginScreen() {
             onPress={handleLogin}
             style={styles.button}
           />
-          {__DEV__ && errorMessage ? (
-            <Text style={styles.apiDebug}>API: {currentApiBaseUrl}</Text>
-          ) : null}
         </View>
       </Card>
       </Animated.View>
@@ -169,10 +165,5 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 4,
     width: "100%",
-  },
-  apiDebug: {
-    fontSize: 12,
-    lineHeight: 16,
-    color: colors.mutedText,
   },
 });

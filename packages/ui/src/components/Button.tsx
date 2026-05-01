@@ -55,7 +55,13 @@ export function Button({
     >
       <View style={styles.content}>
         {loading ? <ActivityIndicator color={spinnerColor(variant)} /> : null}
-        <Text style={[styles.label, labelStyleMap[variant]]}>
+        <Text
+          style={[
+            styles.label,
+            labelStyleMap[variant],
+            loading ? styles.labelWithSpinner : null,
+          ]}
+        >
           {resolvedLabel}
         </Text>
       </View>
@@ -94,7 +100,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 10,
     width: "100%",
   },
   label: {
@@ -102,8 +107,11 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
   },
+  labelWithSpinner: {
+    marginLeft: 10,
+  },
   labelPrimary: {
-    color: colors.ink,
+    color: colors.primaryText,
   },
   labelSecondary: {
     color: colors.text,
@@ -132,7 +140,7 @@ const labelStyleMap: Record<ButtonVariant, TextStyle> = {
 };
 
 function spinnerColor(variant: ButtonVariant): string {
-  return variant === "primary" ? colors.ink : colors.text;
+  return variant === "primary" ? colors.primaryText : colors.text;
 }
 
 function resolveLabel(input: {
