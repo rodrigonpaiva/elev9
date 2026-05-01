@@ -7,6 +7,8 @@ import {
   type TextStyle,
 } from "react-native";
 
+import { colors } from "../theme/colors";
+
 type TextVariant = "body" | "label" | "title" | "headline";
 
 export type TextProps = PropsWithChildren<
@@ -32,7 +34,7 @@ export function Text({
 
 const styles = StyleSheet.create({
   base: {
-    color: "#0f172a",
+    color: colors.text,
   },
   body: {
     fontSize: 16,
@@ -45,7 +47,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.8,
     textTransform: "uppercase",
-    color: "#475569",
+    color: colors.mutedText,
   },
   title: {
     fontSize: 22,

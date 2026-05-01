@@ -11,6 +11,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { colors } from "../theme/colors";
+import { spacing } from "../theme/spacing";
+
 export type ScreenProps = PropsWithChildren<{
   className?: string;
   contentClassName?: string;
@@ -61,7 +64,7 @@ export function Screen({
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#f3f7fb",
+    backgroundColor: colors.background,
   },
   rootWeb: {
     minHeight: "100%" as unknown as ViewStyle["minHeight"],
@@ -71,12 +74,12 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
   },
 });

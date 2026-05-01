@@ -7,6 +7,10 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { colors } from "../theme/colors";
+import { radius } from "../theme/radius";
+import { spacing } from "../theme/spacing";
+
 export type CardProps = PropsWithChildren<
   ViewProps & {
     className?: string;
@@ -23,18 +27,18 @@ export function Card({ children, style, ...props }: CardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 28,
+    borderRadius: radius.xl,
     borderWidth: 1,
-    borderColor: "#dbe4ef",
-    backgroundColor: "#ffffff",
-    padding: 20,
-    shadowColor: "#0f172a",
-    shadowOpacity: Platform.OS === "web" ? 0.08 : 0.12,
-    shadowRadius: 18,
+    borderColor: colors.border,
+    backgroundColor: colors.card,
+    padding: spacing.xl,
+    shadowColor: "#000000",
+    shadowOpacity: Platform.OS === "web" ? 0.18 : 0.24,
+    shadowRadius: 20,
     shadowOffset: {
       width: 0,
-      height: 10,
+      height: 14,
     },
-    elevation: 3,
+    elevation: 6,
   } satisfies ViewStyle,
 });

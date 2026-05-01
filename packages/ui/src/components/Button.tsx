@@ -1,16 +1,18 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
   View,
   type PressableProps,
-  type PressableStateCallbackType,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
 } from "react-native";
 
+import { colors } from "../theme/colors";
+import { radius } from "../theme/radius";
+import { spacing } from "../theme/spacing";
 import { Text } from "./Text";
 
 type ButtonVariant = "primary" | "secondary" | "ghost";
@@ -18,6 +20,7 @@ type ButtonVariant = "primary" | "secondary" | "ghost";
 export type ButtonProps = PropsWithChildren<
   Omit<PressableProps, "children" | "style"> & {
     label?: string;
+    title?: string;
     loading?: boolean;
     variant?: ButtonVariant;
     className?: string;
@@ -28,6 +31,7 @@ export type ButtonProps = PropsWithChildren<
 export function Button({
   disabled,
   label,
+  title,
   loading = false,
   children,
   variant = "primary",
@@ -35,6 +39,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const isDisabled = disabled || loading;
+  const resolvedLabel = resolveLabel({ label, title, children, loading });
 
   return (
     <Pressable
@@ -51,7 +56,7 @@ export function Button({
       <View style={styles.content}>
         {loading ? <ActivityIndicator color={spinnerColor(variant)} /> : null}
         <Text style={[styles.label, labelStyleMap[variant]]}>
-          {label ?? children}
+          {resolvedLabel}
         </Text>
       </View>
     </Pressable>
@@ -60,48 +65,57 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 56,
-    borderRadius: 18,
+    minHeight: 48,
+    minWidth: 160,
+    width: "100%",
+    alignSelf: "stretch",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: "transparent",
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
   },
   primary: {
-    backgroundColor: "#0f766e",
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   secondary: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: "#0f766e",
+    borderColor: colors.border,
   },
   ghost: {
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
   },
   content: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
+    width: "100%",
   },
   label: {
     fontSize: 16,
     fontWeight: "700",
+    textAlign: "center",
   },
   labelPrimary: {
-    color: "#ffffff",
+    color: colors.ink,
   },
   labelSecondary: {
-    color: "#0f766e",
+    color: colors.text,
   },
   labelGhost: {
-    color: "#475569",
+    color: colors.mutedText,
   },
   disabled: {
     opacity: 0.6,
   },
   pressed: {
-    transform: [{ scale: 0.99 }],
+    transform: [{ scale: 0.985 }],
   },
 });
 
@@ -118,5 +132,26 @@ const labelStyleMap: Record<ButtonVariant, TextStyle> = {
 };
 
 function spinnerColor(variant: ButtonVariant): string {
-  return variant === "primary" ? "#ffffff" : "#0f766e";
+  return variant === "primary" ? colors.ink : colors.text;
+}
+
+function resolveLabel(input: {
+  label?: string;
+  title?: string;
+  children?: ReactNode;
+  loading: boolean;
+}): string {
+  if (typeof input.children === "string" && input.children.trim().length > 0) {
+    return input.children;
+  }
+
+  if (input.title && input.title.trim().length > 0) {
+    return input.title;
+  }
+
+  if (input.label && input.label.trim().length > 0) {
+    return input.label;
+  }
+
+  return input.loading ? "Loading..." : "Button";
 }

@@ -8,6 +8,9 @@ import {
   type ViewStyle,
 } from "react-native";
 
+import { colors } from "../theme/colors";
+import { radius } from "../theme/radius";
+import { spacing } from "../theme/spacing";
 import { Text } from "./Text";
 
 export type InputProps = TextInputProps & {
@@ -44,17 +47,17 @@ const styles = StyleSheet.create({
   },
   input: {
     minHeight: 56,
-    borderRadius: 18,
+    borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: "#dbe4ef",
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 18,
-    paddingVertical: 14,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
     fontSize: 16,
-    color: "#0f172a",
+    color: colors.text,
   },
   error: {
-    color: "#dc2626",
+    color: colors.danger,
     fontSize: 14,
     lineHeight: 20,
   },

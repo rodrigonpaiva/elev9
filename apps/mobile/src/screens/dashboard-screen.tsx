@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Animated, StyleSheet, View } from "react-native";
 
 import { ApiClientError } from "@elev9/api-client";
-import { Button, Card, Screen, Text } from "@elev9/ui";
+import { Button, Card, colors, Screen, Text } from "@elev9/ui";
 import type { DashboardHomeResponse } from "@elev9/types";
 
 import { apiClient } from "../api/client";
@@ -14,6 +14,7 @@ export function DashboardScreen() {
     useState<DashboardHomeResponse["dashboard"] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const entrance = useRef(new Animated.Value(0)).current;
 
   const loadDashboard = useCallback(async () => {
     setIsLoading(true);
@@ -45,10 +46,21 @@ export function DashboardScreen() {
     void loadDashboard();
   }, [loadDashboard]);
 
+  useEffect(() => {
+    if (!isLoading) {
+      entrance.setValue(0);
+      Animated.timing(entrance, {
+        toValue: 1,
+        duration: 420,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [entrance, isLoading]);
+
   if (isLoading) {
     return (
       <Screen contentStyle={styles.loadingScreen}>
-        <ActivityIndicator color="#0f766e" />
+        <ActivityIndicator color={colors.primary} />
         <Text style={styles.loadingText}>Loading dashboard...</Text>
       </Screen>
     );
@@ -76,6 +88,7 @@ export function DashboardScreen() {
 
   return (
     <Screen contentStyle={styles.scrollContent} scroll>
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 0)]}>
       <Card style={styles.heroCard}>
         <Text style={styles.eyebrow}>
           Elev9 Home
@@ -87,7 +100,9 @@ export function DashboardScreen() {
           Your home dashboard for training and progress.
         </Text>
       </Card>
+      </Animated.View>
 
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 1)]}>
       <Card style={styles.sectionCard}>
         <Text variant="title">Fitness Profile</Text>
         <Text style={styles.metricLabel}>Primary goal</Text>
@@ -99,7 +114,9 @@ export function DashboardScreen() {
           Activity: {dashboard.fitnessProfile?.activityLevel ?? "Not created yet"}
         </Text>
       </Card>
+      </Animated.View>
 
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 2)]}>
       <Card style={styles.sectionCard}>
         <Text variant="title">Today&apos;s Workout</Text>
         {dashboard.trainingPlan?.todayWorkout ? (
@@ -129,7 +146,9 @@ export function DashboardScreen() {
           </View>
         )}
       </Card>
+      </Animated.View>
 
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 3)]}>
       <Card style={styles.sectionCard}>
         <Text variant="title">Weekly Summary</Text>
         <Text style={styles.metricValue}>
@@ -145,6 +164,7 @@ export function DashboardScreen() {
           Last Workout: {dashboard.progressSummary.lastWorkoutDate ?? "No activity yet"}
         </Text>
       </Card>
+      </Animated.View>
 
       {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
@@ -166,7 +186,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loadingText: {
-    color: "#475569",
+    color: colors.mutedText,
   },
   emptyScreen: {
     justifyContent: "center",
@@ -176,9 +196,12 @@ const styles = StyleSheet.create({
     gap: 18,
     paddingBottom: 32,
   },
+  animatedSection: {
+    width: "100%",
+  },
   heroCard: {
-    backgroundColor: "#0f172a",
-    borderColor: "#0f172a",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     gap: 8,
   },
   eyebrow: {
@@ -186,13 +209,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1.1,
     textTransform: "uppercase",
-    color: "#f59e0b",
+    color: colors.primary,
   },
   heroTitle: {
-    color: "#ffffff",
+    color: colors.text,
   },
   heroSubtitle: {
-    color: "#cbd5e1",
+    color: colors.mutedText,
   },
   sectionCard: {
     gap: 10,
@@ -202,33 +225,49 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 0.8,
     textTransform: "uppercase",
-    color: "#64748b",
+    color: colors.mutedText,
   },
   metricValue: {
-    color: "#334155",
+    color: colors.text,
   },
   workoutTitle: {
     fontSize: 18,
     lineHeight: 24,
     fontWeight: "700",
-    color: "#0f172a",
+    color: colors.text,
   },
   fallbackBox: {
     gap: 6,
     borderRadius: 18,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#0b1220",
     padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   fallbackText: {
-    color: "#64748b",
+    color: colors.mutedText,
   },
   error: {
-    color: "#dc2626",
+    color: "#fca5a5",
   },
   mutedText: {
-    color: "#475569",
+    color: colors.mutedText,
   },
   fullButton: {
     width: "100%",
   },
 });
+
+function animatedStyle(value: Animated.Value, index: number) {
+  return {
+    opacity: value,
+    transform: [
+      {
+        translateY: value.interpolate({
+          inputRange: [0, 1],
+          outputRange: [18 + index * 6, 0],
+        }),
+      },
+    ],
+  };
+}

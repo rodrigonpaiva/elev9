@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Animated, StyleSheet, View } from "react-native";
 
 import { ApiClientError } from "@elev9/api-client";
 import { Button, Card, Input, Screen, Text } from "@elev9/ui";
+import { colors } from "@elev9/ui";
 
+import { currentApiBaseUrl } from "../api/client";
 import { useAuth } from "../auth/auth-provider";
 
 export function LoginScreen() {
@@ -12,8 +14,17 @@ export function LoginScreen() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const entrance = useRef(new Animated.Value(0)).current;
 
-  async function handleSubmit() {
+  useEffect(() => {
+    Animated.timing(entrance, {
+      toValue: 1,
+      duration: 420,
+      useNativeDriver: true,
+    }).start();
+  }, [entrance]);
+
+  async function handleLogin() {
     setErrorMessage(null);
     setIsSubmitting(true);
 
@@ -31,7 +42,23 @@ export function LoginScreen() {
   }
 
   return (
-    <Screen contentStyle={styles.screenContent}>
+    <Screen contentStyle={styles.screenContent} scroll>
+      <Animated.View
+        style={[
+          styles.animatedBlock,
+          {
+            opacity: entrance,
+            transform: [
+              {
+                translateY: entrance.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [24, 0],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
       <View style={styles.hero}>
         <Text style={styles.eyebrow}>Performance coaching</Text>
         <Text variant="headline" style={styles.title}>
@@ -72,13 +99,19 @@ export function LoginScreen() {
 
         {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
-        <Button
-          label="Login"
-          loading={isSubmitting}
-          onPress={handleSubmit}
-          style={styles.button}
-        />
+        <View style={styles.buttonBlock}>
+          <Button
+            label="Sign in"
+            loading={isSubmitting}
+            onPress={handleLogin}
+            style={styles.button}
+          />
+          {__DEV__ && errorMessage ? (
+            <Text style={styles.apiDebug}>API: {currentApiBaseUrl}</Text>
+          ) : null}
+        </View>
       </Card>
+      </Animated.View>
     </Screen>
   );
 }
@@ -87,6 +120,11 @@ const styles = StyleSheet.create({
   screenContent: {
     justifyContent: "center",
     gap: 24,
+    paddingTop: 36,
+    paddingBottom: 36,
+  },
+  animatedBlock: {
+    gap: 22,
   },
   hero: {
     gap: 8,
@@ -97,13 +135,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1.1,
     textTransform: "uppercase",
-    color: "#0f766e",
+    color: colors.primary,
   },
   title: {
     maxWidth: 260,
+    color: colors.text,
   },
   subtitle: {
-    color: "#475569",
+    color: colors.mutedText,
     maxWidth: 340,
   },
   card: {
@@ -115,15 +154,25 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   formSubtitle: {
-    color: "#64748b",
+    color: colors.mutedText,
   },
   fields: {
     gap: 16,
   },
   error: {
-    color: "#dc2626",
+    color: "#fca5a5",
+  },
+  buttonBlock: {
+    gap: 10,
+    width: "100%",
   },
   button: {
     marginTop: 4,
+    width: "100%",
+  },
+  apiDebug: {
+    fontSize: 12,
+    lineHeight: 16,
+    color: colors.mutedText,
   },
 });
