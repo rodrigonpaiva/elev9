@@ -19,6 +19,8 @@
     "paths": {
       "@elev9/api-client": ["packages/api-client/src/index.ts"],
       "@elev9/api-client/*": ["packages/api-client/src/*"],
+      "@elev9/ui": ["packages/ui/src/index.ts"],
+      "@elev9/ui/*": ["packages/ui/src/*"],
       "@elev9/types": ["packages/types/src/index.ts"],
       "@elev9/types/*": ["packages/types/src/*"]
     }

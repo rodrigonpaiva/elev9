@@ -1,3 +1,5 @@
+import "./global.css";
+
 import { AuthProvider } from "./src/auth/auth-provider";
 import { AppNavigator } from "./src/navigation/app-navigator";
 

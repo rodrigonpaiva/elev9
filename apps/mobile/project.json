@@ -8,7 +8,21 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "apps/mobile",
-        "command": "npm run start"
+        "command": "expo start"
+      }
+    },
+    "run-android": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/mobile",
+        "command": "expo start --android"
+      }
+    },
+    "run-ios": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/mobile",
+        "command": "expo start --ios"
       }
     }
   }

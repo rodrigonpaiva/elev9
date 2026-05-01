@@ -4,11 +4,14 @@
     "slug": "elev9-mobile",
     "version": "0.1.0",
     "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
     "android": {},
-    "web": {}
+    "web": {
+      "bundler": "metro"
+    }
   }
 }

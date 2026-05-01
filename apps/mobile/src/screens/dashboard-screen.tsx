@@ -1,16 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  Button,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
-import type { DashboardHomeResponse } from "@elev9/types";
 import { ApiClientError } from "@elev9/api-client";
+import { Button, Card, Screen, Text } from "@elev9/ui";
+import type { DashboardHomeResponse } from "@elev9/types";
 
 import { apiClient } from "../api/client";
 import { useAuth } from "../auth/auth-provider";
@@ -54,97 +47,105 @@ export function DashboardScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.centered}>
-        <ActivityIndicator />
-      </SafeAreaView>
+      <Screen contentClassName="items-center justify-center gap-4 bg-panel">
+        <ActivityIndicator color="#0f766e" />
+        <Text className="text-slate">Loading dashboard...</Text>
+      </Screen>
     );
   }
 
   if (!dashboard) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <Text style={styles.error}>{errorMessage ?? "Dashboard unavailable."}</Text>
-          <Button onPress={() => void loadDashboard()} title="Retry" />
-          <Button onPress={() => void signOut()} title="Logout" />
-        </View>
-      </SafeAreaView>
+      <Screen contentClassName="justify-center gap-5 bg-panel">
+        <Card className="gap-4">
+          <Text variant="title">Dashboard unavailable</Text>
+          <Text className="text-slate">
+            {errorMessage ?? "Unable to load your home dashboard."}
+          </Text>
+        </Card>
+        <Button label="Retry" onPress={() => void loadDashboard()} />
+        <Button
+          label="Logout"
+          onPress={() => void signOut()}
+          variant="secondary"
+        />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Welcome, {dashboard.user.name}</Text>
-
-        <Text style={styles.sectionTitle}>Fitness</Text>
-        <Text>
-          Goal: {dashboard.fitnessProfile?.goal ?? "Not created"}
+    <Screen contentClassName="gap-5 bg-panel" scroll>
+      <Card className="gap-2 border-0 bg-ink">
+        <Text className="text-sm font-semibold uppercase tracking-[1.5px] text-accent">
+          Elev9 Home
         </Text>
-        <Text>
-          Activity: {dashboard.fitnessProfile?.activityLevel ?? "Not created"}
+        <Text variant="headline" className="text-white">
+          {dashboard.user.name}
         </Text>
+        <Text className="text-slate-200">
+          Your home dashboard for training and progress.
+        </Text>
+      </Card>
 
-        <Text style={styles.sectionTitle}>Today</Text>
+      <Card className="gap-3">
+        <Text variant="title">Fitness Profile</Text>
+        <Text className="text-slate">
+          Goal: {dashboard.fitnessProfile?.goal ?? "Not created yet"}
+        </Text>
+        <Text className="text-slate">
+          Activity: {dashboard.fitnessProfile?.activityLevel ?? "Not created yet"}
+        </Text>
+      </Card>
+
+      <Card className="gap-3">
+        <Text variant="title">Today&apos;s Workout</Text>
         {dashboard.trainingPlan?.todayWorkout ? (
-          <View>
-            <Text>{dashboard.trainingPlan.todayWorkout.title}</Text>
-            <Text>{dashboard.trainingPlan.todayWorkout.focus}</Text>
-            <Text>{dashboard.trainingPlan.todayWorkout.intensity}</Text>
-            <Text>
+          <View style={{ gap: 8 }}>
+            <Text className="text-lg font-semibold">
+              {dashboard.trainingPlan.todayWorkout.title}
+            </Text>
+            <Text className="text-slate">
+              Focus: {dashboard.trainingPlan.todayWorkout.focus}
+            </Text>
+            <Text className="text-slate">
+              Format: {dashboard.trainingPlan.todayWorkout.format}
+            </Text>
+            <Text className="text-slate">
+              Intensity: {dashboard.trainingPlan.todayWorkout.intensity}
+            </Text>
+            <Text className="text-slate">
               Exercises: {dashboard.trainingPlan.todayWorkout.exercises.length}
             </Text>
           </View>
         ) : (
-          <Text>Rest day</Text>
+          <Text className="text-slate">No training today</Text>
         )}
+      </Card>
 
-        <Text style={styles.sectionTitle}>Weekly Summary</Text>
-        <Text>Completed: {dashboard.progressSummary.workoutsCompleted}</Text>
-        <Text>
+      <Card className="gap-3">
+        <Text variant="title">Weekly Summary</Text>
+        <Text className="text-slate">
+          Completed: {dashboard.progressSummary.workoutsCompleted}
+        </Text>
+        <Text className="text-slate">
           Total Minutes: {dashboard.progressSummary.totalDurationMinutes}
         </Text>
-        <Text>
+        <Text className="text-slate">
           Average Minutes: {dashboard.progressSummary.averageDurationMinutes}
         </Text>
-        <Text>
-          Last Workout: {dashboard.progressSummary.lastWorkoutDate ?? "None"}
+        <Text className="text-slate">
+          Last Workout: {dashboard.progressSummary.lastWorkoutDate ?? "No activity yet"}
         </Text>
+      </Card>
 
-        {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+      {errorMessage ? <Text className="text-danger">{errorMessage}</Text> : null}
 
-        <Button onPress={() => void loadDashboard()} title="Refresh" />
-        <Button onPress={() => void signOut()} title="Logout" />
-      </ScrollView>
-    </SafeAreaView>
+      <Button label="Refresh" onPress={() => void loadDashboard()} />
+      <Button
+        label="Logout"
+        onPress={() => void signOut()}
+        variant="secondary"
+      />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  container: {
-    flexGrow: 1,
-    padding: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginTop: 12,
-  },
-  error: {
-    color: "#c00",
-  },
-});

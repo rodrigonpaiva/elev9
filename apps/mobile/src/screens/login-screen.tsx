@@ -1,15 +1,7 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Button,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
 
 import { ApiClientError } from "@elev9/api-client";
+import { Button, Card, Input, Screen, Text } from "@elev9/ui";
 
 import { useAuth } from "../auth/auth-provider";
 
@@ -38,64 +30,36 @@ export function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Elev9 Login</Text>
+    <Screen contentClassName="justify-center bg-panel">
+      <Card className="gap-5 border-0 bg-white px-6 py-8">
+        <Text variant="headline">Elev9</Text>
+        <Text className="text-slate">
+          Sign in to continue your training plan and weekly progress.
+        </Text>
 
-        <TextInput
+        <Input
           autoCapitalize="none"
           keyboardType="email-address"
+          label="Email"
           onChangeText={setEmail}
-          placeholder="Email"
-          style={styles.input}
+          placeholder="you@example.com"
           value={email}
         />
 
-        <TextInput
+        <Input
+          label="Password"
           onChangeText={setPassword}
           placeholder="Password"
           secureTextEntry
-          style={styles.input}
           value={password}
         />
 
-        {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <Text className="text-danger">{errorMessage}</Text>
+        ) : null}
 
-        {isSubmitting ? (
-          <ActivityIndicator />
-        ) : (
-          <Button onPress={handleSubmit} title="Login" />
-        )}
-      </View>
-    </SafeAreaView>
+        <Button label="Login" loading={isSubmitting} onPress={handleSubmit} />
+      </Card>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-    gap: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "600",
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  input: {
-    borderColor: "#ccc",
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  error: {
-    color: "#c00",
-  },
-});

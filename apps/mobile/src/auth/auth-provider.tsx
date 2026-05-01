@@ -7,16 +7,18 @@ import {
   useState,
 } from "react";
 
-import { apiClient, } from "../api/client";
+import { apiClient } from "../api/client";
 import {
   clearAccessToken,
   getAccessToken,
   setAccessToken,
 } from "../storage/token-storage";
 
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+
 type AuthContextValue = {
   accessToken: string | null;
-  isBootstrapping: boolean;
+  status: AuthStatus;
   signIn(input: { email: string; password: string }): Promise<void>;
   signOut(): Promise<void>;
 };
@@ -25,7 +27,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
-  const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [status, setStatus] = useState<AuthStatus>("loading");
 
   useEffect(() => {
     let isMounted = true;
@@ -35,7 +37,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       if (isMounted) {
         setAccessTokenState(token);
-        setIsBootstrapping(false);
+        setStatus(token ? "authenticated" : "unauthenticated");
       }
     })();
 
@@ -47,19 +49,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const value = useMemo<AuthContextValue>(
     () => ({
       accessToken,
-      isBootstrapping,
+      status,
       async signIn(input) {
         const response = await apiClient.auth.login(input);
 
         await setAccessToken(response.accessToken);
         setAccessTokenState(response.accessToken);
+        setStatus("authenticated");
       },
       async signOut() {
         await clearAccessToken();
         setAccessTokenState(null);
+        setStatus("unauthenticated");
       },
     }),
-    [accessToken, isBootstrapping],
+    [accessToken, status],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

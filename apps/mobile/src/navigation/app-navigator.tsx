@@ -2,6 +2,8 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { ActivityIndicator, View } from "react-native";
 
+import { Text } from "@elev9/ui";
+
 import { useAuth } from "../auth/auth-provider";
 import { DashboardScreen } from "../screens/dashboard-screen";
 import { LoginScreen } from "../screens/login-screen";
@@ -14,12 +16,21 @@ type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function AppNavigator() {
-  const { accessToken, isBootstrapping } = useAuth();
+  const { status } = useAuth();
 
-  if (isBootstrapping) {
+  if (status === "loading") {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator />
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#ffffff",
+          paddingHorizontal: 24,
+        }}
+      >
+        <ActivityIndicator color="#0f766e" />
+        <Text className="mt-4 text-slate">Loading Elev9...</Text>
       </View>
     );
   }
@@ -27,7 +38,7 @@ export function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {accessToken ? (
+        {status === "authenticated" ? (
           <Stack.Screen name="Dashboard" component={DashboardScreen} />
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} />

@@ -48,37 +48,42 @@ export function createHttpClient(
 
   return {
     async request<TResponse>(requestOptions: RequestOptions): Promise<TResponse> {
-      const token = options.getAccessToken
-        ? await options.getAccessToken()
-        : null;
+      try {
+        const token = options.getAccessToken
+          ? await options.getAccessToken()
+          : null;
 
-      const response = await fetch(`${normalizedBaseUrl}${requestOptions.path}`, {
-        method: requestOptions.method ?? "GET",
-        headers: {
-          ...(requestOptions.body ? { "Content-Type": "application/json" } : {}),
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...requestOptions.headers,
-        },
-        body:
-          requestOptions.body === undefined
-            ? undefined
-            : JSON.stringify(requestOptions.body),
-      });
+        const response = await fetch(`${normalizedBaseUrl}${requestOptions.path}`, {
+          method: requestOptions.method ?? "GET",
+          headers: {
+            ...(requestOptions.body ? { "Content-Type": "application/json" } : {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...requestOptions.headers,
+          },
+          body:
+            requestOptions.body === undefined
+              ? undefined
+              : JSON.stringify(requestOptions.body),
+        });
 
-      const payload = await parseJsonResponse(response);
+        const payload = await parseJsonResponse(response);
 
-      if (!response.ok) {
-        const errorPayload = isErrorPayload(payload) ? payload : {};
+        if (!response.ok) {
+          throw createApiClientError(response.status, payload);
+        }
+
+        return payload as TResponse;
+      } catch (error) {
+        if (error instanceof ApiClientError) {
+          throw error;
+        }
 
         throw new ApiClientError({
-          code: errorPayload.code ?? "API_ERROR",
-          message: errorPayload.message ?? "API request failed.",
-          status: response.status,
-          details: errorPayload.details,
+          code: "NETWORK_ERROR",
+          message: "Unable to reach the Elev9 API.",
+          status: 0,
         });
       }
-
-      return payload as TResponse;
     },
   };
 }
@@ -94,9 +99,58 @@ async function parseJsonResponse(response: Response): Promise<unknown> {
     return null;
   }
 
-  return JSON.parse(text) as unknown;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return text;
+  }
 }
 
 function isErrorPayload(value: unknown): value is ErrorPayload {
   return typeof value === "object" && value !== null;
+}
+
+function createApiClientError(status: number, payload: unknown): ApiClientError {
+  const errorPayload = isErrorPayload(payload) ? payload : {};
+
+  return new ApiClientError({
+    code: errorPayload.code ?? defaultErrorCode(status),
+    message: errorPayload.message ?? defaultErrorMessage(status),
+    status,
+    details: errorPayload.details,
+  });
+}
+
+function defaultErrorCode(status: number): string {
+  switch (status) {
+    case 400:
+      return "BAD_REQUEST";
+    case 401:
+      return "UNAUTHORIZED";
+    case 403:
+      return "FORBIDDEN";
+    case 404:
+      return "NOT_FOUND";
+    case 409:
+      return "CONFLICT";
+    default:
+      return "API_ERROR";
+  }
+}
+
+function defaultErrorMessage(status: number): string {
+  switch (status) {
+    case 400:
+      return "Invalid request.";
+    case 401:
+      return "Authentication required.";
+    case 403:
+      return "You do not have access to this resource.";
+    case 404:
+      return "Requested resource was not found.";
+    case 409:
+      return "The request conflicts with current data.";
+    default:
+      return "API request failed.";
+  }
 }
