@@ -10,6 +10,7 @@ import { useAuth } from "../auth/auth-provider";
 
 export function DashboardScreen() {
   const { signOut } = useAuth();
+  console.log("DashboardScreen rendered");
   const [dashboard, setDashboard] =
     useState<DashboardHomeResponse["dashboard"] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

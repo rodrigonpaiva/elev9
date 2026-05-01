@@ -7,6 +7,7 @@ import { useAuth } from "../auth/auth-provider";
 
 export function LoginScreen() {
   const { signIn } = useAuth();
+  console.log("LoginScreen rendered");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

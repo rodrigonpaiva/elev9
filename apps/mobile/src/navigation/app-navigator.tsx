@@ -17,6 +17,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function AppNavigator() {
   const { status } = useAuth();
+  console.log("Navigator rendered");
 
   if (status === "loading") {
     return (
@@ -27,6 +28,7 @@ export function AppNavigator() {
           justifyContent: "center",
           backgroundColor: "#ffffff",
           paddingHorizontal: 24,
+          minHeight: "100%",
         }}
       >
         <ActivityIndicator color="#0f766e" />

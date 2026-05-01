@@ -29,15 +29,23 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
 
+  console.log("AuthProvider mounted");
+
   useEffect(() => {
     let isMounted = true;
 
     void (async () => {
-      const token = await getAccessToken();
+      let nextToken: string | null = null;
 
-      if (isMounted) {
-        setAccessTokenState(token);
-        setStatus(token ? "authenticated" : "unauthenticated");
+      try {
+        nextToken = await getAccessToken();
+      } catch (error) {
+        console.error("AuthProvider bootstrap error:", error);
+      } finally {
+        if (isMounted) {
+          setAccessTokenState(nextToken);
+          setStatus(nextToken ? "authenticated" : "unauthenticated");
+        }
       }
     })();
 
@@ -45,6 +53,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    console.log(`AuthProvider state: ${status}`);
+  }, [status]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
