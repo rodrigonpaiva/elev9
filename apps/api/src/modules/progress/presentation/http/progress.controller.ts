@@ -17,6 +17,11 @@ import {
 
 import { AuthSessionGuard } from "../../../users/presentation/http/guards/auth-session.guard";
 import {
+  GET_WORKOUT_HISTORY_ERROR_CODES,
+  GetWorkoutHistoryError,
+} from "../../application/use-cases/get-workout-history/get-workout-history.errors";
+import { GetWorkoutHistoryUseCase } from "../../application/use-cases/get-workout-history/get-workout-history.use-case";
+import {
   GET_PROGRESS_SUMMARY_ERROR_CODES,
   GetProgressSummaryError,
 } from "../../application/use-cases/get-progress-summary/get-progress-summary.errors";
@@ -28,6 +33,8 @@ import {
 import { LogWorkoutUseCase } from "../../application/use-cases/log-workout/log-workout.use-case";
 import { GetProgressSummaryQueryDto } from "./dto/get-progress-summary.query.dto";
 import { GetProgressSummaryResponseDto } from "./dto/get-progress-summary.response.dto";
+import { GetWorkoutHistoryQueryDto } from "./dto/get-workout-history.query.dto";
+import { GetWorkoutHistoryResponseDto } from "./dto/get-workout-history.response.dto";
 import { LogWorkoutRequestDto } from "./dto/log-workout.request.dto";
 import { LogWorkoutResponseDto } from "./dto/log-workout.response.dto";
 
@@ -39,12 +46,14 @@ type RequestWithAuthUser = {
 };
 
 class GetProgressSummaryBodyDto {}
+class GetWorkoutHistoryBodyDto {}
 
 @Controller("progress")
 export class ProgressController {
   constructor(
     private readonly logWorkoutUseCase: LogWorkoutUseCase,
     private readonly getProgressSummaryUseCase: GetProgressSummaryUseCase,
+    private readonly getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
   ) {}
 
   @Post("workout-logs")
@@ -106,6 +115,28 @@ export class ProgressController {
       };
     } catch (error) {
       this.handleGetProgressSummaryError(error);
+    }
+  }
+
+  @Get("workout-logs")
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getWorkoutHistory(
+    @Req() request: RequestWithAuthUser,
+    @Query() query: GetWorkoutHistoryQueryDto,
+    @Body() _body: GetWorkoutHistoryBodyDto,
+  ): Promise<GetWorkoutHistoryResponseDto> {
+    try {
+      const result = await this.getWorkoutHistoryUseCase.execute({
+        authUserId: request.authUser?.id ?? "",
+        limit: query.limit,
+      });
+
+      return {
+        workoutLogs: result.workoutLogs,
+      };
+    } catch (error) {
+      this.handleGetWorkoutHistoryError(error);
     }
   }
 
@@ -179,6 +210,40 @@ export class ProgressController {
       default:
         throw new InternalServerErrorException({
           code: GET_PROGRESS_SUMMARY_ERROR_CODES.INTERNAL_ERROR,
+          message: "An unexpected error occurred.",
+        });
+    }
+  }
+
+  private handleGetWorkoutHistoryError(error: unknown): never {
+    if (!(error instanceof GetWorkoutHistoryError)) {
+      throw new InternalServerErrorException("An unexpected error occurred.");
+    }
+
+    switch (error.code) {
+      case GET_WORKOUT_HISTORY_ERROR_CODES.INVALID_INPUT:
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_WORKOUT_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+      case GET_WORKOUT_HISTORY_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_WORKOUT_HISTORY_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_WORKOUT_HISTORY_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: GET_WORKOUT_HISTORY_ERROR_CODES.INTERNAL_ERROR,
           message: "An unexpected error occurred.",
         });
     }

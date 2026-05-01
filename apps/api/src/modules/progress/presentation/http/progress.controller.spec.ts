@@ -6,6 +6,11 @@ import {
 } from "@nestjs/common";
 
 import {
+  GET_WORKOUT_HISTORY_ERROR_CODES,
+  GetWorkoutHistoryError,
+} from "../../application/use-cases/get-workout-history/get-workout-history.errors";
+import { GetWorkoutHistoryUseCase } from "../../application/use-cases/get-workout-history/get-workout-history.use-case";
+import {
   GET_PROGRESS_SUMMARY_ERROR_CODES,
   GetProgressSummaryError,
 } from "../../application/use-cases/get-progress-summary/get-progress-summary.errors";
@@ -20,6 +25,7 @@ import { ProgressController } from "./progress.controller";
 describe("ProgressController", () => {
   let logWorkoutUseCase: jest.Mocked<LogWorkoutUseCase>;
   let getProgressSummaryUseCase: jest.Mocked<GetProgressSummaryUseCase>;
+  let getWorkoutHistoryUseCase: jest.Mocked<GetWorkoutHistoryUseCase>;
   let controller: ProgressController;
 
   beforeEach(() => {
@@ -29,10 +35,14 @@ describe("ProgressController", () => {
     getProgressSummaryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetProgressSummaryUseCase>;
+    getWorkoutHistoryUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetWorkoutHistoryUseCase>;
 
     controller = new ProgressController(
       logWorkoutUseCase,
       getProgressSummaryUseCase,
+      getWorkoutHistoryUseCase,
     );
   });
 
@@ -282,6 +292,115 @@ describe("ProgressController", () => {
 
     await expect(
       controller.getSummary(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        {},
+        {},
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("returns the safe workout history response on success", async () => {
+    getWorkoutHistoryUseCase.execute.mockResolvedValue({
+      workoutLogs: [
+        {
+          id: "log_123",
+          trainingPlanId: "training_plan_123",
+          workoutDayIndex: 1,
+          durationMinutes: 45,
+          completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+          feedback: { difficulty: "medium", notes: "Good session" },
+          date: "2026-04-30",
+          createdAt: "2026-04-30T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const result = await controller.getWorkoutHistory(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      { limit: 20 },
+      {},
+    );
+
+    expect(result).toEqual({
+      workoutLogs: [
+        {
+          id: "log_123",
+          trainingPlanId: "training_plan_123",
+          workoutDayIndex: 1,
+          durationMinutes: 45,
+          completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+          feedback: { difficulty: "medium", notes: "Good session" },
+          date: "2026-04-30",
+          createdAt: "2026-04-30T10:00:00.000Z",
+        },
+      ],
+    });
+  });
+
+  it("maps invalid history query to HTTP 400", async () => {
+    getWorkoutHistoryUseCase.execute.mockRejectedValue(
+      new GetWorkoutHistoryError(
+        GET_WORKOUT_HISTORY_ERROR_CODES.INVALID_INPUT,
+        "Invalid workout history input.",
+      ),
+    );
+
+    await expect(
+      controller.getWorkoutHistory(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        { limit: 100 },
+        {},
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("maps missing fitness profile on history to HTTP 404", async () => {
+    getWorkoutHistoryUseCase.execute.mockRejectedValue(
+      new GetWorkoutHistoryError(
+        GET_WORKOUT_HISTORY_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
+        "Fitness profile not found.",
+      ),
+    );
+
+    await expect(
+      controller.getWorkoutHistory(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        {},
+        {},
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("maps invalid session on history to HTTP 401", async () => {
+    getWorkoutHistoryUseCase.execute.mockRejectedValue(
+      new GetWorkoutHistoryError(
+        GET_WORKOUT_HISTORY_ERROR_CODES.INVALID_SESSION,
+        "Invalid session.",
+      ),
+    );
+
+    await expect(
+      controller.getWorkoutHistory(
         {
           authUser: {
             id: "auth_user_123",

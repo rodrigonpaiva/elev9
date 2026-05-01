@@ -19,6 +19,10 @@ export interface WorkoutLogRepository {
     workoutDayIndex: number;
     date: string;
   }): Promise<WorkoutLog | null>;
+  findByTrainingPlanIdsOrdered(input: {
+    trainingPlanIds: string[];
+    limit: number;
+  }): Promise<WorkoutLog[]>;
   findByTrainingPlanIdsAndDateRange(input: {
     trainingPlanIds: string[];
     startDate: string;

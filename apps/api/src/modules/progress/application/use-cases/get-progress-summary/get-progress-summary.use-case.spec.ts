@@ -37,6 +37,7 @@ describe("GetProgressSummaryUseCase", () => {
     };
     workoutLogRepository = {
       findByTrainingPlanDayAndDate: jest.fn(),
+      findByTrainingPlanIdsOrdered: jest.fn(),
       findByTrainingPlanIdsAndDateRange: jest.fn(),
       create: jest.fn(),
     };

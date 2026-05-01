@@ -66,6 +66,28 @@ export class MongooseWorkoutLogRepository implements WorkoutLogRepository {
     return documents.map((document) => this.toEntity(document as WorkoutLogDocument));
   }
 
+  async findByTrainingPlanIdsOrdered(input: {
+    trainingPlanIds: string[];
+    limit: number;
+  }): Promise<WorkoutLog[]> {
+    if (input.trainingPlanIds.length === 0) {
+      return [];
+    }
+
+    const documents = await this.workoutLogModel
+      .find({
+        trainingPlanId: { $in: input.trainingPlanIds },
+      })
+      .sort({
+        date: -1,
+        createdAt: -1,
+      })
+      .limit(input.limit)
+      .exec();
+
+    return documents.map((document) => this.toEntity(document as WorkoutLogDocument));
+  }
+
   async create(input: CreateWorkoutLogRepositoryInput): Promise<WorkoutLog> {
     try {
       const document = await this.workoutLogModel.create(input);
