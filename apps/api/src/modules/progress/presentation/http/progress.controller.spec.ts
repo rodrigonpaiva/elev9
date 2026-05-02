@@ -209,6 +209,7 @@ describe("ProgressController", () => {
         totalDurationMinutes: 155,
         averageDurationMinutes: 51.67,
         lastWorkoutDate: "2026-04-30",
+        currentStreak: 4,
       },
     });
 
@@ -232,6 +233,7 @@ describe("ProgressController", () => {
         totalDurationMinutes: 155,
         averageDurationMinutes: 51.67,
         lastWorkoutDate: "2026-04-30",
+        currentStreak: 4,
       },
     });
   });

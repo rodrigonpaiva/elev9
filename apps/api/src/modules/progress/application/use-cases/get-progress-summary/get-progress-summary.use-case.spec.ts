@@ -103,6 +103,7 @@ describe("GetProgressSummaryUseCase", () => {
         totalDurationMinutes: 0,
         averageDurationMinutes: 0,
         lastWorkoutDate: null,
+        currentStreak: 0,
       },
     });
     expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).not.toHaveBeenCalled();
@@ -130,6 +131,7 @@ describe("GetProgressSummaryUseCase", () => {
 
     expect(result.summary.workoutsCompleted).toBe(0);
     expect(result.summary.lastWorkoutDate).toBeNull();
+    expect(result.summary.currentStreak).toBe(0);
   });
 
   it("filters week logs inside the last 7 UTC days", async () => {
@@ -230,6 +232,7 @@ describe("GetProgressSummaryUseCase", () => {
     });
 
     expect(result.summary.averageDurationMinutes).toBe(52.5);
+    expect(result.summary.currentStreak).toBe(2);
   });
 
   it("ignores logs from other trainingPlanIds by repository filter", async () => {
@@ -264,6 +267,7 @@ describe("GetProgressSummaryUseCase", () => {
     });
 
     expect(result.summary.workoutsCompleted).toBe(1);
+    expect(result.summary.currentStreak).toBe(1);
     expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).toHaveBeenCalledWith({
       trainingPlanIds: ["training_123"],
       startDate: "2026-04-24",
@@ -313,6 +317,51 @@ describe("GetProgressSummaryUseCase", () => {
     });
 
     expect(result.summary.lastWorkoutDate).toBe("2026-04-30");
+    expect(result.summary.currentStreak).toBe(2);
+  });
+
+  it("breaks the current streak when there is a missing day", async () => {
+    mockActiveScope();
+    trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
+      new TrainingPlan({
+        id: "training_123",
+        fitnessProfileId: "fitness_123",
+        goal: "gain_muscle",
+        activityLevel: "medium",
+        weeklySchedule: [],
+        status: "active",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    );
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      new WorkoutLog({
+        id: "log_1",
+        trainingPlanId: "training_123",
+        workoutDayIndex: 1,
+        durationMinutes: 40,
+        completedExercises: [],
+        date: "2026-04-30",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+      new WorkoutLog({
+        id: "log_2",
+        trainingPlanId: "training_123",
+        workoutDayIndex: 2,
+        durationMinutes: 35,
+        completedExercises: [],
+        date: "2026-04-28",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    ]);
+
+    const result = await useCase.execute({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.summary.currentStreak).toBe(1);
   });
 
   it("returns USER_PROFILE_NOT_FOUND when user profile is missing", async () => {

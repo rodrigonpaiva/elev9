@@ -20,7 +20,11 @@ import {
   SectionHeader,
   Text,
 } from "@elev9/ui";
-import type { DashboardHomeResponse, TodayWorkout } from "@elev9/types";
+import type {
+  DashboardHomeResponse,
+  ProgressSummaryResponse,
+  TodayWorkout,
+} from "@elev9/types";
 
 import { apiClient } from "../api/client";
 import { useAuth } from "../auth/auth-provider";
@@ -43,6 +47,7 @@ export function DashboardScreen({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentStreak, setCurrentStreak] = useState<number>(0);
   const entrance = useRef(new Animated.Value(0)).current;
 
   const loadDashboard = useCallback(async (options?: { refresh?: boolean }) => {
@@ -54,8 +59,13 @@ export function DashboardScreen({
     setErrorMessage(null);
 
     try {
-      const response = await apiClient.dashboard.getHome();
+      const [response, progressSummary] = await Promise.all([
+        apiClient.dashboard.getHome(),
+        apiClient.progress.getSummary("week"),
+      ]);
+
       setDashboard(response.dashboard);
+      setCurrentStreak(progressSummary.summary.currentStreak);
     } catch (error) {
       if (
         error instanceof ApiClientError &&
@@ -151,6 +161,14 @@ export function DashboardScreen({
           <Text style={styles.heroSubtitle}>
             Stay consistent with today&apos;s plan and your weekly momentum.
           </Text>
+          <View style={styles.streakBanner}>
+            <Text style={styles.streakBannerLabel}>🔥 Current streak</Text>
+            <Text style={styles.streakBannerValue}>
+              {currentStreak === 0
+                ? "Start your first streak today"
+                : `${currentStreak} day${currentStreak === 1 ? "" : "s"}`}
+            </Text>
+          </View>
         </Card>
       </Animated.View>
 
@@ -175,6 +193,12 @@ export function DashboardScreen({
             </View>
           </View>
           <View style={styles.metricsGrid}>
+            <View style={[styles.metricCard, styles.metricCardAccent]}>
+              <Text style={styles.metricLabel}>🔥 Streak</Text>
+              <Text style={styles.metricHighlight}>
+                {currentStreak} day{currentStreak === 1 ? "" : "s"}
+              </Text>
+            </View>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Last workout</Text>
               <Text style={styles.metricSecondary}>
@@ -183,6 +207,8 @@ export function DashboardScreen({
                   : "No activity yet"}
               </Text>
             </View>
+          </View>
+          <View style={styles.metricsGrid}>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Fitness goal</Text>
               <Text style={styles.metricSecondary}>
@@ -317,6 +343,26 @@ const styles = StyleSheet.create({
   heroSubtitle: {
     color: colors.mutedText,
   },
+  streakBanner: {
+    gap: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    backgroundColor: colors.card,
+    padding: 14,
+  },
+  streakBannerLabel: {
+    color: colors.primary,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  streakBannerValue: {
+    color: colors.text,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "800",
+  },
   sectionCard: {
     gap: 10,
   },
@@ -332,6 +378,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: "#0b1220",
     padding: 14,
+  },
+  metricCardAccent: {
+    borderColor: colors.primary,
   },
   metricLabel: {
     fontSize: 12,

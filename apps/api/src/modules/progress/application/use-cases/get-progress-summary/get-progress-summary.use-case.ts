@@ -18,6 +18,7 @@ import {
   GET_PROGRESS_SUMMARY_ERROR_CODES,
   GetProgressSummaryError,
 } from "./get-progress-summary.errors";
+import { calculateStreak } from "./calculate-streak";
 import { GetProgressSummaryInput } from "./get-progress-summary.input";
 import { GetProgressSummaryOutput } from "./get-progress-summary.output";
 
@@ -109,6 +110,7 @@ export class GetProgressSummaryUseCase {
         (latest, log) => (latest === null || log.date > latest ? log.date : latest),
         null as string | null,
       );
+      const currentStreak = calculateStreak(workoutLogs);
 
       return {
         summary: {
@@ -117,6 +119,7 @@ export class GetProgressSummaryUseCase {
           totalDurationMinutes,
           averageDurationMinutes,
           lastWorkoutDate,
+          currentStreak,
         },
       };
     } catch (error) {
@@ -176,6 +179,7 @@ export class GetProgressSummaryUseCase {
         totalDurationMinutes: 0,
         averageDurationMinutes: 0,
         lastWorkoutDate: null,
+        currentStreak: 0,
       },
     };
   }

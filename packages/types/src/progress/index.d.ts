@@ -5,5 +5,6 @@ export type ProgressSummaryResponse = {
         totalDurationMinutes: number;
         averageDurationMinutes: number;
         lastWorkoutDate: string | null;
+        currentStreak: number;
     };
 };

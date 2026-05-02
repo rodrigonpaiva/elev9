@@ -191,6 +191,18 @@ export function ProgressSummaryScreen() {
               </View>
             </Card>
 
+            <Card style={styles.streakCard}>
+              <Text style={styles.streakLabel}>🔥 Current streak</Text>
+              <Text style={styles.streakValue}>
+                {summary.currentStreak} day{summary.currentStreak === 1 ? "" : "s"}
+              </Text>
+              <Text style={styles.streakCopy}>
+                {summary.currentStreak === 0
+                  ? "Start your first streak today."
+                  : "Keep the momentum going with another session today."}
+              </Text>
+            </Card>
+
             <View style={styles.metricsGrid}>
               <MetricCard
                 label="Workouts completed"
@@ -309,6 +321,26 @@ const styles = StyleSheet.create({
   overviewCard: {
     gap: 14,
     backgroundColor: colors.card,
+  },
+  streakCard: {
+    gap: 8,
+    backgroundColor: colors.surface,
+    borderColor: colors.primary,
+  },
+  streakLabel: {
+    color: colors.primary,
+    fontSize: 14,
+    lineHeight: 18,
+    fontWeight: "700",
+  },
+  streakValue: {
+    color: colors.text,
+    fontSize: 32,
+    lineHeight: 36,
+    fontWeight: "800",
+  },
+  streakCopy: {
+    color: colors.mutedText,
   },
   highlightRow: {
     flexDirection: "row",

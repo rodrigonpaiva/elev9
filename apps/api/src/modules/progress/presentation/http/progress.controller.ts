@@ -111,6 +111,7 @@ export class ProgressController {
           totalDurationMinutes: result.summary.totalDurationMinutes,
           averageDurationMinutes: result.summary.averageDurationMinutes,
           lastWorkoutDate: result.summary.lastWorkoutDate,
+          currentStreak: result.summary.currentStreak,
         },
       };
     } catch (error) {
