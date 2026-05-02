@@ -15,7 +15,7 @@ import { radius } from "../theme/radius";
 import { spacing } from "../theme/spacing";
 import { Text } from "./Text";
 
-type ButtonVariant = "primary" | "secondary" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 
 export type ButtonProps = PropsWithChildren<
   Omit<PressableProps, "children" | "style"> & {
@@ -96,6 +96,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderColor: colors.border,
   },
+  danger: {
+    backgroundColor: colors.danger,
+    borderColor: colors.danger,
+  },
   content: {
     flexDirection: "row",
     alignItems: "center",
@@ -119,6 +123,9 @@ const styles = StyleSheet.create({
   labelGhost: {
     color: colors.mutedText,
   },
+  labelDanger: {
+    color: colors.text,
+  },
   disabled: {
     opacity: 0.6,
   },
@@ -131,12 +138,14 @@ const containerStyleMap: Record<ButtonVariant, ViewStyle> = {
   primary: styles.primary,
   secondary: styles.secondary,
   ghost: styles.ghost,
+  danger: styles.danger,
 };
 
 const labelStyleMap: Record<ButtonVariant, TextStyle> = {
   primary: styles.labelPrimary,
   secondary: styles.labelSecondary,
   ghost: styles.labelGhost,
+  danger: styles.labelDanger,
 };
 
 function spinnerColor(variant: ButtonVariant): string {

@@ -64,9 +64,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setStatus("authenticated");
       },
       async signOut() {
-        await clearAccessToken();
-        setAccessTokenState(null);
-        setStatus("unauthenticated");
+        setStatus("loading");
+
+        try {
+          await clearAccessToken();
+        } finally {
+          setAccessTokenState(null);
+          setStatus("unauthenticated");
+        }
       },
     }),
     [accessToken, status],
