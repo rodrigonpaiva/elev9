@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
-  FlatList,
+  RefreshControl,
   StyleSheet,
   View,
 } from "react-native";
@@ -10,7 +10,15 @@ import { useFocusEffect } from "@react-navigation/native";
 
 import { ApiClientError } from "@elev9/api-client";
 import type { WorkoutHistoryResponse } from "@elev9/types";
-import { Button, Card, colors, Screen, Text } from "@elev9/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  Screen,
+  SectionHeader,
+  Text,
+} from "@elev9/ui";
 
 import { mobileApiClient } from "../api/client";
 
@@ -21,11 +29,17 @@ const INITIAL_LIMIT = 20;
 export function WorkoutHistoryScreen() {
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const entrance = useRef(new Animated.Value(0)).current;
 
-  const loadWorkoutHistory = useCallback(async () => {
-    setIsLoading(true);
+  const loadWorkoutHistory = useCallback(async (options?: { refresh?: boolean }) => {
+    if (options?.refresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+
     setErrorMessage(null);
 
     try {
@@ -40,7 +54,11 @@ export function WorkoutHistoryScreen() {
         setErrorMessage("Unable to load workout history.");
       }
     } finally {
-      setIsLoading(false);
+      if (options?.refresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -62,10 +80,22 @@ export function WorkoutHistoryScreen() {
   }, [entrance, isLoading]);
 
   return (
-    <Screen contentStyle={styles.content}>
+    <Screen
+      contentStyle={styles.content}
+      scroll
+      scrollProps={{
+        refreshControl: (
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => void loadWorkoutHistory({ refresh: true })}
+            tintColor={colors.primary}
+          />
+        ),
+      }}
+    >
       <Animated.View
         style={[
-          styles.animatedBlock,
+          styles.stack,
           {
             opacity: entrance,
             transform: [
@@ -79,15 +109,15 @@ export function WorkoutHistoryScreen() {
           },
         ]}
       >
-        <View style={styles.header}>
-          <Text style={styles.eyebrow}>Progress</Text>
+        <Card style={styles.heroCard}>
+          <Badge label="History" variant="primary" />
           <Text variant="headline" style={styles.title}>
             Workout History
           </Text>
           <Text style={styles.subtitle}>
-            Review your recent training sessions.
+            Review your recent sessions, duration and perceived effort.
           </Text>
-        </View>
+        </Card>
 
         {isLoading ? (
           <View style={styles.loadingState}>
@@ -108,40 +138,64 @@ export function WorkoutHistoryScreen() {
           <Card style={styles.feedbackCard}>
             <Text variant="title">No workouts yet</Text>
             <Text style={styles.subtitle}>
-              Complete your first session to start building your history.
+              Finish your first session and it will appear here with duration,
+              difficulty and exercise details.
             </Text>
           </Card>
         ) : (
-          <FlatList
-            data={workoutLogs}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <Card style={styles.itemCard}>
-                <View style={styles.itemHeader}>
-                  <Text style={styles.itemDate}>{formatDate(item.date)}</Text>
-                  <Text style={styles.itemDuration}>
-                    {item.durationMinutes} min
-                  </Text>
+          <View style={styles.listContent}>
+            <SectionHeader
+              title="Recent sessions"
+              subtitle={`${workoutLogs.length} logged workout${workoutLogs.length > 1 ? "s" : ""}.`}
+            />
+            {workoutLogs.map((item) => (
+              <Card key={item.id} style={styles.itemCard}>
+                <View style={styles.itemTop}>
+                  <View style={styles.itemTitleBlock}>
+                    <Text style={styles.itemDate}>{formatDate(item.date)}</Text>
+                    <Text style={styles.itemDay}>
+                      Workout Day {item.workoutDayIndex + 1}
+                    </Text>
+                  </View>
+                  <Badge label={`${item.durationMinutes} min`} variant="primary" />
                 </View>
-                <Text style={styles.itemTitle}>
-                  Workout Day {item.workoutDayIndex}
-                </Text>
-                <Text style={styles.itemMeta}>
-                  Exercises: {item.completedExercises.length}
-                </Text>
-                {item.feedback?.difficulty ? (
-                  <Text style={styles.itemMeta}>
-                    Difficulty: {capitalize(item.feedback.difficulty)}
-                  </Text>
+
+                <View style={styles.metricRow}>
+                  <MetricPill
+                    label="Difficulty"
+                    value={
+                      item.feedback?.difficulty
+                        ? capitalize(item.feedback.difficulty)
+                        : "Not rated"
+                    }
+                  />
+                  <MetricPill
+                    label="Exercises"
+                    value={String(item.completedExercises.length)}
+                  />
+                </View>
+
+                {item.feedback?.notes ? (
+                  <View style={styles.notesBox}>
+                    <Text style={styles.notesLabel}>Notes</Text>
+                    <Text style={styles.notesText}>{item.feedback.notes}</Text>
+                  </View>
                 ) : null}
               </Card>
-            )}
-          />
+            ))}
+          </View>
         )}
       </Animated.View>
     </Screen>
+  );
+}
+
+function MetricPill({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.metricPill}>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricValue}>{value}</Text>
+    </View>
   );
 }
 
@@ -149,6 +203,7 @@ function formatDate(value: string): string {
   const date = new Date(`${value}T00:00:00.000Z`);
 
   return new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -162,21 +217,14 @@ function capitalize(value: string): string {
 
 const styles = StyleSheet.create({
   content: {
-    paddingBottom: 0,
+    paddingBottom: 32,
   },
-  animatedBlock: {
-    flex: 1,
+  stack: {
     gap: 18,
   },
-  header: {
-    gap: 8,
-  },
-  eyebrow: {
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 1.1,
-    textTransform: "uppercase",
-    color: colors.primary,
+  heroCard: {
+    gap: 10,
+    backgroundColor: colors.surface,
   },
   title: {
     color: colors.text,
@@ -185,7 +233,7 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
   },
   loadingState: {
-    flex: 1,
+    minHeight: 260,
     alignItems: "center",
     justifyContent: "center",
     gap: 12,
@@ -197,40 +245,82 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   errorText: {
-    color: "#fca5a5",
+    color: colors.danger,
   },
   fullButton: {
     width: "100%",
   },
   listContent: {
     gap: 14,
-    paddingBottom: 32,
   },
   itemCard: {
-    gap: 8,
+    gap: 14,
+    backgroundColor: colors.card,
   },
-  itemHeader: {
+  itemTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 12,
+  },
+  itemTitleBlock: {
+    flex: 1,
+    gap: 4,
   },
   itemDate: {
     color: colors.text,
-    fontSize: 16,
+    fontSize: 18,
+    lineHeight: 24,
     fontWeight: "700",
   },
-  itemDuration: {
-    color: colors.primary,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  itemTitle: {
-    color: colors.text,
-    fontSize: 15,
+  itemDay: {
+    color: colors.mutedText,
     fontWeight: "600",
   },
-  itemMeta: {
+  metricRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  metricPill: {
+    flex: 1,
+    gap: 4,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    padding: 14,
+  },
+  metricLabel: {
     color: colors.mutedText,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  metricValue: {
+    color: colors.text,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "700",
+  },
+  notesBox: {
+    gap: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    padding: 14,
+  },
+  notesLabel: {
+    color: colors.mutedText,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  notesText: {
+    color: colors.text,
   },
 });
