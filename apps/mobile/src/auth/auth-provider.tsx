@@ -8,7 +8,7 @@ import {
 } from "react";
 
 import { ApiClientError } from "@elev9/api-client";
-import type { LoginUserResponse } from "@elev9/types";
+import type { LoginUserResponse, TrainingPlanResponse } from "@elev9/types";
 
 import { apiClient, mobileApiClient } from "../api/client";
 import {
@@ -150,6 +150,8 @@ async function ensureDemoWorkspace(): Promise<void> {
   if (!dashboard.trainingPlan) {
     await createTrainingPlanIfNeeded(dashboard.fitnessProfile.id);
   }
+
+  await ensureDemoWorkoutHistory();
 }
 
 async function getDashboardOrNull() {
@@ -223,6 +225,55 @@ async function createTrainingPlanIfNeeded(
       throw error;
     }
   }
+}
+
+async function ensureDemoWorkoutHistory(): Promise<void> {
+  const history = await mobileApiClient.progress.getWorkoutHistory(50);
+
+  if (history.workoutLogs.length > 0) {
+    return;
+  }
+
+  const dashboard = await apiClient.dashboard.getHome();
+  const trainingPlanResponse = await apiClient.training.getCurrentPlan();
+  const trainingPlan = trainingPlanResponse.trainingPlan;
+  const targetWorkout =
+    dashboard.dashboard.trainingPlan?.todayWorkout ??
+    trainingPlan.weeklySchedule[0] ??
+    null;
+
+  if (!targetWorkout) {
+    return;
+  }
+
+  try {
+    await mobileApiClient.progress.logWorkout({
+      trainingPlanId: trainingPlan.id,
+      workoutDayIndex: targetWorkout.dayIndex,
+      durationMinutes: 42,
+      completedExercises: targetWorkout.exercises.map((exercise) => ({
+        name: exercise.name,
+        setsDone: exercise.sets,
+        repsDone: parseReps(exercise.reps),
+      })),
+      feedback: {
+        difficulty: "medium",
+        notes: "Demo workout completed to unlock progress and history views.",
+      },
+    });
+  } catch (error) {
+    if (
+      !(error instanceof ApiClientError) ||
+      error.code !== "WORKOUT_LOG_ALREADY_EXISTS"
+    ) {
+      throw error;
+    }
+  }
+}
+
+function parseReps(reps: string): number {
+  const match = reps.match(/\d+/);
+  return match ? Number(match[0]) : 10;
 }
 
 async function persistSession(
