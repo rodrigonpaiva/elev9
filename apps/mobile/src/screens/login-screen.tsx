@@ -7,12 +7,16 @@ import { colors } from "@elev9/ui";
 
 import { useAuth } from "../auth/auth-provider";
 
+const isDemoModeEnabled =
+  __DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === "true";
+
 export function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, signInDemo } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
   const entrance = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -37,6 +41,23 @@ export function LoginScreen() {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleDemoLogin() {
+    setErrorMessage(null);
+    setIsDemoSubmitting(true);
+
+    try {
+      await signInDemo();
+    } catch (error) {
+      if (error instanceof ApiClientError) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to start demo mode.");
+      }
+    } finally {
+      setIsDemoSubmitting(false);
     }
   }
 
@@ -105,6 +126,15 @@ export function LoginScreen() {
             onPress={handleLogin}
             style={styles.button}
           />
+          {isDemoModeEnabled ? (
+            <Button
+              label="Try demo"
+              loading={isDemoSubmitting}
+              onPress={handleDemoLogin}
+              variant="secondary"
+              style={styles.button}
+            />
+          ) : null}
         </View>
       </Card>
       </Animated.View>

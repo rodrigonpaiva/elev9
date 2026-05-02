@@ -7,7 +7,10 @@ import {
   useState,
 } from "react";
 
-import { apiClient } from "../api/client";
+import { ApiClientError } from "@elev9/api-client";
+import type { LoginUserResponse } from "@elev9/types";
+
+import { apiClient, mobileApiClient } from "../api/client";
 import {
   clearAccessToken,
   getAccessToken,
@@ -20,10 +23,17 @@ type AuthContextValue = {
   accessToken: string | null;
   status: AuthStatus;
   signIn(input: { email: string; password: string }): Promise<void>;
+  signInDemo(): Promise<void>;
   signOut(): Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const DEMO_CREDENTIALS = {
+  name: "Demo Athlete",
+  email: "demo@elev9.com",
+  password: "StrongPassword123",
+} as const;
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
@@ -57,11 +67,24 @@ export function AuthProvider({ children }: PropsWithChildren) {
       accessToken,
       status,
       async signIn(input) {
-        const response = await apiClient.auth.login(input);
+        await persistSession(
+          await apiClient.auth.login(input),
+          setAccessTokenState,
+          setStatus,
+        );
+      },
+      async signInDemo() {
+        setStatus("loading");
 
-        await setAccessToken(response.accessToken);
-        setAccessTokenState(response.accessToken);
-        setStatus("authenticated");
+        try {
+          const response = await loginOrProvisionDemoUser();
+          await persistSession(response, setAccessTokenState, setStatus);
+          await ensureDemoWorkspace();
+        } catch (error) {
+          setAccessTokenState(null);
+          setStatus("unauthenticated");
+          throw error;
+        }
       },
       async signOut() {
         setStatus("loading");
@@ -78,6 +101,138 @@ export function AuthProvider({ children }: PropsWithChildren) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+async function loginOrProvisionDemoUser(): Promise<LoginUserResponse> {
+  try {
+    return await apiClient.auth.login(DEMO_CREDENTIALS);
+  } catch (error) {
+    if (
+      !(error instanceof ApiClientError) ||
+      error.code !== "INVALID_CREDENTIALS"
+    ) {
+      throw error;
+    }
+  }
+
+  try {
+    await apiClient.auth.register(DEMO_CREDENTIALS);
+  } catch (error) {
+    if (
+      !(error instanceof ApiClientError) ||
+      error.code !== "EMAIL_ALREADY_EXISTS"
+    ) {
+      throw error;
+    }
+  }
+
+  return apiClient.auth.login(DEMO_CREDENTIALS);
+}
+
+async function ensureDemoWorkspace(): Promise<void> {
+  let dashboard = await getDashboardOrNull();
+
+  if (!dashboard) {
+    await createProfileIfNeeded();
+    dashboard = (await apiClient.dashboard.getHome()).dashboard;
+  }
+
+  if (!dashboard.fitnessProfile) {
+    const response = await createFitnessProfileIfNeeded();
+
+    if (!dashboard.trainingPlan) {
+      await createTrainingPlanIfNeeded(response.fitnessProfile.id);
+    }
+
+    return;
+  }
+
+  if (!dashboard.trainingPlan) {
+    await createTrainingPlanIfNeeded(dashboard.fitnessProfile.id);
+  }
+}
+
+async function getDashboardOrNull() {
+  try {
+    const response = await apiClient.dashboard.getHome();
+    return response.dashboard;
+  } catch (error) {
+    if (
+      error instanceof ApiClientError &&
+      error.code === "USER_PROFILE_NOT_FOUND"
+    ) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+async function createProfileIfNeeded(): Promise<void> {
+  try {
+    await mobileApiClient.users.createProfile({
+      name: DEMO_CREDENTIALS.name,
+    });
+  } catch (error) {
+    if (
+      !(error instanceof ApiClientError) ||
+      error.code !== "USER_PROFILE_ALREADY_EXISTS"
+    ) {
+      throw error;
+    }
+  }
+}
+
+async function createFitnessProfileIfNeeded() {
+  try {
+    return await mobileApiClient.fitness.createProfile({
+      heightCm: 178,
+      weightKg: 76,
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      trainingAvailability: {
+        daysPerWeek: 4,
+        minutesPerSession: 50,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof ApiClientError &&
+      error.code === "FITNESS_PROFILE_ALREADY_EXISTS"
+    ) {
+      const existingProfile = await apiClient.fitness.getMyProfile();
+      return {
+        fitnessProfile: existingProfile.fitnessProfile,
+      };
+    }
+
+    throw error;
+  }
+}
+
+async function createTrainingPlanIfNeeded(
+  fitnessProfileId: string,
+): Promise<void> {
+  try {
+    await mobileApiClient.training.createPlan({ fitnessProfileId });
+  } catch (error) {
+    if (
+      !(error instanceof ApiClientError) ||
+      error.code !== "TRAINING_PLAN_ALREADY_EXISTS"
+    ) {
+      throw error;
+    }
+  }
+}
+
+async function persistSession(
+  response: LoginUserResponse,
+  setAccessTokenState: (value: string | null) => void,
+  setStatus: (value: AuthStatus) => void,
+): Promise<void> {
+  await setAccessToken(response.accessToken);
+  setAccessTokenState(response.accessToken);
+  setStatus("authenticated");
 }
 
 export function useAuth(): AuthContextValue {
