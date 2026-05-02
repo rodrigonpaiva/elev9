@@ -56,7 +56,15 @@ Additional architectural notes live in [docs/architecture/overview.en.md](/Users
 npm install
 ```
 
-### 2. Configure environment variables
+### 2. Start MongoDB with Docker Compose
+
+```bash
+docker compose up -d
+```
+
+This starts a local MongoDB on port `27017` with a persistent Docker volume.
+
+### 3. Configure environment variables
 
 Backend:
 
@@ -67,7 +75,8 @@ cp .env.example .env
 Set at least:
 
 - `PORT=3000`
-- `MONGODB_URI=<your MongoDB connection string>`
+- `MONGODB_URI=mongodb://localhost:27017/elev9`
+- `JWT_SECRET=change-me`
 
 Mobile:
 
@@ -78,20 +87,26 @@ cp apps/mobile/.env.example apps/mobile/.env
 Set:
 
 - `EXPO_PUBLIC_API_URL=http://YOUR_LOCAL_IP:3000`
+- `EXPO_PUBLIC_DEMO_MODE=true`
 
-### 3. Start the backend
+Important:
+
+- On a physical phone, do not use `localhost`
+- Use your computer local network IP instead, for example `http://192.168.1.20:3000`
+
+### 4. Start the backend
 
 ```bash
 npm run start
 ```
 
-### 4. Start the mobile app
+### 5. Start the mobile app
 
 ```bash
 npm run mobile:start
 ```
 
-### 5. Run tests
+### 6. Run tests
 
 ```bash
 npm run test
