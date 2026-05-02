@@ -79,3 +79,7 @@ coverage/
 *.swp
 .claude/worktrees
 .claude/settings.local.json
+
+# Next.js
+.next
+out
