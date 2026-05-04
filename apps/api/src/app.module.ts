@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
+import { AiModule } from "./modules/ai/ai.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { FitnessModule } from "./modules/fitness/fitness.module";
@@ -24,6 +25,7 @@ function getMongoDbUri(): string {
 @Module({
   imports: [
     MongooseModule.forRoot(getMongoDbUri()),
+    AiModule,
     AuthModule,
     DashboardModule,
     FitnessModule,
