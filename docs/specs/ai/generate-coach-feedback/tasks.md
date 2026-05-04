@@ -14,6 +14,11 @@ Estrutura sugerida:
 
 ```txt
 src/modules/ai/
+  domain/
+    entities/
+      coach-feedback.entity.ts
+    repositories/
+      coach-feedback.repository.ts
   application/
     services/
       coach-feedback/
@@ -29,6 +34,10 @@ src/modules/ai/
       ai.controller.ts
       dto/
         generate-coach-feedback.response.dto.ts
+  infrastructure/
+    mongoose/
+      coach-feedback.schema.ts
+      mongoose-coach-feedback.repository.ts
 ```
 
 ---
@@ -40,7 +49,8 @@ src/modules/ai/
 - [ ] Reuse `TrainingPlanRepository`
 - [ ] Reuse `WorkoutLogRepository`
 - [ ] Reuse or align with `ProgressSummary` aggregation
-- [ ] Define read-only invariants for AI Coach MVP
+- [ ] Define no-mutation invariants for fitness/training/progress data
+- [ ] Create `CoachFeedback` entity and repository contract
 
 ---
 
@@ -67,6 +77,8 @@ src/modules/ai/
 - [ ] Generate `message`
 - [ ] Generate `insights`
 - [ ] Generate `recommendations`
+- [ ] Persist `CoachFeedback` after successful generation
+- [ ] Fail request if `CoachFeedback` persistence fails
 - [ ] Enforce message priority order
 - [ ] Enforce output size limits
 - [ ] Return safe output
@@ -80,8 +92,9 @@ src/modules/ai/
 - [ ] Reuse `MongooseFitnessProfileRepository`
 - [ ] Reuse `MongooseTrainingPlanRepository`
 - [ ] Reuse `MongooseWorkoutLogRepository`
+- [ ] Create Mongoose persistence for `CoachFeedback`
 - [ ] Reuse progress aggregation logic when possible
-- [ ] Keep infrastructure read-only for this flow
+- [ ] Keep existing modules untouched except for required `CoachFeedback` persistence
 
 ---
 
@@ -121,6 +134,8 @@ src/modules/ai/
 - [ ] Unit test: fitness profile not found
 - [ ] Unit test: invalid input
 - [ ] Unit test: internal failure
+- [ ] Unit test: feedback persistence on success
+- [ ] Unit test: persistence failure
 - [ ] Unit test: message priority order
 - [ ] Unit test: output length limits
 - [ ] HTTP test: safe response shape
@@ -163,7 +178,8 @@ O use-case está pronto quando:
 - [ ] output respeita limites de tamanho
 - [ ] response não retorna dados sensíveis
 - [ ] nenhuma IA externa é usada
-- [ ] nenhuma mutação de dados ocorre
+- [ ] nenhuma mutação ocorre em `FitnessProfile`, `TrainingPlan` ou `WorkoutLogs`
+- [ ] `CoachFeedback` é persistido com sucesso
 - [ ] testes principais passam
 
 ---

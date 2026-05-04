@@ -33,17 +33,19 @@ Nenhuma resolução por ids externos deve ser aceita.
 
 ---
 
-## 3. Read-Only Rules
+## 3. Mutation Rules
 
-### RULE-003 — No data mutation
+### RULE-003 — No mutation of user fitness/training/progress data
 
 O use-case não pode:
 
-- criar entidades
-- atualizar entidades
-- deletar entidades
+- alterar `FitnessProfile`
+- alterar `TrainingPlan`
+- alterar `WorkoutLogs`
 
-Ele opera apenas em leitura + geração de texto.
+A única escrita permitida no MVP é:
+
+- criar `CoachFeedback`
 
 ### RULE-004 — No external AI in MVP
 
@@ -54,9 +56,15 @@ O MVP não pode chamar:
 
 A geração deve ser local e determinística.
 
-### RULE-005 — No persistence of generated feedback
+### RULE-005 — Successful feedback must be persisted
 
-O feedback gerado não deve ser salvo em banco no MVP.
+Feedback gerado com sucesso deve ser persistido como `CoachFeedback`.
+
+Se a persistência falhar:
+
+- o `POST` deve falhar inteiro
+- retornar `AI_COACH_INTERNAL_ERROR`
+- nunca retornar feedback não persistido
 
 ### RULE-006 — No Nutrition access in MVP
 
@@ -303,6 +311,12 @@ O MVP não deve produzir:
 ### RULE-033 — Keep module DDD-lite and isolated
 
 O contexto `AI` deve apenas orquestrar leitura e geração textual, sem romper os limites do modular monolith.
+
+Com a decisão atual do MVP:
+
+- leitura dos dados de treino/progresso
+- geração textual determinística
+- persistência de `CoachFeedback`
 
 ---
 

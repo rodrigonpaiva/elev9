@@ -6,7 +6,7 @@ O use-case `generate-coach-feedback` retorna um feedback textual inteligente par
 
 No MVP, este use-case pertence ao `AI Context`, mas não usa LLM externo. A geração é feita por regras determinísticas baseadas em dados já existentes do usuário.
 
-O objetivo é entregar uma camada inicial de coaching orientada por progresso sem alterar dados nem introduzir dependências externas de IA.
+O objetivo é entregar uma camada inicial de coaching orientada por progresso sem alterar dados de fitness, treino ou progresso, sem introduzir dependências externas de IA e persistindo o feedback gerado como `CoachFeedback`.
 
 ---
 
@@ -54,6 +54,7 @@ Incluído:
 - resolver `WorkoutLogs` recentes
 - reaproveitar cálculo de resumo/progresso
 - gerar `message`, `insights` e `recommendations`
+- persistir `CoachFeedback` após geração bem-sucedida
 - responder mesmo com poucos dados
 - responder com mensagem motivacional quando não houver logs
 
@@ -61,7 +62,6 @@ Não incluído:
 
 - integração com OpenAI
 - chat multi-turn
-- armazenamento de feedback gerado
 - personalização por histórico longo
 - alteração de `WorkoutLogs`, `TrainingPlans` ou perfis
 - side effects em outros contextos
@@ -82,11 +82,14 @@ Não incluído:
 
 Após sucesso:
 
-- nenhum dado é alterado
-- nenhuma entidade é criada
+- nenhum dado de `FitnessProfile`, `TrainingPlan` ou `WorkoutLog` é alterado
+- um `CoachFeedback` é criado e persistido
 - um payload textual de coaching é retornado
 
-Nenhum outro contexto é modificado.
+Se a persistência falhar:
+
+- o endpoint falha com `AI_COACH_INTERNAL_ERROR`
+- nenhum feedback não persistido é retornado
 
 ---
 
@@ -98,6 +101,7 @@ Nenhum outro contexto é modificado.
 - `TrainingPlan`
 - `WorkoutLog`
 - `ProgressSummary`
+- `CoachFeedback`
 
 ---
 
@@ -111,6 +115,7 @@ Nenhum outro contexto é modificado.
 - `progress/log-workout`
 - `progress/get-workout-history`
 - `progress/get-progress-summary`
+- `ai/get-coach-feedback-history`
 
 ---
 
@@ -135,8 +140,9 @@ Decisões fechadas para o MVP:
 - o endpoint é protegido por JWT/AuthGuard
 - `authUserId` vem exclusivamente da sessão
 - o cliente não envia dados de treino no body
-- o use-case opera apenas em leitura
 - a geração é determinística e baseada em regras simples
+- feedback gerado com sucesso deve ser persistido como `CoachFeedback`
+- se a persistência falhar, retornar `AI_COACH_INTERNAL_ERROR`
 - o sistema deve responder mesmo com poucos dados
 - ausência de logs retorna coaching inicial motivacional
 - nenhuma IA externa é usada no MVP
@@ -150,5 +156,6 @@ O use-case deve priorizar:
 - resolução exclusiva via sessão
 - reaproveitamento dos dados atuais do produto
 - resposta segura e motivadora
-- zero mutação de dados
+- nenhuma mutação de dados de fitness, treino ou progresso
+- persistência obrigatória de `CoachFeedback`
 - arquitetura pronta para evolução futura com IA real

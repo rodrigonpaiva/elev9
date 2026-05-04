@@ -109,6 +109,12 @@ Observações:
 - o sistema deve responder mesmo com poucos dados
 - se não houver logs, o payload ainda deve ser válido
 
+Postcondition:
+
+- após sucesso, um `CoachFeedback` deve estar persistido
+- essa persistência não altera o response shape
+- ela é apenas uma postcondition obrigatória do `POST /ai/coach-feedback`
+
 ---
 
 ## 7. Success Response Example
@@ -293,4 +299,5 @@ O contrato do MVP é intencionalmente fechado:
 - body com campos extras é inválido
 - output textual simples e seguro
 - sem IA externa
-- sem mutação de dados
+- sem mutação de dados de fitness, treino ou progresso
+- com persistência obrigatória de `CoachFeedback`

@@ -23,7 +23,8 @@ No MVP, o fluxo termina com a leitura do contexto do usuário e a geração dete
 10. Build derived coaching metrics
 11. Generate deterministic insights
 12. Generate deterministic recommendations
-13. Return safe coach feedback
+13. Persist CoachFeedback
+14. Return safe coach feedback
 ```
 
 ---
@@ -188,7 +189,16 @@ Prioridade obrigatória da mensagem principal:
 5. `inconsistent`
 6. fallback motivacional
 
-### Step 13 — Return Safe Coach Feedback
+### Step 13 — Persist CoachFeedback
+
+Antes de retornar sucesso:
+
+- persistir `CoachFeedback` com `userProfileId`
+- salvar `message`, `insights`, `recommendations` e `createdAt`
+- se a persistência falhar, não retornar o feedback
+- falhar o `POST` com `AI_COACH_INTERNAL_ERROR`
+
+### Step 14 — Return Safe Coach Feedback
 
 Retornar apenas:
 
@@ -263,7 +273,7 @@ Se o cliente enviar body com qualquer campo funcional ou extra:
 O fluxo do MVP deve ser:
 
 - autenticado
-- read-only
 - determinístico
+- com persistência obrigatória de `CoachFeedback`
 - resiliente a poucos dados
 - pronto para futura substituição do gerador por LLM real

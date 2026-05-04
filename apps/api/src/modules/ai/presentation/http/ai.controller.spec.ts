@@ -6,6 +6,11 @@ import {
 } from "@nestjs/common";
 
 import {
+  GET_COACH_FEEDBACK_HISTORY_ERROR_CODES,
+  GetCoachFeedbackHistoryError,
+} from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
+import { GetCoachFeedbackHistoryUseCase } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
+import {
   GENERATE_COACH_FEEDBACK_ERROR_CODES,
   GenerateCoachFeedbackError,
 } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors";
@@ -14,14 +19,21 @@ import { AiController } from "./ai.controller";
 
 describe("AiController", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
+  let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
   let controller: AiController;
 
   beforeEach(() => {
     generateCoachFeedbackUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GenerateCoachFeedbackUseCase>;
+    getCoachFeedbackHistoryUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCoachFeedbackHistoryUseCase>;
 
-    controller = new AiController(generateCoachFeedbackUseCase);
+    controller = new AiController(
+      generateCoachFeedbackUseCase,
+      getCoachFeedbackHistoryUseCase,
+    );
   });
 
   it("returns the safe response on success", async () => {
@@ -140,5 +152,58 @@ describe("AiController", () => {
         {},
       ),
     ).rejects.toBeInstanceOf(InternalServerErrorException);
+  });
+
+  it("returns feedback history", async () => {
+    getCoachFeedbackHistoryUseCase.execute.mockResolvedValue({
+      feedbacks: [
+        {
+          id: "feedback_001",
+          message: "Great consistency this week.",
+          insights: ["You trained 4 times this week"],
+          recommendations: ["Keep your current rhythm"],
+          createdAt: "2026-05-04T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const result = await controller.getCoachFeedbackHistory(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      { limit: 1 },
+      {},
+    );
+
+    expect(getCoachFeedbackHistoryUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+      limit: 1,
+    });
+    expect(result.feedbacks).toHaveLength(1);
+  });
+
+  it("maps GET invalid input to HTTP 400", async () => {
+    getCoachFeedbackHistoryUseCase.execute.mockRejectedValue(
+      new GetCoachFeedbackHistoryError(
+        GET_COACH_FEEDBACK_HISTORY_ERROR_CODES.INVALID_INPUT,
+        "Invalid coach feedback history input.",
+      ),
+    );
+
+    await expect(
+      controller.getCoachFeedbackHistory(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        { limit: 99 },
+        {},
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

@@ -1,6 +1,12 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
+import { COACH_FEEDBACK_REPOSITORY } from "./domain/repositories/coach-feedback.repository";
+import { MongooseCoachFeedbackRepository } from "./infrastructure/mongoose/mongoose-coach-feedback.repository";
+import {
+  COACH_FEEDBACK_MODEL_NAME,
+  CoachFeedbackSchema,
+} from "./infrastructure/mongoose/coach-feedback.schema";
 import { AuthModule } from "../auth/auth.module";
 import { FITNESS_PROFILE_REPOSITORY } from "../fitness/domain/repositories/fitness-profile.repository";
 import { MongooseFitnessProfileRepository } from "../fitness/infrastructure/mongoose/mongoose-fitness-profile.repository";
@@ -30,6 +36,7 @@ import {
 } from "../users/infrastructure/mongoose/user-profile.schema";
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
 import { CoachFeedbackGenerator } from "./application/services/coach-feedback/coach-feedback-generator.service";
+import { GetCoachFeedbackHistoryUseCase } from "./application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
 import { GenerateCoachFeedbackUseCase } from "./application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
 import { AiController } from "./presentation/http/ai.controller";
 
@@ -53,12 +60,17 @@ import { AiController } from "./presentation/http/ai.controller";
         name: WORKOUT_LOG_MODEL_NAME,
         schema: WorkoutLogSchema,
       },
+      {
+        name: COACH_FEEDBACK_MODEL_NAME,
+        schema: CoachFeedbackSchema,
+      },
     ]),
   ],
   controllers: [AiController],
   providers: [
     AuthSessionGuard,
     CoachFeedbackGenerator,
+    GetCoachFeedbackHistoryUseCase,
     GenerateCoachFeedbackUseCase,
     {
       provide: CLOCK,
@@ -79,6 +91,10 @@ import { AiController } from "./presentation/http/ai.controller";
     {
       provide: WORKOUT_LOG_REPOSITORY,
       useClass: MongooseWorkoutLogRepository,
+    },
+    {
+      provide: COACH_FEEDBACK_REPOSITORY,
+      useClass: MongooseCoachFeedbackRepository,
     },
   ],
 })

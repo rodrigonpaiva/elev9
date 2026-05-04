@@ -4,6 +4,10 @@ import {
   CoachFeedbackGenerator,
 } from "../../services/coach-feedback/coach-feedback-generator.service";
 import {
+  COACH_FEEDBACK_REPOSITORY,
+  CoachFeedbackRepository,
+} from "../../../domain/repositories/coach-feedback.repository";
+import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
 } from "../../../../fitness/domain/repositories/fitness-profile.repository";
@@ -41,6 +45,8 @@ export class GenerateCoachFeedbackUseCase {
     private readonly workoutLogRepository: WorkoutLogRepository,
     @Inject(CLOCK)
     private readonly clock: Clock,
+    @Inject(COACH_FEEDBACK_REPOSITORY)
+    private readonly coachFeedbackRepository: CoachFeedbackRepository,
     private readonly coachFeedbackGenerator: CoachFeedbackGenerator,
   ) {}
 
@@ -110,7 +116,7 @@ export class GenerateCoachFeedbackUseCase {
         activityLevel: fitnessProfile.activityLevel,
       });
 
-      return this.coachFeedbackGenerator.generate({
+      const feedback = this.coachFeedbackGenerator.generate({
         goal: fitnessProfile.goal,
         activityLevel: fitnessProfile.activityLevel,
         expectedWorkouts,
@@ -119,6 +125,15 @@ export class GenerateCoachFeedbackUseCase {
         workoutLogs,
         hasTrainingPlan: trainingPlan !== null,
       });
+
+      await this.coachFeedbackRepository.create({
+        userProfileId: userProfile.id,
+        message: feedback.message,
+        insights: feedback.insights,
+        recommendations: feedback.recommendations,
+      });
+
+      return feedback;
     } catch (error) {
       if (error instanceof GenerateCoachFeedbackError) {
         throw error;

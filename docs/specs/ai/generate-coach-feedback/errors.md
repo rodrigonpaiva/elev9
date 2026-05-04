@@ -126,6 +126,7 @@ Causas comuns:
 - erro no banco
 - erro inesperado no agregador
 - falha na camada determinística de geração
+- falha ao persistir `CoachFeedback`
 
 Mensagem segura:
 

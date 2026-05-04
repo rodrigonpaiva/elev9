@@ -1,5 +1,6 @@
 import { FitnessProfile } from "../../../../fitness/domain/entities/fitness-profile.entity";
 import { FitnessProfileRepository } from "../../../../fitness/domain/repositories/fitness-profile.repository";
+import { CoachFeedbackRepository } from "../../../domain/repositories/coach-feedback.repository";
 import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
 import { WorkoutLogRepository } from "../../../../progress/domain/repositories/workout-log.repository";
 import { Clock } from "../../../../progress/domain/services/clock.service";
@@ -18,6 +19,7 @@ describe("GenerateCoachFeedbackUseCase", () => {
   let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
+  let coachFeedbackRepository: jest.Mocked<CoachFeedbackRepository>;
   let clock: jest.Mocked<Clock>;
   let coachFeedbackGenerator: CoachFeedbackGenerator;
   let useCase: GenerateCoachFeedbackUseCase;
@@ -43,6 +45,10 @@ describe("GenerateCoachFeedbackUseCase", () => {
       findByTrainingPlanIdsAndDateRange: jest.fn(),
       create: jest.fn(),
     };
+    coachFeedbackRepository = {
+      create: jest.fn(),
+      findByUserProfileId: jest.fn(),
+    };
     clock = {
       now: jest.fn().mockReturnValue(new Date("2026-05-04T10:00:00.000Z")),
       todayUtcDateString: jest.fn().mockReturnValue("2026-05-04"),
@@ -55,6 +61,7 @@ describe("GenerateCoachFeedbackUseCase", () => {
       trainingPlanRepository,
       workoutLogRepository,
       clock,
+      coachFeedbackRepository,
       coachFeedbackGenerator,
     );
   });
@@ -81,6 +88,12 @@ describe("GenerateCoachFeedbackUseCase", () => {
         endDate: "2026-05-04",
       },
     );
+    expect(coachFeedbackRepository.create).toHaveBeenCalledWith({
+      userProfileId: "profile_123",
+      message: "Great consistency this week. You're on a 4-day streak.",
+      insights: expect.any(Array),
+      recommendations: expect.any(Array),
+    });
     expect(result.message).toBe(
       "Great consistency this week. You're on a 4-day streak.",
     );
@@ -160,6 +173,24 @@ describe("GenerateCoachFeedbackUseCase", () => {
 
   it("maps unexpected failures to AI_COACH_INTERNAL_ERROR", async () => {
     userProfileRepository.findByAuthUserId.mockRejectedValue(
+      new Error("database unavailable"),
+    );
+
+    await expect(
+      useCase.execute({
+        authUserId: "auth_user_123",
+      }),
+    ).rejects.toMatchObject({
+      code: GENERATE_COACH_FEEDBACK_ERROR_CODES.INTERNAL_ERROR,
+    });
+  });
+
+  it("fails when coach feedback persistence fails", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    coachFeedbackRepository.create.mockRejectedValue(
       new Error("database unavailable"),
     );
 

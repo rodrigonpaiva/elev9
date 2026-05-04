@@ -189,56 +189,74 @@ Expected:
 
 - `AI_COACH_INTERNAL_ERROR`
 
+### TEST-016 — Persist feedback when POST succeeds
+
+Expected:
+
+- `CoachFeedback` é criado com `userProfileId`, `message`, `insights`, `recommendations` e `createdAt`
+
+### TEST-017 — Persistence failure returns AI_COACH_INTERNAL_ERROR
+
+Given:
+
+- geração textual bem-sucedida
+- falha ao persistir `CoachFeedback`
+
+Then:
+
+- o `POST` falha com `AI_COACH_INTERNAL_ERROR`
+- nenhum feedback não persistido é retornado
+
 ---
 
 ## 5. Security Tests
 
-### TEST-016 — Session required
+### TEST-018 — Session required
 
 Expected:
 
 - `AUTH_INVALID_SESSION`
 
-### TEST-017 — authUserId never comes from body
+### TEST-019 — authUserId never comes from body
 
 Expected:
 
 - o sistema rejeita qualquer tentativa de enviar `authUserId`
 
-### TEST-018 — No raw workout data leak
+### TEST-020 — No raw workout data leak
 
 Then:
 
 - a resposta não expõe lista completa de `WorkoutLogs`
 - a resposta não expõe ids internos desnecessários
 
-### TEST-019 — No Nutrition access in MVP
+### TEST-021 — No Nutrition access in MVP
 
 Then:
 
 - o fluxo não lê `Nutrition`
 - o fluxo não produz recomendações nutricionais
 
-### TEST-020 — No external AI call in MVP
+### TEST-022 — No external AI call in MVP
 
 Then:
 
 - o fluxo não depende de OpenAI
 - o fluxo continua funcionando offline da perspectiva de IA externa
 
-### TEST-021 — No mutation happens
+### TEST-023 — No unintended mutation happens
 
 Then:
 
-- nenhuma entidade é criada
-- nenhuma entidade é atualizada
+- nenhuma entidade é criada além de `CoachFeedback`
+- nenhuma entidade existente é atualizada
 - nenhuma entidade é deletada
 
 ---
 
 ## 6. Presentation Tests
 
-### TEST-022 — HTTP success response shape
+### TEST-024 — HTTP success response shape
 
 Expected:
 
@@ -254,37 +272,37 @@ And:
 - `recommendations` tem no máximo `3` itens
 - cada item tem no máximo `160` caracteres
 
-### TEST-023 — HTTP invalid input mapping
+### TEST-025 — HTTP invalid input mapping
 
 Expected:
 
 - `AI_COACH_INVALID_INPUT -> 400`
 
-### TEST-024 — HTTP invalid session mapping
+### TEST-026 — HTTP invalid session mapping
 
 Expected:
 
 - `AUTH_INVALID_SESSION -> 401`
 
-### TEST-025 — HTTP user profile not found mapping
+### TEST-027 — HTTP user profile not found mapping
 
 Expected:
 
 - `USER_PROFILE_NOT_FOUND -> 404`
 
-### TEST-026 — HTTP fitness profile not found mapping
+### TEST-028 — HTTP fitness profile not found mapping
 
 Expected:
 
 - `FITNESS_PROFILE_NOT_FOUND -> 404`
 
-### TEST-027 — HTTP internal failure mapping
+### TEST-029 — HTTP internal failure mapping
 
 Expected:
 
 - `AI_COACH_INTERNAL_ERROR -> 500`
 
-### TEST-028 — Message priority order is deterministic
+### TEST-030 — Message priority order is deterministic
 
 Given:
 
