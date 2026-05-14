@@ -6,6 +6,10 @@ import {
   FitnessProfileRepository,
 } from "../../../../fitness/domain/repositories/fitness-profile.repository";
 import {
+  DAILY_CHECK_IN_REPOSITORY,
+  DailyCheckInRepository,
+} from "../../../../progress/domain/repositories/daily-check-in.repository";
+import {
   WORKOUT_LOG_REPOSITORY,
   WorkoutLogRepository,
 } from "../../../../progress/domain/repositories/workout-log.repository";
@@ -36,6 +40,8 @@ export class GetHomeDashboardUseCase {
     private readonly trainingPlanRepository: TrainingPlanRepository,
     @Inject(WORKOUT_LOG_REPOSITORY)
     private readonly workoutLogRepository: WorkoutLogRepository,
+    @Inject(DAILY_CHECK_IN_REPOSITORY)
+    private readonly dailyCheckInRepository: DailyCheckInRepository,
     @Inject(CLOCK)
     private readonly clock: Clock,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
@@ -66,6 +72,10 @@ export class GetHomeDashboardUseCase {
         );
       }
 
+      const recentDailyCheckIns = (
+        await this.dailyCheckInRepository.findManyByUserProfileId(userProfile.id)
+      ).slice(0, 3);
+
       const fitnessProfile =
         await this.fitnessProfileRepository.findActiveByUserProfileId(
           userProfile.id,
@@ -80,7 +90,10 @@ export class GetHomeDashboardUseCase {
             fitnessProfile: null,
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
-            recovery: this.buildRecoverySummary(healthContext),
+            recovery: this.buildRecoverySummary(
+              healthContext,
+              recentDailyCheckIns,
+            ),
           },
         };
       }
@@ -103,7 +116,10 @@ export class GetHomeDashboardUseCase {
             },
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
-            recovery: this.buildRecoverySummary(healthContext),
+            recovery: this.buildRecoverySummary(
+              healthContext,
+              recentDailyCheckIns,
+            ),
           },
         };
       }
@@ -133,7 +149,7 @@ export class GetHomeDashboardUseCase {
             todayWorkout,
           },
           progressSummary: this.buildSummaryFromLogs(workoutLogs),
-          recovery: this.buildRecoverySummary(healthContext),
+          recovery: this.buildRecoverySummary(healthContext, recentDailyCheckIns),
         },
       };
     } catch (error) {
@@ -250,12 +266,18 @@ export class GetHomeDashboardUseCase {
 
   private buildRecoverySummary(
     healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
+    recentDailyCheckIns: Array<{
+      energyLevel: number;
+      sleepQuality: number;
+      muscleSoreness: number;
+    }>,
   ): GetHomeDashboardOutput["dashboard"]["recovery"] {
     return {
       fatigueLevel: healthContext.fatigueLevel,
       recommendedIntensity: this.mapRecommendedIntensity(
         healthContext.fatigueLevel,
       ),
+      recoveryTrend: this.calculateRecoveryTrend(recentDailyCheckIns),
       latestCheckIn: healthContext.latestCheckIn
         ? {
             energyLevel: healthContext.latestCheckIn.energyLevel,
@@ -266,6 +288,52 @@ export class GetHomeDashboardUseCase {
           }
         : undefined,
     };
+  }
+
+  private calculateRecoveryTrend(
+    recentDailyCheckIns: Array<{
+      energyLevel: number;
+      sleepQuality: number;
+      muscleSoreness: number;
+    }>,
+  ): GetHomeDashboardOutput["dashboard"]["recovery"]["recoveryTrend"] {
+    if (recentDailyCheckIns.length < 3) {
+      return "stable";
+    }
+
+    const latest = recentDailyCheckIns[0];
+    const oldest = recentDailyCheckIns[recentDailyCheckIns.length - 1];
+
+    let positiveSignals = 0;
+    let negativeSignals = 0;
+
+    if (latest.energyLevel > oldest.energyLevel) {
+      positiveSignals += 1;
+    } else if (latest.energyLevel < oldest.energyLevel) {
+      negativeSignals += 1;
+    }
+
+    if (latest.sleepQuality > oldest.sleepQuality) {
+      positiveSignals += 1;
+    } else if (latest.sleepQuality < oldest.sleepQuality) {
+      negativeSignals += 1;
+    }
+
+    if (latest.muscleSoreness < oldest.muscleSoreness) {
+      positiveSignals += 1;
+    } else if (latest.muscleSoreness > oldest.muscleSoreness) {
+      negativeSignals += 1;
+    }
+
+    if (positiveSignals >= 2 && negativeSignals === 0) {
+      return "improving";
+    }
+
+    if (negativeSignals >= 2 && positiveSignals === 0) {
+      return "needs_recovery";
+    }
+
+    return "stable";
   }
 
   private mapRecommendedIntensity(

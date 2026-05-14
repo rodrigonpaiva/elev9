@@ -53,6 +53,7 @@ describe("DashboardController", () => {
         recovery: {
           fatigueLevel: "HIGH",
           recommendedIntensity: "low",
+          recoveryTrend: "needs_recovery",
           latestCheckIn: {
             energyLevel: 2,
             sleepQuality: 2,
@@ -81,6 +82,7 @@ describe("DashboardController", () => {
     expect(result.dashboard.user.name).toBe("Rodrigo Paiva");
     expect(result.dashboard.progressSummary.period).toBe("week");
     expect(result.dashboard.recovery.recommendedIntensity).toBe("low");
+    expect(result.dashboard.recovery.recoveryTrend).toBe("needs_recovery");
   });
 
   it("maps USER_PROFILE_NOT_FOUND to HTTP 404", async () => {

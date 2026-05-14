@@ -34,6 +34,7 @@ export class GetHomeDashboardResponseDto {
     recovery: {
       fatigueLevel: "LOW" | "MODERATE" | "HIGH";
       recommendedIntensity: "low" | "medium" | "normal";
+      recoveryTrend: "improving" | "stable" | "needs_recovery";
       latestCheckIn?: {
         energyLevel: number;
         sleepQuality: number;

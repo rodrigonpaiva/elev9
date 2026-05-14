@@ -44,6 +44,7 @@ export type GetHomeDashboardOutput = {
     recovery: {
       fatigueLevel: FatigueLevel;
       recommendedIntensity: "low" | "medium" | "normal";
+      recoveryTrend: "improving" | "stable" | "needs_recovery";
       latestCheckIn?: {
         energyLevel: number;
         sleepQuality: number;

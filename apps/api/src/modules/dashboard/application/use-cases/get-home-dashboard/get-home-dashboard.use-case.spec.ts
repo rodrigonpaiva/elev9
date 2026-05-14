@@ -1,5 +1,7 @@
 import { FitnessProfile } from "../../../../fitness/domain/entities/fitness-profile.entity";
 import { FitnessProfileRepository } from "../../../../fitness/domain/repositories/fitness-profile.repository";
+import { DailyCheckIn } from "../../../../progress/domain/entities/daily-check-in.entity";
+import { DailyCheckInRepository } from "../../../../progress/domain/repositories/daily-check-in.repository";
 import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
 import { WorkoutLogRepository } from "../../../../progress/domain/repositories/workout-log.repository";
 import { Clock } from "../../../../progress/domain/services/clock.service";
@@ -18,6 +20,7 @@ describe("GetHomeDashboardUseCase", () => {
   let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
+  let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let clock: jest.Mocked<Clock>;
   let buildUserHealthContextService: {
     build: jest.MockedFunction<BuildUserHealthContextService["build"]>;
@@ -44,6 +47,11 @@ describe("GetHomeDashboardUseCase", () => {
       findByTrainingPlanIdsOrdered: jest.fn(),
       findByTrainingPlanIdsAndDateRange: jest.fn(),
       create: jest.fn(),
+    };
+    dailyCheckInRepository = {
+      create: jest.fn(),
+      findLatestByUserProfileId: jest.fn(),
+      findManyByUserProfileId: jest.fn().mockResolvedValue([]),
     };
     clock = {
       now: jest.fn().mockReturnValue(new Date("2026-04-30T10:00:00.000Z")),
@@ -74,6 +82,7 @@ describe("GetHomeDashboardUseCase", () => {
       fitnessProfileRepository,
       trainingPlanRepository,
       workoutLogRepository,
+      dailyCheckInRepository,
       clock,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
     );
@@ -141,6 +150,33 @@ describe("GetHomeDashboardUseCase", () => {
     );
   }
 
+  function mockDailyCheckInHistory(
+    entries: Array<{
+      id: string;
+      energyLevel: number;
+      sleepQuality: number;
+      muscleSoreness: number;
+      motivationLevel: number;
+      createdAt: string;
+    }>,
+  ): void {
+    dailyCheckInRepository.findManyByUserProfileId.mockResolvedValue(
+      entries.map(
+        (entry) =>
+          new DailyCheckIn({
+            id: entry.id,
+            userProfileId: "profile_123",
+            energyLevel: entry.energyLevel,
+            sleepQuality: entry.sleepQuality,
+            muscleSoreness: entry.muscleSoreness,
+            motivationLevel: entry.motivationLevel,
+            createdAt: new Date(entry.createdAt),
+            updatedAt: new Date(entry.createdAt),
+          }),
+      ),
+    );
+  }
+
   it("returns fitnessProfile and trainingPlan as null when no active fitness profile exists", async () => {
     mockUserProfile();
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
@@ -166,6 +202,7 @@ describe("GetHomeDashboardUseCase", () => {
         recovery: {
           fatigueLevel: "MODERATE",
           recommendedIntensity: "medium",
+          recoveryTrend: "stable",
         },
       },
     });
@@ -193,6 +230,7 @@ describe("GetHomeDashboardUseCase", () => {
     expect(result.dashboard.recovery).toEqual({
       fatigueLevel: "MODERATE",
       recommendedIntensity: "medium",
+      recoveryTrend: "stable",
     });
     expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).not.toHaveBeenCalled();
   });
@@ -290,6 +328,7 @@ describe("GetHomeDashboardUseCase", () => {
     expect(result.dashboard.recovery).toEqual({
       fatigueLevel: "MODERATE",
       recommendedIntensity: "medium",
+      recoveryTrend: "stable",
     });
   });
 
@@ -352,6 +391,7 @@ describe("GetHomeDashboardUseCase", () => {
     expect(result.dashboard.recovery).toEqual({
       fatigueLevel: "HIGH",
       recommendedIntensity: "low",
+      recoveryTrend: "stable",
       latestCheckIn: {
         energyLevel: 2,
         sleepQuality: 2,
@@ -386,6 +426,147 @@ describe("GetHomeDashboardUseCase", () => {
     expect(result.dashboard.recovery).toEqual({
       fatigueLevel: "LOW",
       recommendedIntensity: "normal",
+      recoveryTrend: "stable",
     });
+  });
+
+  it("returns improving recovery trend with positive recent check-in signals", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    mockDailyCheckInHistory([
+      {
+        id: "check_in_3",
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 1,
+        motivationLevel: 4,
+        createdAt: "2026-04-30T09:00:00.000Z",
+      },
+      {
+        id: "check_in_2",
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 3,
+        createdAt: "2026-04-29T09:00:00.000Z",
+      },
+      {
+        id: "check_in_1",
+        energyLevel: 2,
+        sleepQuality: 2,
+        muscleSoreness: 4,
+        motivationLevel: 3,
+        createdAt: "2026-04-28T09:00:00.000Z",
+      },
+    ]);
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.recovery.recoveryTrend).toBe("improving");
+  });
+
+  it("returns needs_recovery trend with negative recent check-in signals", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    mockDailyCheckInHistory([
+      {
+        id: "check_in_3",
+        energyLevel: 2,
+        sleepQuality: 2,
+        muscleSoreness: 4,
+        motivationLevel: 2,
+        createdAt: "2026-04-30T09:00:00.000Z",
+      },
+      {
+        id: "check_in_2",
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 3,
+        motivationLevel: 3,
+        createdAt: "2026-04-29T09:00:00.000Z",
+      },
+      {
+        id: "check_in_1",
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 1,
+        motivationLevel: 4,
+        createdAt: "2026-04-28T09:00:00.000Z",
+      },
+    ]);
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.recovery.recoveryTrend).toBe("needs_recovery");
+  });
+
+  it("returns stable recovery trend with mixed recent check-in signals", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    mockDailyCheckInHistory([
+      {
+        id: "check_in_3",
+        energyLevel: 4,
+        sleepQuality: 2,
+        muscleSoreness: 2,
+        motivationLevel: 3,
+        createdAt: "2026-04-30T09:00:00.000Z",
+      },
+      {
+        id: "check_in_2",
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 3,
+        motivationLevel: 3,
+        createdAt: "2026-04-29T09:00:00.000Z",
+      },
+      {
+        id: "check_in_1",
+        energyLevel: 2,
+        sleepQuality: 4,
+        muscleSoreness: 4,
+        motivationLevel: 3,
+        createdAt: "2026-04-28T09:00:00.000Z",
+      },
+    ]);
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.recovery.recoveryTrend).toBe("stable");
+  });
+
+  it("returns stable recovery trend when there are fewer than three check-ins", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    mockDailyCheckInHistory([
+      {
+        id: "check_in_2",
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 2,
+        motivationLevel: 4,
+        createdAt: "2026-04-30T09:00:00.000Z",
+      },
+      {
+        id: "check_in_1",
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 3,
+        motivationLevel: 3,
+        createdAt: "2026-04-29T09:00:00.000Z",
+      },
+    ]);
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.recovery.recoveryTrend).toBe("stable");
   });
 });

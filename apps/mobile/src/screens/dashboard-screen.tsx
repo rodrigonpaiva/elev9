@@ -290,6 +290,17 @@ export function DashboardScreen({
               </Text>
             </View>
           </View>
+          <View style={styles.recoveryTrendRow}>
+            <Text style={styles.metricLabel}>Recovery trend</Text>
+            <Text
+              style={[
+                styles.recoveryTrendValue,
+                recoveryTrendStyleMap[dashboard.recovery.recoveryTrend],
+              ]}
+            >
+              {formatRecoveryTrend(dashboard.recovery.recoveryTrend)}
+            </Text>
+          </View>
           {dashboard.recovery.latestCheckIn ? (
             <View style={styles.recoverySnapshot}>
               <Text style={styles.metricLabel}>Latest check-in</Text>
@@ -633,6 +644,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#0b1220",
     padding: 16,
   },
+  recoveryTrendRow: {
+    marginTop: 4,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  recoveryTrendValue: {
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: "700",
+  },
   recoveryTimestamp: {
     color: colors.mutedText,
     fontSize: 13,
@@ -701,6 +724,21 @@ const recoveryCardStyleMap: Record<
   LOW: styles.metricCardCalm,
 };
 
+const recoveryTrendStyleMap: Record<
+  DashboardHomeResponse["dashboard"]["recovery"]["recoveryTrend"],
+  object
+> = {
+  improving: {
+    color: "#86efac",
+  },
+  stable: {
+    color: colors.text,
+  },
+  needs_recovery: {
+    color: "#fdba74",
+  },
+};
+
 function animatedStyle(value: Animated.Value, index: number) {
   return {
     opacity: value,
@@ -735,4 +773,18 @@ function formatDateTime(value: string): string {
     hour: "numeric",
     minute: "2-digit",
   }).format(date);
+}
+
+function formatRecoveryTrend(
+  value: DashboardHomeResponse["dashboard"]["recovery"]["recoveryTrend"],
+): string {
+  switch (value) {
+    case "improving":
+      return "Improving";
+    case "needs_recovery":
+      return "Needs recovery";
+    case "stable":
+    default:
+      return "Stable";
+  }
 }
