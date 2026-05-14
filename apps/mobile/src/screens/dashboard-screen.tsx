@@ -21,18 +21,25 @@ import {
   Text,
 } from "@elev9/ui";
 import type {
+  CreateDailyCheckInRequest,
   DashboardHomeResponse,
-  ProgressSummaryResponse,
   TodayWorkout,
 } from "@elev9/types";
 
-import { apiClient } from "../api/client";
+import { apiClient, mobileApiClient } from "../api/client";
 import { useAuth } from "../auth/auth-provider";
 import type { RootStackParamList } from "../navigation/app-navigator";
 
 type DashboardScreenProps = {
   onOpenHistory?: () => void;
   showLogout?: boolean;
+};
+
+const DEFAULT_DAILY_CHECK_IN: CreateDailyCheckInRequest = {
+  energyLevel: 3,
+  sleepQuality: 3,
+  muscleSoreness: 3,
+  motivationLevel: 3,
 };
 
 export function DashboardScreen({
@@ -47,7 +54,10 @@ export function DashboardScreen({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSubmittingCheckIn, setIsSubmittingCheckIn] = useState(false);
   const [currentStreak, setCurrentStreak] = useState<number>(0);
+  const [dailyCheckInForm, setDailyCheckInForm] =
+    useState<CreateDailyCheckInRequest>(DEFAULT_DAILY_CHECK_IN);
   const entrance = useRef(new Animated.Value(0)).current;
 
   const loadDashboard = useCallback(async (options?: { refresh?: boolean }) => {
@@ -105,6 +115,42 @@ export function DashboardScreen({
       }).start();
     }
   }, [entrance, isLoading]);
+
+  const updateDailyCheckInValue = useCallback(
+    (field: keyof CreateDailyCheckInRequest, value: number) => {
+      setDailyCheckInForm((current) => ({
+        ...current,
+        [field]: value,
+      }));
+    },
+    [],
+  );
+
+  const submitDailyCheckIn = useCallback(async () => {
+    setIsSubmittingCheckIn(true);
+    setErrorMessage(null);
+
+    try {
+      await mobileApiClient.progress.createDailyCheckIn(dailyCheckInForm);
+      await loadDashboard({ refresh: true });
+    } catch (error) {
+      if (
+        error instanceof ApiClientError &&
+        error.code === "AUTH_INVALID_SESSION"
+      ) {
+        await signOut();
+        return;
+      }
+
+      if (error instanceof ApiClientError) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to save daily check-in.");
+      }
+    } finally {
+      setIsSubmittingCheckIn(false);
+    }
+  }, [dailyCheckInForm, loadDashboard, signOut]);
 
   if (isLoading) {
     return (
@@ -222,6 +268,92 @@ export function DashboardScreen({
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 2)]}>
         <Card style={styles.sectionCard}>
           <SectionHeader
+            title="Recovery Status"
+            subtitle="A simple signal for today's training intensity."
+          />
+          <View style={styles.metricsGrid}>
+            <View
+              style={[
+                styles.metricCard,
+                recoveryCardStyleMap[dashboard.recovery.fatigueLevel],
+              ]}
+            >
+              <Text style={styles.metricLabel}>Fatigue</Text>
+              <Text style={styles.metricSecondary}>
+                {dashboard.recovery.fatigueLevel}
+              </Text>
+            </View>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricLabel}>Recommended intensity</Text>
+              <Text style={styles.metricSecondary}>
+                {dashboard.recovery.recommendedIntensity}
+              </Text>
+            </View>
+          </View>
+          {dashboard.recovery.latestCheckIn ? (
+            <View style={styles.recoverySnapshot}>
+              <Text style={styles.metricLabel}>Latest check-in</Text>
+              <Text style={styles.metricValue}>
+                Energy {dashboard.recovery.latestCheckIn.energyLevel} • Sleep{" "}
+                {dashboard.recovery.latestCheckIn.sleepQuality} • Soreness{" "}
+                {dashboard.recovery.latestCheckIn.muscleSoreness} • Motivation{" "}
+                {dashboard.recovery.latestCheckIn.motivationLevel}
+              </Text>
+              <Text style={styles.recoveryTimestamp}>
+                Updated {formatDateTime(dashboard.recovery.latestCheckIn.createdAt)}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.fallbackBox}>
+              <Text style={styles.metricValue}>No check-in yet</Text>
+              <Text style={styles.fallbackText}>
+                Save today's recovery signals to personalize this dashboard.
+              </Text>
+            </View>
+          )}
+        </Card>
+      </Animated.View>
+
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 3)]}>
+        <Card style={styles.sectionCard}>
+          <SectionHeader
+            title="Daily Check-in"
+            subtitle="Track how you feel before today's session."
+          />
+          <RatingField
+            label="Energy"
+            value={dailyCheckInForm.energyLevel}
+            onChange={(value) => updateDailyCheckInValue("energyLevel", value)}
+          />
+          <RatingField
+            label="Sleep"
+            value={dailyCheckInForm.sleepQuality}
+            onChange={(value) => updateDailyCheckInValue("sleepQuality", value)}
+          />
+          <RatingField
+            label="Soreness"
+            value={dailyCheckInForm.muscleSoreness}
+            onChange={(value) =>
+              updateDailyCheckInValue("muscleSoreness", value)
+            }
+          />
+          <RatingField
+            label="Motivation"
+            value={dailyCheckInForm.motivationLevel}
+            onChange={(value) => updateDailyCheckInValue("motivationLevel", value)}
+          />
+          <Button
+            label="Save Daily Check-in"
+            onPress={() => void submitDailyCheckIn()}
+            loading={isSubmittingCheckIn}
+            style={styles.fullButton}
+          />
+        </Card>
+      </Animated.View>
+
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 4)]}>
+        <Card style={styles.sectionCard}>
+          <SectionHeader
             title="Today&apos;s Workout"
             subtitle={
               trainingPlan && todayWorkout
@@ -262,7 +394,7 @@ export function DashboardScreen({
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 3)]}>
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 5)]}>
         <Card style={styles.sectionCard}>
           <SectionHeader
             title="Quick Actions"
@@ -309,6 +441,48 @@ export function DashboardScreen({
         />
       ) : null}
     </Screen>
+  );
+}
+
+type RatingFieldProps = {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+};
+
+function RatingField({ label, value, onChange }: RatingFieldProps) {
+  return (
+    <View style={styles.ratingField}>
+      <View style={styles.ratingHeader}>
+        <Text style={styles.metricLabel}>{label}</Text>
+        <Text style={styles.metricSecondary}>{value}/5</Text>
+      </View>
+      <View style={styles.ratingScale}>
+        {[1, 2, 3, 4, 5].map((option) => {
+          const isActive = option === value;
+
+          return (
+            <Pressable
+              key={`${label}-${option}`}
+              onPress={() => onChange(option)}
+              style={[
+                styles.ratingButton,
+                isActive ? styles.ratingButtonActive : null,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.ratingButtonText,
+                  isActive ? styles.ratingButtonTextActive : null,
+                ]}
+              >
+                {option}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -382,6 +556,12 @@ const styles = StyleSheet.create({
   metricCardAccent: {
     borderColor: colors.primary,
   },
+  metricCardDanger: {
+    borderColor: colors.danger,
+  },
+  metricCardCalm: {
+    borderColor: colors.accent,
+  },
   metricLabel: {
     fontSize: 12,
     fontWeight: "700",
@@ -433,6 +613,56 @@ const styles = StyleSheet.create({
   fallbackText: {
     color: colors.mutedText,
   },
+  recoverySnapshot: {
+    gap: 6,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: "#0b1220",
+    padding: 16,
+  },
+  recoveryTimestamp: {
+    color: colors.mutedText,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  ratingField: {
+    gap: 10,
+    paddingVertical: 4,
+  },
+  ratingHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  ratingScale: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  ratingButton: {
+    flex: 1,
+    minHeight: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: "#0b1220",
+  },
+  ratingButtonActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  ratingButtonText: {
+    color: colors.text,
+    fontSize: 16,
+    lineHeight: 20,
+    fontWeight: "700",
+  },
+  ratingButtonTextActive: {
+    color: colors.primaryText,
+  },
   error: {
     color: "#fca5a5",
   },
@@ -446,6 +676,15 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 });
+
+const recoveryCardStyleMap: Record<
+  DashboardHomeResponse["dashboard"]["recovery"]["fatigueLevel"],
+  object
+> = {
+  HIGH: styles.metricCardDanger,
+  MODERATE: styles.metricCardAccent,
+  LOW: styles.metricCardCalm,
+};
 
 function animatedStyle(value: Animated.Value, index: number) {
   return {
@@ -469,5 +708,16 @@ function formatDashboardDate(value: string): string {
     day: "numeric",
     year: "numeric",
     timeZone: "UTC",
+  }).format(date);
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   }).format(date);
 }

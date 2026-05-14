@@ -33,5 +33,16 @@ export type DashboardHomeResponse = {
             averageDurationMinutes: number;
             lastWorkoutDate: string | null;
         };
+        recovery: {
+            fatigueLevel: "LOW" | "MODERATE" | "HIGH";
+            recommendedIntensity: "low" | "medium" | "normal";
+            latestCheckIn?: {
+                energyLevel: number;
+                sleepQuality: number;
+                muscleSoreness: number;
+                motivationLevel: number;
+                createdAt: string;
+            };
+        };
     };
 };
