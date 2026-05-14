@@ -22,6 +22,7 @@ import {
 } from "../users/infrastructure/mongoose/user-profile.schema";
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
 import { CreateDailyCheckInUseCase } from "./application/use-cases/create-daily-check-in/create-daily-check-in.use-case";
+import { GetDailyCheckInHistoryUseCase } from "./application/use-cases/get-daily-check-in-history/get-daily-check-in-history.use-case";
 import { GetWorkoutHistoryUseCase } from "./application/use-cases/get-workout-history/get-workout-history.use-case";
 import { GetProgressSummaryUseCase } from "./application/use-cases/get-progress-summary/get-progress-summary.use-case";
 import { LogWorkoutUseCase } from "./application/use-cases/log-workout/log-workout.use-case";
@@ -71,6 +72,7 @@ import { ProgressController } from "./presentation/http/progress.controller";
   providers: [
     AuthSessionGuard,
     CreateDailyCheckInUseCase,
+    GetDailyCheckInHistoryUseCase,
     GetWorkoutHistoryUseCase,
     GetProgressSummaryUseCase,
     LogWorkoutUseCase,

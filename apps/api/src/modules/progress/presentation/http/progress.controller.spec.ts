@@ -11,6 +11,11 @@ import {
 } from "../../application/use-cases/create-daily-check-in/create-daily-check-in.errors";
 import { CreateDailyCheckInUseCase } from "../../application/use-cases/create-daily-check-in/create-daily-check-in.use-case";
 import {
+  GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES,
+  GetDailyCheckInHistoryError,
+} from "../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.errors";
+import { GetDailyCheckInHistoryUseCase } from "../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.use-case";
+import {
   GET_WORKOUT_HISTORY_ERROR_CODES,
   GetWorkoutHistoryError,
 } from "../../application/use-cases/get-workout-history/get-workout-history.errors";
@@ -31,6 +36,7 @@ describe("ProgressController", () => {
   let createDailyCheckInUseCase: jest.Mocked<CreateDailyCheckInUseCase>;
   let logWorkoutUseCase: jest.Mocked<LogWorkoutUseCase>;
   let getProgressSummaryUseCase: jest.Mocked<GetProgressSummaryUseCase>;
+  let getDailyCheckInHistoryUseCase: jest.Mocked<GetDailyCheckInHistoryUseCase>;
   let getWorkoutHistoryUseCase: jest.Mocked<GetWorkoutHistoryUseCase>;
   let controller: ProgressController;
 
@@ -44,6 +50,9 @@ describe("ProgressController", () => {
     getProgressSummaryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetProgressSummaryUseCase>;
+    getDailyCheckInHistoryUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetDailyCheckInHistoryUseCase>;
     getWorkoutHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetWorkoutHistoryUseCase>;
@@ -52,6 +61,7 @@ describe("ProgressController", () => {
       createDailyCheckInUseCase,
       logWorkoutUseCase,
       getProgressSummaryUseCase,
+      getDailyCheckInHistoryUseCase,
       getWorkoutHistoryUseCase,
     );
   });
@@ -455,6 +465,115 @@ describe("ProgressController", () => {
         },
       ],
     });
+  });
+
+  it("returns the authenticated daily check-in history", async () => {
+    getDailyCheckInHistoryUseCase.execute.mockResolvedValue({
+      dailyCheckIns: [
+        {
+          id: "checkin_123",
+          energyLevel: 4,
+          sleepQuality: 3,
+          muscleSoreness: 2,
+          motivationLevel: 5,
+          createdAt: "2026-05-14T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const result = await controller.getDailyCheckInHistory(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      { limit: 10 },
+      {},
+    );
+
+    expect(getDailyCheckInHistoryUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+      limit: 10,
+    });
+    expect(result).toEqual({
+      dailyCheckIns: [
+        {
+          id: "checkin_123",
+          energyLevel: 4,
+          sleepQuality: 3,
+          muscleSoreness: 2,
+          motivationLevel: 5,
+          createdAt: "2026-05-14T10:00:00.000Z",
+        },
+      ],
+    });
+  });
+
+  it("maps invalid daily check-in history query to HTTP 400", async () => {
+    getDailyCheckInHistoryUseCase.execute.mockRejectedValue(
+      new GetDailyCheckInHistoryError(
+        GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INVALID_INPUT,
+        "Invalid daily check-in history input.",
+      ),
+    );
+
+    await expect(
+      controller.getDailyCheckInHistory(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        { limit: 101 },
+        {},
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("maps missing user profile on daily check-in history to HTTP 404", async () => {
+    getDailyCheckInHistoryUseCase.execute.mockRejectedValue(
+      new GetDailyCheckInHistoryError(
+        GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND,
+        "User profile not found.",
+      ),
+    );
+
+    await expect(
+      controller.getDailyCheckInHistory(
+        {
+          authUser: {
+            id: "auth_user_999",
+            email: "other@email.com",
+          },
+        },
+        {},
+        {},
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("maps invalid session on daily check-in history to HTTP 401", async () => {
+    getDailyCheckInHistoryUseCase.execute.mockRejectedValue(
+      new GetDailyCheckInHistoryError(
+        GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INVALID_SESSION,
+        "Invalid session.",
+      ),
+    );
+
+    await expect(
+      controller.getDailyCheckInHistory(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        {},
+        {},
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it("maps invalid history query to HTTP 400", async () => {

@@ -22,6 +22,11 @@ import {
 } from "../../application/use-cases/create-daily-check-in/create-daily-check-in.errors";
 import { CreateDailyCheckInUseCase } from "../../application/use-cases/create-daily-check-in/create-daily-check-in.use-case";
 import {
+  GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES,
+  GetDailyCheckInHistoryError,
+} from "../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.errors";
+import { GetDailyCheckInHistoryUseCase } from "../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.use-case";
+import {
   GET_WORKOUT_HISTORY_ERROR_CODES,
   GetWorkoutHistoryError,
 } from "../../application/use-cases/get-workout-history/get-workout-history.errors";
@@ -38,6 +43,8 @@ import {
 import { LogWorkoutUseCase } from "../../application/use-cases/log-workout/log-workout.use-case";
 import { CreateDailyCheckInRequestDto } from "./dto/create-daily-check-in.request.dto";
 import { CreateDailyCheckInResponseDto } from "./dto/create-daily-check-in.response.dto";
+import { GetDailyCheckInHistoryQueryDto } from "./dto/get-daily-check-in-history.query.dto";
+import { GetDailyCheckInHistoryResponseDto } from "./dto/get-daily-check-in-history.response.dto";
 import { GetProgressSummaryQueryDto } from "./dto/get-progress-summary.query.dto";
 import { GetProgressSummaryResponseDto } from "./dto/get-progress-summary.response.dto";
 import { GetWorkoutHistoryQueryDto } from "./dto/get-workout-history.query.dto";
@@ -53,6 +60,7 @@ type RequestWithAuthUser = {
 };
 
 class GetProgressSummaryBodyDto {}
+class GetDailyCheckInHistoryBodyDto {}
 class GetWorkoutHistoryBodyDto {}
 
 @Controller("progress")
@@ -61,6 +69,7 @@ export class ProgressController {
     private readonly createDailyCheckInUseCase: CreateDailyCheckInUseCase,
     private readonly logWorkoutUseCase: LogWorkoutUseCase,
     private readonly getProgressSummaryUseCase: GetProgressSummaryUseCase,
+    private readonly getDailyCheckInHistoryUseCase: GetDailyCheckInHistoryUseCase,
     private readonly getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
   ) {}
 
@@ -177,6 +186,28 @@ export class ProgressController {
       };
     } catch (error) {
       this.handleGetWorkoutHistoryError(error);
+    }
+  }
+
+  @Get("daily-check-ins")
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getDailyCheckInHistory(
+    @Req() request: RequestWithAuthUser,
+    @Query() query: GetDailyCheckInHistoryQueryDto,
+    @Body() _body: GetDailyCheckInHistoryBodyDto,
+  ): Promise<GetDailyCheckInHistoryResponseDto> {
+    try {
+      const result = await this.getDailyCheckInHistoryUseCase.execute({
+        authUserId: request.authUser?.id ?? "",
+        limit: query.limit,
+      });
+
+      return {
+        dailyCheckIns: result.dailyCheckIns,
+      };
+    } catch (error) {
+      this.handleGetDailyCheckInHistoryError(error);
     }
   }
 
@@ -317,6 +348,39 @@ export class ProgressController {
       default:
         throw new InternalServerErrorException({
           code: GET_WORKOUT_HISTORY_ERROR_CODES.INTERNAL_ERROR,
+          message: "An unexpected error occurred.",
+        });
+    }
+  }
+
+  private handleGetDailyCheckInHistoryError(error: unknown): never {
+    if (!(error instanceof GetDailyCheckInHistoryError)) {
+      throw new InternalServerErrorException("An unexpected error occurred.");
+    }
+
+    switch (error.code) {
+      case GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INVALID_INPUT:
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INTERNAL_ERROR,
           message: "An unexpected error occurred.",
         });
     }
