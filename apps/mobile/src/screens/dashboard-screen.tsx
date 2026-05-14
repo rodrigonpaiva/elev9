@@ -302,6 +302,12 @@ export function DashboardScreen({
               <Text style={styles.recoveryTimestamp}>
                 Updated {formatDateTime(dashboard.recovery.latestCheckIn.createdAt)}
               </Text>
+              <Button
+                label="View recovery history"
+                onPress={() => navigation.navigate("DailyCheckInHistory")}
+                variant="secondary"
+                style={styles.historyButton}
+              />
             </View>
           ) : (
             <View style={styles.fallbackBox}>
@@ -309,6 +315,12 @@ export function DashboardScreen({
               <Text style={styles.fallbackText}>
                 Save today's recovery signals to personalize this dashboard.
               </Text>
+              <Button
+                label="View recovery history"
+                onPress={() => navigation.navigate("DailyCheckInHistory")}
+                variant="secondary"
+                style={styles.historyButton}
+              />
             </View>
           )}
         </Card>
@@ -625,6 +637,9 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 13,
     lineHeight: 18,
+  },
+  historyButton: {
+    marginTop: 6,
   },
   ratingField: {
     gap: 10,

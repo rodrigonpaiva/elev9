@@ -9,6 +9,7 @@ import { useAuth } from "../auth/auth-provider";
 import { CreateFitnessProfileScreen } from "../screens/create-fitness-profile-screen";
 import { CreateProfileScreen } from "../screens/create-profile-screen";
 import { CreateTrainingPlanScreen } from "../screens/create-training-plan-screen";
+import { DailyCheckInHistoryScreen } from "../screens/daily-check-in-history-screen";
 import { HomeResolverScreen } from "../screens/home-resolver-screen";
 import { LoginScreen } from "../screens/login-screen";
 import { MainTabsScreen } from "../screens/main-tabs-screen";
@@ -25,6 +26,7 @@ export type RootStackParamList = {
     activityLevel?: "low" | "medium" | "high";
   };
   MainTabs: undefined;
+  DailyCheckInHistory: undefined;
   Workout: {
     trainingPlanId: string;
     workout: TodayWorkout;
@@ -74,6 +76,19 @@ export function AppNavigator() {
               name="MainTabs"
               component={MainTabsScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="DailyCheckInHistory"
+              component={DailyCheckInHistoryScreen}
+              options={{
+                headerShown: true,
+                title: "Recovery History",
+                headerStyle: {
+                  backgroundColor: "#020617",
+                },
+                headerTintColor: "#f8fafc",
+                headerShadowVisible: false,
+              }}
             />
             <Stack.Screen
               name="Workout"
