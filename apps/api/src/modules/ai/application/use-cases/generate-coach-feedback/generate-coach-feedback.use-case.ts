@@ -3,28 +3,12 @@ import { Inject, Injectable } from "@nestjs/common";
 import {
   CoachFeedbackGenerator,
 } from "../../services/coach-feedback/coach-feedback-generator.service";
+import { BuildUserHealthContextService } from "../../services/context-builder/build-user-health-context.service";
 import {
   COACH_FEEDBACK_REPOSITORY,
   CoachFeedbackRepository,
 } from "../../../domain/repositories/coach-feedback.repository";
-import {
-  FITNESS_PROFILE_REPOSITORY,
-  FitnessProfileRepository,
-} from "../../../../fitness/domain/repositories/fitness-profile.repository";
-import {
-  WORKOUT_LOG_REPOSITORY,
-  WorkoutLogRepository,
-} from "../../../../progress/domain/repositories/workout-log.repository";
-import { CLOCK, Clock } from "../../../../progress/domain/services/clock.service";
-import { calculateStreak } from "../../../../progress/application/use-cases/get-progress-summary/calculate-streak";
-import {
-  TRAINING_PLAN_REPOSITORY,
-  TrainingPlanRepository,
-} from "../../../../training/domain/repositories/training-plan.repository";
-import {
-  USER_PROFILE_REPOSITORY,
-  UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+import { ActivityLevel } from "../../../../fitness/domain/entities/fitness-profile.entity";
 import {
   GENERATE_COACH_FEEDBACK_ERROR_CODES,
   GenerateCoachFeedbackError,
@@ -35,19 +19,10 @@ import { GenerateCoachFeedbackOutput } from "./generate-coach-feedback.output";
 @Injectable()
 export class GenerateCoachFeedbackUseCase {
   constructor(
-    @Inject(USER_PROFILE_REPOSITORY)
-    private readonly userProfileRepository: UserProfileRepository,
-    @Inject(FITNESS_PROFILE_REPOSITORY)
-    private readonly fitnessProfileRepository: FitnessProfileRepository,
-    @Inject(TRAINING_PLAN_REPOSITORY)
-    private readonly trainingPlanRepository: TrainingPlanRepository,
-    @Inject(WORKOUT_LOG_REPOSITORY)
-    private readonly workoutLogRepository: WorkoutLogRepository,
-    @Inject(CLOCK)
-    private readonly clock: Clock,
     @Inject(COACH_FEEDBACK_REPOSITORY)
     private readonly coachFeedbackRepository: CoachFeedbackRepository,
     private readonly coachFeedbackGenerator: CoachFeedbackGenerator,
+    private readonly buildUserHealthContextService: BuildUserHealthContextService,
   ) {}
 
   async execute(
@@ -64,70 +39,39 @@ export class GenerateCoachFeedbackUseCase {
     }
 
     try {
-      const userProfile =
-        await this.userProfileRepository.findByAuthUserId(authUserId);
+      const healthContext = await this.buildUserHealthContextService.build({
+        authUserId,
+      });
 
-      if (!userProfile) {
+      if (!healthContext.userProfileId) {
         throw new GenerateCoachFeedbackError(
           GENERATE_COACH_FEEDBACK_ERROR_CODES.USER_PROFILE_NOT_FOUND,
           "User profile not found.",
         );
       }
 
-      const fitnessProfile =
-        await this.fitnessProfileRepository.findActiveByUserProfileId(
-          userProfile.id,
-        );
-
-      if (!fitnessProfile) {
+      if (!healthContext.goal || !healthContext.activityLevel) {
         throw new GenerateCoachFeedbackError(
           GENERATE_COACH_FEEDBACK_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
           "Fitness profile not found.",
         );
       }
 
-      const trainingPlan =
-        await this.trainingPlanRepository.findActiveByFitnessProfileId(
-          fitnessProfile.id,
-        );
-
-      const { startDate, endDate } = this.getWeekUtcDateRange();
-      const workoutLogs = trainingPlan
-        ? await this.workoutLogRepository.findByTrainingPlanIdsAndDateRange({
-            trainingPlanIds: [trainingPlan.id],
-            startDate,
-            endDate,
-          })
-        : [];
-
-      const workoutsCompleted = workoutLogs.length;
-      const totalDurationMinutes = workoutLogs.reduce(
-        (total, workoutLog) => total + workoutLog.durationMinutes,
-        0,
-      );
-      const averageDurationMinutes =
-        workoutsCompleted === 0
-          ? 0
-          : this.roundToTwoDecimals(totalDurationMinutes / workoutsCompleted);
-      const currentStreak =
-        workoutsCompleted === 0 ? 0 : calculateStreak(workoutLogs);
-      const expectedWorkouts = this.resolveExpectedWorkouts({
-        daysPerWeek: fitnessProfile.trainingAvailability?.daysPerWeek,
-        activityLevel: fitnessProfile.activityLevel,
-      });
-
       const feedback = this.coachFeedbackGenerator.generate({
-        goal: fitnessProfile.goal,
-        activityLevel: fitnessProfile.activityLevel,
-        expectedWorkouts,
-        currentStreak,
-        averageDurationMinutes,
-        workoutLogs,
-        hasTrainingPlan: trainingPlan !== null,
+        goal: healthContext.goal,
+        activityLevel: healthContext.activityLevel,
+        expectedWorkouts:
+          healthContext.weeklyFrequency ??
+          this.resolveExpectedWorkouts(healthContext.activityLevel),
+        currentStreak: healthContext.currentStreak,
+        averageDurationMinutes: healthContext.averageWorkoutDuration,
+        workoutLogs: healthContext.recentWorkoutLogs,
+        hasTrainingPlan: Boolean(healthContext.activeTrainingPlanId),
+        fatigueLevel: healthContext.fatigueLevel,
       });
 
       await this.coachFeedbackRepository.create({
-        userProfileId: userProfile.id,
+        userProfileId: healthContext.userProfileId,
         message: feedback.message,
         insights: feedback.insights,
         recommendations: feedback.recommendations,
@@ -146,36 +90,8 @@ export class GenerateCoachFeedbackUseCase {
     }
   }
 
-  private getWeekUtcDateRange(): {
-    startDate: string;
-    endDate: string;
-  } {
-    const now = this.clock.now();
-    const endDate = this.clock.todayUtcDateString();
-    const start = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-    );
-    start.setUTCDate(start.getUTCDate() - 6);
-
-    return {
-      startDate: this.toUtcDateString(start),
-      endDate,
-    };
-  }
-
-  private resolveExpectedWorkouts(input: {
-    daysPerWeek?: number;
-    activityLevel: "low" | "medium" | "high";
-  }): number {
-    if (
-      typeof input.daysPerWeek === "number" &&
-      Number.isFinite(input.daysPerWeek) &&
-      input.daysPerWeek > 0
-    ) {
-      return Math.round(input.daysPerWeek);
-    }
-
-    switch (input.activityLevel) {
+  private resolveExpectedWorkouts(activityLevel: ActivityLevel): number {
+    switch (activityLevel) {
       case "low":
         return 2;
       case "medium":
@@ -184,13 +100,5 @@ export class GenerateCoachFeedbackUseCase {
       default:
         return 4;
     }
-  }
-
-  private toUtcDateString(date: Date): string {
-    return date.toISOString().slice(0, 10);
-  }
-
-  private roundToTwoDecimals(value: number): number {
-    return Math.round(value * 100) / 100;
   }
 }

@@ -1,92 +1,72 @@
-import { FitnessProfile } from "../../../../fitness/domain/entities/fitness-profile.entity";
-import { FitnessProfileRepository } from "../../../../fitness/domain/repositories/fitness-profile.repository";
 import { CoachFeedbackRepository } from "../../../domain/repositories/coach-feedback.repository";
 import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
-import { WorkoutLogRepository } from "../../../../progress/domain/repositories/workout-log.repository";
-import { Clock } from "../../../../progress/domain/services/clock.service";
-import { TrainingPlan } from "../../../../training/domain/entities/training-plan.entity";
-import { TrainingPlanRepository } from "../../../../training/domain/repositories/training-plan.repository";
-import { UserProfile } from "../../../../users/domain/entities/user-profile.entity";
-import { UserProfileRepository } from "../../../../users/domain/repositories/user-profile.repository";
-import { CoachFeedbackGenerator } from "../../services/coach-feedback/coach-feedback-generator.service";
+import {
+  CoachFeedbackGenerator,
+  CoachFeedbackGeneratorInput,
+} from "../../services/coach-feedback/coach-feedback-generator.service";
+import {
+  BuildUserHealthContextService,
+  UserHealthContext,
+} from "../../services/context-builder/build-user-health-context.service";
 import {
   GENERATE_COACH_FEEDBACK_ERROR_CODES,
 } from "./generate-coach-feedback.errors";
 import { GenerateCoachFeedbackUseCase } from "./generate-coach-feedback.use-case";
 
 describe("GenerateCoachFeedbackUseCase", () => {
-  let userProfileRepository: jest.Mocked<UserProfileRepository>;
-  let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
-  let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
-  let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
   let coachFeedbackRepository: jest.Mocked<CoachFeedbackRepository>;
-  let clock: jest.Mocked<Clock>;
+  let buildUserHealthContextService: {
+    build: jest.MockedFunction<BuildUserHealthContextService["build"]>;
+  };
   let coachFeedbackGenerator: CoachFeedbackGenerator;
+  let generateSpy: jest.SpiedFunction<CoachFeedbackGenerator["generate"]>;
   let useCase: GenerateCoachFeedbackUseCase;
 
   beforeEach(() => {
-    userProfileRepository = {
-      findByAuthUserId: jest.fn(),
-      create: jest.fn(),
-    };
-    fitnessProfileRepository = {
-      findById: jest.fn(),
-      findActiveByUserProfileId: jest.fn(),
-      create: jest.fn(),
-    };
-    trainingPlanRepository = {
-      findById: jest.fn(),
-      findActiveByFitnessProfileId: jest.fn(),
-      create: jest.fn(),
-    };
-    workoutLogRepository = {
-      findByTrainingPlanDayAndDate: jest.fn(),
-      findByTrainingPlanIdsOrdered: jest.fn(),
-      findByTrainingPlanIdsAndDateRange: jest.fn(),
-      create: jest.fn(),
-    };
     coachFeedbackRepository = {
       create: jest.fn(),
       findByUserProfileId: jest.fn(),
     };
-    clock = {
-      now: jest.fn().mockReturnValue(new Date("2026-05-04T10:00:00.000Z")),
-      todayUtcDateString: jest.fn().mockReturnValue("2026-05-04"),
+    buildUserHealthContextService = {
+      build: jest.fn(),
     };
     coachFeedbackGenerator = new CoachFeedbackGenerator();
+    generateSpy = jest.spyOn(coachFeedbackGenerator, "generate");
 
     useCase = new GenerateCoachFeedbackUseCase(
-      userProfileRepository,
-      fitnessProfileRepository,
-      trainingPlanRepository,
-      workoutLogRepository,
-      clock,
       coachFeedbackRepository,
       coachFeedbackGenerator,
+      buildUserHealthContextService as unknown as BuildUserHealthContextService,
     );
   });
 
-  it("returns deterministic feedback for an authenticated user with recent logs", async () => {
-    mockUserProfile(userProfileRepository);
-    mockFitnessProfile(fitnessProfileRepository);
-    mockTrainingPlan(trainingPlanRepository);
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
-      buildWorkoutLog("2026-05-01", 30, "2026-05-01T08:00:00.000Z"),
-      buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
-      buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
-      buildWorkoutLog("2026-05-04", 50, "2026-05-04T08:00:00.000Z"),
-    ]);
+  it("calls BuildUserHealthContextService and returns deterministic feedback with full data", async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        weeklyFrequency: 4,
+        averageWorkoutDuration: 38.75,
+        currentStreak: 4,
+        activeTrainingPlanId: "training_123",
+        recentWorkoutLogs: [
+          buildWorkoutLog("2026-05-01", 30, "2026-05-01T08:00:00.000Z"),
+          buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
+          buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
+          buildWorkoutLog("2026-05-04", 50, "2026-05-04T08:00:00.000Z"),
+        ],
+      }),
+    );
 
     const result = await useCase.execute({
       authUserId: "auth_user_123",
     });
 
-    expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).toHaveBeenCalledWith(
-      {
-        trainingPlanIds: ["training_123"],
-        startDate: "2026-04-28",
-        endDate: "2026-05-04",
-      },
+    expect(buildUserHealthContextService.build).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+    });
+    expect(generateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fatigueLevel: "MODERATE",
+      }) as CoachFeedbackGeneratorInput,
     );
     expect(coachFeedbackRepository.create).toHaveBeenCalledWith({
       userProfileId: "profile_123",
@@ -99,10 +79,16 @@ describe("GenerateCoachFeedbackUseCase", () => {
     );
   });
 
-  it("still returns feedback when no active training plan exists", async () => {
-    mockUserProfile(userProfileRepository);
-    mockFitnessProfile(fitnessProfileRepository, undefined);
-    trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
+  it("continues generating feedback with partial context", async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        weeklyFrequency: 3,
+        averageWorkoutDuration: 0,
+        currentStreak: 0,
+        activeTrainingPlanId: undefined,
+        recentWorkoutLogs: [],
+      }),
+    );
 
     const result = await useCase.execute({
       authUserId: "auth_user_123",
@@ -111,18 +97,23 @@ describe("GenerateCoachFeedbackUseCase", () => {
     expect(result.message).toBe(
       "You are ready to start your first training streak today.",
     );
-    expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).not.toHaveBeenCalled();
   });
 
-  it("uses activity level fallback when training availability is missing", async () => {
-    mockUserProfile(userProfileRepository);
-    mockFitnessProfile(fitnessProfileRepository, 4, false, "high");
-    mockTrainingPlan(trainingPlanRepository);
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
-      buildWorkoutLog("2026-04-28", 30),
-      buildWorkoutLog("2026-05-01", 35),
-      buildWorkoutLog("2026-05-04", 40),
-    ]);
+  it("uses activity-level fallback when weekly frequency is absent from context", async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        activityLevel: "high",
+        weeklyFrequency: undefined,
+        averageWorkoutDuration: 35,
+        currentStreak: 1,
+        activeTrainingPlanId: "training_123",
+        recentWorkoutLogs: [
+          buildWorkoutLog("2026-04-28", 30),
+          buildWorkoutLog("2026-05-01", 35),
+          buildWorkoutLog("2026-05-04", 40),
+        ],
+      }),
+    );
 
     const result = await useCase.execute({
       authUserId: "auth_user_123",
@@ -137,7 +128,15 @@ describe("GenerateCoachFeedbackUseCase", () => {
   });
 
   it("returns USER_PROFILE_NOT_FOUND when user profile is missing", async () => {
-    userProfileRepository.findByAuthUserId.mockResolvedValue(null);
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        userProfileId: undefined,
+        userName: undefined,
+        goal: undefined,
+        activityLevel: undefined,
+        weeklyFrequency: undefined,
+      }),
+    );
 
     await expect(
       useCase.execute({
@@ -149,8 +148,13 @@ describe("GenerateCoachFeedbackUseCase", () => {
   });
 
   it("returns FITNESS_PROFILE_NOT_FOUND when fitness profile is missing", async () => {
-    mockUserProfile(userProfileRepository);
-    fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        goal: undefined,
+        activityLevel: undefined,
+        weeklyFrequency: undefined,
+      }),
+    );
 
     await expect(
       useCase.execute({
@@ -172,7 +176,7 @@ describe("GenerateCoachFeedbackUseCase", () => {
   });
 
   it("maps unexpected failures to AI_COACH_INTERNAL_ERROR", async () => {
-    userProfileRepository.findByAuthUserId.mockRejectedValue(
+    buildUserHealthContextService.build.mockRejectedValue(
       new Error("database unavailable"),
     );
 
@@ -186,10 +190,12 @@ describe("GenerateCoachFeedbackUseCase", () => {
   });
 
   it("fails when coach feedback persistence fails", async () => {
-    mockUserProfile(userProfileRepository);
-    mockFitnessProfile(fitnessProfileRepository);
-    mockTrainingPlan(trainingPlanRepository);
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        activeTrainingPlanId: "training_123",
+        recentWorkoutLogs: [],
+      }),
+    );
     coachFeedbackRepository.create.mockRejectedValue(
       new Error("database unavailable"),
     );
@@ -202,72 +208,27 @@ describe("GenerateCoachFeedbackUseCase", () => {
       code: GENERATE_COACH_FEEDBACK_ERROR_CODES.INTERNAL_ERROR,
     });
   });
-});
 
-function mockUserProfile(
-  userProfileRepository: jest.Mocked<UserProfileRepository>,
-): void {
-  userProfileRepository.findByAuthUserId.mockResolvedValue(
-    new UserProfile({
-      id: "profile_123",
+  it("passes fatigueLevel from health context to the generator", async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        fatigueLevel: "HIGH",
+        currentStreak: 6,
+        averageWorkoutDuration: 80,
+      }),
+    );
+
+    await useCase.execute({
       authUserId: "auth_user_123",
-      name: "Rodrigo Paiva",
-      language: "en-US",
-      timezone: "UTC",
-      status: "active",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }),
-  );
-}
+    });
 
-function mockFitnessProfile(
-  fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>,
-  daysPerWeek = 4,
-  includeTrainingAvailability = true,
-  activityLevel: "low" | "medium" | "high" = "medium",
-): void {
-  fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(
-    new FitnessProfile({
-      id: "fitness_123",
-      userProfileId: "profile_123",
-      heightCm: 180,
-      weightKg: 82.5,
-      goal: "gain_muscle",
-      activityLevel,
-      trainingAvailability: includeTrainingAvailability
-        ? {
-            daysPerWeek,
-            minutesPerSession: 60,
-          }
-        : ({
-            daysPerWeek: undefined,
-            minutesPerSession: 60,
-          } as unknown as FitnessProfile["trainingAvailability"]),
-      limitations: [],
-      status: "active",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }),
-  );
-}
-
-function mockTrainingPlan(
-  trainingPlanRepository: jest.Mocked<TrainingPlanRepository>,
-): void {
-  trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
-    new TrainingPlan({
-      id: "training_123",
-      fitnessProfileId: "fitness_123",
-      goal: "gain_muscle",
-      activityLevel: "medium",
-      weeklySchedule: [],
-      status: "active",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }),
-  );
-}
+    expect(generateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fatigueLevel: "HIGH",
+      }) as CoachFeedbackGeneratorInput,
+    );
+  });
+});
 
 function buildWorkoutLog(
   date: string,
@@ -284,4 +245,28 @@ function buildWorkoutLog(
     createdAt: new Date(createdAt),
     updatedAt: new Date(createdAt),
   });
+}
+
+function buildHealthContext(
+  overrides: Partial<UserHealthContext> = {},
+): UserHealthContext {
+  return {
+    authUserId: "auth_user_123",
+    userProfileId: "profile_123",
+    userName: "Rodrigo Paiva",
+    goal: "gain_muscle",
+    activityLevel: "medium",
+    weeklyFrequency: 4,
+    adherenceScore: 0,
+    currentStreak: 0,
+    averageWorkoutDuration: 0,
+    fatigueLevel: "MODERATE",
+    availableEquipment: [],
+    limitations: [],
+    todayWorkout: null,
+    activeTrainingPlanId: "training_123",
+    recentWorkoutLogs: [],
+    generatedAt: new Date("2026-05-04T10:00:00.000Z"),
+    ...overrides,
+  };
 }

@@ -11,11 +11,13 @@ import {
 } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
 import { GetCoachFeedbackHistoryUseCase } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
 import { GenerateCoachFeedbackUseCase } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
+import { BuildUserHealthContextService } from "../../application/services/context-builder/build-user-health-context.service";
 import { AiController } from "./ai.controller";
 
 describe("AiController history", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
+  let buildUserHealthContextService: jest.Mocked<BuildUserHealthContextService>;
   let controller: AiController;
 
   beforeEach(() => {
@@ -25,10 +27,14 @@ describe("AiController history", () => {
     getCoachFeedbackHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackHistoryUseCase>;
+    buildUserHealthContextService = {
+      build: jest.fn(),
+    } as unknown as jest.Mocked<BuildUserHealthContextService>;
 
     controller = new AiController(
       generateCoachFeedbackUseCase,
       getCoachFeedbackHistoryUseCase,
+      buildUserHealthContextService,
     );
   });
 

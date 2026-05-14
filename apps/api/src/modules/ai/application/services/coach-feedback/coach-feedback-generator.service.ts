@@ -5,6 +5,7 @@ import {
   FitnessGoal,
 } from "../../../../fitness/domain/entities/fitness-profile.entity";
 import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
+import { FatigueLevel } from "../context-builder/build-user-health-context.service";
 
 export type CoachFeedbackGeneratorInput = {
   goal: FitnessGoal;
@@ -14,6 +15,7 @@ export type CoachFeedbackGeneratorInput = {
   averageDurationMinutes: number;
   workoutLogs: WorkoutLog[];
   hasTrainingPlan: boolean;
+  fatigueLevel?: FatigueLevel;
 };
 
 export type CoachFeedbackGeneratorOutput = {
@@ -51,6 +53,8 @@ export class CoachFeedbackGenerator {
 
     const insights: string[] = [];
     const recommendations: string[] = [];
+    const fatigueLevel = input.fatigueLevel ?? "MODERATE";
+    const hasExplicitFatigueLevel = input.fatigueLevel !== undefined;
 
     if (isNoLogs) {
       insights.push("No completed workouts were found in the last 7 days");
@@ -103,6 +107,15 @@ export class CoachFeedbackGenerator {
         recommendations.push("Keep showing up for your next planned session");
       }
     }
+
+    this.applyFatigueSignals({
+      fatigueLevel,
+      hasExplicitFatigueLevel,
+      insights,
+      recommendations,
+      hasTrainingPlan: input.hasTrainingPlan,
+      isNoLogs,
+    });
 
     recommendations.push(this.buildGoalAwareRecommendation(input.goal));
 
@@ -160,6 +173,69 @@ export class CoachFeedbackGenerator {
       default:
         return "Keep your routine steady to maintain your current fitness";
     }
+  }
+
+  private applyFatigueSignals(input: {
+    fatigueLevel: FatigueLevel;
+    hasExplicitFatigueLevel: boolean;
+    insights: string[];
+    recommendations: string[];
+    hasTrainingPlan: boolean;
+    isNoLogs: boolean;
+  }): void {
+    if (input.isNoLogs) {
+      return;
+    }
+
+    switch (input.fatigueLevel) {
+      case "HIGH":
+        this.upsertInsight(
+          input.insights,
+          "Your recent training load suggests elevated fatigue",
+        );
+        input.recommendations.unshift(
+          "Prioritize recovery and consider a lighter session if needed",
+        );
+        input.recommendations.push(
+          "Avoid increasing intensity until your recovery feels more stable",
+        );
+        return;
+      case "LOW":
+        this.upsertInsight(
+          input.insights,
+          "Your recent workload looks manageable",
+        );
+        input.recommendations.push(
+          input.hasTrainingPlan
+            ? "You can consider a small progression if your form stays solid"
+            : "Build consistency first, then progress intensity gradually",
+        );
+        return;
+      case "MODERATE":
+      default:
+        if (input.insights.length < 3) {
+          input.insights.push("Your current workload looks balanced overall");
+        } else if (input.hasExplicitFatigueLevel) {
+          input.insights[input.insights.length - 1] =
+            "Your current workload looks balanced overall";
+        }
+        input.recommendations.push(
+          "Keep your current plan and monitor recovery between sessions",
+        );
+    }
+  }
+
+  private upsertInsight(insights: string[], message: string): void {
+    if (insights.includes(message)) {
+      return;
+    }
+
+    if (insights.length < 3) {
+      insights.push(message);
+      return;
+    }
+
+    insights[insights.length - 1] = message;
   }
 
   private hasIncreasingDurationTrend(workoutLogs: WorkoutLog[]): boolean {

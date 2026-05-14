@@ -30,6 +30,95 @@ describe("CoachFeedbackGenerator", () => {
     );
   });
 
+  it("prioritizes recovery guidance when fatigueLevel is HIGH", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 6,
+      averageDurationMinutes: 78,
+      workoutLogs: [
+        buildWorkoutLog("2026-04-29", 70),
+        buildWorkoutLog("2026-04-30", 75),
+        buildWorkoutLog("2026-05-01", 80),
+        buildWorkoutLog("2026-05-02", 82),
+        buildWorkoutLog("2026-05-03", 78),
+        buildWorkoutLog("2026-05-04", 83),
+      ],
+      hasTrainingPlan: true,
+      fatigueLevel: "HIGH",
+    });
+
+    expect(result.insights).toContain(
+      "Your recent training load suggests elevated fatigue",
+    );
+    expect(result.recommendations).toContain(
+      "Prioritize recovery and consider a lighter session if needed",
+    );
+  });
+
+  it("supports controlled progression guidance when fatigueLevel is LOW", () => {
+    const result = generator.generate({
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 40,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-03", 38),
+        buildWorkoutLog("2026-05-04", 42),
+      ],
+      hasTrainingPlan: true,
+      fatigueLevel: "LOW",
+    });
+
+    expect(result.insights).toContain(
+      "Your recent workload looks manageable",
+    );
+    expect(result.recommendations).toContain(
+      "You can consider a small progression if your form stays solid",
+    );
+  });
+
+  it("keeps balanced recovery messaging when fatigueLevel is MODERATE", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 1,
+      averageDurationMinutes: 46,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 45),
+        buildWorkoutLog("2026-05-04", 47),
+      ],
+      hasTrainingPlan: true,
+      fatigueLevel: "MODERATE",
+    });
+
+    expect(result.recommendations).toContain(
+      "Keep your current plan and monitor recovery between sessions",
+    );
+  });
+
+  it("falls back to MODERATE messaging when fatigueLevel is not provided", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 1,
+      averageDurationMinutes: 46,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 45),
+        buildWorkoutLog("2026-05-04", 47),
+      ],
+      hasTrainingPlan: true,
+    });
+
+    expect(result.recommendations).toContain(
+      "Keep your current plan and monitor recovery between sessions",
+    );
+  });
+
   it("prioritizes high streak messaging over other classifications", () => {
     const result = generator.generate({
       goal: "maintain",
@@ -155,6 +244,7 @@ describe("CoachFeedbackGenerator", () => {
         buildWorkoutLog("2026-05-01", 80, "2026-05-01T08:00:00.000Z"),
       ],
       hasTrainingPlan: true,
+      fatigueLevel: "HIGH",
     });
 
     expect(result.message.length).toBeLessThanOrEqual(240);

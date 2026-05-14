@@ -1,0 +1,349 @@
+import {
+  FitnessProfile,
+  FitnessProfileLimitation,
+} from "../../../../fitness/domain/entities/fitness-profile.entity";
+import { FitnessProfileRepository } from "../../../../fitness/domain/repositories/fitness-profile.repository";
+import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
+import { WorkoutLogRepository } from "../../../../progress/domain/repositories/workout-log.repository";
+import { Clock } from "../../../../progress/domain/services/clock.service";
+import { TrainingPlan } from "../../../../training/domain/entities/training-plan.entity";
+import { TrainingPlanRepository } from "../../../../training/domain/repositories/training-plan.repository";
+import { UserProfile } from "../../../../users/domain/entities/user-profile.entity";
+import { UserProfileRepository } from "../../../../users/domain/repositories/user-profile.repository";
+import { BuildUserHealthContextService } from "./build-user-health-context.service";
+
+describe("BuildUserHealthContextService", () => {
+  let userProfileRepository: jest.Mocked<UserProfileRepository>;
+  let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
+  let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
+  let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
+  let clock: jest.Mocked<Clock>;
+  let service: BuildUserHealthContextService;
+
+  beforeEach(() => {
+    userProfileRepository = {
+      findByAuthUserId: jest.fn(),
+      create: jest.fn(),
+    };
+    fitnessProfileRepository = {
+      findById: jest.fn(),
+      findActiveByUserProfileId: jest.fn(),
+      create: jest.fn(),
+    };
+    trainingPlanRepository = {
+      findById: jest.fn(),
+      findActiveByFitnessProfileId: jest.fn(),
+      create: jest.fn(),
+    };
+    workoutLogRepository = {
+      findByTrainingPlanDayAndDate: jest.fn(),
+      findByTrainingPlanIdsOrdered: jest.fn(),
+      findByTrainingPlanIdsAndDateRange: jest.fn(),
+      create: jest.fn(),
+    };
+    clock = {
+      now: jest.fn().mockReturnValue(new Date("2026-05-04T10:00:00.000Z")),
+      todayUtcDateString: jest.fn().mockReturnValue("2026-05-04"),
+    };
+
+    service = new BuildUserHealthContextService(
+      userProfileRepository,
+      fitnessProfileRepository,
+      trainingPlanRepository,
+      workoutLogRepository,
+      clock,
+    );
+  });
+
+  it("builds a context with complete user data", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository, [
+      buildLimitation("knee_pain", "medium"),
+    ]);
+    mockTrainingPlan(trainingPlanRepository);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-04", 50, "2026-05-04T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).toHaveBeenCalledWith(
+      {
+        trainingPlanIds: ["training_123"],
+        startDate: "2026-04-28",
+        endDate: "2026-05-04",
+      },
+    );
+    expect(result).toMatchObject({
+      authUserId: "auth_user_123",
+      userProfileId: "profile_123",
+      userName: "Rodrigo Paiva",
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      weeklyFrequency: 4,
+      adherenceScore: 75,
+      currentStreak: 3,
+      averageWorkoutDuration: 41.67,
+      fatigueLevel: "LOW",
+      activeTrainingPlanId: "training_123",
+      limitations: [
+        {
+          type: "knee_pain",
+          severity: "medium",
+        },
+      ],
+      todayWorkout: {
+        dayIndex: 1,
+        title: "Upper Body Strength",
+      },
+    });
+    expect(result.recentWorkoutLogs).toHaveLength(3);
+    expect(result.availableEquipment).toEqual([]);
+  });
+
+  it("returns a partial context when only user data exists", async () => {
+    mockUserProfile(userProfileRepository);
+    fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(trainingPlanRepository.findActiveByFitnessProfileId).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      authUserId: "auth_user_123",
+      userProfileId: "profile_123",
+      userName: "Rodrigo Paiva",
+      adherenceScore: 0,
+      currentStreak: 0,
+      averageWorkoutDuration: 0,
+      fatigueLevel: "MODERATE",
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      limitations: [],
+      availableEquipment: [],
+    });
+    expect(result.goal).toBeUndefined();
+    expect(result.weeklyFrequency).toBeUndefined();
+  });
+
+  it("returns a safe context when there is no active training plan", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository, [
+      buildLimitation("shoulder_sensitivity", "low"),
+    ]);
+    trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      authUserId: "auth_user_123",
+      userProfileId: "profile_123",
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      weeklyFrequency: 4,
+      adherenceScore: 0,
+      currentStreak: 0,
+      averageWorkoutDuration: 0,
+      fatigueLevel: "MODERATE",
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      limitations: [
+        {
+          type: "shoulder_sensitivity",
+          severity: "low",
+        },
+      ],
+    });
+  });
+
+  it("falls back safely when there is not enough progress data", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result).toMatchObject({
+      authUserId: "auth_user_123",
+      activeTrainingPlanId: "training_123",
+      adherenceScore: 0,
+      currentStreak: 0,
+      averageWorkoutDuration: 0,
+      fatigueLevel: "MODERATE",
+      todayWorkout: {
+        dayIndex: 1,
+        title: "Upper Body Strength",
+      },
+      recentWorkoutLogs: [],
+    });
+  });
+
+  it("returns HIGH when current streak is 6 or more", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-04-29", 40, "2026-04-29T08:00:00.000Z"),
+      buildWorkoutLog("2026-04-30", 40, "2026-04-30T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-01", 40, "2026-05-01T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-02", 40, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-04", 40, "2026-05-04T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.fatigueLevel).toBe("HIGH");
+    expect(result.currentStreak).toBe(6);
+  });
+
+  it("returns HIGH when average workout duration is very high", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-05-02", 80, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 90, "2026-05-03T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.fatigueLevel).toBe("HIGH");
+    expect(result.averageWorkoutDuration).toBe(85);
+  });
+
+  it("returns LOW when consistency is healthy and duration is controlled", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-04", 45, "2026-05-04T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.fatigueLevel).toBe("LOW");
+    expect(result.currentStreak).toBe(3);
+    expect(result.averageWorkoutDuration).toBe(40);
+  });
+});
+
+function mockUserProfile(
+  userProfileRepository: jest.Mocked<UserProfileRepository>,
+): void {
+  userProfileRepository.findByAuthUserId.mockResolvedValue(
+    new UserProfile({
+      id: "profile_123",
+      authUserId: "auth_user_123",
+      name: "Rodrigo Paiva",
+      language: "en-US",
+      timezone: "UTC",
+      status: "active",
+      createdAt: new Date("2026-04-01T10:00:00.000Z"),
+      updatedAt: new Date("2026-04-01T10:00:00.000Z"),
+    }),
+  );
+}
+
+function mockFitnessProfile(
+  fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>,
+  limitations: FitnessProfileLimitation[] = [],
+): void {
+  fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(
+    new FitnessProfile({
+      id: "fitness_123",
+      userProfileId: "profile_123",
+      heightCm: 178,
+      weightKg: 76,
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      trainingAvailability: {
+        daysPerWeek: 4,
+        minutesPerSession: 50,
+      },
+      limitations,
+      status: "active",
+      createdAt: new Date("2026-04-02T10:00:00.000Z"),
+      updatedAt: new Date("2026-04-02T10:00:00.000Z"),
+    }),
+  );
+}
+
+function mockTrainingPlan(
+  trainingPlanRepository: jest.Mocked<TrainingPlanRepository>,
+): void {
+  trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
+    new TrainingPlan({
+      id: "training_123",
+      fitnessProfileId: "fitness_123",
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      weeklySchedule: [
+        {
+          dayIndex: 1,
+          title: "Upper Body Strength",
+          focus: "upper_body_strength",
+          format: "strength",
+          intensity: "high",
+          exercises: [
+            {
+              name: "push_up",
+              sets: 4,
+              reps: "8-12",
+              restSeconds: 90,
+            },
+          ],
+        },
+      ],
+      status: "active",
+      createdAt: new Date("2026-04-03T10:00:00.000Z"),
+      updatedAt: new Date("2026-04-03T10:00:00.000Z"),
+    }),
+  );
+}
+
+function buildWorkoutLog(
+  date: string,
+  durationMinutes: number,
+  createdAt = `${date}T10:00:00.000Z`,
+): WorkoutLog {
+  return new WorkoutLog({
+    id: `${date}-${durationMinutes}`,
+    trainingPlanId: "training_123",
+    workoutDayIndex: 1,
+    durationMinutes,
+    completedExercises: [],
+    date,
+    createdAt: new Date(createdAt),
+    updatedAt: new Date(createdAt),
+  });
+}
+
+function buildLimitation(
+  type: string,
+  severity: FitnessProfileLimitation["severity"],
+): FitnessProfileLimitation {
+  return {
+    type,
+    severity,
+  };
+}

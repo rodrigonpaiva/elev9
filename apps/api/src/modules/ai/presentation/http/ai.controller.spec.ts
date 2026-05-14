@@ -15,11 +15,15 @@ import {
   GenerateCoachFeedbackError,
 } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors";
 import { GenerateCoachFeedbackUseCase } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
+import { BuildUserHealthContextService } from "../../application/services/context-builder/build-user-health-context.service";
 import { AiController } from "./ai.controller";
+import { AuthSessionGuard } from "../../../users/presentation/http/guards/auth-session.guard";
+import { GUARDS_METADATA } from "@nestjs/common/constants";
 
 describe("AiController", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
+  let buildUserHealthContextService: jest.Mocked<BuildUserHealthContextService>;
   let controller: AiController;
 
   beforeEach(() => {
@@ -29,10 +33,14 @@ describe("AiController", () => {
     getCoachFeedbackHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackHistoryUseCase>;
+    buildUserHealthContextService = {
+      build: jest.fn(),
+    } as unknown as jest.Mocked<BuildUserHealthContextService>;
 
     controller = new AiController(
       generateCoachFeedbackUseCase,
       getCoachFeedbackHistoryUseCase,
+      buildUserHealthContextService,
     );
   });
 
@@ -205,5 +213,62 @@ describe("AiController", () => {
         {},
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("returns the authenticated AI context", async () => {
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: "auth_user_123",
+      userProfileId: "profile_123",
+      userName: "Rodrigo Paiva",
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      weeklyFrequency: 4,
+      adherenceScore: 75,
+      currentStreak: 3,
+      averageWorkoutDuration: 42,
+      fatigueLevel: "LOW",
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      activeTrainingPlanId: "training_123",
+      recentWorkoutLogs: [],
+      generatedAt: new Date("2026-05-04T10:00:00.000Z"),
+    });
+
+    const result = await controller.getAiContext({
+      authUser: {
+        id: "auth_user_123",
+        email: "user@email.com",
+      },
+    });
+
+    expect(buildUserHealthContextService.build).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+    });
+    expect(result).toMatchObject({
+      userId: "auth_user_123",
+      userProfileId: "profile_123",
+      fatigueLevel: "LOW",
+      generatedAt: "2026-05-04T10:00:00.000Z",
+    });
+  });
+
+  it("uses the same auth guard on AI routes", () => {
+    const generateGuards = Reflect.getMetadata(
+      GUARDS_METADATA,
+      AiController.prototype.generateCoachFeedback,
+    ) as Array<new (...args: never[]) => unknown>;
+    const historyGuards = Reflect.getMetadata(
+      GUARDS_METADATA,
+      AiController.prototype.getCoachFeedbackHistory,
+    ) as Array<new (...args: never[]) => unknown>;
+    const contextGuards = Reflect.getMetadata(
+      GUARDS_METADATA,
+      AiController.prototype.getAiContext,
+    ) as Array<new (...args: never[]) => unknown>;
+
+    expect(generateGuards).toContain(AuthSessionGuard);
+    expect(historyGuards).toContain(AuthSessionGuard);
+    expect(contextGuards).toContain(AuthSessionGuard);
   });
 });

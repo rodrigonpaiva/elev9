@@ -25,6 +25,7 @@ import {
   GenerateCoachFeedbackError,
 } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors";
 import { GenerateCoachFeedbackUseCase } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
+import { BuildUserHealthContextService } from "../../application/services/context-builder/build-user-health-context.service";
 import { GetCoachFeedbackHistoryQueryDto } from "./dto/get-coach-feedback-history.query.dto";
 import { GetCoachFeedbackHistoryResponseDto } from "./dto/get-coach-feedback-history.response.dto";
 import { GenerateCoachFeedbackResponseDto } from "./dto/generate-coach-feedback.response.dto";
@@ -41,6 +42,7 @@ export class AiController {
   constructor(
     private readonly generateCoachFeedbackUseCase: GenerateCoachFeedbackUseCase,
     private readonly getCoachFeedbackHistoryUseCase: GetCoachFeedbackHistoryUseCase,
+    private readonly buildUserHealthContextService: BuildUserHealthContextService,
   ) {}
 
   @Post("coach-feedback")
@@ -89,6 +91,94 @@ export class AiController {
     } catch (error) {
       this.handleGetHistoryError(error);
     }
+  }
+
+  @Get("context")
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getAiContext(@Req() request: RequestWithAuthUser): Promise<{
+    userId: string;
+    userProfileId?: string;
+    userName?: string;
+    goal?: string;
+    activityLevel?: string;
+    weeklyFrequency?: number;
+    adherenceScore: number;
+    currentStreak: number;
+    averageWorkoutDuration: number;
+    fatigueLevel: "LOW" | "MODERATE" | "HIGH";
+    availableEquipment: string[];
+    limitations: Array<{
+      type: string;
+      description?: string;
+      severity: "low" | "medium" | "high";
+    }>;
+    todayWorkout: {
+      dayIndex: number;
+      title: string;
+      focus: string;
+      format: string;
+      intensity: "low" | "moderate" | "high";
+      exercises: Array<{
+        name: string;
+        sets: number;
+        reps: string;
+        restSeconds: number;
+      }>;
+    } | null;
+    activeTrainingPlanId?: string;
+    recentWorkoutLogs: Array<{
+      id: string;
+      trainingPlanId: string;
+      workoutDayIndex: number;
+      durationMinutes: number;
+      completedExercises: Array<{
+        name: string;
+        setsDone: number;
+        repsDone: number;
+      }>;
+      feedback?: {
+        difficulty: "easy" | "medium" | "hard";
+        notes?: string;
+      };
+      date: string;
+      createdAt: string;
+      updatedAt: string;
+    }>;
+    generatedAt: string;
+  }> {
+    const context = await this.buildUserHealthContextService.build({
+      authUserId: request.authUser?.id ?? "",
+    });
+
+    return {
+      userId: context.authUserId,
+      userProfileId: context.userProfileId,
+      userName: context.userName,
+      goal: context.goal,
+      activityLevel: context.activityLevel,
+      weeklyFrequency: context.weeklyFrequency,
+      adherenceScore: context.adherenceScore,
+      currentStreak: context.currentStreak,
+      averageWorkoutDuration: context.averageWorkoutDuration,
+      fatigueLevel: context.fatigueLevel,
+      availableEquipment: context.availableEquipment,
+      limitations: context.limitations,
+      todayWorkout: context.todayWorkout,
+      activeTrainingPlanId: context.activeTrainingPlanId,
+      recentWorkoutLogs: context.recentWorkoutLogs.map((workoutLog) => ({
+        id: workoutLog.id,
+        trainingPlanId: workoutLog.trainingPlanId,
+        workoutDayIndex: workoutLog.workoutDayIndex,
+        durationMinutes: workoutLog.durationMinutes,
+        completedExercises: workoutLog.completedExercises,
+        feedback: workoutLog.feedback,
+        date: workoutLog.date,
+        createdAt: workoutLog.createdAt.toISOString(),
+        updatedAt: workoutLog.updatedAt.toISOString(),
+      })),
+      generatedAt: context.generatedAt.toISOString(),
+    };
   }
 
   private handleError(error: unknown): never {
