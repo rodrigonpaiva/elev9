@@ -11,6 +11,31 @@
         "command": "expo start"
       }
     },
+    "build": {
+      "executor": "@nx/expo:export",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "platform": "all",
+        "outputDir": "dist/apps/mobile"
+      },
+      "dependsOn": ["sync-deps"]
+    },
+    "build:eas": {
+      "executor": "@nx/expo:build",
+      "options": {
+        "platform": "all",
+        "profile": "development"
+      }
+    },
+    "export": {
+      "executor": "@nx/expo:export",
+      "outputs": ["{options.outputDir}"],
+      "options": {
+        "platform": "all",
+        "outputDir": "dist/apps/mobile"
+      },
+      "dependsOn": ["sync-deps"]
+    },
     "run-android": {
       "executor": "nx:run-commands",
       "options": {
