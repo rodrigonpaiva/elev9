@@ -127,6 +127,13 @@ export class AiController {
       }>;
     } | null;
     activeTrainingPlanId?: string;
+    latestCheckIn?: {
+      energyLevel: number;
+      sleepQuality: number;
+      muscleSoreness: number;
+      motivationLevel: number;
+      createdAt: string;
+    };
     recentWorkoutLogs: Array<{
       id: string;
       trainingPlanId: string;
@@ -166,6 +173,15 @@ export class AiController {
       limitations: context.limitations,
       todayWorkout: context.todayWorkout,
       activeTrainingPlanId: context.activeTrainingPlanId,
+      latestCheckIn: context.latestCheckIn
+        ? {
+            energyLevel: context.latestCheckIn.energyLevel,
+            sleepQuality: context.latestCheckIn.sleepQuality,
+            muscleSoreness: context.latestCheckIn.muscleSoreness,
+            motivationLevel: context.latestCheckIn.motivationLevel,
+            createdAt: context.latestCheckIn.createdAt.toISOString(),
+          }
+        : undefined,
       recentWorkoutLogs: context.recentWorkoutLogs.map((workoutLog) => ({
         id: workoutLog.id,
         trainingPlanId: workoutLog.trainingPlanId,

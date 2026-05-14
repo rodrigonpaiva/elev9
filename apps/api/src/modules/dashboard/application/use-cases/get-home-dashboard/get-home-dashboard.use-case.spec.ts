@@ -7,6 +7,7 @@ import { TrainingPlan } from "../../../../training/domain/entities/training-plan
 import { TrainingPlanRepository } from "../../../../training/domain/repositories/training-plan.repository";
 import { UserProfile } from "../../../../users/domain/entities/user-profile.entity";
 import { UserProfileRepository } from "../../../../users/domain/repositories/user-profile.repository";
+import { BuildUserHealthContextService } from "../../../../ai/application/services/context-builder/build-user-health-context.service";
 import {
   GET_HOME_DASHBOARD_ERROR_CODES,
 } from "./get-home-dashboard.errors";
@@ -18,6 +19,9 @@ describe("GetHomeDashboardUseCase", () => {
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
   let clock: jest.Mocked<Clock>;
+  let buildUserHealthContextService: {
+    build: jest.MockedFunction<BuildUserHealthContextService["build"]>;
+  };
   let useCase: GetHomeDashboardUseCase;
 
   beforeEach(() => {
@@ -45,6 +49,25 @@ describe("GetHomeDashboardUseCase", () => {
       now: jest.fn().mockReturnValue(new Date("2026-04-30T10:00:00.000Z")),
       todayUtcDateString: jest.fn().mockReturnValue("2026-04-30"),
     };
+    buildUserHealthContextService = {
+      build: jest.fn().mockResolvedValue({
+        authUserId: "auth_user_123",
+        userProfileId: "profile_123",
+        userName: "Rodrigo Paiva",
+        goal: "gain_muscle",
+        activityLevel: "high",
+        weeklyFrequency: 4,
+        adherenceScore: 0,
+        currentStreak: 0,
+        averageWorkoutDuration: 0,
+        fatigueLevel: "MODERATE",
+        availableEquipment: [],
+        limitations: [],
+        todayWorkout: null,
+        recentWorkoutLogs: [],
+        generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      }),
+    };
 
     useCase = new GetHomeDashboardUseCase(
       userProfileRepository,
@@ -52,6 +75,7 @@ describe("GetHomeDashboardUseCase", () => {
       trainingPlanRepository,
       workoutLogRepository,
       clock,
+      buildUserHealthContextService as unknown as BuildUserHealthContextService,
     );
   });
 
@@ -139,6 +163,10 @@ describe("GetHomeDashboardUseCase", () => {
           averageDurationMinutes: 0,
           lastWorkoutDate: null,
         },
+        recovery: {
+          fatigueLevel: "MODERATE",
+          recommendedIntensity: "medium",
+        },
       },
     });
     expect(trainingPlanRepository.findActiveByFitnessProfileId).not.toHaveBeenCalled();
@@ -161,6 +189,10 @@ describe("GetHomeDashboardUseCase", () => {
       totalDurationMinutes: 0,
       averageDurationMinutes: 0,
       lastWorkoutDate: null,
+    });
+    expect(result.dashboard.recovery).toEqual({
+      fatigueLevel: "MODERATE",
+      recommendedIntensity: "medium",
     });
     expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).not.toHaveBeenCalled();
   });
@@ -255,6 +287,10 @@ describe("GetHomeDashboardUseCase", () => {
       averageDurationMinutes: 47.5,
       lastWorkoutDate: "2026-04-30",
     });
+    expect(result.dashboard.recovery).toEqual({
+      fatigueLevel: "MODERATE",
+      recommendedIntensity: "medium",
+    });
   });
 
   it("isolates the summary by authenticated user's training plan id", async () => {
@@ -283,6 +319,73 @@ describe("GetHomeDashboardUseCase", () => {
       }),
     ).rejects.toMatchObject({
       code: GET_HOME_DASHBOARD_ERROR_CODES.USER_PROFILE_NOT_FOUND,
+    });
+  });
+
+  it("returns recovery with HIGH fatigue mapped to low intensity", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: "auth_user_123",
+      adherenceScore: 0,
+      currentStreak: 6,
+      averageWorkoutDuration: 80,
+      fatigueLevel: "HIGH",
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      latestCheckIn: {
+        energyLevel: 2,
+        sleepQuality: 2,
+        muscleSoreness: 4,
+        motivationLevel: 3,
+        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+      },
+    });
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.recovery).toEqual({
+      fatigueLevel: "HIGH",
+      recommendedIntensity: "low",
+      latestCheckIn: {
+        energyLevel: 2,
+        sleepQuality: 2,
+        muscleSoreness: 4,
+        motivationLevel: 3,
+        createdAt: "2026-04-30T09:00:00.000Z",
+      },
+    });
+  });
+
+  it("returns recovery with LOW fatigue mapped to normal intensity", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: "auth_user_123",
+      adherenceScore: 0,
+      currentStreak: 3,
+      averageWorkoutDuration: 40,
+      fatigueLevel: "LOW",
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      latestCheckIn: undefined,
+    });
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.recovery).toEqual({
+      fatigueLevel: "LOW",
+      recommendedIntensity: "normal",
     });
   });
 });

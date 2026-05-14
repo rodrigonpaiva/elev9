@@ -1,5 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 
+import { BuildUserHealthContextService } from "../../../../ai/application/services/context-builder/build-user-health-context.service";
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
@@ -37,6 +38,7 @@ export class GetHomeDashboardUseCase {
     private readonly workoutLogRepository: WorkoutLogRepository,
     @Inject(CLOCK)
     private readonly clock: Clock,
+    private readonly buildUserHealthContextService: BuildUserHealthContextService,
   ) {}
 
   async execute(input: GetHomeDashboardInput): Promise<GetHomeDashboardOutput> {
@@ -53,6 +55,9 @@ export class GetHomeDashboardUseCase {
     try {
       const userProfile =
         await this.userProfileRepository.findByAuthUserId(authUserId);
+      const healthContext = await this.buildUserHealthContextService.build({
+        authUserId,
+      });
 
       if (!userProfile) {
         throw new GetHomeDashboardError(
@@ -75,6 +80,7 @@ export class GetHomeDashboardUseCase {
             fitnessProfile: null,
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
+            recovery: this.buildRecoverySummary(healthContext),
           },
         };
       }
@@ -97,6 +103,7 @@ export class GetHomeDashboardUseCase {
             },
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
+            recovery: this.buildRecoverySummary(healthContext),
           },
         };
       }
@@ -126,6 +133,7 @@ export class GetHomeDashboardUseCase {
             todayWorkout,
           },
           progressSummary: this.buildSummaryFromLogs(workoutLogs),
+          recovery: this.buildRecoverySummary(healthContext),
         },
       };
     } catch (error) {
@@ -238,6 +246,40 @@ export class GetHomeDashboardUseCase {
       averageDurationMinutes,
       lastWorkoutDate,
     };
+  }
+
+  private buildRecoverySummary(
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
+  ): GetHomeDashboardOutput["dashboard"]["recovery"] {
+    return {
+      fatigueLevel: healthContext.fatigueLevel,
+      recommendedIntensity: this.mapRecommendedIntensity(
+        healthContext.fatigueLevel,
+      ),
+      latestCheckIn: healthContext.latestCheckIn
+        ? {
+            energyLevel: healthContext.latestCheckIn.energyLevel,
+            sleepQuality: healthContext.latestCheckIn.sleepQuality,
+            muscleSoreness: healthContext.latestCheckIn.muscleSoreness,
+            motivationLevel: healthContext.latestCheckIn.motivationLevel,
+            createdAt: healthContext.latestCheckIn.createdAt.toISOString(),
+          }
+        : undefined,
+    };
+  }
+
+  private mapRecommendedIntensity(
+    fatigueLevel: GetHomeDashboardOutput["dashboard"]["recovery"]["fatigueLevel"],
+  ): GetHomeDashboardOutput["dashboard"]["recovery"]["recommendedIntensity"] {
+    switch (fatigueLevel) {
+      case "HIGH":
+        return "low";
+      case "LOW":
+        return "normal";
+      case "MODERATE":
+      default:
+        return "medium";
+    }
   }
 
   private roundToTwoDecimals(value: number): number {

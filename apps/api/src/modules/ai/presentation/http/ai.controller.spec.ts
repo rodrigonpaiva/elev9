@@ -231,6 +231,13 @@ describe("AiController", () => {
       limitations: [],
       todayWorkout: null,
       activeTrainingPlanId: "training_123",
+      latestCheckIn: {
+        energyLevel: 4,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 5,
+        createdAt: new Date("2026-05-04T09:00:00.000Z"),
+      },
       recentWorkoutLogs: [],
       generatedAt: new Date("2026-05-04T10:00:00.000Z"),
     });
@@ -249,6 +256,13 @@ describe("AiController", () => {
       userId: "auth_user_123",
       userProfileId: "profile_123",
       fatigueLevel: "LOW",
+      latestCheckIn: {
+        energyLevel: 4,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 5,
+        createdAt: "2026-05-04T09:00:00.000Z",
+      },
       generatedAt: "2026-05-04T10:00:00.000Z",
     });
   });

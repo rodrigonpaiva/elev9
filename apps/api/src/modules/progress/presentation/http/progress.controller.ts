@@ -17,6 +17,11 @@ import {
 
 import { AuthSessionGuard } from "../../../users/presentation/http/guards/auth-session.guard";
 import {
+  CREATE_DAILY_CHECK_IN_ERROR_CODES,
+  CreateDailyCheckInError,
+} from "../../application/use-cases/create-daily-check-in/create-daily-check-in.errors";
+import { CreateDailyCheckInUseCase } from "../../application/use-cases/create-daily-check-in/create-daily-check-in.use-case";
+import {
   GET_WORKOUT_HISTORY_ERROR_CODES,
   GetWorkoutHistoryError,
 } from "../../application/use-cases/get-workout-history/get-workout-history.errors";
@@ -31,6 +36,8 @@ import {
   LogWorkoutError,
 } from "../../application/use-cases/log-workout/log-workout.errors";
 import { LogWorkoutUseCase } from "../../application/use-cases/log-workout/log-workout.use-case";
+import { CreateDailyCheckInRequestDto } from "./dto/create-daily-check-in.request.dto";
+import { CreateDailyCheckInResponseDto } from "./dto/create-daily-check-in.response.dto";
 import { GetProgressSummaryQueryDto } from "./dto/get-progress-summary.query.dto";
 import { GetProgressSummaryResponseDto } from "./dto/get-progress-summary.response.dto";
 import { GetWorkoutHistoryQueryDto } from "./dto/get-workout-history.query.dto";
@@ -51,10 +58,42 @@ class GetWorkoutHistoryBodyDto {}
 @Controller("progress")
 export class ProgressController {
   constructor(
+    private readonly createDailyCheckInUseCase: CreateDailyCheckInUseCase,
     private readonly logWorkoutUseCase: LogWorkoutUseCase,
     private readonly getProgressSummaryUseCase: GetProgressSummaryUseCase,
     private readonly getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
   ) {}
+
+  @Post("daily-check-in")
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async createDailyCheckIn(
+    @Req() request: RequestWithAuthUser,
+    @Body() body: CreateDailyCheckInRequestDto,
+  ): Promise<CreateDailyCheckInResponseDto> {
+    try {
+      const result = await this.createDailyCheckInUseCase.execute({
+        authUserId: request.authUser?.id ?? "",
+        energyLevel: body.energyLevel,
+        sleepQuality: body.sleepQuality,
+        muscleSoreness: body.muscleSoreness,
+        motivationLevel: body.motivationLevel,
+      });
+
+      return {
+        dailyCheckIn: {
+          id: result.dailyCheckIn.id,
+          energyLevel: result.dailyCheckIn.energyLevel,
+          sleepQuality: result.dailyCheckIn.sleepQuality,
+          muscleSoreness: result.dailyCheckIn.muscleSoreness,
+          motivationLevel: result.dailyCheckIn.motivationLevel,
+          createdAt: result.dailyCheckIn.createdAt.toISOString(),
+        },
+      };
+    } catch (error) {
+      this.handleCreateDailyCheckInError(error);
+    }
+  }
 
   @Post("workout-logs")
   @UseGuards(AuthSessionGuard)
@@ -138,6 +177,39 @@ export class ProgressController {
       };
     } catch (error) {
       this.handleGetWorkoutHistoryError(error);
+    }
+  }
+
+  private handleCreateDailyCheckInError(error: unknown): never {
+    if (!(error instanceof CreateDailyCheckInError)) {
+      throw new InternalServerErrorException("An unexpected error occurred.");
+    }
+
+    switch (error.code) {
+      case CREATE_DAILY_CHECK_IN_ERROR_CODES.INVALID_INPUT:
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case CREATE_DAILY_CHECK_IN_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case CREATE_DAILY_CHECK_IN_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case CREATE_DAILY_CHECK_IN_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: CREATE_DAILY_CHECK_IN_ERROR_CODES.INTERNAL_ERROR,
+          message: "An unexpected error occurred.",
+        });
     }
   }
 

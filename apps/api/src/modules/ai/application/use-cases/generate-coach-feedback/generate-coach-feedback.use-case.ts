@@ -68,6 +68,7 @@ export class GenerateCoachFeedbackUseCase {
         workoutLogs: healthContext.recentWorkoutLogs,
         hasTrainingPlan: Boolean(healthContext.activeTrainingPlanId),
         fatigueLevel: healthContext.fatigueLevel,
+        latestCheckIn: healthContext.latestCheckIn,
       });
 
       await this.coachFeedbackRepository.create({

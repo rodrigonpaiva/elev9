@@ -6,6 +6,11 @@ import {
 } from "@nestjs/common";
 
 import {
+  CREATE_DAILY_CHECK_IN_ERROR_CODES,
+  CreateDailyCheckInError,
+} from "../../application/use-cases/create-daily-check-in/create-daily-check-in.errors";
+import { CreateDailyCheckInUseCase } from "../../application/use-cases/create-daily-check-in/create-daily-check-in.use-case";
+import {
   GET_WORKOUT_HISTORY_ERROR_CODES,
   GetWorkoutHistoryError,
 } from "../../application/use-cases/get-workout-history/get-workout-history.errors";
@@ -23,12 +28,16 @@ import { LogWorkoutUseCase } from "../../application/use-cases/log-workout/log-w
 import { ProgressController } from "./progress.controller";
 
 describe("ProgressController", () => {
+  let createDailyCheckInUseCase: jest.Mocked<CreateDailyCheckInUseCase>;
   let logWorkoutUseCase: jest.Mocked<LogWorkoutUseCase>;
   let getProgressSummaryUseCase: jest.Mocked<GetProgressSummaryUseCase>;
   let getWorkoutHistoryUseCase: jest.Mocked<GetWorkoutHistoryUseCase>;
   let controller: ProgressController;
 
   beforeEach(() => {
+    createDailyCheckInUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<CreateDailyCheckInUseCase>;
     logWorkoutUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<LogWorkoutUseCase>;
@@ -40,10 +49,109 @@ describe("ProgressController", () => {
     } as unknown as jest.Mocked<GetWorkoutHistoryUseCase>;
 
     controller = new ProgressController(
+      createDailyCheckInUseCase,
       logWorkoutUseCase,
       getProgressSummaryUseCase,
       getWorkoutHistoryUseCase,
     );
+  });
+
+  it("creates a daily check-in for the authenticated user", async () => {
+    createDailyCheckInUseCase.execute.mockResolvedValue({
+      dailyCheckIn: {
+        id: "checkin_123",
+        energyLevel: 4,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 5,
+        createdAt: new Date("2026-05-04T10:00:00.000Z"),
+      },
+    });
+
+    const result = await controller.createDailyCheckIn(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      {
+        energyLevel: 4,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 5,
+      },
+    );
+
+    expect(createDailyCheckInUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+      energyLevel: 4,
+      sleepQuality: 3,
+      muscleSoreness: 2,
+      motivationLevel: 5,
+    });
+    expect(result).toEqual({
+      dailyCheckIn: {
+        id: "checkin_123",
+        energyLevel: 4,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 5,
+        createdAt: "2026-05-04T10:00:00.000Z",
+      },
+    });
+  });
+
+  it("maps daily check-in invalid input to HTTP 400", async () => {
+    createDailyCheckInUseCase.execute.mockRejectedValue(
+      new CreateDailyCheckInError(
+        CREATE_DAILY_CHECK_IN_ERROR_CODES.INVALID_INPUT,
+        "Invalid daily check-in input.",
+      ),
+    );
+
+    await expect(
+      controller.createDailyCheckIn(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        {
+          energyLevel: 4,
+          sleepQuality: 3,
+          muscleSoreness: 2,
+          motivationLevel: 5,
+        },
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("maps daily check-in missing profile to HTTP 404", async () => {
+    createDailyCheckInUseCase.execute.mockRejectedValue(
+      new CreateDailyCheckInError(
+        CREATE_DAILY_CHECK_IN_ERROR_CODES.USER_PROFILE_NOT_FOUND,
+        "User profile not found.",
+      ),
+    );
+
+    await expect(
+      controller.createDailyCheckIn(
+        {
+          authUser: {
+            id: "auth_user_999",
+            email: "other@email.com",
+          },
+        },
+        {
+          energyLevel: 4,
+          sleepQuality: 3,
+          muscleSoreness: 2,
+          motivationLevel: 5,
+        },
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it("returns the safe response on success", async () => {

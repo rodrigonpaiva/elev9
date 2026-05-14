@@ -66,6 +66,7 @@ describe("GenerateCoachFeedbackUseCase", () => {
     expect(generateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         fatigueLevel: "MODERATE",
+        latestCheckIn: undefined,
       }) as CoachFeedbackGeneratorInput,
     );
     expect(coachFeedbackRepository.create).toHaveBeenCalledWith({
@@ -225,6 +226,36 @@ describe("GenerateCoachFeedbackUseCase", () => {
     expect(generateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         fatigueLevel: "HIGH",
+      }) as CoachFeedbackGeneratorInput,
+    );
+  });
+
+  it("passes latestCheckIn from health context to the generator", async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        latestCheckIn: {
+          energyLevel: 4,
+          sleepQuality: 3,
+          muscleSoreness: 2,
+          motivationLevel: 5,
+          createdAt: new Date("2026-05-04T09:00:00.000Z"),
+        },
+      }),
+    );
+
+    await useCase.execute({
+      authUserId: "auth_user_123",
+    });
+
+    expect(generateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        latestCheckIn: {
+          energyLevel: 4,
+          sleepQuality: 3,
+          muscleSoreness: 2,
+          motivationLevel: 5,
+          createdAt: new Date("2026-05-04T09:00:00.000Z"),
+        },
       }) as CoachFeedbackGeneratorInput,
     );
   });

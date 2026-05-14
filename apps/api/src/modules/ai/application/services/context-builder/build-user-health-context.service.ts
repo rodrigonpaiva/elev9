@@ -11,6 +11,10 @@ import {
 } from "../../../../fitness/domain/repositories/fitness-profile.repository";
 import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
 import {
+  DAILY_CHECK_IN_REPOSITORY,
+  DailyCheckInRepository,
+} from "../../../../progress/domain/repositories/daily-check-in.repository";
+import {
   WORKOUT_LOG_REPOSITORY,
   WorkoutLogRepository,
 } from "../../../../progress/domain/repositories/workout-log.repository";
@@ -55,6 +59,13 @@ export type UserHealthContext = {
   limitations: FitnessProfileLimitation[];
   todayWorkout: UserHealthContextTodayWorkout | null;
   activeTrainingPlanId?: string;
+  latestCheckIn?: {
+    energyLevel: number;
+    sleepQuality: number;
+    muscleSoreness: number;
+    motivationLevel: number;
+    createdAt: Date;
+  };
   recentWorkoutLogs: WorkoutLog[];
   generatedAt: Date;
 };
@@ -68,6 +79,8 @@ export class BuildUserHealthContextService {
     private readonly fitnessProfileRepository: FitnessProfileRepository,
     @Inject(TRAINING_PLAN_REPOSITORY)
     private readonly trainingPlanRepository: TrainingPlanRepository,
+    @Inject(DAILY_CHECK_IN_REPOSITORY)
+    private readonly dailyCheckInRepository: DailyCheckInRepository,
     @Inject(WORKOUT_LOG_REPOSITORY)
     private readonly workoutLogRepository: WorkoutLogRepository,
     @Inject(CLOCK)
@@ -90,6 +103,8 @@ export class BuildUserHealthContextService {
       return baseContext;
     }
 
+    const latestCheckIn =
+      await this.dailyCheckInRepository.findLatestByUserProfileId(userProfile.id);
     const fitnessProfile =
       await this.fitnessProfileRepository.findActiveByUserProfileId(userProfile.id);
 
@@ -106,6 +121,15 @@ export class BuildUserHealthContextService {
           })
         : undefined,
       limitations: fitnessProfile?.limitations ?? [],
+      latestCheckIn: latestCheckIn
+        ? {
+            energyLevel: latestCheckIn.energyLevel,
+            sleepQuality: latestCheckIn.sleepQuality,
+            muscleSoreness: latestCheckIn.muscleSoreness,
+            motivationLevel: latestCheckIn.motivationLevel,
+            createdAt: latestCheckIn.createdAt,
+          }
+        : undefined,
     };
 
     if (!fitnessProfile) {
@@ -155,6 +179,7 @@ export class BuildUserHealthContextService {
         weeklyFrequency,
         averageWorkoutDuration,
         recentLogsCount: recentWorkoutLogs.length,
+        latestCheckIn: contextWithoutTrainingPlan.latestCheckIn,
       }),
     };
   }
@@ -223,7 +248,36 @@ export class BuildUserHealthContextService {
     weeklyFrequency?: number;
     averageWorkoutDuration: number;
     recentLogsCount: number;
+    latestCheckIn?: {
+      energyLevel: number;
+      sleepQuality: number;
+      muscleSoreness: number;
+      motivationLevel: number;
+    };
   }): FatigueLevel {
+    if (input.latestCheckIn) {
+      if (
+        input.latestCheckIn.energyLevel <= 2 ||
+        input.latestCheckIn.sleepQuality <= 2 ||
+        input.latestCheckIn.muscleSoreness >= 4
+      ) {
+        return "HIGH";
+      }
+
+      if (
+        input.latestCheckIn.energyLevel >= 4 &&
+        input.latestCheckIn.sleepQuality >= 4 &&
+        input.latestCheckIn.muscleSoreness <= 2 &&
+        input.latestCheckIn.motivationLevel >= 4 &&
+        input.currentStreak >= 1 &&
+        input.currentStreak <= 4
+      ) {
+        return "LOW";
+      }
+
+      return "MODERATE";
+    }
+
     if (input.recentLogsCount === 0 || input.weeklyFrequency === undefined) {
       return "MODERATE";
     }

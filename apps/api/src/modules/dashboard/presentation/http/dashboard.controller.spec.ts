@@ -50,6 +50,17 @@ describe("DashboardController", () => {
           averageDurationMinutes: 47.5,
           lastWorkoutDate: "2026-04-30",
         },
+        recovery: {
+          fatigueLevel: "HIGH",
+          recommendedIntensity: "low",
+          latestCheckIn: {
+            energyLevel: 2,
+            sleepQuality: 2,
+            muscleSoreness: 4,
+            motivationLevel: 3,
+            createdAt: "2026-04-30T09:00:00.000Z",
+          },
+        },
       },
     });
 
@@ -69,6 +80,7 @@ describe("DashboardController", () => {
     });
     expect(result.dashboard.user.name).toBe("Rodrigo Paiva");
     expect(result.dashboard.progressSummary.period).toBe("week");
+    expect(result.dashboard.recovery.recommendedIntensity).toBe("low");
   });
 
   it("maps USER_PROFILE_NOT_FOUND to HTTP 404", async () => {

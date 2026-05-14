@@ -3,6 +3,8 @@ import {
   FitnessProfileLimitation,
 } from "../../../../fitness/domain/entities/fitness-profile.entity";
 import { FitnessProfileRepository } from "../../../../fitness/domain/repositories/fitness-profile.repository";
+import { DailyCheckIn } from "../../../../progress/domain/entities/daily-check-in.entity";
+import { DailyCheckInRepository } from "../../../../progress/domain/repositories/daily-check-in.repository";
 import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
 import { WorkoutLogRepository } from "../../../../progress/domain/repositories/workout-log.repository";
 import { Clock } from "../../../../progress/domain/services/clock.service";
@@ -16,6 +18,7 @@ describe("BuildUserHealthContextService", () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
   let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
+  let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
   let clock: jest.Mocked<Clock>;
   let service: BuildUserHealthContextService;
@@ -35,6 +38,11 @@ describe("BuildUserHealthContextService", () => {
       findActiveByFitnessProfileId: jest.fn(),
       create: jest.fn(),
     };
+    dailyCheckInRepository = {
+      create: jest.fn(),
+      findLatestByUserProfileId: jest.fn().mockResolvedValue(null),
+      findManyByUserProfileId: jest.fn(),
+    };
     workoutLogRepository = {
       findByTrainingPlanDayAndDate: jest.fn(),
       findByTrainingPlanIdsOrdered: jest.fn(),
@@ -50,6 +58,7 @@ describe("BuildUserHealthContextService", () => {
       userProfileRepository,
       fitnessProfileRepository,
       trainingPlanRepository,
+      dailyCheckInRepository,
       workoutLogRepository,
       clock,
     );
@@ -61,6 +70,9 @@ describe("BuildUserHealthContextService", () => {
       buildLimitation("knee_pain", "medium"),
     ]);
     mockTrainingPlan(trainingPlanRepository);
+    dailyCheckInRepository.findLatestByUserProfileId.mockResolvedValue(
+      buildDailyCheckIn("2026-05-04T09:00:00.000Z"),
+    );
     workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
       buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
       buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
@@ -88,7 +100,7 @@ describe("BuildUserHealthContextService", () => {
       adherenceScore: 75,
       currentStreak: 3,
       averageWorkoutDuration: 41.67,
-      fatigueLevel: "LOW",
+      fatigueLevel: "MODERATE",
       activeTrainingPlanId: "training_123",
       limitations: [
         {
@@ -96,6 +108,13 @@ describe("BuildUserHealthContextService", () => {
           severity: "medium",
         },
       ],
+      latestCheckIn: {
+        energyLevel: 4,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 5,
+        createdAt: new Date("2026-05-04T09:00:00.000Z"),
+      },
       todayWorkout: {
         dayIndex: 1,
         title: "Upper Body Strength",
@@ -129,6 +148,7 @@ describe("BuildUserHealthContextService", () => {
     });
     expect(result.goal).toBeUndefined();
     expect(result.weeklyFrequency).toBeUndefined();
+    expect(result.latestCheckIn).toBeUndefined();
   });
 
   it("returns a safe context when there is no active training plan", async () => {
@@ -187,6 +207,30 @@ describe("BuildUserHealthContextService", () => {
       },
       recentWorkoutLogs: [],
     });
+    expect(result.latestCheckIn).toBeUndefined();
+  });
+
+  it("includes latestCheckIn when the user has a recent check-in", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    dailyCheckInRepository.findLatestByUserProfileId.mockResolvedValue(
+      buildDailyCheckIn("2026-05-04T09:00:00.000Z"),
+    );
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(dailyCheckInRepository.findLatestByUserProfileId).toHaveBeenCalledWith(
+      "profile_123",
+    );
+    expect(result.latestCheckIn).toEqual({
+      energyLevel: 4,
+      sleepQuality: 3,
+      muscleSoreness: 2,
+      motivationLevel: 5,
+      createdAt: new Date("2026-05-04T09:00:00.000Z"),
+    });
   });
 
   it("returns HIGH when current streak is 6 or more", async () => {
@@ -208,6 +252,72 @@ describe("BuildUserHealthContextService", () => {
 
     expect(result.fatigueLevel).toBe("HIGH");
     expect(result.currentStreak).toBe(6);
+  });
+
+  it("returns HIGH when energy level is 2 or lower", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    dailyCheckInRepository.findLatestByUserProfileId.mockResolvedValue(
+      buildDailyCheckIn("2026-05-04T09:00:00.000Z", {
+        energyLevel: 2,
+      }),
+    );
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.fatigueLevel).toBe("HIGH");
+    expect(result.latestCheckIn?.energyLevel).toBe(2);
+  });
+
+  it("returns HIGH when sleep quality is 2 or lower", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    dailyCheckInRepository.findLatestByUserProfileId.mockResolvedValue(
+      buildDailyCheckIn("2026-05-04T09:00:00.000Z", {
+        sleepQuality: 2,
+      }),
+    );
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.fatigueLevel).toBe("HIGH");
+    expect(result.latestCheckIn?.sleepQuality).toBe(2);
+  });
+
+  it("returns HIGH when muscle soreness is 4 or higher", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    dailyCheckInRepository.findLatestByUserProfileId.mockResolvedValue(
+      buildDailyCheckIn("2026-05-04T09:00:00.000Z", {
+        muscleSoreness: 4,
+      }),
+    );
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.fatigueLevel).toBe("HIGH");
+    expect(result.latestCheckIn?.muscleSoreness).toBe(4);
   });
 
   it("returns HIGH when average workout duration is very high", async () => {
@@ -244,6 +354,87 @@ describe("BuildUserHealthContextService", () => {
     expect(result.fatigueLevel).toBe("LOW");
     expect(result.currentStreak).toBe(3);
     expect(result.averageWorkoutDuration).toBe(40);
+  });
+
+  it("returns LOW when the latest check-in indicates good recovery", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    dailyCheckInRepository.findLatestByUserProfileId.mockResolvedValue(
+      buildDailyCheckIn("2026-05-04T09:00:00.000Z", {
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 2,
+        motivationLevel: 5,
+      }),
+    );
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-05-02", 50, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 55, "2026-05-03T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-04", 60, "2026-05-04T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.fatigueLevel).toBe("LOW");
+    expect(result.latestCheckIn).toEqual({
+      energyLevel: 4,
+      sleepQuality: 4,
+      muscleSoreness: 2,
+      motivationLevel: 5,
+      createdAt: new Date("2026-05-04T09:00:00.000Z"),
+    });
+  });
+
+  it("falls back to the previous heuristic when there is no latest check-in", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-04", 45, "2026-05-04T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.fatigueLevel).toBe("LOW");
+    expect(result.latestCheckIn).toBeUndefined();
+  });
+
+  it("returns MODERATE when the latest check-in does not clearly indicate low or high fatigue", async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    mockTrainingPlan(trainingPlanRepository);
+    dailyCheckInRepository.findLatestByUserProfileId.mockResolvedValue(
+      buildDailyCheckIn("2026-05-04T09:00:00.000Z", {
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 3,
+        motivationLevel: 3,
+      }),
+    );
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
+      buildWorkoutLog("2026-05-03", 40, "2026-05-03T08:00:00.000Z"),
+    ]);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.fatigueLevel).toBe("MODERATE");
+    expect(result.latestCheckIn).toEqual({
+      energyLevel: 3,
+      sleepQuality: 3,
+      muscleSoreness: 3,
+      motivationLevel: 3,
+      createdAt: new Date("2026-05-04T09:00:00.000Z"),
+    });
   });
 });
 
@@ -346,4 +537,25 @@ function buildLimitation(
     type,
     severity,
   };
+}
+
+function buildDailyCheckIn(
+  createdAt: string,
+  overrides?: Partial<{
+    energyLevel: number;
+    sleepQuality: number;
+    muscleSoreness: number;
+    motivationLevel: number;
+  }>,
+): DailyCheckIn {
+  return new DailyCheckIn({
+    id: `daily-check-in-${createdAt}`,
+    userProfileId: "profile_123",
+    energyLevel: overrides?.energyLevel ?? 4,
+    sleepQuality: overrides?.sleepQuality ?? 3,
+    muscleSoreness: overrides?.muscleSoreness ?? 2,
+    motivationLevel: overrides?.motivationLevel ?? 5,
+    createdAt: new Date(createdAt),
+    updatedAt: new Date(createdAt),
+  });
 }

@@ -119,6 +119,162 @@ describe("CoachFeedbackGenerator", () => {
     );
   });
 
+  it("considers low energy from the latest check-in", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+      fatigueLevel: "HIGH",
+      latestCheckIn: {
+        energyLevel: 2,
+        sleepQuality: 3,
+        muscleSoreness: 3,
+        motivationLevel: 3,
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      "Keep today's session lighter if your energy still feels low",
+    );
+  });
+
+  it("considers poor sleep from the latest check-in", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+      fatigueLevel: "HIGH",
+      latestCheckIn: {
+        energyLevel: 3,
+        sleepQuality: 2,
+        muscleSoreness: 3,
+        motivationLevel: 3,
+      },
+    });
+
+    expect(result.insights).toContain(
+      "Your latest check-in suggests sleep may be limiting recovery",
+    );
+  });
+
+  it("considers high muscle soreness from the latest check-in", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+      fatigueLevel: "HIGH",
+      latestCheckIn: {
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 4,
+        motivationLevel: 3,
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      "Consider mobility work, a lighter session, or extra recovery today",
+    );
+  });
+
+  it("considers high motivation with low fatigue", () => {
+    const result = generator.generate({
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 3,
+      averageDurationMinutes: 40,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 38),
+        buildWorkoutLog("2026-05-03", 40),
+        buildWorkoutLog("2026-05-04", 42),
+      ],
+      hasTrainingPlan: true,
+      fatigueLevel: "LOW",
+      latestCheckIn: {
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 2,
+        motivationLevel: 5,
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      "Your motivation looks strong, so a small progression can make sense if recovery stays solid",
+    );
+  });
+
+  it("considers low motivation from the latest check-in", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 1,
+      averageDurationMinutes: 35,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-04", 35),
+      ],
+      hasTrainingPlan: true,
+      fatigueLevel: "MODERATE",
+      latestCheckIn: {
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 3,
+        motivationLevel: 2,
+      },
+    });
+
+    expect(result.insights).toContain(
+      "Your latest check-in shows motivation is lower right now",
+    );
+    expect(result.recommendations).toContain(
+      "Focus on consistency with a lighter, easier-to-start session today",
+    );
+  });
+
+  it("keeps fallback behavior when latestCheckIn is not provided", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+      fatigueLevel: "MODERATE",
+    });
+
+    expect(result.insights).not.toContain(
+      "Your latest check-in suggests sleep may be limiting recovery",
+    );
+    expect(result.recommendations).not.toContain(
+      "Keep today's session lighter if your energy still feels low",
+    );
+  });
+
   it("prioritizes high streak messaging over other classifications", () => {
     const result = generator.generate({
       goal: "maintain",

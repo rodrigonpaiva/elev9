@@ -21,11 +21,18 @@ import {
   UserProfileSchema,
 } from "../users/infrastructure/mongoose/user-profile.schema";
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
+import { CreateDailyCheckInUseCase } from "./application/use-cases/create-daily-check-in/create-daily-check-in.use-case";
 import { GetWorkoutHistoryUseCase } from "./application/use-cases/get-workout-history/get-workout-history.use-case";
 import { GetProgressSummaryUseCase } from "./application/use-cases/get-progress-summary/get-progress-summary.use-case";
 import { LogWorkoutUseCase } from "./application/use-cases/log-workout/log-workout.use-case";
+import { DAILY_CHECK_IN_REPOSITORY } from "./domain/repositories/daily-check-in.repository";
 import { WORKOUT_LOG_REPOSITORY } from "./domain/repositories/workout-log.repository";
 import { CLOCK } from "./domain/services/clock.service";
+import { MongooseDailyCheckInRepository } from "./infrastructure/mongoose/mongoose-daily-check-in.repository";
+import {
+  DAILY_CHECK_IN_MODEL_NAME,
+  DailyCheckInSchema,
+} from "./infrastructure/mongoose/daily-check-in.schema";
 import { MongooseWorkoutLogRepository } from "./infrastructure/mongoose/mongoose-workout-log.repository";
 import { SystemClockService } from "./infrastructure/system-clock.service";
 import {
@@ -54,11 +61,16 @@ import { ProgressController } from "./presentation/http/progress.controller";
         name: WORKOUT_LOG_MODEL_NAME,
         schema: WorkoutLogSchema,
       },
+      {
+        name: DAILY_CHECK_IN_MODEL_NAME,
+        schema: DailyCheckInSchema,
+      },
     ]),
   ],
   controllers: [ProgressController],
   providers: [
     AuthSessionGuard,
+    CreateDailyCheckInUseCase,
     GetWorkoutHistoryUseCase,
     GetProgressSummaryUseCase,
     LogWorkoutUseCase,
@@ -81,6 +93,10 @@ import { ProgressController } from "./presentation/http/progress.controller";
     {
       provide: WORKOUT_LOG_REPOSITORY,
       useClass: MongooseWorkoutLogRepository,
+    },
+    {
+      provide: DAILY_CHECK_IN_REPOSITORY,
+      useClass: MongooseDailyCheckInRepository,
     },
   ],
 })

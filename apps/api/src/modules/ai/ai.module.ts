@@ -14,10 +14,16 @@ import {
   FITNESS_PROFILE_MODEL_NAME,
   FitnessProfileSchema,
 } from "../fitness/infrastructure/mongoose/fitness-profile.schema";
+import { DAILY_CHECK_IN_REPOSITORY } from "../progress/domain/repositories/daily-check-in.repository";
 import { WORKOUT_LOG_REPOSITORY } from "../progress/domain/repositories/workout-log.repository";
 import { CLOCK } from "../progress/domain/services/clock.service";
+import { MongooseDailyCheckInRepository } from "../progress/infrastructure/mongoose/mongoose-daily-check-in.repository";
 import { MongooseWorkoutLogRepository } from "../progress/infrastructure/mongoose/mongoose-workout-log.repository";
 import { SystemClockService } from "../progress/infrastructure/system-clock.service";
+import {
+  DAILY_CHECK_IN_MODEL_NAME,
+  DailyCheckInSchema,
+} from "../progress/infrastructure/mongoose/daily-check-in.schema";
 import {
   WORKOUT_LOG_MODEL_NAME,
   WorkoutLogSchema,
@@ -62,6 +68,10 @@ import { AiController } from "./presentation/http/ai.controller";
         schema: WorkoutLogSchema,
       },
       {
+        name: DAILY_CHECK_IN_MODEL_NAME,
+        schema: DailyCheckInSchema,
+      },
+      {
         name: COACH_FEEDBACK_MODEL_NAME,
         schema: CoachFeedbackSchema,
       },
@@ -93,6 +103,10 @@ import { AiController } from "./presentation/http/ai.controller";
     {
       provide: WORKOUT_LOG_REPOSITORY,
       useClass: MongooseWorkoutLogRepository,
+    },
+    {
+      provide: DAILY_CHECK_IN_REPOSITORY,
+      useClass: MongooseDailyCheckInRepository,
     },
     {
       provide: COACH_FEEDBACK_REPOSITORY,

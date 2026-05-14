@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
+import { BuildUserHealthContextService } from "../ai/application/services/context-builder/build-user-health-context.service";
 import { AuthModule } from "../auth/auth.module";
 import { FITNESS_PROFILE_REPOSITORY } from "../fitness/domain/repositories/fitness-profile.repository";
 import { MongooseFitnessProfileRepository } from "../fitness/infrastructure/mongoose/mongoose-fitness-profile.repository";
@@ -8,10 +9,16 @@ import {
   FITNESS_PROFILE_MODEL_NAME,
   FitnessProfileSchema,
 } from "../fitness/infrastructure/mongoose/fitness-profile.schema";
+import { DAILY_CHECK_IN_REPOSITORY } from "../progress/domain/repositories/daily-check-in.repository";
 import { WORKOUT_LOG_REPOSITORY } from "../progress/domain/repositories/workout-log.repository";
 import { CLOCK } from "../progress/domain/services/clock.service";
+import { MongooseDailyCheckInRepository } from "../progress/infrastructure/mongoose/mongoose-daily-check-in.repository";
 import { MongooseWorkoutLogRepository } from "../progress/infrastructure/mongoose/mongoose-workout-log.repository";
 import { SystemClockService } from "../progress/infrastructure/system-clock.service";
+import {
+  DAILY_CHECK_IN_MODEL_NAME,
+  DailyCheckInSchema,
+} from "../progress/infrastructure/mongoose/daily-check-in.schema";
 import {
   WORKOUT_LOG_MODEL_NAME,
   WorkoutLogSchema,
@@ -52,11 +59,16 @@ import { DashboardController } from "./presentation/http/dashboard.controller";
         name: WORKOUT_LOG_MODEL_NAME,
         schema: WorkoutLogSchema,
       },
+      {
+        name: DAILY_CHECK_IN_MODEL_NAME,
+        schema: DailyCheckInSchema,
+      },
     ]),
   ],
   controllers: [DashboardController],
   providers: [
     AuthSessionGuard,
+    BuildUserHealthContextService,
     GetHomeDashboardUseCase,
     {
       provide: CLOCK,
@@ -77,6 +89,10 @@ import { DashboardController } from "./presentation/http/dashboard.controller";
     {
       provide: WORKOUT_LOG_REPOSITORY,
       useClass: MongooseWorkoutLogRepository,
+    },
+    {
+      provide: DAILY_CHECK_IN_REPOSITORY,
+      useClass: MongooseDailyCheckInRepository,
     },
   ],
 })

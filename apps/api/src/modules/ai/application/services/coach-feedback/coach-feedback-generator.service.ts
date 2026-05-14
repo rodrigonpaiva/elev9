@@ -16,6 +16,12 @@ export type CoachFeedbackGeneratorInput = {
   workoutLogs: WorkoutLog[];
   hasTrainingPlan: boolean;
   fatigueLevel?: FatigueLevel;
+  latestCheckIn?: {
+    energyLevel: number;
+    sleepQuality: number;
+    muscleSoreness: number;
+    motivationLevel: number;
+  };
 };
 
 export type CoachFeedbackGeneratorOutput = {
@@ -115,6 +121,14 @@ export class CoachFeedbackGenerator {
       recommendations,
       hasTrainingPlan: input.hasTrainingPlan,
       isNoLogs,
+    });
+    this.applyDailyCheckInSignals({
+      latestCheckIn: input.latestCheckIn,
+      fatigueLevel,
+      insights,
+      recommendations,
+      isNoLogs,
+      hasTrainingPlan: input.hasTrainingPlan,
     });
 
     recommendations.push(this.buildGoalAwareRecommendation(input.goal));
@@ -225,6 +239,68 @@ export class CoachFeedbackGenerator {
     }
   }
 
+  private applyDailyCheckInSignals(input: {
+    latestCheckIn?: {
+      energyLevel: number;
+      sleepQuality: number;
+      muscleSoreness: number;
+      motivationLevel: number;
+    };
+    fatigueLevel: FatigueLevel;
+    insights: string[];
+    recommendations: string[];
+    isNoLogs: boolean;
+    hasTrainingPlan: boolean;
+  }): void {
+    if (input.isNoLogs || !input.latestCheckIn) {
+      return;
+    }
+
+    if (input.latestCheckIn.sleepQuality <= 2) {
+      this.upsertInsight(
+        input.insights,
+        "Your latest check-in suggests sleep may be limiting recovery",
+      );
+    }
+
+    if (input.latestCheckIn.energyLevel <= 2) {
+      this.prependRecommendation(
+        input.recommendations,
+        "Keep today's session lighter if your energy still feels low",
+      );
+    }
+
+    if (input.latestCheckIn.muscleSoreness >= 4) {
+      this.prependRecommendation(
+        input.recommendations,
+        "Consider mobility work, a lighter session, or extra recovery today",
+      );
+    }
+
+    if (
+      input.latestCheckIn.motivationLevel >= 4 &&
+      input.fatigueLevel === "LOW"
+    ) {
+      this.prependRecommendation(
+        input.recommendations,
+        input.hasTrainingPlan
+          ? "Your motivation looks strong, so a small progression can make sense if recovery stays solid"
+          : "Use this motivation to stay consistent before adding more intensity",
+      );
+    }
+
+    if (input.latestCheckIn.motivationLevel <= 2) {
+      this.upsertInsight(
+        input.insights,
+        "Your latest check-in shows motivation is lower right now",
+      );
+      this.prependRecommendation(
+        input.recommendations,
+        "Focus on consistency with a lighter, easier-to-start session today",
+      );
+    }
+  }
+
   private upsertInsight(insights: string[], message: string): void {
     if (insights.includes(message)) {
       return;
@@ -236,6 +312,17 @@ export class CoachFeedbackGenerator {
     }
 
     insights[insights.length - 1] = message;
+  }
+
+  private prependRecommendation(
+    recommendations: string[],
+    message: string,
+  ): void {
+    if (recommendations.includes(message)) {
+      return;
+    }
+
+    recommendations.unshift(message);
   }
 
   private hasIncreasingDurationTrend(workoutLogs: WorkoutLog[]): boolean {
