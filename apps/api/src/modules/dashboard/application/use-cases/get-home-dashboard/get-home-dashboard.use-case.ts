@@ -341,7 +341,7 @@ export class GetHomeDashboardUseCase {
       healthContext.fatigueLevel === "LOW" &&
       hasHighMotivation
     ) {
-      const signals = this.collectNutritionGuidanceSignals([
+      const signals = this.collectSignals([
         "muscle_gain_goal",
         "high_motivation",
         "low_fatigue",
@@ -356,7 +356,7 @@ export class GetHomeDashboardUseCase {
     }
 
     if (hasLowConsistencySignal) {
-      const signals = this.collectNutritionGuidanceSignals([
+      const signals = this.collectSignals([
         hasLowMealFrequency ? "low_meal_frequency" : null,
         hasLowMotivation ? "low_motivation" : null,
         healthContext.adherenceScore < 50 ? "low_consistency" : null,
@@ -400,7 +400,7 @@ export class GetHomeDashboardUseCase {
       ? latestCheckIn.muscleSoreness >= 4
       : false;
 
-    return this.collectNutritionGuidanceSignals([
+    return this.collectSignals([
       healthContext.fatigueLevel === "HIGH" ? "high_fatigue" : null,
       hasLowSleep ? "poor_sleep" : null,
       hasHighSoreness ? "high_soreness" : null,
@@ -409,7 +409,7 @@ export class GetHomeDashboardUseCase {
     ]);
   }
 
-  private collectNutritionGuidanceSignals(
+  private collectSignals(
     signals: Array<string | null>,
   ): string[] {
     return signals.filter((signal): signal is string => Boolean(signal));

@@ -17,7 +17,9 @@ import {
   GET_HOME_DASHBOARD_ERROR_CODES,
   GetHomeDashboardError,
 } from "../../application/use-cases/get-home-dashboard/get-home-dashboard.errors";
+import { GetHomeDashboardDebugUseCase } from "../../application/use-cases/get-home-dashboard-debug/get-home-dashboard-debug.use-case";
 import { GetHomeDashboardUseCase } from "../../application/use-cases/get-home-dashboard/get-home-dashboard.use-case";
+import { GetHomeDashboardDebugResponseDto } from "./dto/get-home-dashboard-debug.response.dto";
 import { GetHomeDashboardResponseDto } from "./dto/get-home-dashboard.response.dto";
 
 type RequestWithAuthUser = {
@@ -35,6 +37,7 @@ class GetHomeDashboardBodyDto {}
 export class DashboardController {
   constructor(
     private readonly getHomeDashboardUseCase: GetHomeDashboardUseCase,
+    private readonly getHomeDashboardDebugUseCase: GetHomeDashboardDebugUseCase,
   ) {}
 
   @Get("home")
@@ -53,6 +56,23 @@ export class DashboardController {
       return {
         dashboard: result.dashboard,
       };
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+  @Get("home/debug")
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getHomeDashboardDebug(
+    @Req() request: RequestWithAuthUser,
+    @Query() _query: GetHomeDashboardQueryDto,
+    @Body() _body: GetHomeDashboardBodyDto,
+  ): Promise<GetHomeDashboardDebugResponseDto> {
+    try {
+      return await this.getHomeDashboardDebugUseCase.execute({
+        authUserId: request.authUser?.id ?? "",
+      });
     } catch (error) {
       this.handleError(error);
     }

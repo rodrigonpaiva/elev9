@@ -36,6 +36,7 @@ import {
   UserProfileSchema,
 } from "../users/infrastructure/mongoose/user-profile.schema";
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
+import { GetHomeDashboardDebugUseCase } from "./application/use-cases/get-home-dashboard-debug/get-home-dashboard-debug.use-case";
 import { GetHomeDashboardUseCase } from "./application/use-cases/get-home-dashboard/get-home-dashboard.use-case";
 import { DashboardController } from "./presentation/http/dashboard.controller";
 
@@ -70,6 +71,7 @@ import { DashboardController } from "./presentation/http/dashboard.controller";
     AuthSessionGuard,
     BuildUserHealthContextService,
     GetHomeDashboardUseCase,
+    GetHomeDashboardDebugUseCase,
     {
       provide: CLOCK,
       useClass: SystemClockService,

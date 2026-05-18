@@ -4,11 +4,13 @@ import {
   GET_HOME_DASHBOARD_ERROR_CODES,
   GetHomeDashboardError,
 } from "../../application/use-cases/get-home-dashboard/get-home-dashboard.errors";
+import { GetHomeDashboardDebugUseCase } from "../../application/use-cases/get-home-dashboard-debug/get-home-dashboard-debug.use-case";
 import { GetHomeDashboardUseCase } from "../../application/use-cases/get-home-dashboard/get-home-dashboard.use-case";
 import { DashboardController } from "./dashboard.controller";
 
 describe("DashboardController", () => {
   let getHomeDashboardUseCase: jest.Mocked<GetHomeDashboardUseCase>;
+  let getHomeDashboardDebugUseCase: jest.Mocked<GetHomeDashboardDebugUseCase>;
   let controller: DashboardController;
 
   beforeEach(() => {
@@ -16,7 +18,14 @@ describe("DashboardController", () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetHomeDashboardUseCase>;
 
-    controller = new DashboardController(getHomeDashboardUseCase);
+    getHomeDashboardDebugUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetHomeDashboardDebugUseCase>;
+
+    controller = new DashboardController(
+      getHomeDashboardUseCase,
+      getHomeDashboardDebugUseCase,
+    );
   });
 
   it("returns the safe dashboard shape on success", async () => {
@@ -144,5 +153,38 @@ describe("DashboardController", () => {
         {},
       ),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("returns the internal debug snapshot on success", async () => {
+    getHomeDashboardDebugUseCase.execute.mockResolvedValue({
+      generatedAt: "2026-04-30T10:00:00.000Z",
+      recovery: {
+        fatigueLevel: "HIGH",
+        recoveryTrend: "needs_recovery",
+        recoverySignals: ["high_fatigue", "poor_sleep", "high_soreness"],
+      },
+      nutrition: {
+        priority: "recovery",
+        signals: ["high_fatigue", "poor_sleep", "high_soreness"],
+      },
+    });
+
+    const result = await controller.getHomeDashboardDebug(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      {},
+      {},
+    );
+
+    expect(getHomeDashboardDebugUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+    });
+    expect(result.generatedAt).toBe("2026-04-30T10:00:00.000Z");
+    expect(result.recovery.recoveryTrend).toBe("needs_recovery");
+    expect(result.nutrition.priority).toBe("recovery");
   });
 });
