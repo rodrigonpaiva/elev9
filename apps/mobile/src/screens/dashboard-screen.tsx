@@ -506,6 +506,12 @@ export function DashboardScreen({
           />
           <View style={styles.actionsGroup}>
             <Button
+              label="Coach Chat"
+              onPress={() => navigation.navigate("CoachChat")}
+              variant="secondary"
+              style={styles.fullButton}
+            />
+            <Button
               label="Start Workout"
               onPress={() =>
                 trainingPlan && todayWorkout

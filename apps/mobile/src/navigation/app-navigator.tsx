@@ -10,6 +10,7 @@ import { CreateFitnessProfileScreen } from "../screens/create-fitness-profile-sc
 import { CreateProfileScreen } from "../screens/create-profile-screen";
 import { CreateTrainingPlanScreen } from "../screens/create-training-plan-screen";
 import { DailyCheckInHistoryScreen } from "../screens/daily-check-in-history-screen";
+import { CoachChatScreen } from "../screens/coach-chat-screen";
 import { HomeResolverScreen } from "../screens/home-resolver-screen";
 import { LoginScreen } from "../screens/login-screen";
 import { MainTabsScreen } from "../screens/main-tabs-screen";
@@ -26,6 +27,7 @@ export type RootStackParamList = {
     activityLevel?: "low" | "medium" | "high";
   };
   MainTabs: undefined;
+  CoachChat: undefined;
   DailyCheckInHistory: undefined;
   Workout: {
     trainingPlanId: string;
@@ -76,6 +78,19 @@ export function AppNavigator() {
               name="MainTabs"
               component={MainTabsScreen}
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CoachChat"
+              component={CoachChatScreen}
+              options={{
+                headerShown: true,
+                title: "Coach Chat",
+                headerStyle: {
+                  backgroundColor: "#020617",
+                },
+                headerTintColor: "#f8fafc",
+                headerShadowVisible: false,
+              }}
             />
             <Stack.Screen
               name="DailyCheckInHistory"
