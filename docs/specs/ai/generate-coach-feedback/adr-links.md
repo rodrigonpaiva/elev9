@@ -8,6 +8,11 @@ Este documento referencia as decisões arquiteturais relacionadas ao use-case `g
 
 ## 2. Related ADRs
 
+### Official ADRs In Repository
+
+- [ADR-002 — Recovery & Adaptive Coaching System](../../../adr/adr-002-recovery-system.md)
+- [ADR-003 — Coach Feedback Explainability & Replay System](../../../adr/adr-003-coach-feedback-explainability.md)
+
 ### ADR-001 — Modular Monolith for MVP
 
 Decision:
@@ -200,6 +205,8 @@ Tema:
 
 As decisões principais que impactam `generate-coach-feedback` são:
 
+- ADR-002 recovery system
+- ADR-003 explainability and replay system
 - modular monolith
 - NestJS
 - MongoDB com Mongoose
