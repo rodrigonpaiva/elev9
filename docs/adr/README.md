@@ -9,6 +9,7 @@ No projeto atual:
 - os `specs` descrevem workflows, contratos, regras, tarefas e testes
 - os `ADRs` descrevem decisões arquiteturais mais estáveis
 - a arquitetura evolui de forma incremental e spec-driven
+- a evolução arquitetural atual segue a linha `adaptive coaching → explainability → conversational coaching`
 - os ADRs funcionam como registro histórico das escolhas técnicas que estruturam o sistema
 
 Este índice centraliza a navegação das decisões arquiteturais atualmente formalizadas no repositório.
@@ -48,6 +49,7 @@ Os ADRs atuais convergem nos seguintes temas:
 - context aggregation
 - explainability
 - replay infrastructure
+- conversational coaching
 - spec-driven evolution
 
 Esses temas descrevem o estado atual do sistema e não devem ser interpretados como uma plataforma de IA avançada ou como uma camada clínica.
@@ -82,6 +84,10 @@ Temas prováveis para ADRs futuros, ainda não implementados:
 - prompt versioning
 - wearable integrations
 - adaptive recommendations
+- LangGraph orchestration
+- streaming
+- voice interface
+- multi-agent routing
 
 Esses itens devem ser tratados como áreas potenciais de decisão arquitetural futura, não como capacidades já entregues.
 
