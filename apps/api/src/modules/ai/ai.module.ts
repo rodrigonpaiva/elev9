@@ -57,6 +57,7 @@ import { CoachChatReplyGenerator } from "./application/services/chat/coach-chat-
 import { CoachConversationMemorySummarizer } from "./application/services/memory/coach-conversation-memory-summarizer.service";
 import { CreateCoachChatUseCase } from "./application/use-cases/create-coach-chat/create-coach-chat.use-case";
 import { GetCoachChatDebugHistoryUseCase } from "./application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case";
+import { GetCoachChatMemoryDebugUseCase } from "./application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case";
 import { GetCoachChatPromptDebugUseCase } from "./application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case";
 import { GetCoachChatReplyPathDebugUseCase } from "./application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case";
 import { GetCoachChatDebugIndexUseCase } from "./application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.use-case";
@@ -144,6 +145,7 @@ import { OpenAiLlmProvider } from "./infrastructure/llm/openai-llm.provider";
     CoachChatReplyGenerator,
     CreateCoachChatUseCase,
     GetCoachChatDebugHistoryUseCase,
+    GetCoachChatMemoryDebugUseCase,
     GetCoachChatPromptDebugUseCase,
     GetCoachChatReplyPathDebugUseCase,
     GetCoachChatDebugIndexUseCase,

@@ -11,6 +11,11 @@ import {
   GET_COACH_CHAT_DEBUG_HISTORY_ERROR_CODES,
   GetCoachChatDebugHistoryError,
 } from "../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.errors";
+import {
+  GET_COACH_CHAT_MEMORY_DEBUG_ERROR_CODES,
+  GetCoachChatMemoryDebugError,
+} from "../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.errors";
+import { GetCoachChatMemoryDebugUseCase } from "../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case";
 import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
 import { ReplayCoachFeedbackUseCase } from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
 import {
@@ -53,6 +58,7 @@ describe("AiController", () => {
   let createCoachChatUseCase: jest.Mocked<CreateCoachChatUseCase>;
   let getCoachChatHistoryUseCase: jest.Mocked<GetCoachChatHistoryUseCase>;
   let getCoachChatDebugHistoryUseCase: jest.Mocked<GetCoachChatDebugHistoryUseCase>;
+  let getCoachChatMemoryDebugUseCase: jest.Mocked<GetCoachChatMemoryDebugUseCase>;
   let getCoachChatPromptDebugUseCase: jest.Mocked<GetCoachChatPromptDebugUseCase>;
   let getCoachChatReplyPathDebugUseCase: jest.Mocked<GetCoachChatReplyPathDebugUseCase>;
   let getCoachChatDebugIndexUseCase: jest.Mocked<GetCoachChatDebugIndexUseCase>;
@@ -75,6 +81,9 @@ describe("AiController", () => {
     getCoachChatDebugHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachChatDebugHistoryUseCase>;
+    getCoachChatMemoryDebugUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCoachChatMemoryDebugUseCase>;
     getCoachChatPromptDebugUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachChatPromptDebugUseCase>;
@@ -102,6 +111,7 @@ describe("AiController", () => {
       createCoachChatUseCase,
       getCoachChatHistoryUseCase,
       getCoachChatDebugHistoryUseCase,
+      getCoachChatMemoryDebugUseCase,
       getCoachChatPromptDebugUseCase,
       getCoachChatReplyPathDebugUseCase,
       getCoachChatDebugIndexUseCase,
@@ -270,6 +280,72 @@ describe("AiController", () => {
 
     await expect(
       controller.getCoachChatPromptDebug(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        { extra: true } as never,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("returns sanitized memory debug data", async () => {
+    getCoachChatMemoryDebugUseCase.execute.mockResolvedValue({
+      memory: {
+        version: "memory-v1",
+        generatedFromMessageCount: 18,
+        summaryPreview:
+          "User is focused on recovery after intense workouts and improving nutrition consistency.",
+        metadata: {
+          hasRecoveryContext: true,
+          hasNutritionContext: true,
+          hasWorkoutContinuity: true,
+        },
+        createdAt: "2026-05-18T10:05:00.000Z",
+        updatedAt: "2026-05-18T10:10:00.000Z",
+      },
+    });
+
+    const result = await controller.getCoachChatMemoryDebug(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      {},
+    );
+
+    expect(getCoachChatMemoryDebugUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+    });
+    expect(result.memory).toEqual({
+      version: "memory-v1",
+      generatedFromMessageCount: 18,
+      summaryPreview:
+        "User is focused on recovery after intense workouts and improving nutrition consistency.",
+      metadata: {
+        hasRecoveryContext: true,
+        hasNutritionContext: true,
+        hasWorkoutContinuity: true,
+      },
+      createdAt: "2026-05-18T10:05:00.000Z",
+      updatedAt: "2026-05-18T10:10:00.000Z",
+    });
+  });
+
+  it("maps memory debug invalid input to HTTP 400", async () => {
+    getCoachChatMemoryDebugUseCase.execute.mockRejectedValue(
+      new GetCoachChatMemoryDebugError(
+        GET_COACH_CHAT_MEMORY_DEBUG_ERROR_CODES.INVALID_INPUT,
+        "Invalid chat memory debug input.",
+      ),
+    );
+
+    await expect(
+      controller.getCoachChatMemoryDebug(
         {
           authUser: {
             id: "auth_user_123",

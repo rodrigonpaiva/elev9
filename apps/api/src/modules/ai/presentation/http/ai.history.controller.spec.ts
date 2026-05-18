@@ -10,6 +10,7 @@ import {
   GetCoachFeedbackDebugHistoryError,
 } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.errors";
 import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
+import { GetCoachChatMemoryDebugUseCase } from "../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case";
 import { GetCoachChatPromptDebugUseCase } from "../../application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case";
 import { GetCoachChatReplyPathDebugUseCase } from "../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case";
 import { GetCoachChatDebugIndexUseCase } from "../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.use-case";
@@ -35,6 +36,7 @@ describe("AiController history", () => {
   let createCoachChatUseCase: jest.Mocked<CreateCoachChatUseCase>;
   let getCoachChatHistoryUseCase: jest.Mocked<GetCoachChatHistoryUseCase>;
   let getCoachChatDebugHistoryUseCase: jest.Mocked<GetCoachChatDebugHistoryUseCase>;
+  let getCoachChatMemoryDebugUseCase: jest.Mocked<GetCoachChatMemoryDebugUseCase>;
   let getCoachChatPromptDebugUseCase: jest.Mocked<GetCoachChatPromptDebugUseCase>;
   let getCoachChatReplyPathDebugUseCase: jest.Mocked<GetCoachChatReplyPathDebugUseCase>;
   let getCoachChatDebugIndexUseCase: jest.Mocked<GetCoachChatDebugIndexUseCase>;
@@ -57,6 +59,9 @@ describe("AiController history", () => {
     getCoachChatDebugHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachChatDebugHistoryUseCase>;
+    getCoachChatMemoryDebugUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCoachChatMemoryDebugUseCase>;
     getCoachChatPromptDebugUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachChatPromptDebugUseCase>;
@@ -84,6 +89,7 @@ describe("AiController history", () => {
       createCoachChatUseCase,
       getCoachChatHistoryUseCase,
       getCoachChatDebugHistoryUseCase,
+      getCoachChatMemoryDebugUseCase,
       getCoachChatPromptDebugUseCase,
       getCoachChatReplyPathDebugUseCase,
       getCoachChatDebugIndexUseCase,
