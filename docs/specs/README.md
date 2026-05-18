@@ -20,9 +20,15 @@ Este índice funciona como ponto central de navegação da arquitetura documenta
 
 - [Documentation Governance](./GOVERNANCE.md)
 
+## 3. CI Validation
+
+- [CI Validation Flow](../ci.md)
+
+Repository CI validation flow, quality gates and deterministic validation policy.
+
 ---
 
-## 3. System Contexts
+## 4. System Contexts
 
 ## Core Platform
 
@@ -52,7 +58,7 @@ Este índice funciona como ponto central de navegação da arquitetura documenta
 
 ---
 
-## 4. AI Architecture
+## 5. AI Architecture
 
 O módulo `ai` documentado em [docs/specs/ai/README.md](./ai/README.md) atualmente se organiza em torno do seguinte fluxo:
 
@@ -83,14 +89,14 @@ Importante:
 
 ---
 
-## 5. ADRs
+## 6. ADRs
 
 - [ADR-002 — Recovery & Adaptive Coaching System](../adr/adr-002-recovery-system.md)
 - [ADR-003 — Coach Feedback Explainability & Replay System](../adr/adr-003-coach-feedback-explainability.md)
 
 ---
 
-## 6. Current Architecture Characteristics
+## 7. Current Architecture Characteristics
 
 O estado atual da arquitetura pode ser resumido por:
 
@@ -106,7 +112,7 @@ Essas características descrevem o sistema atual e não devem ser lidas como cap
 
 ---
 
-## 7. Future Directions
+## 8. Future Directions
 
 Possíveis direções arquiteturais futuras, ainda não implementadas:
 
@@ -121,6 +127,6 @@ Esses itens devem ser tratados como roadmap técnico, não como comportamento at
 
 ---
 
-## 8. Summary
+## 9. Summary
 
 `docs/specs/README.md` organiza a navegação da arquitetura spec-driven do projeto por bounded context e destaca o módulo `ai` como uma camada contextual determinística já preparada para explainability e replay, mas ainda sem depender de LLM no fluxo principal.
