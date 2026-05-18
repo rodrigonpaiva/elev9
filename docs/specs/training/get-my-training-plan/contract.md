@@ -65,15 +65,15 @@ type GetMyTrainingPlanOutput = {
   trainingPlan: {
     id: string;
     fitnessProfileId: string;
-    status: "active";
-    goal: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel: "low" | "medium" | "high";
+    status: 'active';
+    goal: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel: 'low' | 'medium' | 'high';
     weeklySchedule: Array<{
       dayIndex: number;
       title: string;
       focus: string;
       format: string;
-      intensity: "low" | "moderate" | "high";
+      intensity: 'low' | 'moderate' | 'high';
       exercises: Array<{
         name: string;
         sets: number;

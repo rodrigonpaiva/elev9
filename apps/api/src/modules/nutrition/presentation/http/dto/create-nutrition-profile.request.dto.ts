@@ -1,9 +1,17 @@
-import { Type } from "class-transformer";
-import { IsArray, IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreateNutritionProfileRequestDto {
-  @IsIn(["fat_loss", "maintenance", "muscle_gain"])
-  goal!: "fat_loss" | "maintenance" | "muscle_gain";
+  @IsIn(['fat_loss', 'maintenance', 'muscle_gain'])
+  goal!: 'fat_loss' | 'maintenance' | 'muscle_gain';
 
   @Type(() => Number)
   @IsInt()

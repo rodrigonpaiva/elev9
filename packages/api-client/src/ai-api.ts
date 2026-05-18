@@ -3,16 +3,18 @@ import type {
   GetCoachChatHistoryQuery,
   SendCoachChatRequest,
   SendCoachChatResponse,
-} from "@elev9/types";
+} from '@elev9/types';
 
-import type { HttpClient } from "./http-client";
+import type { HttpClient } from './http-client';
 
 export function createAiApi(httpClient: HttpClient) {
   return {
-    sendChatMessage(input: SendCoachChatRequest): Promise<SendCoachChatResponse> {
+    sendChatMessage(
+      input: SendCoachChatRequest,
+    ): Promise<SendCoachChatResponse> {
       return httpClient.request<SendCoachChatResponse>({
-        method: "POST",
-        path: "/ai/chat",
+        method: 'POST',
+        path: '/ai/chat',
         body: input,
       });
     },
@@ -22,14 +24,14 @@ export function createAiApi(httpClient: HttpClient) {
       const searchParams = new URLSearchParams();
 
       if (query?.limit !== undefined) {
-        searchParams.set("limit", String(query.limit));
+        searchParams.set('limit', String(query.limit));
       }
 
       const suffix =
-        searchParams.toString().length > 0 ? `?${searchParams.toString()}` : "";
+        searchParams.toString().length > 0 ? `?${searchParams.toString()}` : '';
 
       return httpClient.request<CoachChatHistoryResponse>({
-        method: "GET",
+        method: 'GET',
         path: `/ai/chat/history${suffix}`,
       });
     },

@@ -27,7 +27,7 @@ progress.get-progress-summary
 ```ts
 type GetProgressSummaryInput = {
   authUserId: string;
-  period?: "week" | "month";
+  period?: 'week' | 'month';
 };
 ```
 
@@ -76,7 +76,7 @@ Authorization: Bearer <access-token>
 ```ts
 type GetProgressSummaryOutput = {
   summary: {
-    period: "week" | "month";
+    period: 'week' | 'month';
     workoutsCompleted: number;
     totalDurationMinutes: number;
     averageDurationMinutes: number;

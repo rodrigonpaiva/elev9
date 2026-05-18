@@ -3,57 +3,57 @@ import {
   InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
-} from "@nestjs/common";
+} from '@nestjs/common';
 
-import { CreateCoachChatUseCase } from "../../application/use-cases/create-coach-chat/create-coach-chat.use-case";
-import { GetCoachChatDebugHistoryUseCase } from "../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case";
+import { CreateCoachChatUseCase } from '../../application/use-cases/create-coach-chat/create-coach-chat.use-case';
+import { GetCoachChatDebugHistoryUseCase } from '../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case';
 import {
   GET_COACH_CHAT_DEBUG_HISTORY_ERROR_CODES,
   GetCoachChatDebugHistoryError,
-} from "../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.errors";
+} from '../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.errors';
 import {
   GET_COACH_CHAT_MEMORY_DEBUG_ERROR_CODES,
   GetCoachChatMemoryDebugError,
-} from "../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.errors";
-import { GetCoachChatMemoryDebugUseCase } from "../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case";
-import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
-import { ReplayCoachFeedbackUseCase } from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
+} from '../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.errors';
+import { GetCoachChatMemoryDebugUseCase } from '../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case';
+import { GetCoachFeedbackDebugHistoryUseCase } from '../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case';
+import { ReplayCoachFeedbackUseCase } from '../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case';
 import {
   GET_COACH_FEEDBACK_HISTORY_ERROR_CODES,
   GetCoachFeedbackHistoryError,
-} from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
-import { GetCoachFeedbackHistoryUseCase } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
+} from '../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors';
+import { GetCoachFeedbackHistoryUseCase } from '../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case';
 import {
   CREATE_COACH_CHAT_ERROR_CODES,
   CreateCoachChatError,
-} from "../../application/use-cases/create-coach-chat/create-coach-chat.errors";
-import { GetCoachChatHistoryUseCase } from "../../application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case";
+} from '../../application/use-cases/create-coach-chat/create-coach-chat.errors';
+import { GetCoachChatHistoryUseCase } from '../../application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case';
 import {
   GET_COACH_CHAT_PROMPT_DEBUG_ERROR_CODES,
   GetCoachChatPromptDebugError,
-} from "../../application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.errors";
-import { GetCoachChatPromptDebugUseCase } from "../../application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case";
+} from '../../application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.errors';
+import { GetCoachChatPromptDebugUseCase } from '../../application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case';
 import {
   GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES,
   GetCoachChatReplyPathDebugError,
-} from "../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.errors";
-import { GetCoachChatReplyPathDebugUseCase } from "../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case";
+} from '../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.errors';
+import { GetCoachChatReplyPathDebugUseCase } from '../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case';
 import {
   GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES,
   GetCoachChatDebugIndexError,
-} from "../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.errors";
-import { GetCoachChatDebugIndexUseCase } from "../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.use-case";
+} from '../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.errors';
+import { GetCoachChatDebugIndexUseCase } from '../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.use-case';
 import {
   GENERATE_COACH_FEEDBACK_ERROR_CODES,
   GenerateCoachFeedbackError,
-} from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors";
-import { GenerateCoachFeedbackUseCase } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
-import { BuildUserHealthContextService } from "../../application/services/context-builder/build-user-health-context.service";
-import { AiController } from "./ai.controller";
-import { AuthSessionGuard } from "../../../users/presentation/http/guards/auth-session.guard";
-import { GUARDS_METADATA } from "@nestjs/common/constants";
+} from '../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors';
+import { GenerateCoachFeedbackUseCase } from '../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case';
+import { BuildUserHealthContextService } from '../../application/services/context-builder/build-user-health-context.service';
+import { AiController } from './ai.controller';
+import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 
-describe("AiController", () => {
+describe('AiController', () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
   let createCoachChatUseCase: jest.Mocked<CreateCoachChatUseCase>;
   let getCoachChatHistoryUseCase: jest.Mocked<GetCoachChatHistoryUseCase>;
@@ -122,51 +122,51 @@ describe("AiController", () => {
     );
   });
 
-  it("returns chat reply and conversation id", async () => {
+  it('returns chat reply and conversation id', async () => {
     createCoachChatUseCase.execute.mockResolvedValue({
-      conversationId: "conversation_123",
+      conversationId: 'conversation_123',
       reply: "Your recovery signals suggest keeping today's session lighter.",
     });
 
     const result = await controller.createCoachChat(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
-      { message: "Should I train today?" },
+      { message: 'Should I train today?' },
     );
 
     expect(createCoachChatUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
-      message: "Should I train today?",
+      authUserId: 'auth_user_123',
+      message: 'Should I train today?',
     });
     expect(result).toEqual({
-      conversationId: "conversation_123",
+      conversationId: 'conversation_123',
       reply: "Your recovery signals suggest keeping today's session lighter.",
     });
   });
 
-  it("rejects invalid chat payloads with HTTP 400", async () => {
+  it('rejects invalid chat payloads with HTTP 400', async () => {
     await expect(
       controller.createCoachChat(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
-        { message: "Hi", extra: true } as never,
+        { message: 'Hi', extra: true } as never,
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("maps chat invalid session to HTTP 401", async () => {
+  it('maps chat invalid session to HTTP 401', async () => {
     createCoachChatUseCase.execute.mockRejectedValue(
       new CreateCoachChatError(
         CREATE_COACH_CHAT_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       ),
     );
 
@@ -174,20 +174,20 @@ describe("AiController", () => {
       controller.createCoachChat(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
-        { message: "Should I train today?" },
+        { message: 'Should I train today?' },
       ),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it("maps debug chat history invalid input to HTTP 400", async () => {
+  it('maps debug chat history invalid input to HTTP 400', async () => {
     getCoachChatDebugHistoryUseCase.execute.mockRejectedValue(
       new GetCoachChatDebugHistoryError(
         GET_COACH_CHAT_DEBUG_HISTORY_ERROR_CODES.INVALID_INPUT,
-        "Invalid chat debug history input.",
+        'Invalid chat debug history input.',
       ),
     );
 
@@ -195,8 +195,8 @@ describe("AiController", () => {
       controller.getCoachChatDebugHistory(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         { limit: 0 as never },
@@ -205,17 +205,17 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("returns sanitized prompt debug data", async () => {
+  it('returns sanitized prompt debug data', async () => {
     getCoachChatPromptDebugUseCase.execute.mockResolvedValue({
-      promptVersion: "coach-chat-prompt-v1",
+      promptVersion: 'coach-chat-prompt-v1',
       llm: {
         enabled: true,
-        provider: "openai",
-        model: "gpt-4.1-mini",
+        provider: 'openai',
+        model: 'gpt-4.1-mini',
       },
       context: {
-        fatigueLevel: "HIGH",
-        recoveryTrend: "needs_recovery",
+        fatigueLevel: 'HIGH',
+        recoveryTrend: 'needs_recovery',
         hasNutritionProfile: true,
         hasLatestCheckIn: true,
         recentWorkoutCount: 3,
@@ -223,37 +223,37 @@ describe("AiController", () => {
       },
       promptPreview: {
         systemSections: [
-          "safety_rules",
-          "adaptive_context",
-          "conversation_context",
+          'safety_rules',
+          'adaptive_context',
+          'conversation_context',
         ],
-        userMessagePreview: "I feel tired today after my workout",
+        userMessagePreview: 'I feel tired today after my workout',
       },
     });
 
     const result = await controller.getCoachChatPromptDebug(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       {},
     );
 
     expect(getCoachChatPromptDebugUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
     expect(result).toEqual({
-      promptVersion: "coach-chat-prompt-v1",
+      promptVersion: 'coach-chat-prompt-v1',
       llm: {
         enabled: true,
-        provider: "openai",
-        model: "gpt-4.1-mini",
+        provider: 'openai',
+        model: 'gpt-4.1-mini',
       },
       context: {
-        fatigueLevel: "HIGH",
-        recoveryTrend: "needs_recovery",
+        fatigueLevel: 'HIGH',
+        recoveryTrend: 'needs_recovery',
         hasNutritionProfile: true,
         hasLatestCheckIn: true,
         recentWorkoutCount: 3,
@@ -261,20 +261,20 @@ describe("AiController", () => {
       },
       promptPreview: {
         systemSections: [
-          "safety_rules",
-          "adaptive_context",
-          "conversation_context",
+          'safety_rules',
+          'adaptive_context',
+          'conversation_context',
         ],
-        userMessagePreview: "I feel tired today after my workout",
+        userMessagePreview: 'I feel tired today after my workout',
       },
     });
   });
 
-  it("maps prompt debug invalid input to HTTP 400", async () => {
+  it('maps prompt debug invalid input to HTTP 400', async () => {
     getCoachChatPromptDebugUseCase.execute.mockRejectedValue(
       new GetCoachChatPromptDebugError(
         GET_COACH_CHAT_PROMPT_DEBUG_ERROR_CODES.INVALID_INPUT,
-        "Invalid chat prompt debug input.",
+        'Invalid chat prompt debug input.',
       ),
     );
 
@@ -282,8 +282,8 @@ describe("AiController", () => {
       controller.getCoachChatPromptDebug(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         { extra: true } as never,
@@ -291,56 +291,56 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("returns sanitized memory debug data", async () => {
+  it('returns sanitized memory debug data', async () => {
     getCoachChatMemoryDebugUseCase.execute.mockResolvedValue({
       memory: {
-        version: "memory-v1",
+        version: 'memory-v1',
         generatedFromMessageCount: 18,
         summaryPreview:
-          "User is focused on recovery after intense workouts and improving nutrition consistency.",
+          'User is focused on recovery after intense workouts and improving nutrition consistency.',
         metadata: {
           hasRecoveryContext: true,
           hasNutritionContext: true,
           hasWorkoutContinuity: true,
         },
-        createdAt: "2026-05-18T10:05:00.000Z",
-        updatedAt: "2026-05-18T10:10:00.000Z",
+        createdAt: '2026-05-18T10:05:00.000Z',
+        updatedAt: '2026-05-18T10:10:00.000Z',
       },
     });
 
     const result = await controller.getCoachChatMemoryDebug(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       {},
     );
 
     expect(getCoachChatMemoryDebugUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
     expect(result.memory).toEqual({
-      version: "memory-v1",
+      version: 'memory-v1',
       generatedFromMessageCount: 18,
       summaryPreview:
-        "User is focused on recovery after intense workouts and improving nutrition consistency.",
+        'User is focused on recovery after intense workouts and improving nutrition consistency.',
       metadata: {
         hasRecoveryContext: true,
         hasNutritionContext: true,
         hasWorkoutContinuity: true,
       },
-      createdAt: "2026-05-18T10:05:00.000Z",
-      updatedAt: "2026-05-18T10:10:00.000Z",
+      createdAt: '2026-05-18T10:05:00.000Z',
+      updatedAt: '2026-05-18T10:10:00.000Z',
     });
   });
 
-  it("maps memory debug invalid input to HTTP 400", async () => {
+  it('maps memory debug invalid input to HTTP 400', async () => {
     getCoachChatMemoryDebugUseCase.execute.mockRejectedValue(
       new GetCoachChatMemoryDebugError(
         GET_COACH_CHAT_MEMORY_DEBUG_ERROR_CODES.INVALID_INPUT,
-        "Invalid chat memory debug input.",
+        'Invalid chat memory debug input.',
       ),
     );
 
@@ -348,8 +348,8 @@ describe("AiController", () => {
       controller.getCoachChatMemoryDebug(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         { extra: true } as never,
@@ -357,21 +357,21 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("returns sanitized reply path debug data", async () => {
+  it('returns sanitized reply path debug data', async () => {
     getCoachChatReplyPathDebugUseCase.execute.mockResolvedValue({
       replyPath: {
-        source: "llm",
+        source: 'llm',
         fallbackActivated: false,
         llm: {
           enabled: true,
-          provider: "openai",
-          model: "gpt-4.1-mini",
-          promptVersion: "coach-chat-prompt-v1",
+          provider: 'openai',
+          model: 'gpt-4.1-mini',
+          promptVersion: 'coach-chat-prompt-v1',
         },
       },
       context: {
-        fatigueLevel: "HIGH",
-        recoveryTrend: "needs_recovery",
+        fatigueLevel: 'HIGH',
+        recoveryTrend: 'needs_recovery',
         hasNutritionProfile: true,
         hasLatestCheckIn: true,
         recentWorkoutCount: 3,
@@ -379,36 +379,36 @@ describe("AiController", () => {
       },
       promptPreview: {
         systemSections: [
-          "safety_rules",
-          "adaptive_context",
-          "conversation_context",
+          'safety_rules',
+          'adaptive_context',
+          'conversation_context',
         ],
-        userMessagePreview: "I feel exhausted after training",
+        userMessagePreview: 'I feel exhausted after training',
       },
     });
 
     const result = await controller.getCoachChatReplyPathDebug(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       {},
     );
 
     expect(getCoachChatReplyPathDebugUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
-    expect(result.replyPath.source).toBe("llm");
-    expect(result.replyPath.llm.promptVersion).toBe("coach-chat-prompt-v1");
+    expect(result.replyPath.source).toBe('llm');
+    expect(result.replyPath.llm.promptVersion).toBe('coach-chat-prompt-v1');
   });
 
-  it("maps reply path invalid input to HTTP 400", async () => {
+  it('maps reply path invalid input to HTTP 400', async () => {
     getCoachChatReplyPathDebugUseCase.execute.mockRejectedValue(
       new GetCoachChatReplyPathDebugError(
         GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES.INVALID_INPUT,
-        "Invalid chat reply path debug input.",
+        'Invalid chat reply path debug input.',
       ),
     );
 
@@ -416,8 +416,8 @@ describe("AiController", () => {
       controller.getCoachChatReplyPathDebug(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         { extra: true } as never,
@@ -425,41 +425,42 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("returns the aggregated chat debug index", async () => {
+  it('returns the aggregated chat debug index', async () => {
     getCoachChatDebugIndexUseCase.execute.mockResolvedValue({
-      generatedAt: "2026-05-18T10:00:00.000Z",
+      generatedAt: '2026-05-18T10:00:00.000Z',
       replyPath: {
-        source: "llm",
+        source: 'llm',
         fallbackActivated: false,
       },
       llm: {
         enabled: true,
-        provider: "openai",
-        model: "gpt-4.1-mini",
-        promptVersion: "coach-chat-prompt-v1",
+        provider: 'openai',
+        model: 'gpt-4.1-mini',
+        promptVersion: 'coach-chat-prompt-v1',
       },
-      promptVersion: "coach-chat-prompt-v1",
+      promptVersion: 'coach-chat-prompt-v1',
       promptPreview: {
         systemSections: [
-          "safety_rules",
-          "adaptive_context",
-          "conversation_context",
+          'safety_rules',
+          'adaptive_context',
+          'conversation_context',
         ],
       },
       context: {
-        fatigueLevel: "MODERATE",
-        recoveryTrend: "stable",
+        fatigueLevel: 'MODERATE',
+        recoveryTrend: 'stable',
         hasNutritionProfile: true,
         recentWorkoutCount: 2,
       },
       recentMessages: [
         {
-          role: "assistant",
-          content: "Your recovery signals suggest keeping today's session lighter.",
-          createdAt: "2026-05-18T09:00:00.000Z",
+          role: 'assistant',
+          content:
+            "Your recovery signals suggest keeping today's session lighter.",
+          createdAt: '2026-05-18T09:00:00.000Z',
           metadata: {
-            source: "llm",
-            promptVersion: "coach-chat-prompt-v1",
+            source: 'llm',
+            promptVersion: 'coach-chat-prompt-v1',
           },
         },
       ],
@@ -468,26 +469,26 @@ describe("AiController", () => {
     const result = await controller.getCoachChatDebugIndex(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       {},
     );
 
     expect(getCoachChatDebugIndexUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
-    expect(result.generatedAt).toBe("2026-05-18T10:00:00.000Z");
-    expect(result.replyPath.source).toBe("llm");
+    expect(result.generatedAt).toBe('2026-05-18T10:00:00.000Z');
+    expect(result.replyPath.source).toBe('llm');
     expect(result.recentMessages).toHaveLength(1);
   });
 
-  it("maps chat debug index invalid input to HTTP 400", async () => {
+  it('maps chat debug index invalid input to HTTP 400', async () => {
     getCoachChatDebugIndexUseCase.execute.mockRejectedValue(
       new GetCoachChatDebugIndexError(
         GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INVALID_INPUT,
-        "Invalid chat debug input.",
+        'Invalid chat debug input.',
       ),
     );
 
@@ -495,8 +496,8 @@ describe("AiController", () => {
       controller.getCoachChatDebugIndex(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         { extra: true } as never,
@@ -504,25 +505,26 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("returns chat history in the internal order", async () => {
+  it('returns chat history in the internal order', async () => {
     getCoachChatHistoryUseCase.execute.mockResolvedValue([
       {
-        role: "user",
-        content: "Should I train today?",
-        createdAt: "2026-05-18T09:00:00.000Z",
+        role: 'user',
+        content: 'Should I train today?',
+        createdAt: '2026-05-18T09:00:00.000Z',
       },
       {
-        role: "assistant",
-        content: "Your recovery signals suggest keeping today's session lighter.",
-        createdAt: "2026-05-18T09:00:01.000Z",
+        role: 'assistant',
+        content:
+          "Your recovery signals suggest keeping today's session lighter.",
+        createdAt: '2026-05-18T09:00:01.000Z',
       },
     ]);
 
     const result = await controller.getCoachChatHistory(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       { limit: 50 },
@@ -530,29 +532,29 @@ describe("AiController", () => {
     );
 
     expect(getCoachChatHistoryUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       limit: 50,
     });
     expect(result).toHaveLength(2);
   });
 
-  it("returns debug chat history with assistant metadata", async () => {
+  it('returns debug chat history with assistant metadata', async () => {
     getCoachChatDebugHistoryUseCase.execute.mockResolvedValue({
       messages: [
         {
-          role: "user",
-          content: "Should I train today?",
-          createdAt: "2026-05-18T09:00:00.000Z",
+          role: 'user',
+          content: 'Should I train today?',
+          createdAt: '2026-05-18T09:00:00.000Z',
         },
         {
-          role: "assistant",
-          content: "Keep it light today.",
-          createdAt: "2026-05-18T09:00:01.000Z",
+          role: 'assistant',
+          content: 'Keep it light today.',
+          createdAt: '2026-05-18T09:00:01.000Z',
           metadata: {
-            source: "llm",
-            provider: "openai",
-            model: "gpt-4.1-mini",
-            promptVersion: "coach-chat-prompt-v1",
+            source: 'llm',
+            provider: 'openai',
+            model: 'gpt-4.1-mini',
+            promptVersion: 'coach-chat-prompt-v1',
           },
         },
       ],
@@ -561,8 +563,8 @@ describe("AiController", () => {
     const result = await controller.getCoachChatDebugHistory(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       { limit: 50 },
@@ -570,61 +572,61 @@ describe("AiController", () => {
     );
 
     expect(getCoachChatDebugHistoryUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       limit: 50,
     });
     expect(result.messages[1].metadata).toEqual({
-      source: "llm",
-      provider: "openai",
-      model: "gpt-4.1-mini",
-      promptVersion: "coach-chat-prompt-v1",
+      source: 'llm',
+      provider: 'openai',
+      model: 'gpt-4.1-mini',
+      promptVersion: 'coach-chat-prompt-v1',
     });
   });
 
-  it("returns the safe response on success", async () => {
+  it('returns the safe response on success', async () => {
     generateCoachFeedbackUseCase.execute.mockResolvedValue({
       message: "Great consistency this week. You're on a 4-day streak.",
-      insights: ["You trained 4 times in the last 7 days"],
-      recommendations: ["Keep your current rhythm"],
+      insights: ['You trained 4 times in the last 7 days'],
+      recommendations: ['Keep your current rhythm'],
     });
 
     const result = await controller.generateCoachFeedback(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       {},
     );
 
     expect(generateCoachFeedbackUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
-    expect(result.message).toContain("4-day streak");
-    expect(result).not.toHaveProperty("influences");
-    expect(result).not.toHaveProperty("generatorVersion");
+    expect(result.message).toContain('4-day streak');
+    expect(result).not.toHaveProperty('influences');
+    expect(result).not.toHaveProperty('generatorVersion');
   });
 
-  it("rejects extra body fields with HTTP 400", async () => {
+  it('rejects extra body fields with HTTP 400', async () => {
     await expect(
       controller.generateCoachFeedback(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
-        { authUserId: "forbidden" },
+        { authUserId: 'forbidden' },
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("maps AI_COACH_INVALID_INPUT to HTTP 400", async () => {
+  it('maps AI_COACH_INVALID_INPUT to HTTP 400', async () => {
     generateCoachFeedbackUseCase.execute.mockRejectedValue(
       new GenerateCoachFeedbackError(
         GENERATE_COACH_FEEDBACK_ERROR_CODES.INVALID_INPUT,
-        "Invalid input.",
+        'Invalid input.',
       ),
     );
 
@@ -632,8 +634,8 @@ describe("AiController", () => {
       controller.generateCoachFeedback(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {},
@@ -641,11 +643,11 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("maps USER_PROFILE_NOT_FOUND to HTTP 404", async () => {
+  it('maps USER_PROFILE_NOT_FOUND to HTTP 404', async () => {
     generateCoachFeedbackUseCase.execute.mockRejectedValue(
       new GenerateCoachFeedbackError(
         GENERATE_COACH_FEEDBACK_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-        "User profile not found.",
+        'User profile not found.',
       ),
     );
 
@@ -653,8 +655,8 @@ describe("AiController", () => {
       controller.generateCoachFeedback(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {},
@@ -662,11 +664,11 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("maps AUTH_INVALID_SESSION to HTTP 401", async () => {
+  it('maps AUTH_INVALID_SESSION to HTTP 401', async () => {
     generateCoachFeedbackUseCase.execute.mockRejectedValue(
       new GenerateCoachFeedbackError(
         GENERATE_COACH_FEEDBACK_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       ),
     );
 
@@ -674,8 +676,8 @@ describe("AiController", () => {
       controller.generateCoachFeedback(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {},
@@ -683,17 +685,17 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it("maps unexpected failures to HTTP 500", async () => {
+  it('maps unexpected failures to HTTP 500', async () => {
     generateCoachFeedbackUseCase.execute.mockRejectedValue(
-      new Error("unexpected"),
+      new Error('unexpected'),
     );
 
     await expect(
       controller.generateCoachFeedback(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {},
@@ -701,15 +703,15 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(InternalServerErrorException);
   });
 
-  it("returns feedback history", async () => {
+  it('returns feedback history', async () => {
     getCoachFeedbackHistoryUseCase.execute.mockResolvedValue({
       feedbacks: [
         {
-          id: "feedback_001",
-          message: "Great consistency this week.",
-          insights: ["You trained 4 times this week"],
-          recommendations: ["Keep your current rhythm"],
-          createdAt: "2026-05-04T10:00:00.000Z",
+          id: 'feedback_001',
+          message: 'Great consistency this week.',
+          insights: ['You trained 4 times this week'],
+          recommendations: ['Keep your current rhythm'],
+          createdAt: '2026-05-04T10:00:00.000Z',
         },
       ],
     });
@@ -717,8 +719,8 @@ describe("AiController", () => {
     const result = await controller.getCoachFeedbackHistory(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       { limit: 1 },
@@ -726,17 +728,17 @@ describe("AiController", () => {
     );
 
     expect(getCoachFeedbackHistoryUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       limit: 1,
     });
     expect(result.feedbacks).toHaveLength(1);
   });
 
-  it("maps GET invalid input to HTTP 400", async () => {
+  it('maps GET invalid input to HTTP 400', async () => {
     getCoachFeedbackHistoryUseCase.execute.mockRejectedValue(
       new GetCoachFeedbackHistoryError(
         GET_COACH_FEEDBACK_HISTORY_ERROR_CODES.INVALID_INPUT,
-        "Invalid coach feedback history input.",
+        'Invalid coach feedback history input.',
       ),
     );
 
@@ -744,8 +746,8 @@ describe("AiController", () => {
       controller.getCoachFeedbackHistory(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         { limit: 99 },
@@ -754,99 +756,99 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("returns the authenticated AI context", async () => {
+  it('returns the authenticated AI context', async () => {
     buildUserHealthContextService.build.mockResolvedValue({
-      authUserId: "auth_user_123",
-      userProfileId: "profile_123",
-      userName: "Rodrigo Paiva",
-      goal: "gain_muscle",
-      activityLevel: "medium",
+      authUserId: 'auth_user_123',
+      userProfileId: 'profile_123',
+      userName: 'Rodrigo Paiva',
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
       weeklyFrequency: 4,
       adherenceScore: 75,
       currentStreak: 3,
       averageWorkoutDuration: 42,
-      fatigueLevel: "LOW",
+      fatigueLevel: 'LOW',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
-      activeTrainingPlanId: "training_123",
+      activeTrainingPlanId: 'training_123',
       latestCheckIn: {
         energyLevel: 4,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 5,
-        createdAt: new Date("2026-05-04T09:00:00.000Z"),
+        createdAt: new Date('2026-05-04T09:00:00.000Z'),
       },
       nutritionProfile: {
-        goal: "muscle_gain",
+        goal: 'muscle_gain',
         mealsPerDay: 4,
         dietaryRestrictions: [],
         allergies: [],
         dislikedFoods: [],
-        preferredFoods: ["rice", "eggs"],
+        preferredFoods: ['rice', 'eggs'],
       },
       recentWorkoutLogs: [],
-      generatedAt: new Date("2026-05-04T10:00:00.000Z"),
+      generatedAt: new Date('2026-05-04T10:00:00.000Z'),
     });
 
     const result = await controller.getAiContext({
       authUser: {
-        id: "auth_user_123",
-        email: "user@email.com",
+        id: 'auth_user_123',
+        email: 'user@email.com',
       },
     });
 
     expect(buildUserHealthContextService.build).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
     expect(result).toMatchObject({
-      userId: "auth_user_123",
-      userProfileId: "profile_123",
-      fatigueLevel: "LOW",
+      userId: 'auth_user_123',
+      userProfileId: 'profile_123',
+      fatigueLevel: 'LOW',
       latestCheckIn: {
         energyLevel: 4,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 5,
-        createdAt: "2026-05-04T09:00:00.000Z",
+        createdAt: '2026-05-04T09:00:00.000Z',
       },
       nutritionProfile: {
-        goal: "muscle_gain",
+        goal: 'muscle_gain',
         mealsPerDay: 4,
         dietaryRestrictions: [],
         allergies: [],
         dislikedFoods: [],
-        preferredFoods: ["rice", "eggs"],
+        preferredFoods: ['rice', 'eggs'],
       },
-      generatedAt: "2026-05-04T10:00:00.000Z",
+      generatedAt: '2026-05-04T10:00:00.000Z',
     });
   });
 
-  it("omits nutritionProfile in AI context when absent", async () => {
+  it('omits nutritionProfile in AI context when absent', async () => {
     buildUserHealthContextService.build.mockResolvedValue({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       adherenceScore: 0,
       currentStreak: 0,
       averageWorkoutDuration: 0,
-      fatigueLevel: "MODERATE",
+      fatigueLevel: 'MODERATE',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
       recentWorkoutLogs: [],
-      generatedAt: new Date("2026-05-04T10:00:00.000Z"),
+      generatedAt: new Date('2026-05-04T10:00:00.000Z'),
     });
 
     const result = await controller.getAiContext({
       authUser: {
-        id: "auth_user_123",
-        email: "user@email.com",
+        id: 'auth_user_123',
+        email: 'user@email.com',
       },
     });
 
     expect(result.nutritionProfile).toBeUndefined();
   });
 
-  it("uses the same auth guard on AI routes", () => {
+  it('uses the same auth guard on AI routes', () => {
     const generateGuards = Reflect.getMetadata(
       GUARDS_METADATA,
       AiController.prototype.generateCoachFeedback,

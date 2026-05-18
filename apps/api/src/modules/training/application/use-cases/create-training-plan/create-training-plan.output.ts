@@ -1,10 +1,8 @@
 import {
   ActivityLevel,
   FitnessGoal,
-} from "../../../../fitness/domain/entities/fitness-profile.entity";
-import {
-  TrainingPlanDay,
-} from "../../../domain/entities/training-plan.entity";
+} from '../../../../fitness/domain/entities/fitness-profile.entity';
+import { TrainingPlanDay } from '../../../domain/entities/training-plan.entity';
 
 export type CreateTrainingPlanOutput = {
   trainingPlan: {
@@ -13,7 +11,7 @@ export type CreateTrainingPlanOutput = {
     goal: FitnessGoal;
     activityLevel: ActivityLevel;
     weeklySchedule: TrainingPlanDay[];
-    status: "active";
+    status: 'active';
     createdAt: Date;
   };
 };

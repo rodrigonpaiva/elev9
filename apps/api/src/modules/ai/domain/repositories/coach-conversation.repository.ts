@@ -1,4 +1,4 @@
-import { CoachConversation } from "../entities/coach-conversation.entity";
+import { CoachConversation } from '../entities/coach-conversation.entity';
 
 export interface CreateCoachConversationRepositoryInput {
   userProfileId: string;
@@ -14,5 +14,5 @@ export interface CoachConversationRepository {
 }
 
 export const COACH_CONVERSATION_REPOSITORY = Symbol(
-  "COACH_CONVERSATION_REPOSITORY",
+  'COACH_CONVERSATION_REPOSITORY',
 );

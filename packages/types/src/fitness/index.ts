@@ -1,6 +1,6 @@
-export type FitnessProfileGoal = "lose_weight" | "gain_muscle" | "maintain";
-export type FitnessProfileActivityLevel = "low" | "medium" | "high";
-export type FitnessProfileLimitationSeverity = "low" | "medium" | "high";
+export type FitnessProfileGoal = 'lose_weight' | 'gain_muscle' | 'maintain';
+export type FitnessProfileActivityLevel = 'low' | 'medium' | 'high';
+export type FitnessProfileLimitationSeverity = 'low' | 'medium' | 'high';
 
 export type FitnessProfileResponse = {
   fitnessProfile: {
@@ -19,7 +19,7 @@ export type FitnessProfileResponse = {
       description?: string;
       severity: FitnessProfileLimitationSeverity;
     }>;
-    status: "active";
+    status: 'active';
     createdAt: string;
   };
 };

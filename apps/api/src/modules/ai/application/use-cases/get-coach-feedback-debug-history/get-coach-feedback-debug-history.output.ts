@@ -7,8 +7,8 @@ export type GetCoachFeedbackDebugHistoryOutput = {
     influences: string[];
     generatorVersion?: string;
     contextSnapshot?: {
-      fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
-      recoveryTrend?: "improving" | "stable" | "needs_recovery";
+      fatigueLevel?: 'LOW' | 'MODERATE' | 'HIGH';
+      recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
       weeklyFrequency?: number;
       currentStreak?: number;
       averageWorkoutDuration?: number;
@@ -19,7 +19,7 @@ export type GetCoachFeedbackDebugHistoryOutput = {
         motivationLevel: number;
       };
       nutritionProfile?: {
-        goal: "fat_loss" | "maintenance" | "muscle_gain";
+        goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
         mealsPerDay: number;
       };
     };

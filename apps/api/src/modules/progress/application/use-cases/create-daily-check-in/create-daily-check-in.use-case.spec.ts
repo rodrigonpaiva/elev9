@@ -1,13 +1,11 @@
-import { UserProfile } from "../../../../users/domain/entities/user-profile.entity";
-import { UserProfileRepository } from "../../../../users/domain/repositories/user-profile.repository";
-import { DailyCheckIn } from "../../../domain/entities/daily-check-in.entity";
-import { DailyCheckInRepository } from "../../../domain/repositories/daily-check-in.repository";
-import {
-  CREATE_DAILY_CHECK_IN_ERROR_CODES,
-} from "./create-daily-check-in.errors";
-import { CreateDailyCheckInUseCase } from "./create-daily-check-in.use-case";
+import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
+import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
+import { DailyCheckIn } from '../../../domain/entities/daily-check-in.entity';
+import { DailyCheckInRepository } from '../../../domain/repositories/daily-check-in.repository';
+import { CREATE_DAILY_CHECK_IN_ERROR_CODES } from './create-daily-check-in.errors';
+import { CreateDailyCheckInUseCase } from './create-daily-check-in.use-case';
 
-describe("CreateDailyCheckInUseCase", () => {
+describe('CreateDailyCheckInUseCase', () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let useCase: CreateDailyCheckInUseCase;
@@ -29,25 +27,25 @@ describe("CreateDailyCheckInUseCase", () => {
     );
   });
 
-  it("creates a daily check-in successfully", async () => {
+  it('creates a daily check-in successfully', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       buildUserProfile(),
     );
     dailyCheckInRepository.create.mockResolvedValue(
       new DailyCheckIn({
-        id: "checkin_123",
-        userProfileId: "profile_123",
+        id: 'checkin_123',
+        userProfileId: 'profile_123',
         energyLevel: 4,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 5,
-        createdAt: new Date("2026-05-04T10:00:00.000Z"),
-        updatedAt: new Date("2026-05-04T10:00:00.000Z"),
+        createdAt: new Date('2026-05-04T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-04T10:00:00.000Z'),
       }),
     );
 
     const result = await useCase.execute({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       energyLevel: 4,
       sleepQuality: 3,
       muscleSoreness: 2,
@@ -55,7 +53,7 @@ describe("CreateDailyCheckInUseCase", () => {
     });
 
     expect(result.dailyCheckIn).toMatchObject({
-      id: "checkin_123",
+      id: 'checkin_123',
       energyLevel: 4,
       sleepQuality: 3,
       muscleSoreness: 2,
@@ -63,12 +61,12 @@ describe("CreateDailyCheckInUseCase", () => {
     });
   });
 
-  it("fails when user profile is missing", async () => {
+  it('fails when user profile is missing', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);
 
     await expect(
       useCase.execute({
-        authUserId: "auth_user_123",
+        authUserId: 'auth_user_123',
         energyLevel: 4,
         sleepQuality: 3,
         muscleSoreness: 2,
@@ -79,25 +77,25 @@ describe("CreateDailyCheckInUseCase", () => {
     });
   });
 
-  it("persists the daily check-in with the resolved user profile", async () => {
+  it('persists the daily check-in with the resolved user profile', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       buildUserProfile(),
     );
     dailyCheckInRepository.create.mockResolvedValue(
       new DailyCheckIn({
-        id: "checkin_123",
-        userProfileId: "profile_123",
+        id: 'checkin_123',
+        userProfileId: 'profile_123',
         energyLevel: 4,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 5,
-        createdAt: new Date("2026-05-04T10:00:00.000Z"),
-        updatedAt: new Date("2026-05-04T10:00:00.000Z"),
+        createdAt: new Date('2026-05-04T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-04T10:00:00.000Z'),
       }),
     );
 
     await useCase.execute({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       energyLevel: 4,
       sleepQuality: 3,
       muscleSoreness: 2,
@@ -105,7 +103,7 @@ describe("CreateDailyCheckInUseCase", () => {
     });
 
     expect(dailyCheckInRepository.create).toHaveBeenCalledWith({
-      userProfileId: "profile_123",
+      userProfileId: 'profile_123',
       energyLevel: 4,
       sleepQuality: 3,
       muscleSoreness: 2,
@@ -116,12 +114,12 @@ describe("CreateDailyCheckInUseCase", () => {
 
 function buildUserProfile(): UserProfile {
   return new UserProfile({
-    id: "profile_123",
-    authUserId: "auth_user_123",
-    name: "Rodrigo",
-    language: "en-US",
-    timezone: "UTC",
-    status: "active",
+    id: 'profile_123',
+    authUserId: 'auth_user_123',
+    name: 'Rodrigo',
+    language: 'en-US',
+    timezone: 'UTC',
+    status: 'active',
     createdAt: new Date(),
     updatedAt: new Date(),
   });

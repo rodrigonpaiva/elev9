@@ -70,14 +70,14 @@ type CreateTrainingPlanOutput = {
   trainingPlan: {
     id: string;
     fitnessProfileId: string;
-    goal: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel: "low" | "medium" | "high";
+    goal: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel: 'low' | 'medium' | 'high';
     weeklySchedule: Array<{
       dayIndex: number;
       title: string;
       focus: string;
-      intensity: "low" | "moderate" | "high";
-      format: "strength" | "circuit";
+      intensity: 'low' | 'moderate' | 'high';
+      format: 'strength' | 'circuit';
       exercises: Array<{
         name: string;
         sets: number;
@@ -85,7 +85,7 @@ type CreateTrainingPlanOutput = {
         restSeconds: number;
       }>;
     }>;
-    status: "active";
+    status: 'active';
     createdAt: Date;
   };
 };

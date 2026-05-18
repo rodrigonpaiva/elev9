@@ -171,9 +171,9 @@ Retornar apenas:
       completedExercises,
       feedback,
       date,
-      createdAt
-    }
-  ]
+      createdAt,
+    },
+  ];
 }
 ```
 

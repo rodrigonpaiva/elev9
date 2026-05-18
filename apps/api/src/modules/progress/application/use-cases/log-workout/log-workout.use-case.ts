@@ -1,31 +1,28 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
-} from "../../../../fitness/domain/repositories/fitness-profile.repository";
+} from '../../../../fitness/domain/repositories/fitness-profile.repository';
 import {
   TRAINING_PLAN_REPOSITORY,
   TrainingPlanRepository,
-} from "../../../../training/domain/repositories/training-plan.repository";
+} from '../../../../training/domain/repositories/training-plan.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   WORKOUT_LOG_REPOSITORY,
   WorkoutLogRepository,
-} from "../../../domain/repositories/workout-log.repository";
-import { CLOCK, Clock } from "../../../domain/services/clock.service";
-import {
-  LOG_WORKOUT_ERROR_CODES,
-  LogWorkoutError,
-} from "./log-workout.errors";
-import { LogWorkoutInput } from "./log-workout.input";
-import { LogWorkoutOutput } from "./log-workout.output";
+} from '../../../domain/repositories/workout-log.repository';
+import { CLOCK, Clock } from '../../../domain/services/clock.service';
+import { LOG_WORKOUT_ERROR_CODES, LogWorkoutError } from './log-workout.errors';
+import { LogWorkoutInput } from './log-workout.input';
+import { LogWorkoutOutput } from './log-workout.output';
 
 const MONGO_OBJECT_ID_REGEX = /^[a-f\d]{24}$/i;
-const ALLOWED_DIFFICULTIES = new Set(["easy", "medium", "hard"] as const);
+const ALLOWED_DIFFICULTIES = new Set(['easy', 'medium', 'hard'] as const);
 
 @Injectable()
 export class LogWorkoutUseCase {
@@ -44,15 +41,17 @@ export class LogWorkoutUseCase {
 
   async execute(input: LogWorkoutInput): Promise<LogWorkoutOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const trainingPlanId =
-      typeof input.trainingPlanId === "string" ? input.trainingPlanId.trim() : "";
+      typeof input.trainingPlanId === 'string'
+        ? input.trainingPlanId.trim()
+        : '';
     const date = this.clock.todayUtcDateString();
 
     if (!authUserId) {
       throw new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -71,7 +70,7 @@ export class LogWorkoutUseCase {
       if (!userProfile) {
         throw new LogWorkoutError(
           LOG_WORKOUT_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -83,16 +82,20 @@ export class LogWorkoutUseCase {
       if (!fitnessProfile) {
         throw new LogWorkoutError(
           LOG_WORKOUT_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
-          "Fitness profile not found.",
+          'Fitness profile not found.',
         );
       }
 
-      const trainingPlan = await this.trainingPlanRepository.findById(trainingPlanId);
+      const trainingPlan =
+        await this.trainingPlanRepository.findById(trainingPlanId);
 
-      if (!trainingPlan || trainingPlan.fitnessProfileId !== fitnessProfile.id) {
+      if (
+        !trainingPlan ||
+        trainingPlan.fitnessProfileId !== fitnessProfile.id
+      ) {
         throw new LogWorkoutError(
           LOG_WORKOUT_ERROR_CODES.TRAINING_PLAN_NOT_FOUND,
-          "Training plan not found.",
+          'Training plan not found.',
         );
       }
 
@@ -103,7 +106,7 @@ export class LogWorkoutUseCase {
       if (!hasWorkoutDay) {
         throw new LogWorkoutError(
           LOG_WORKOUT_ERROR_CODES.INVALID_INPUT,
-          "Invalid workout log input.",
+          'Invalid workout log input.',
         );
       }
 
@@ -117,7 +120,7 @@ export class LogWorkoutUseCase {
       if (existingWorkoutLog) {
         throw new LogWorkoutError(
           LOG_WORKOUT_ERROR_CODES.ALREADY_EXISTS,
-          "Workout log already exists.",
+          'Workout log already exists.',
         );
       }
 
@@ -158,7 +161,7 @@ export class LogWorkoutUseCase {
 
       throw new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -173,21 +176,21 @@ export class LogWorkoutUseCase {
       repsDone: number;
     }>;
     feedback?: {
-      difficulty: "easy" | "medium" | "hard";
+      difficulty: 'easy' | 'medium' | 'hard';
       notes?: string;
     };
   }): void {
     if (!input.trainingPlanId || !this.isValidObjectId(input.trainingPlanId)) {
       throw new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.TRAINING_PLAN_NOT_FOUND,
-        "Training plan not found.",
+        'Training plan not found.',
       );
     }
 
     if (!Number.isInteger(input.workoutDayIndex)) {
       throw new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.INVALID_INPUT,
-        "Invalid workout log input.",
+        'Invalid workout log input.',
       );
     }
 
@@ -198,7 +201,7 @@ export class LogWorkoutUseCase {
     ) {
       throw new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.INVALID_INPUT,
-        "Invalid workout log input.",
+        'Invalid workout log input.',
       );
     }
 
@@ -208,14 +211,14 @@ export class LogWorkoutUseCase {
     ) {
       throw new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.INVALID_INPUT,
-        "Invalid workout log input.",
+        'Invalid workout log input.',
       );
     }
 
     for (const exercise of input.completedExercises) {
       if (
         !exercise ||
-        typeof exercise.name !== "string" ||
+        typeof exercise.name !== 'string' ||
         !exercise.name.trim() ||
         !Number.isInteger(exercise.setsDone) ||
         exercise.setsDone < 0 ||
@@ -224,7 +227,7 @@ export class LogWorkoutUseCase {
       ) {
         throw new LogWorkoutError(
           LOG_WORKOUT_ERROR_CODES.INVALID_INPUT,
-          "Invalid workout log input.",
+          'Invalid workout log input.',
         );
       }
     }
@@ -233,18 +236,18 @@ export class LogWorkoutUseCase {
       if (!ALLOWED_DIFFICULTIES.has(input.feedback.difficulty)) {
         throw new LogWorkoutError(
           LOG_WORKOUT_ERROR_CODES.INVALID_INPUT,
-          "Invalid workout log input.",
+          'Invalid workout log input.',
         );
       }
 
       if (
         input.feedback.notes !== undefined &&
-        (typeof input.feedback.notes !== "string" ||
+        (typeof input.feedback.notes !== 'string' ||
           input.feedback.notes.length > 500)
       ) {
         throw new LogWorkoutError(
           LOG_WORKOUT_ERROR_CODES.INVALID_INPUT,
-          "Invalid workout log input.",
+          'Invalid workout log input.',
         );
       }
     }

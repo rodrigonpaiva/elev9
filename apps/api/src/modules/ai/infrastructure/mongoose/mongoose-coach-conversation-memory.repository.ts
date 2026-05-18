@@ -1,22 +1,20 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { CoachConversationMemory } from "../../domain/entities/coach-conversation-memory.entity";
+import { CoachConversationMemory } from '../../domain/entities/coach-conversation-memory.entity';
 import {
   CoachConversationMemoryRepository,
   CreateCoachConversationMemoryRepositoryInput,
-} from "../../domain/repositories/coach-conversation-memory.repository";
+} from '../../domain/repositories/coach-conversation-memory.repository';
 import {
   COACH_CONVERSATION_MEMORY_MODEL_NAME,
   CoachConversationMemoryDocument,
   CoachConversationMemorySchemaClass,
-} from "./coach-conversation-memory.schema";
+} from './coach-conversation-memory.schema';
 
 @Injectable()
-export class MongooseCoachConversationMemoryRepository
-  implements CoachConversationMemoryRepository
-{
+export class MongooseCoachConversationMemoryRepository implements CoachConversationMemoryRepository {
   constructor(
     @InjectModel(COACH_CONVERSATION_MEMORY_MODEL_NAME)
     private readonly coachConversationMemoryModel: Model<CoachConversationMemorySchemaClass>,
@@ -60,7 +58,7 @@ export class MongooseCoachConversationMemoryRepository
       .exec();
 
     if (!document) {
-      throw new Error("Unable to upsert coach conversation memory.");
+      throw new Error('Unable to upsert coach conversation memory.');
     }
 
     return this.toEntity(document as CoachConversationMemoryDocument);
@@ -74,8 +72,7 @@ export class MongooseCoachConversationMemoryRepository
       conversationId: document.conversationId,
       summary: document.summary,
       metadata: {
-        generatedFromMessageCount:
-          document.metadata.generatedFromMessageCount,
+        generatedFromMessageCount: document.metadata.generatedFromMessageCount,
         version: document.metadata.version,
       },
       createdAt: document.createdAt,

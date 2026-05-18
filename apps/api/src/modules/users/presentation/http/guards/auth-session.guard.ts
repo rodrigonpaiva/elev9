@@ -4,13 +4,13 @@ import {
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
-} from "@nestjs/common";
+} from '@nestjs/common';
 
 import {
   VALIDATE_SESSION_ERROR_CODES,
   ValidateSessionError,
-} from "../../../../auth/application/use-cases/validate-session/validate-session.errors";
-import { ValidateSessionUseCase } from "../../../../auth/application/use-cases/validate-session/validate-session.use-case";
+} from '../../../../auth/application/use-cases/validate-session/validate-session.errors';
+import { ValidateSessionUseCase } from '../../../../auth/application/use-cases/validate-session/validate-session.use-case';
 
 type RequestWithAuthUser = {
   headers: Record<string, string | string[] | undefined>;
@@ -31,8 +31,8 @@ export class AuthSessionGuard implements CanActivate {
 
     const authorizationHeader = request.headers.authorization;
     const normalizedAuthorizationHeader = Array.isArray(authorizationHeader)
-      ? authorizationHeader[0] ?? ""
-      : authorizationHeader ?? "";
+      ? (authorizationHeader[0] ?? '')
+      : (authorizationHeader ?? '');
 
     try {
       const result = await this.validateSessionUseCase.execute({
@@ -49,7 +49,7 @@ export class AuthSessionGuard implements CanActivate {
       ) {
         throw new UnauthorizedException({
           code: VALIDATE_SESSION_ERROR_CODES.INVALID_SESSION,
-          message: "Invalid session.",
+          message: 'Invalid session.',
         });
       }
 
@@ -59,11 +59,11 @@ export class AuthSessionGuard implements CanActivate {
       ) {
         throw new UnauthorizedException({
           code: VALIDATE_SESSION_ERROR_CODES.INVALID_SESSION,
-          message: "Invalid session.",
+          message: 'Invalid session.',
         });
       }
 
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
   }
 }

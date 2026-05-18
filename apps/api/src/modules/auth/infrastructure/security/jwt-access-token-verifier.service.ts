@@ -1,15 +1,15 @@
-import { Injectable } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 
 import {
   AccessTokenVerifier,
   AccessTokenVerifierPayload,
-} from "../../domain/services/access-token-verifier.service";
+} from '../../domain/services/access-token-verifier.service';
 import {
   ValidateSessionError,
   VALIDATE_SESSION_ERROR_CODES,
-} from "../../application/use-cases/validate-session/validate-session.errors";
+} from '../../application/use-cases/validate-session/validate-session.errors';
 
 @Injectable()
 export class JwtAccessTokenVerifierService implements AccessTokenVerifier {
@@ -17,14 +17,13 @@ export class JwtAccessTokenVerifierService implements AccessTokenVerifier {
 
   async verifyAccessToken(token: string): Promise<AccessTokenVerifierPayload> {
     try {
-      const payload = await this.jwtService.verifyAsync<AccessTokenVerifierPayload>(
-        token,
-      );
+      const payload =
+        await this.jwtService.verifyAsync<AccessTokenVerifierPayload>(token);
 
       if (!payload?.sub || !payload?.email) {
         throw new ValidateSessionError(
           VALIDATE_SESSION_ERROR_CODES.INVALID_SESSION,
-          "Invalid session.",
+          'Invalid session.',
         );
       }
 
@@ -43,7 +42,7 @@ export class JwtAccessTokenVerifierService implements AccessTokenVerifier {
       ) {
         throw new ValidateSessionError(
           VALIDATE_SESSION_ERROR_CODES.INVALID_SESSION,
-          "Invalid session.",
+          'Invalid session.',
         );
       }
 

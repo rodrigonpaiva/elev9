@@ -1,8 +1,8 @@
 export type GetCoachChatReplyPathDebugResponseDto = {
   replyPath: {
-    source: "llm" | "heuristic";
+    source: 'llm' | 'heuristic';
     fallbackActivated: boolean;
-    fallbackReason?: "provider_failure" | "llm_disabled" | "invalid_provider";
+    fallbackReason?: 'provider_failure' | 'llm_disabled' | 'invalid_provider';
     llm: {
       enabled: boolean;
       provider: string;
@@ -11,8 +11,8 @@ export type GetCoachChatReplyPathDebugResponseDto = {
     };
   };
   context: {
-    fatigueLevel: "LOW" | "MODERATE" | "HIGH";
-    recoveryTrend: "improving" | "stable" | "needs_recovery";
+    fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH';
+    recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
     hasNutritionProfile: boolean;
     hasLatestCheckIn: boolean;
     recentWorkoutCount: number;

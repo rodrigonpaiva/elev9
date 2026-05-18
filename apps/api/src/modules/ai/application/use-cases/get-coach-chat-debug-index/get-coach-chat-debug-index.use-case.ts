@@ -1,19 +1,19 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 
-import { GetCoachChatDebugHistoryUseCase } from "../get-coach-chat-debug-history/get-coach-chat-debug-history.use-case";
-import { GetCoachChatDebugHistoryError } from "../get-coach-chat-debug-history/get-coach-chat-debug-history.errors";
-import { GetCoachChatMemoryDebugUseCase } from "../get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case";
-import { GetCoachChatMemoryDebugError } from "../get-coach-chat-memory-debug/get-coach-chat-memory-debug.errors";
-import { GetCoachChatPromptDebugUseCase } from "../get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case";
-import { GetCoachChatPromptDebugError } from "../get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.errors";
-import { GetCoachChatReplyPathDebugUseCase } from "../get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case";
-import { GetCoachChatReplyPathDebugError } from "../get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.errors";
+import { GetCoachChatDebugHistoryUseCase } from '../get-coach-chat-debug-history/get-coach-chat-debug-history.use-case';
+import { GetCoachChatDebugHistoryError } from '../get-coach-chat-debug-history/get-coach-chat-debug-history.errors';
+import { GetCoachChatMemoryDebugUseCase } from '../get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case';
+import { GetCoachChatMemoryDebugError } from '../get-coach-chat-memory-debug/get-coach-chat-memory-debug.errors';
+import { GetCoachChatPromptDebugUseCase } from '../get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case';
+import { GetCoachChatPromptDebugError } from '../get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.errors';
+import { GetCoachChatReplyPathDebugUseCase } from '../get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case';
+import { GetCoachChatReplyPathDebugError } from '../get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.errors';
 import {
   GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES,
   GetCoachChatDebugIndexError,
-} from "./get-coach-chat-debug-index.errors";
-import { GetCoachChatDebugIndexInput } from "./get-coach-chat-debug-index.input";
-import { GetCoachChatDebugIndexOutput } from "./get-coach-chat-debug-index.output";
+} from './get-coach-chat-debug-index.errors';
+import { GetCoachChatDebugIndexInput } from './get-coach-chat-debug-index.input';
+import { GetCoachChatDebugIndexOutput } from './get-coach-chat-debug-index.output';
 
 @Injectable()
 export class GetCoachChatDebugIndexUseCase {
@@ -28,12 +28,12 @@ export class GetCoachChatDebugIndexUseCase {
     input: GetCoachChatDebugIndexInput,
   ): Promise<GetCoachChatDebugIndexOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
     if (!authUserId) {
       throw new GetCoachChatDebugIndexError(
         GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -92,7 +92,7 @@ export class GetCoachChatDebugIndexUseCase {
 
       throw new GetCoachChatDebugIndexError(
         GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }

@@ -1,8 +1,8 @@
 export const CREATE_DAILY_CHECK_IN_ERROR_CODES = {
-  INVALID_SESSION: "AUTH_INVALID_SESSION",
-  USER_PROFILE_NOT_FOUND: "USER_PROFILE_NOT_FOUND",
-  INVALID_INPUT: "DAILY_CHECK_IN_INVALID_INPUT",
-  INTERNAL_ERROR: "DAILY_CHECK_IN_INTERNAL_ERROR",
+  INVALID_SESSION: 'AUTH_INVALID_SESSION',
+  USER_PROFILE_NOT_FOUND: 'USER_PROFILE_NOT_FOUND',
+  INVALID_INPUT: 'DAILY_CHECK_IN_INVALID_INPUT',
+  INTERNAL_ERROR: 'DAILY_CHECK_IN_INTERNAL_ERROR',
 } as const;
 
 export type CreateDailyCheckInErrorCode =
@@ -18,7 +18,7 @@ export class CreateDailyCheckInError extends Error {
     details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = "CreateDailyCheckInError";
+    this.name = 'CreateDailyCheckInError';
     this.code = code;
     this.details = details;
   }

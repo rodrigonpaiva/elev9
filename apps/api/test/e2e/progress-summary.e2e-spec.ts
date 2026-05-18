@@ -1,20 +1,23 @@
-import "reflect-metadata";
+import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { Test, TestingModule } from "@nestjs/testing";
-import { disconnect } from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import request from "supertest";
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+import { disconnect } from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import request from 'supertest';
 
-import { AuthModule } from "../../src/modules/auth/auth.module";
-import { FitnessModule } from "../../src/modules/fitness/fitness.module";
-import { Clock, CLOCK } from "../../src/modules/progress/domain/services/clock.service";
-import { ProgressModule } from "../../src/modules/progress/progress.module";
-import { TrainingModule } from "../../src/modules/training/training.module";
-import { UsersModule } from "../../src/modules/users/users.module";
+import { AuthModule } from '../../src/modules/auth/auth.module';
+import { FitnessModule } from '../../src/modules/fitness/fitness.module';
+import {
+  Clock,
+  CLOCK,
+} from '../../src/modules/progress/domain/services/clock.service';
+import { ProgressModule } from '../../src/modules/progress/progress.module';
+import { TrainingModule } from '../../src/modules/training/training.module';
+import { UsersModule } from '../../src/modules/users/users.module';
 
-describe("Progress Summary E2E", () => {
+describe('Progress Summary E2E', () => {
   let app: INestApplication;
   let mongoMemoryServer: MongoMemoryServer;
   let currentNow: Date;
@@ -22,7 +25,7 @@ describe("Progress Summary E2E", () => {
   beforeAll(async () => {
     mongoMemoryServer = await MongoMemoryServer.create();
     const mongoUri = mongoMemoryServer.getUri();
-    currentNow = new Date("2026-04-30T10:00:00.000Z");
+    currentNow = new Date('2026-04-30T10:00:00.000Z');
 
     const testClock: Clock = {
       now: () => currentNow,
@@ -65,19 +68,19 @@ describe("Progress Summary E2E", () => {
     }
   });
 
-  it("full flow", async () => {
+  it('full flow', async () => {
     const { token } = await createAuthenticatedTrainingFlow(
-      "progress-summary-success@email.com",
+      'progress-summary-success@email.com',
     );
 
     const response = await request(app.getHttpServer())
-      .get("/progress/summary")
-      .set("Authorization", `Bearer ${token}`)
+      .get('/progress/summary')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     expect(response.body).toEqual({
       summary: {
-        period: "week",
+        period: 'week',
         workoutsCompleted: expect.any(Number),
         totalDurationMinutes: expect.any(Number),
         averageDurationMinutes: expect.any(Number),
@@ -86,60 +89,60 @@ describe("Progress Summary E2E", () => {
     });
   });
 
-  it("week vs month", async () => {
+  it('week vs month', async () => {
     const { token } = await createAuthenticatedTrainingFlow(
-      "progress-summary-period@email.com",
+      'progress-summary-period@email.com',
     );
 
     const weekResponse = await request(app.getHttpServer())
-      .get("/progress/summary")
-      .query({ period: "week" })
-      .set("Authorization", `Bearer ${token}`)
+      .get('/progress/summary')
+      .query({ period: 'week' })
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     const monthResponse = await request(app.getHttpServer())
-      .get("/progress/summary")
-      .query({ period: "month" })
-      .set("Authorization", `Bearer ${token}`)
+      .get('/progress/summary')
+      .query({ period: 'month' })
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    expect(weekResponse.body.summary.period).toBe("week");
-    expect(monthResponse.body.summary.period).toBe("month");
+    expect(weekResponse.body.summary.period).toBe('week');
+    expect(monthResponse.body.summary.period).toBe('month');
   });
 
-  it("without token returns 401", async () => {
+  it('without token returns 401', async () => {
     const response = await request(app.getHttpServer())
-      .get("/progress/summary")
+      .get('/progress/summary')
       .expect(401);
 
     expect(response.body).toEqual({
-      code: "AUTH_INVALID_SESSION",
-      message: "Invalid session.",
+      code: 'AUTH_INVALID_SESSION',
+      message: 'Invalid session.',
     });
   });
 
-  it("invalid query returns 400", async () => {
+  it('invalid query returns 400', async () => {
     await request(app.getHttpServer())
-      .post("/auth/register")
+      .post('/auth/register')
       .send({
-        name: "Invalid Query User",
-        email: "progress-summary-invalid-query@email.com",
-        password: "StrongPassword123",
+        name: 'Invalid Query User',
+        email: 'progress-summary-invalid-query@email.com',
+        password: 'StrongPassword123',
       })
       .expect(201);
 
     const loginResponse = await request(app.getHttpServer())
-      .post("/auth/login")
+      .post('/auth/login')
       .send({
-        email: "progress-summary-invalid-query@email.com",
-        password: "StrongPassword123",
+        email: 'progress-summary-invalid-query@email.com',
+        password: 'StrongPassword123',
       })
       .expect(200);
 
     const response = await request(app.getHttpServer())
-      .get("/progress/summary")
-      .query({ period: "year" })
-      .set("Authorization", `Bearer ${loginResponse.body.accessToken}`)
+      .get('/progress/summary')
+      .query({ period: 'year' })
+      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
       .expect(400);
 
     expect(response.body.message).toBeDefined();
@@ -149,38 +152,38 @@ describe("Progress Summary E2E", () => {
     token: string;
   }> {
     await request(app.getHttpServer())
-      .post("/auth/register")
+      .post('/auth/register')
       .send({
-        name: "Rodrigo Paiva",
+        name: 'Rodrigo Paiva',
         email,
-        password: "StrongPassword123",
+        password: 'StrongPassword123',
       })
       .expect(201);
 
     const loginResponse = await request(app.getHttpServer())
-      .post("/auth/login")
+      .post('/auth/login')
       .send({
         email,
-        password: "StrongPassword123",
+        password: 'StrongPassword123',
       })
       .expect(200);
 
     const token = loginResponse.body.accessToken as string;
 
     await request(app.getHttpServer())
-      .post("/users/profile")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ name: "Rodrigo Paiva" })
+      .post('/users/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Rodrigo Paiva' })
       .expect(201);
 
     const fitnessResponse = await request(app.getHttpServer())
-      .post("/fitness/profile")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/fitness/profile')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         heightCm: 180,
         weightKg: 82.5,
-        goal: "gain_muscle",
-        activityLevel: "medium",
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
         trainingAvailability: {
           daysPerWeek: 4,
           minutesPerSession: 60,
@@ -189,21 +192,21 @@ describe("Progress Summary E2E", () => {
       .expect(201);
 
     const trainingResponse = await request(app.getHttpServer())
-      .post("/training/plans")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/training/plans')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         fitnessProfileId: fitnessResponse.body.fitnessProfile.id,
       })
       .expect(201);
 
     await request(app.getHttpServer())
-      .post("/progress/workout-logs")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/progress/workout-logs')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         trainingPlanId: trainingResponse.body.trainingPlan.id,
         workoutDayIndex: 1,
         durationMinutes: 45,
-        completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+        completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
       })
       .expect(201);
 

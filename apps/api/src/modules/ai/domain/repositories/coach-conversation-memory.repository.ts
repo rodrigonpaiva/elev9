@@ -1,4 +1,4 @@
-import { CoachConversationMemory } from "../entities/coach-conversation-memory.entity";
+import { CoachConversationMemory } from '../entities/coach-conversation-memory.entity';
 
 export interface CreateCoachConversationMemoryRepositoryInput {
   conversationId: string;
@@ -19,5 +19,5 @@ export interface CoachConversationMemoryRepository {
 }
 
 export const COACH_CONVERSATION_MEMORY_REPOSITORY = Symbol(
-  "COACH_CONVERSATION_MEMORY_REPOSITORY",
+  'COACH_CONVERSATION_MEMORY_REPOSITORY',
 );

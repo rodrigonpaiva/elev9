@@ -7,11 +7,11 @@ export type CoachFeedbackProps = {
   influences?: string[];
   generatorVersion?: string;
   contextSnapshot?: {
-    goal?: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel?: "low" | "medium" | "high";
+    goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel?: 'low' | 'medium' | 'high';
     hasTrainingPlan?: boolean;
-    fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
-    recoveryTrend?: "improving" | "stable" | "needs_recovery";
+    fatigueLevel?: 'LOW' | 'MODERATE' | 'HIGH';
+    recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -27,7 +27,7 @@ export type CoachFeedbackProps = {
       motivationLevel: number;
     };
     nutritionProfile?: {
-      goal: "fat_loss" | "maintenance" | "muscle_gain";
+      goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
       mealsPerDay: number;
     };
   };
@@ -42,7 +42,7 @@ export class CoachFeedback {
   readonly recommendations: string[];
   readonly influences: string[];
   readonly generatorVersion?: string;
-  readonly contextSnapshot?: CoachFeedbackProps["contextSnapshot"];
+  readonly contextSnapshot?: CoachFeedbackProps['contextSnapshot'];
   readonly createdAt: Date;
 
   constructor(props: CoachFeedbackProps) {

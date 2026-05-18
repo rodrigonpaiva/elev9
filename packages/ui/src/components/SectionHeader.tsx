@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
-import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import type { ReactNode } from 'react';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors } from "../theme/colors";
-import { spacing } from "../theme/spacing";
-import { Text } from "./Text";
+import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
+import { Text } from './Text';
 
 export type SectionHeaderProps = {
   title: string;
@@ -31,9 +31,9 @@ export function SectionHeader({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: spacing.md,
   },
   copy: {
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
   },
   action: {
-    alignItems: "flex-end",
-    justifyContent: "center",
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
 });

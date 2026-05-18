@@ -15,13 +15,13 @@ Embora o sistema final seja baseado em microservices, o MVP adota uma abordagem 
 ## 2. MVP Architecture (Simplified)
 
 Mobile App (React Native)
-        ↓
+↓
 API Layer (NestJS)
-        ↓
+↓
 Application Services (modular, dentro do mesmo projeto)
-        ↓
+↓
 MongoDB
-        ↓
+↓
 OpenAI API
 
 ---
@@ -39,14 +39,14 @@ A arquitetura deve permitir evolução futura, mas sem introduzir complexidade d
 Em vez de microservices distribuídos, usamos um **modular monolith**:
 
 src/
-  modules/
-    auth/
-    users/
-    fitness/
-    training/
-    nutrition/
-    ai-agent/
-    progress/
+modules/
+auth/
+users/
+fitness/
+training/
+nutrition/
+ai-agent/
+progress/
 
 Cada módulo contém:
 
@@ -201,4 +201,4 @@ A arquitetura do MVP é:
 Ela permite:
 
 👉 validar o produto rapidamente  
-👉 evoluir para microservices sem refatoração massiva  
+👉 evoluir para microservices sem refatoração massiva

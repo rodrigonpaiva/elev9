@@ -1,20 +1,20 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
-import { BuildUserHealthContextService } from "../../../../ai/application/services/context-builder/build-user-health-context.service";
+import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
 import {
   DAILY_CHECK_IN_REPOSITORY,
   DailyCheckInRepository,
-} from "../../../../progress/domain/repositories/daily-check-in.repository";
+} from '../../../../progress/domain/repositories/daily-check-in.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   GET_HOME_DASHBOARD_ERROR_CODES,
   GetHomeDashboardError,
-} from "../get-home-dashboard/get-home-dashboard.errors";
-import { DashboardAdaptiveSignalsService } from "../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service";
-import { GetHomeDashboardDebugOutput } from "./get-home-dashboard-debug.output";
+} from '../get-home-dashboard/get-home-dashboard.errors';
+import { DashboardAdaptiveSignalsService } from '../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service';
+import { GetHomeDashboardDebugOutput } from './get-home-dashboard-debug.output';
 
 @Injectable()
 export class GetHomeDashboardDebugUseCase {
@@ -31,12 +31,12 @@ export class GetHomeDashboardDebugUseCase {
     authUserId: string;
   }): Promise<GetHomeDashboardDebugOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
     if (!authUserId) {
       throw new GetHomeDashboardError(
         GET_HOME_DASHBOARD_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -50,17 +50,20 @@ export class GetHomeDashboardDebugUseCase {
       if (!userProfile) {
         throw new GetHomeDashboardError(
           GET_HOME_DASHBOARD_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
       const recentDailyCheckIns = (
-        await this.dailyCheckInRepository.findManyByUserProfileId(userProfile.id)
+        await this.dailyCheckInRepository.findManyByUserProfileId(
+          userProfile.id,
+        )
       ).slice(0, 3);
-      const recovery = this.dashboardAdaptiveSignalsService.buildRecoverySummary(
-        healthContext,
-        recentDailyCheckIns,
-      );
+      const recovery =
+        this.dashboardAdaptiveSignalsService.buildRecoverySummary(
+          healthContext,
+          recentDailyCheckIns,
+        );
       const nutritionGuidance =
         this.dashboardAdaptiveSignalsService.buildNutritionGuidance(
           healthContext,
@@ -79,7 +82,7 @@ export class GetHomeDashboardDebugUseCase {
 
       throw new GetHomeDashboardError(
         GET_HOME_DASHBOARD_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }

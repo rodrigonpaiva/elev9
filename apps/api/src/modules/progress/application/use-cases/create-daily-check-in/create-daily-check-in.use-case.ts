@@ -1,19 +1,19 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   DAILY_CHECK_IN_REPOSITORY,
   DailyCheckInRepository,
-} from "../../../domain/repositories/daily-check-in.repository";
+} from '../../../domain/repositories/daily-check-in.repository';
 import {
   CREATE_DAILY_CHECK_IN_ERROR_CODES,
   CreateDailyCheckInError,
-} from "./create-daily-check-in.errors";
-import { CreateDailyCheckInInput } from "./create-daily-check-in.input";
-import { CreateDailyCheckInOutput } from "./create-daily-check-in.output";
+} from './create-daily-check-in.errors';
+import { CreateDailyCheckInInput } from './create-daily-check-in.input';
+import { CreateDailyCheckInOutput } from './create-daily-check-in.output';
 
 @Injectable()
 export class CreateDailyCheckInUseCase {
@@ -28,7 +28,7 @@ export class CreateDailyCheckInUseCase {
     input: CreateDailyCheckInInput,
   ): Promise<CreateDailyCheckInOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
     this.validateInput({
       authUserId,
@@ -45,7 +45,7 @@ export class CreateDailyCheckInUseCase {
       if (!userProfile) {
         throw new CreateDailyCheckInError(
           CREATE_DAILY_CHECK_IN_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -74,7 +74,7 @@ export class CreateDailyCheckInUseCase {
 
       throw new CreateDailyCheckInError(
         CREATE_DAILY_CHECK_IN_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -89,7 +89,7 @@ export class CreateDailyCheckInUseCase {
     if (!input.authUserId) {
       throw new CreateDailyCheckInError(
         CREATE_DAILY_CHECK_IN_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -102,7 +102,7 @@ export class CreateDailyCheckInUseCase {
       if (!Number.isInteger(value) || value < 1 || value > 5) {
         throw new CreateDailyCheckInError(
           CREATE_DAILY_CHECK_IN_ERROR_CODES.INVALID_INPUT,
-          "Invalid daily check-in input.",
+          'Invalid daily check-in input.',
         );
       }
     }

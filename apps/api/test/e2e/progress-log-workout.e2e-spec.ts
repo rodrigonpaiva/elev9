@@ -1,25 +1,28 @@
-import "reflect-metadata";
+import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { Test, TestingModule } from "@nestjs/testing";
-import { disconnect } from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import request from "supertest";
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+import { disconnect } from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import request from 'supertest';
 
-import { AuthModule } from "../../src/modules/auth/auth.module";
-import { FitnessModule } from "../../src/modules/fitness/fitness.module";
-import { ProgressModule } from "../../src/modules/progress/progress.module";
-import { Clock, CLOCK } from "../../src/modules/progress/domain/services/clock.service";
-import { TrainingModule } from "../../src/modules/training/training.module";
-import { UsersModule } from "../../src/modules/users/users.module";
+import { AuthModule } from '../../src/modules/auth/auth.module';
+import { FitnessModule } from '../../src/modules/fitness/fitness.module';
+import { ProgressModule } from '../../src/modules/progress/progress.module';
+import {
+  Clock,
+  CLOCK,
+} from '../../src/modules/progress/domain/services/clock.service';
+import { TrainingModule } from '../../src/modules/training/training.module';
+import { UsersModule } from '../../src/modules/users/users.module';
 
 type AuthenticatedUserFlow = {
   token: string;
   trainingPlanId: string;
 };
 
-describe("Progress Log Workout E2E", () => {
+describe('Progress Log Workout E2E', () => {
   let app: INestApplication;
   let mongoMemoryServer: MongoMemoryServer;
   let currentNow: Date;
@@ -27,7 +30,7 @@ describe("Progress Log Workout E2E", () => {
   beforeAll(async () => {
     mongoMemoryServer = await MongoMemoryServer.create();
     const mongoUri = mongoMemoryServer.getUri();
-    currentNow = new Date("2026-04-30T10:00:00.000Z");
+    currentNow = new Date('2026-04-30T10:00:00.000Z');
 
     const testClock: Clock = {
       now: () => currentNow,
@@ -70,22 +73,22 @@ describe("Progress Log Workout E2E", () => {
     }
   });
 
-  it("full flow success", async () => {
+  it('full flow success', async () => {
     const { token, trainingPlanId } = await createAuthenticatedTrainingFlow(
-      "progress-log-success@email.com",
+      'progress-log-success@email.com',
     );
 
     const response = await request(app.getHttpServer())
-      .post("/progress/workout-logs")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/progress/workout-logs')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         trainingPlanId,
         workoutDayIndex: 1,
         durationMinutes: 45,
-        completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+        completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
         feedback: {
-          difficulty: "medium",
-          notes: "Good session",
+          difficulty: 'medium',
+          notes: 'Good session',
         },
       })
       .expect(201);
@@ -96,10 +99,10 @@ describe("Progress Log Workout E2E", () => {
         trainingPlanId,
         workoutDayIndex: 1,
         durationMinutes: 45,
-        completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+        completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
         feedback: {
-          difficulty: "medium",
-          notes: "Good session",
+          difficulty: 'medium',
+          notes: 'Good session',
         },
         date: expect.any(String),
         createdAt: expect.any(String),
@@ -107,83 +110,83 @@ describe("Progress Log Workout E2E", () => {
     });
   });
 
-  it("same day duplicate returns 409", async () => {
-    currentNow = new Date("2026-04-30T10:00:00.000Z");
+  it('same day duplicate returns 409', async () => {
+    currentNow = new Date('2026-04-30T10:00:00.000Z');
 
     const { token, trainingPlanId } = await createAuthenticatedTrainingFlow(
-      "progress-log-duplicate@email.com",
+      'progress-log-duplicate@email.com',
     );
 
     const payload = {
       trainingPlanId,
       workoutDayIndex: 1,
       durationMinutes: 45,
-      completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+      completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
     };
 
     await request(app.getHttpServer())
-      .post("/progress/workout-logs")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/progress/workout-logs')
+      .set('Authorization', `Bearer ${token}`)
       .send(payload)
       .expect(201);
 
     const response = await request(app.getHttpServer())
-      .post("/progress/workout-logs")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/progress/workout-logs')
+      .set('Authorization', `Bearer ${token}`)
       .send(payload)
       .expect(409);
 
     expect(response.body).toEqual({
-      code: "WORKOUT_LOG_ALREADY_EXISTS",
-      message: "Workout log already exists.",
+      code: 'WORKOUT_LOG_ALREADY_EXISTS',
+      message: 'Workout log already exists.',
     });
   });
 
-  it("same workout on different days is allowed", async () => {
+  it('same workout on different days is allowed', async () => {
     const { token, trainingPlanId } = await createAuthenticatedTrainingFlow(
-      "progress-log-different-days@email.com",
+      'progress-log-different-days@email.com',
     );
 
     const payload = {
       trainingPlanId,
       workoutDayIndex: 1,
       durationMinutes: 45,
-      completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+      completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
     };
 
-    currentNow = new Date("2026-04-30T23:59:59.000Z");
+    currentNow = new Date('2026-04-30T23:59:59.000Z');
 
     await request(app.getHttpServer())
-      .post("/progress/workout-logs")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/progress/workout-logs')
+      .set('Authorization', `Bearer ${token}`)
       .send(payload)
       .expect(201);
 
-    currentNow = new Date("2026-05-01T00:00:01.000Z");
+    currentNow = new Date('2026-05-01T00:00:01.000Z');
 
     const response = await request(app.getHttpServer())
-      .post("/progress/workout-logs")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/progress/workout-logs')
+      .set('Authorization', `Bearer ${token}`)
       .send(payload)
       .expect(201);
 
-    expect(response.body.workoutLog.date).toBe("2026-05-01");
+    expect(response.body.workoutLog.date).toBe('2026-05-01');
   });
 
-  it("without token returns 401", async () => {
+  it('without token returns 401', async () => {
     const response = await request(app.getHttpServer())
-      .post("/progress/workout-logs")
+      .post('/progress/workout-logs')
       .send({
-        trainingPlanId: "507f1f77bcf86cd799439011",
+        trainingPlanId: '507f1f77bcf86cd799439011',
         workoutDayIndex: 1,
         durationMinutes: 45,
-        completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+        completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
       })
       .expect(401);
 
     expect(response.body).toEqual({
-      code: "AUTH_INVALID_SESSION",
-      message: "Invalid session.",
+      code: 'AUTH_INVALID_SESSION',
+      message: 'Invalid session.',
     });
   });
 
@@ -191,38 +194,38 @@ describe("Progress Log Workout E2E", () => {
     email: string,
   ): Promise<AuthenticatedUserFlow> {
     await request(app.getHttpServer())
-      .post("/auth/register")
+      .post('/auth/register')
       .send({
-        name: "Rodrigo Paiva",
+        name: 'Rodrigo Paiva',
         email,
-        password: "StrongPassword123",
+        password: 'StrongPassword123',
       })
       .expect(201);
 
     const loginResponse = await request(app.getHttpServer())
-      .post("/auth/login")
+      .post('/auth/login')
       .send({
         email,
-        password: "StrongPassword123",
+        password: 'StrongPassword123',
       })
       .expect(200);
 
     const token = loginResponse.body.accessToken as string;
 
     await request(app.getHttpServer())
-      .post("/users/profile")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ name: "Rodrigo Paiva" })
+      .post('/users/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Rodrigo Paiva' })
       .expect(201);
 
     const fitnessResponse = await request(app.getHttpServer())
-      .post("/fitness/profile")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/fitness/profile')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         heightCm: 180,
         weightKg: 82.5,
-        goal: "gain_muscle",
-        activityLevel: "medium",
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
         trainingAvailability: {
           daysPerWeek: 4,
           minutesPerSession: 60,
@@ -231,8 +234,8 @@ describe("Progress Log Workout E2E", () => {
       .expect(201);
 
     const trainingResponse = await request(app.getHttpServer())
-      .post("/training/plans")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/training/plans')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         fitnessProfileId: fitnessResponse.body.fitnessProfile.id,
       })

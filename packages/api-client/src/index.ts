@@ -1,16 +1,13 @@
-import { createAiApi } from "./ai-api";
-import { createAuthApi } from "./auth-api";
-import { createDashboardApi } from "./dashboard-api";
-import { createFitnessApi } from "./fitness-api";
-import {
-  createHttpClient,
-  type CreateHttpClientOptions,
-} from "./http-client";
-import { createProgressApi } from "./progress-api";
-import { createTrainingApi } from "./training-api";
+import { createAiApi } from './ai-api';
+import { createAuthApi } from './auth-api';
+import { createDashboardApi } from './dashboard-api';
+import { createFitnessApi } from './fitness-api';
+import { createHttpClient, type CreateHttpClientOptions } from './http-client';
+import { createProgressApi } from './progress-api';
+import { createTrainingApi } from './training-api';
 
-export { ApiClientError } from "./http-client";
-export type { CreateHttpClientOptions, GetAccessToken } from "./http-client";
+export { ApiClientError } from './http-client';
+export type { CreateHttpClientOptions, GetAccessToken } from './http-client';
 
 export function createApiClient(options: CreateHttpClientOptions) {
   const httpClient = createHttpClient(options);

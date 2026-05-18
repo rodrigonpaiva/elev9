@@ -1,23 +1,20 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   AuthUserRepository,
   AUTH_USER_REPOSITORY,
-} from "../../../domain/repositories/auth-user.repository";
+} from '../../../domain/repositories/auth-user.repository';
 import {
   ACCESS_TOKEN_SIGNER,
   AccessTokenSigner,
-} from "../../../domain/services/access-token-signer.service";
+} from '../../../domain/services/access-token-signer.service';
 import {
   PASSWORD_HASHER,
   PasswordHasher,
-} from "../../../domain/services/password-hasher.service";
-import { LoginUserInput } from "./login-user.input";
-import {
-  LOGIN_USER_ERROR_CODES,
-  LoginUserError,
-} from "./login-user.errors";
-import { LoginUserOutput } from "./login-user.output";
+} from '../../../domain/services/password-hasher.service';
+import { LoginUserInput } from './login-user.input';
+import { LOGIN_USER_ERROR_CODES, LoginUserError } from './login-user.errors';
+import { LoginUserOutput } from './login-user.output';
 
 @Injectable()
 export class LoginUserUseCase {
@@ -32,8 +29,9 @@ export class LoginUserUseCase {
 
   async execute(input: LoginUserInput): Promise<LoginUserOutput> {
     const normalizedEmail =
-      typeof input.email === "string" ? input.email.trim().toLowerCase() : "";
-    const rawPassword = typeof input.password === "string" ? input.password : "";
+      typeof input.email === 'string' ? input.email.trim().toLowerCase() : '';
+    const rawPassword =
+      typeof input.password === 'string' ? input.password : '';
 
     this.validateInput({
       email: normalizedEmail,
@@ -41,12 +39,13 @@ export class LoginUserUseCase {
     });
 
     try {
-      const authUser = await this.authUserRepository.findByEmail(normalizedEmail);
+      const authUser =
+        await this.authUserRepository.findByEmail(normalizedEmail);
 
       if (!authUser) {
         throw new LoginUserError(
           LOGIN_USER_ERROR_CODES.INVALID_CREDENTIALS,
-          "Invalid credentials.",
+          'Invalid credentials.',
         );
       }
 
@@ -58,7 +57,7 @@ export class LoginUserUseCase {
       if (!isPasswordValid) {
         throw new LoginUserError(
           LOGIN_USER_ERROR_CODES.INVALID_CREDENTIALS,
-          "Invalid credentials.",
+          'Invalid credentials.',
         );
       }
 
@@ -81,7 +80,7 @@ export class LoginUserUseCase {
 
       throw new LoginUserError(
         LOGIN_USER_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -90,14 +89,14 @@ export class LoginUserUseCase {
     if (!input.email || !input.password) {
       throw new LoginUserError(
         LOGIN_USER_ERROR_CODES.INVALID_INPUT,
-        "Invalid input.",
+        'Invalid input.',
       );
     }
 
     if (!this.isValidEmail(input.email)) {
       throw new LoginUserError(
         LOGIN_USER_ERROR_CODES.INVALID_INPUT,
-        "Invalid input.",
+        'Invalid input.',
       );
     }
   }

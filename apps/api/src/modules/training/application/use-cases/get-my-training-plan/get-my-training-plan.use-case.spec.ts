@@ -1,15 +1,13 @@
-import { FitnessProfile } from "../../../../fitness/domain/entities/fitness-profile.entity";
-import { FitnessProfileRepository } from "../../../../fitness/domain/repositories/fitness-profile.repository";
-import { UserProfile } from "../../../../users/domain/entities/user-profile.entity";
-import { UserProfileRepository } from "../../../../users/domain/repositories/user-profile.repository";
-import { TrainingPlan } from "../../../domain/entities/training-plan.entity";
-import { TrainingPlanRepository } from "../../../domain/repositories/training-plan.repository";
-import {
-  GET_MY_TRAINING_PLAN_ERROR_CODES,
-} from "./get-my-training-plan.errors";
-import { GetMyTrainingPlanUseCase } from "./get-my-training-plan.use-case";
+import { FitnessProfile } from '../../../../fitness/domain/entities/fitness-profile.entity';
+import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
+import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
+import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
+import { TrainingPlan } from '../../../domain/entities/training-plan.entity';
+import { TrainingPlanRepository } from '../../../domain/repositories/training-plan.repository';
+import { GET_MY_TRAINING_PLAN_ERROR_CODES } from './get-my-training-plan.errors';
+import { GetMyTrainingPlanUseCase } from './get-my-training-plan.use-case';
 
-describe("GetMyTrainingPlanUseCase", () => {
+describe('GetMyTrainingPlanUseCase', () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
   let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
@@ -40,215 +38,214 @@ describe("GetMyTrainingPlanUseCase", () => {
     );
   });
 
-  it("returns the active training plan successfully ordered by dayIndex", async () => {
+  it('returns the active training plan successfully ordered by dayIndex', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       new UserProfile({
-        id: "profile_123",
-        authUserId: "auth_user_123",
-        name: "Rodrigo Paiva",
-        language: "en-US",
-        timezone: "UTC",
-        status: "active",
-        createdAt: new Date("2026-04-29T10:00:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:00:00.000Z"),
+        id: 'profile_123',
+        authUserId: 'auth_user_123',
+        name: 'Rodrigo Paiva',
+        language: 'en-US',
+        timezone: 'UTC',
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:00:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:00:00.000Z'),
       }),
     );
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(
       new FitnessProfile({
-        id: "fitness_123",
-        userProfileId: "profile_123",
+        id: 'fitness_123',
+        userProfileId: 'profile_123',
         heightCm: 180,
         weightKg: 82.5,
-        goal: "gain_muscle",
-        activityLevel: "medium",
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
         trainingAvailability: {
           daysPerWeek: 4,
           minutesPerSession: 60,
         },
         limitations: [],
-        status: "active",
-        createdAt: new Date("2026-04-29T10:30:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:30:00.000Z"),
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:30:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:30:00.000Z'),
       }),
     );
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
       new TrainingPlan({
-        id: "training_123",
-        fitnessProfileId: "fitness_123",
-        goal: "gain_muscle",
-        activityLevel: "medium",
+        id: 'training_123',
+        fitnessProfileId: 'fitness_123',
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
         weeklySchedule: [
           {
             dayIndex: 3,
-            title: "Day 3",
-            focus: "focus_3",
-            format: "strength",
-            intensity: "moderate",
+            title: 'Day 3',
+            focus: 'focus_3',
+            format: 'strength',
+            intensity: 'moderate',
             exercises: [],
           },
           {
             dayIndex: 1,
-            title: "Day 1",
-            focus: "focus_1",
-            format: "strength",
-            intensity: "high",
+            title: 'Day 1',
+            focus: 'focus_1',
+            format: 'strength',
+            intensity: 'high',
             exercises: [],
           },
         ],
-        status: "active",
-        createdAt: new Date("2026-04-29T10:45:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:45:00.000Z"),
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:45:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:45:00.000Z'),
       }),
     );
 
     const result = await useCase.execute({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
 
-    expect(result.trainingPlan.weeklySchedule.map((day) => day.dayIndex)).toEqual([
-      1,
-      3,
-    ]);
+    expect(
+      result.trainingPlan.weeklySchedule.map((day) => day.dayIndex),
+    ).toEqual([1, 3]);
   });
 
-  it("returns USER_PROFILE_NOT_FOUND when user profile is missing", async () => {
+  it('returns USER_PROFILE_NOT_FOUND when user profile is missing', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);
 
     await expect(
       useCase.execute({
-        authUserId: "auth_user_123",
+        authUserId: 'auth_user_123',
       }),
     ).rejects.toMatchObject({
       code: GET_MY_TRAINING_PLAN_ERROR_CODES.USER_PROFILE_NOT_FOUND,
     });
   });
 
-  it("returns FITNESS_PROFILE_NOT_FOUND when active fitness profile is missing", async () => {
+  it('returns FITNESS_PROFILE_NOT_FOUND when active fitness profile is missing', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       new UserProfile({
-        id: "profile_123",
-        authUserId: "auth_user_123",
-        name: "Rodrigo Paiva",
-        language: "en-US",
-        timezone: "UTC",
-        status: "active",
-        createdAt: new Date("2026-04-29T10:00:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:00:00.000Z"),
+        id: 'profile_123',
+        authUserId: 'auth_user_123',
+        name: 'Rodrigo Paiva',
+        language: 'en-US',
+        timezone: 'UTC',
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:00:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:00:00.000Z'),
       }),
     );
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
 
     await expect(
       useCase.execute({
-        authUserId: "auth_user_123",
+        authUserId: 'auth_user_123',
       }),
     ).rejects.toMatchObject({
       code: GET_MY_TRAINING_PLAN_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
     });
   });
 
-  it("returns FITNESS_PROFILE_NOT_FOUND when fitness profile is inactive", async () => {
+  it('returns FITNESS_PROFILE_NOT_FOUND when fitness profile is inactive', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       new UserProfile({
-        id: "profile_123",
-        authUserId: "auth_user_123",
-        name: "Rodrigo Paiva",
-        language: "en-US",
-        timezone: "UTC",
-        status: "active",
-        createdAt: new Date("2026-04-29T10:00:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:00:00.000Z"),
+        id: 'profile_123',
+        authUserId: 'auth_user_123',
+        name: 'Rodrigo Paiva',
+        language: 'en-US',
+        timezone: 'UTC',
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:00:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:00:00.000Z'),
       }),
     );
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
 
     await expect(
       useCase.execute({
-        authUserId: "auth_user_123",
+        authUserId: 'auth_user_123',
       }),
     ).rejects.toMatchObject({
       code: GET_MY_TRAINING_PLAN_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
     });
   });
 
-  it("returns TRAINING_PLAN_NOT_FOUND when active training plan is missing", async () => {
+  it('returns TRAINING_PLAN_NOT_FOUND when active training plan is missing', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       new UserProfile({
-        id: "profile_123",
-        authUserId: "auth_user_123",
-        name: "Rodrigo Paiva",
-        language: "en-US",
-        timezone: "UTC",
-        status: "active",
-        createdAt: new Date("2026-04-29T10:00:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:00:00.000Z"),
+        id: 'profile_123',
+        authUserId: 'auth_user_123',
+        name: 'Rodrigo Paiva',
+        language: 'en-US',
+        timezone: 'UTC',
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:00:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:00:00.000Z'),
       }),
     );
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(
       new FitnessProfile({
-        id: "fitness_123",
-        userProfileId: "profile_123",
+        id: 'fitness_123',
+        userProfileId: 'profile_123',
         heightCm: 180,
         weightKg: 82.5,
-        goal: "gain_muscle",
-        activityLevel: "medium",
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
         trainingAvailability: {
           daysPerWeek: 4,
           minutesPerSession: 60,
         },
         limitations: [],
-        status: "active",
-        createdAt: new Date("2026-04-29T10:30:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:30:00.000Z"),
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:30:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:30:00.000Z'),
       }),
     );
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
 
     await expect(
       useCase.execute({
-        authUserId: "auth_user_123",
+        authUserId: 'auth_user_123',
       }),
     ).rejects.toMatchObject({
       code: GET_MY_TRAINING_PLAN_ERROR_CODES.TRAINING_PLAN_NOT_FOUND,
     });
   });
 
-  it("returns TRAINING_PLAN_NOT_FOUND when training plan is inactive", async () => {
+  it('returns TRAINING_PLAN_NOT_FOUND when training plan is inactive', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       new UserProfile({
-        id: "profile_123",
-        authUserId: "auth_user_123",
-        name: "Rodrigo Paiva",
-        language: "en-US",
-        timezone: "UTC",
-        status: "active",
-        createdAt: new Date("2026-04-29T10:00:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:00:00.000Z"),
+        id: 'profile_123',
+        authUserId: 'auth_user_123',
+        name: 'Rodrigo Paiva',
+        language: 'en-US',
+        timezone: 'UTC',
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:00:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:00:00.000Z'),
       }),
     );
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(
       new FitnessProfile({
-        id: "fitness_123",
-        userProfileId: "profile_123",
+        id: 'fitness_123',
+        userProfileId: 'profile_123',
         heightCm: 180,
         weightKg: 82.5,
-        goal: "gain_muscle",
-        activityLevel: "medium",
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
         trainingAvailability: {
           daysPerWeek: 4,
           minutesPerSession: 60,
         },
         limitations: [],
-        status: "active",
-        createdAt: new Date("2026-04-29T10:30:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:30:00.000Z"),
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:30:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:30:00.000Z'),
       }),
     );
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
 
     await expect(
       useCase.execute({
-        authUserId: "auth_user_123",
+        authUserId: 'auth_user_123',
       }),
     ).rejects.toMatchObject({
       code: GET_MY_TRAINING_PLAN_ERROR_CODES.TRAINING_PLAN_NOT_FOUND,

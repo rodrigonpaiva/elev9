@@ -1,27 +1,27 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
-} from "../../../../fitness/domain/repositories/fitness-profile.repository";
+} from '../../../../fitness/domain/repositories/fitness-profile.repository';
 import {
   TRAINING_PLAN_REPOSITORY,
   TrainingPlanRepository,
-} from "../../../../training/domain/repositories/training-plan.repository";
+} from '../../../../training/domain/repositories/training-plan.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   WORKOUT_LOG_REPOSITORY,
   WorkoutLogRepository,
-} from "../../../domain/repositories/workout-log.repository";
+} from '../../../domain/repositories/workout-log.repository';
 import {
   GET_WORKOUT_HISTORY_ERROR_CODES,
   GetWorkoutHistoryError,
-} from "./get-workout-history.errors";
-import { GetWorkoutHistoryInput } from "./get-workout-history.input";
-import { GetWorkoutHistoryOutput } from "./get-workout-history.output";
+} from './get-workout-history.errors';
+import { GetWorkoutHistoryInput } from './get-workout-history.input';
+import { GetWorkoutHistoryOutput } from './get-workout-history.output';
 
 @Injectable()
 export class GetWorkoutHistoryUseCase {
@@ -40,13 +40,13 @@ export class GetWorkoutHistoryUseCase {
     input: GetWorkoutHistoryInput,
   ): Promise<GetWorkoutHistoryOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const normalizedLimit = this.normalizeLimit(input.limit);
 
     if (!authUserId) {
       throw new GetWorkoutHistoryError(
         GET_WORKOUT_HISTORY_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -57,7 +57,7 @@ export class GetWorkoutHistoryUseCase {
       if (!userProfile) {
         throw new GetWorkoutHistoryError(
           GET_WORKOUT_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -69,7 +69,7 @@ export class GetWorkoutHistoryUseCase {
       if (!fitnessProfile) {
         throw new GetWorkoutHistoryError(
           GET_WORKOUT_HISTORY_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
-          "Fitness profile not found.",
+          'Fitness profile not found.',
         );
       }
 
@@ -109,7 +109,7 @@ export class GetWorkoutHistoryUseCase {
 
       throw new GetWorkoutHistoryError(
         GET_WORKOUT_HISTORY_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -125,7 +125,7 @@ export class GetWorkoutHistoryUseCase {
 
     throw new GetWorkoutHistoryError(
       GET_WORKOUT_HISTORY_ERROR_CODES.INVALID_INPUT,
-      "Invalid workout history input.",
+      'Invalid workout history input.',
     );
   }
 }

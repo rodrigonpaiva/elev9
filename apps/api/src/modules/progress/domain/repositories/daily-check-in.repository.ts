@@ -1,4 +1,4 @@
-import { DailyCheckIn } from "../entities/daily-check-in.entity";
+import { DailyCheckIn } from '../entities/daily-check-in.entity';
 
 export interface CreateDailyCheckInRepositoryInput {
   userProfileId: string;
@@ -10,8 +10,10 @@ export interface CreateDailyCheckInRepositoryInput {
 
 export interface DailyCheckInRepository {
   create(input: CreateDailyCheckInRepositoryInput): Promise<DailyCheckIn>;
-  findLatestByUserProfileId(userProfileId: string): Promise<DailyCheckIn | null>;
+  findLatestByUserProfileId(
+    userProfileId: string,
+  ): Promise<DailyCheckIn | null>;
   findManyByUserProfileId(userProfileId: string): Promise<DailyCheckIn[]>;
 }
 
-export const DAILY_CHECK_IN_REPOSITORY = Symbol("DAILY_CHECK_IN_REPOSITORY");
+export const DAILY_CHECK_IN_REPOSITORY = Symbol('DAILY_CHECK_IN_REPOSITORY');

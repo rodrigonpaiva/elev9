@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import type { ComponentProps } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useEffect, useState } from 'react';
+import type { ComponentProps } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
   interpolate,
   interpolateColor,
@@ -9,52 +9,52 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
-} from "react-native-reanimated";
-import { Ionicons } from "@expo/vector-icons";
+} from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 
-import { colors } from "@elev9/ui";
-import { Text } from "@elev9/ui";
+import { colors } from '@elev9/ui';
+import { Text } from '@elev9/ui';
 
-import { CurrentWorkoutScreen } from "./current-workout-screen";
-import { DashboardScreen } from "./dashboard-screen";
-import { ProfileScreen } from "./profile-screen";
-import { ProgressSummaryScreen } from "./progress-summary-screen";
-import { WorkoutHistoryScreen } from "./workout-history-screen";
+import { CurrentWorkoutScreen } from './current-workout-screen';
+import { DashboardScreen } from './dashboard-screen';
+import { ProfileScreen } from './profile-screen';
+import { ProgressSummaryScreen } from './progress-summary-screen';
+import { WorkoutHistoryScreen } from './workout-history-screen';
 
-type MainTabKey = "home" | "workout" | "history" | "progress" | "profile";
+type MainTabKey = 'home' | 'workout' | 'history' | 'progress' | 'profile';
 
 type TabConfig = {
   key: MainTabKey;
   label: string;
-  icon: ComponentProps<typeof Ionicons>["name"];
-  activeIcon: ComponentProps<typeof Ionicons>["name"];
+  icon: ComponentProps<typeof Ionicons>['name'];
+  activeIcon: ComponentProps<typeof Ionicons>['name'];
 };
 
 const TABS: TabConfig[] = [
-  { key: "home", label: "Home", icon: "home-outline", activeIcon: "home" },
+  { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
   {
-    key: "workout",
-    label: "Workout",
-    icon: "barbell-outline",
-    activeIcon: "barbell",
+    key: 'workout',
+    label: 'Workout',
+    icon: 'barbell-outline',
+    activeIcon: 'barbell',
   },
   {
-    key: "history",
-    label: "History",
-    icon: "time-outline",
-    activeIcon: "time",
+    key: 'history',
+    label: 'History',
+    icon: 'time-outline',
+    activeIcon: 'time',
   },
   {
-    key: "progress",
-    label: "Progress",
-    icon: "stats-chart-outline",
-    activeIcon: "stats-chart",
+    key: 'progress',
+    label: 'Progress',
+    icon: 'stats-chart-outline',
+    activeIcon: 'stats-chart',
   },
   {
-    key: "profile",
-    label: "Profile",
-    icon: "person-outline",
-    activeIcon: "person",
+    key: 'profile',
+    label: 'Profile',
+    icon: 'person-outline',
+    activeIcon: 'person',
   },
 ];
 
@@ -71,10 +71,10 @@ const themeAlpha = {
 };
 
 export function MainTabsScreen() {
-  const [activeTab, setActiveTab] = useState<MainTabKey>("home");
+  const [activeTab, setActiveTab] = useState<MainTabKey>('home');
 
   return (
-    <SafeAreaView style={styles.root} edges={["bottom"]}>
+    <SafeAreaView style={styles.root} edges={['bottom']}>
       <View style={styles.content}>{renderTab(activeTab, setActiveTab)}</View>
       <View style={styles.tabBarShell}>
         <View style={styles.tabBar}>
@@ -205,18 +205,18 @@ function renderTab(
   setActiveTab: (tab: MainTabKey) => void,
 ) {
   switch (activeTab) {
-    case "home":
-      return <DashboardScreen onOpenHistory={() => setActiveTab("history")} />;
-    case "workout":
+    case 'home':
+      return <DashboardScreen onOpenHistory={() => setActiveTab('history')} />;
+    case 'workout':
       return <CurrentWorkoutScreen />;
-    case "history":
+    case 'history':
       return <WorkoutHistoryScreen />;
-    case "progress":
+    case 'progress':
       return <ProgressSummaryScreen />;
-    case "profile":
+    case 'profile':
       return <ProfileScreen />;
     default:
-      return <DashboardScreen onOpenHistory={() => setActiveTab("history")} />;
+      return <DashboardScreen onOpenHistory={() => setActiveTab('history')} />;
   }
 }
 
@@ -237,8 +237,8 @@ const styles = StyleSheet.create({
     borderTopColor: colors.border,
   },
   tabBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     gap: 8,
     borderRadius: 28,
     borderWidth: 1,
@@ -260,19 +260,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabItem: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
     borderRadius: 22,
     borderWidth: 1,
     paddingVertical: 10,
     paddingHorizontal: 4,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   activeGlow: {
-    position: "absolute",
+    position: 'absolute',
     top: 0,
-    alignSelf: "center",
+    alignSelf: 'center',
     width: 26,
     height: 3,
     borderBottomLeftRadius: 999,
@@ -282,27 +282,27 @@ const styles = StyleSheet.create({
   iconShell: {
     width: 36,
     height: 36,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 18,
     borderWidth: 1,
   },
   tabLabel: {
     fontSize: 11,
     lineHeight: 14,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 0.2,
   },
 });
 
 function withAlpha(color: string, alpha: number) {
-  const normalized = color.replace("#", "");
+  const normalized = color.replace('#', '');
   const hex =
     normalized.length === 3
       ? normalized
-          .split("")
+          .split('')
           .map((value) => value + value)
-          .join("")
+          .join('')
       : normalized;
 
   const red = Number.parseInt(hex.slice(0, 2), 16);

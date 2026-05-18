@@ -1,11 +1,17 @@
 # 🧩 Bounded Contexts — Elev9 Coach
+
 ## 1. Overview
+
 Este documento define os bounded contexts do Elev9 Coach.
 Um bounded context representa uma área do domínio com responsabilidade clara, linguagem própria e regras específicas.
 O objetivo é evitar mistura entre módulos e preparar o sistema para evoluir de um modular monolith para microservices no futuro.
+
 ---
+
 ## 2. Architecture Decision
+
 No MVP, o sistema será construído como:
+
 ```txt
 Modular Monolith
 
@@ -405,3 +411,4 @@ AI Agent Context
 Mas ele depende diretamente da qualidade dos dados dos outros contextos.
 
 Próximo recomendado: **`entities.md`**.
+```

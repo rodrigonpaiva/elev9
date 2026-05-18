@@ -12,22 +12,22 @@ import {
   Req,
   UnauthorizedException,
   UseGuards,
-} from "@nestjs/common";
+} from '@nestjs/common';
 
-import { AuthSessionGuard } from "../../../users/presentation/http/guards/auth-session.guard";
+import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
 import {
   CREATE_TRAINING_PLAN_ERROR_CODES,
   CreateTrainingPlanError,
-} from "../../application/use-cases/create-training-plan/create-training-plan.errors";
-import { CreateTrainingPlanUseCase } from "../../application/use-cases/create-training-plan/create-training-plan.use-case";
+} from '../../application/use-cases/create-training-plan/create-training-plan.errors';
+import { CreateTrainingPlanUseCase } from '../../application/use-cases/create-training-plan/create-training-plan.use-case';
 import {
   GET_MY_TRAINING_PLAN_ERROR_CODES,
   GetMyTrainingPlanError,
-} from "../../application/use-cases/get-my-training-plan/get-my-training-plan.errors";
-import { GetMyTrainingPlanUseCase } from "../../application/use-cases/get-my-training-plan/get-my-training-plan.use-case";
-import { CreateTrainingPlanRequestDto } from "./dto/create-training-plan.request.dto";
-import { CreateTrainingPlanResponseDto } from "./dto/create-training-plan.response.dto";
-import { GetMyTrainingPlanResponseDto } from "./dto/get-my-training-plan.response.dto";
+} from '../../application/use-cases/get-my-training-plan/get-my-training-plan.errors';
+import { GetMyTrainingPlanUseCase } from '../../application/use-cases/get-my-training-plan/get-my-training-plan.use-case';
+import { CreateTrainingPlanRequestDto } from './dto/create-training-plan.request.dto';
+import { CreateTrainingPlanResponseDto } from './dto/create-training-plan.response.dto';
+import { GetMyTrainingPlanResponseDto } from './dto/get-my-training-plan.response.dto';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -40,14 +40,14 @@ class GetMyTrainingPlanQueryDto {}
 
 class GetMyTrainingPlanBodyDto {}
 
-@Controller("training")
+@Controller('training')
 export class TrainingController {
   constructor(
     private readonly createTrainingPlanUseCase: CreateTrainingPlanUseCase,
     private readonly getMyTrainingPlanUseCase: GetMyTrainingPlanUseCase,
   ) {}
 
-  @Post("plans")
+  @Post('plans')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.CREATED)
   async createPlan(
@@ -56,7 +56,7 @@ export class TrainingController {
   ): Promise<CreateTrainingPlanResponseDto> {
     try {
       const result = await this.createTrainingPlanUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         fitnessProfileId: body.fitnessProfileId,
       });
 
@@ -76,7 +76,7 @@ export class TrainingController {
     }
   }
 
-  @Get("plans/current")
+  @Get('plans/current')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getCurrentPlan(
@@ -86,7 +86,7 @@ export class TrainingController {
   ): Promise<GetMyTrainingPlanResponseDto> {
     try {
       const result = await this.getMyTrainingPlanUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
       });
 
       return {
@@ -107,7 +107,7 @@ export class TrainingController {
 
   private handleError(error: unknown): never {
     if (!(error instanceof CreateTrainingPlanError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -133,14 +133,14 @@ export class TrainingController {
       default:
         throw new InternalServerErrorException({
           code: CREATE_TRAINING_PLAN_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleGetMyTrainingPlanError(error: unknown): never {
     if (!(error instanceof GetMyTrainingPlanError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -162,7 +162,7 @@ export class TrainingController {
       default:
         throw new InternalServerErrorException({
           code: GET_MY_TRAINING_PLAN_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }

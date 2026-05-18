@@ -1,7 +1,7 @@
 export const VALIDATE_SESSION_ERROR_CODES = {
-  INVALID_INPUT: "AUTH_INVALID_INPUT",
-  INVALID_SESSION: "AUTH_INVALID_SESSION",
-  INTERNAL_ERROR: "AUTH_INTERNAL_ERROR",
+  INVALID_INPUT: 'AUTH_INVALID_INPUT',
+  INVALID_SESSION: 'AUTH_INVALID_SESSION',
+  INTERNAL_ERROR: 'AUTH_INTERNAL_ERROR',
 } as const;
 
 export type ValidateSessionErrorCode =
@@ -17,7 +17,7 @@ export class ValidateSessionError extends Error {
     details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = "ValidateSessionError";
+    this.name = 'ValidateSessionError';
     this.code = code;
     this.details = details;
   }

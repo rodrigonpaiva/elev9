@@ -1,13 +1,13 @@
 import {
   ActivityLevel,
   FitnessGoal,
-} from "../../../../fitness/domain/entities/fitness-profile.entity";
+} from '../../../../fitness/domain/entities/fitness-profile.entity';
 import {
   TrainingPlanDay,
   TrainingPlanExercise,
   TrainingPlanIntensity,
-} from "../../../../training/domain/entities/training-plan.entity";
-import { FatigueLevel } from "../../../../ai/application/services/context-builder/build-user-health-context.service";
+} from '../../../../training/domain/entities/training-plan.entity';
+import { FatigueLevel } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
 
 type DashboardWorkoutExercise = TrainingPlanExercise;
 
@@ -21,7 +21,7 @@ type DashboardTodayWorkout = {
 };
 
 type DashboardNutritionGuidance = {
-  priority: "recovery" | "consistency" | "performance";
+  priority: 'recovery' | 'consistency' | 'performance';
   message: string;
   signals: string[];
 };
@@ -41,7 +41,7 @@ export type GetHomeDashboardOutput = {
       todayWorkout: DashboardTodayWorkout | null;
     } | null;
     progressSummary: {
-      period: "week";
+      period: 'week';
       workoutsCompleted: number;
       totalDurationMinutes: number;
       averageDurationMinutes: number;
@@ -49,8 +49,8 @@ export type GetHomeDashboardOutput = {
     };
     recovery: {
       fatigueLevel: FatigueLevel;
-      recommendedIntensity: "low" | "medium" | "normal";
-      recoveryTrend: "improving" | "stable" | "needs_recovery";
+      recommendedIntensity: 'low' | 'medium' | 'normal';
+      recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
       latestCheckIn?: {
         energyLevel: number;
         sleepQuality: number;

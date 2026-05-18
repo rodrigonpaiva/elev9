@@ -1,21 +1,21 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 import {
   CREATE_TRAINING_PLAN_ERROR_CODES,
   CreateTrainingPlanError,
-} from "../../application/use-cases/create-training-plan/create-training-plan.errors";
-import { TrainingPlan } from "../../domain/entities/training-plan.entity";
+} from '../../application/use-cases/create-training-plan/create-training-plan.errors';
+import { TrainingPlan } from '../../domain/entities/training-plan.entity';
 import {
   CreateTrainingPlanRepositoryInput,
   TrainingPlanRepository,
-} from "../../domain/repositories/training-plan.repository";
+} from '../../domain/repositories/training-plan.repository';
 import {
   TRAINING_PLAN_MODEL_NAME,
   TrainingPlanDocument,
   TrainingPlanSchemaClass,
-} from "./training-plan.schema";
+} from './training-plan.schema';
 
 @Injectable()
 export class MongooseTrainingPlanRepository implements TrainingPlanRepository {
@@ -25,7 +25,9 @@ export class MongooseTrainingPlanRepository implements TrainingPlanRepository {
   ) {}
 
   async findById(trainingPlanId: string): Promise<TrainingPlan | null> {
-    const document = await this.trainingPlanModel.findById(trainingPlanId).exec();
+    const document = await this.trainingPlanModel
+      .findById(trainingPlanId)
+      .exec();
 
     if (!document) {
       return null;
@@ -40,7 +42,7 @@ export class MongooseTrainingPlanRepository implements TrainingPlanRepository {
     const document = await this.trainingPlanModel
       .findOne({
         fitnessProfileId,
-        status: "active",
+        status: 'active',
       })
       .exec();
 
@@ -62,7 +64,7 @@ export class MongooseTrainingPlanRepository implements TrainingPlanRepository {
       if (this.isDuplicateFitnessProfileIdError(error)) {
         throw new CreateTrainingPlanError(
           CREATE_TRAINING_PLAN_ERROR_CODES.ALREADY_EXISTS,
-          "Training plan already exists.",
+          'Training plan already exists.',
         );
       }
 
@@ -96,7 +98,7 @@ export class MongooseTrainingPlanRepository implements TrainingPlanRepository {
   }
 
   private isDuplicateFitnessProfileIdError(error: unknown): boolean {
-    if (!error || typeof error !== "object") {
+    if (!error || typeof error !== 'object') {
       return false;
     }
 
@@ -108,8 +110,8 @@ export class MongooseTrainingPlanRepository implements TrainingPlanRepository {
 
     return (
       maybeError.code === 11000 &&
-      ("fitnessProfileId" in (maybeError.keyPattern ?? {}) ||
-        "fitnessProfileId" in (maybeError.keyValue ?? {}))
+      ('fitnessProfileId' in (maybeError.keyPattern ?? {}) ||
+        'fitnessProfileId' in (maybeError.keyValue ?? {}))
     );
   }
 }

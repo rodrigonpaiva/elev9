@@ -66,8 +66,8 @@ type GetMyFitnessProfileOutput = {
     userProfileId: string;
     heightCm: number;
     weightKg: number;
-    goal: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel: "low" | "medium" | "high";
+    goal: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel: 'low' | 'medium' | 'high';
     trainingAvailability: {
       daysPerWeek: number;
       minutesPerSession: number;
@@ -75,9 +75,9 @@ type GetMyFitnessProfileOutput = {
     limitations: Array<{
       type: string;
       description?: string;
-      severity: "low" | "medium" | "high";
+      severity: 'low' | 'medium' | 'high';
     }>;
-    status: "active";
+    status: 'active';
     createdAt: Date;
   };
 };

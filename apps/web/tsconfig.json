@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "jsx": "preserve",
-    
+
     "strict": true,
     "noEmit": true,
     "emitDeclarationOnly": false,
@@ -23,11 +23,17 @@
     "**/*.tsx",
     "**/*.js",
     "**/*.jsx",
-    
-      "./.next/types/**/*.ts",
-      "../../dist/apps/web/.next/types/**/*.ts",
-    
+
+    "./.next/types/**/*.ts",
+    "../../dist/apps/web/.next/types/**/*.ts",
+
     "next-env.d.ts"
   ],
-  "exclude": ["node_modules", "jest.config.ts", "jest.config.cts", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": [
+    "node_modules",
+    "jest.config.ts",
+    "jest.config.cts",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }

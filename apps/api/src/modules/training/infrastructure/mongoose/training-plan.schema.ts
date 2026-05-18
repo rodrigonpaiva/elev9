@@ -1,13 +1,13 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
 import {
   ActivityLevel,
   FitnessGoal,
-} from "../../../fitness/domain/entities/fitness-profile.entity";
+} from '../../../fitness/domain/entities/fitness-profile.entity';
 import {
   TrainingPlanFormat,
   TrainingPlanIntensity,
-} from "../../domain/entities/training-plan.entity";
+} from '../../domain/entities/training-plan.entity';
 
 export type TrainingPlanDocument = HydratedDocument<TrainingPlanSchemaClass>;
 
@@ -29,13 +29,13 @@ export class TrainingPlanSchemaClass {
       restSeconds: number;
     }>;
   }>;
-  status!: "active";
+  status!: 'active';
   createdAt!: Date;
   updatedAt!: Date;
 }
 
-export const TRAINING_PLAN_MODEL_NAME = "TrainingPlan";
-export const TRAINING_PLAN_COLLECTION_NAME = "training_plans";
+export const TRAINING_PLAN_MODEL_NAME = 'TrainingPlan';
+export const TRAINING_PLAN_COLLECTION_NAME = 'training_plans';
 
 export const TrainingPlanSchema = new Schema<TrainingPlanSchemaClass>(
   {
@@ -65,7 +65,7 @@ export const TrainingPlanSchema = new Schema<TrainingPlanSchemaClass>(
       ],
       required: true,
     },
-    status: { type: String, required: true, default: "active" },
+    status: { type: String, required: true, default: 'active' },
   },
   {
     collection: TRAINING_PLAN_COLLECTION_NAME,
@@ -78,6 +78,6 @@ TrainingPlanSchema.index(
   { fitnessProfileId: 1 },
   {
     unique: true,
-    partialFilterExpression: { status: "active" },
+    partialFilterExpression: { status: 'active' },
   },
 );

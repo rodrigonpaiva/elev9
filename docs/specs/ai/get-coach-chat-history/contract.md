@@ -16,10 +16,10 @@
 
 ```ts
 Array<{
-  role: "user" | "assistant";
+  role: 'user' | 'assistant';
   content: string;
   createdAt: string;
-}>
+}>;
 ```
 
 ## Notes

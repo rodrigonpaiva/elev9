@@ -1,4 +1,4 @@
-import { Transform } from "class-transformer";
+import { Transform } from 'class-transformer';
 import {
   IsDateString,
   IsIn,
@@ -6,10 +6,10 @@ import {
   IsString,
   MaxLength,
   MinLength,
-} from "class-validator";
+} from 'class-validator';
 
 export class CreateUserProfileRequestDto {
-  @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @MinLength(2)
   @MaxLength(80)
@@ -20,6 +20,6 @@ export class CreateUserProfileRequestDto {
   birthDate?: string;
 
   @IsOptional()
-  @IsIn(["male", "female", "other", "prefer_not_to_say"])
-  gender?: "male" | "female" | "other" | "prefer_not_to_say";
+  @IsIn(['male', 'female', 'other', 'prefer_not_to_say'])
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
 }

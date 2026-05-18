@@ -1,21 +1,21 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../domain/repositories/user-profile.repository";
+} from '../../../domain/repositories/user-profile.repository';
 import {
   CREATE_USER_PROFILE_ERROR_CODES,
   CreateUserProfileError,
-} from "./create-user-profile.errors";
-import { CreateUserProfileInput } from "./create-user-profile.input";
-import { CreateUserProfileOutput } from "./create-user-profile.output";
+} from './create-user-profile.errors';
+import { CreateUserProfileInput } from './create-user-profile.input';
+import { CreateUserProfileOutput } from './create-user-profile.output';
 
 const ALLOWED_GENDERS = new Set([
-  "male",
-  "female",
-  "other",
-  "prefer_not_to_say",
+  'male',
+  'female',
+  'other',
+  'prefer_not_to_say',
 ] as const);
 
 @Injectable()
@@ -29,9 +29,9 @@ export class CreateUserProfileUseCase {
     input: CreateUserProfileInput,
   ): Promise<CreateUserProfileOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const normalizedName =
-      typeof input.name === "string" ? input.name.trim() : "";
+      typeof input.name === 'string' ? input.name.trim() : '';
     const birthDate = this.normalizeBirthDate(input.birthDate);
 
     this.validateInput({
@@ -48,7 +48,7 @@ export class CreateUserProfileUseCase {
       if (existingProfile) {
         throw new CreateUserProfileError(
           CREATE_USER_PROFILE_ERROR_CODES.ALREADY_EXISTS,
-          "User profile already exists.",
+          'User profile already exists.',
         );
       }
 
@@ -57,9 +57,9 @@ export class CreateUserProfileUseCase {
         name: normalizedName,
         birthDate,
         gender: input.gender,
-        language: "en-US",
-        timezone: "UTC",
-        status: "active",
+        language: 'en-US',
+        timezone: 'UTC',
+        status: 'active',
       });
 
       return {
@@ -82,7 +82,7 @@ export class CreateUserProfileUseCase {
 
       throw new CreateUserProfileError(
         CREATE_USER_PROFILE_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -91,26 +91,26 @@ export class CreateUserProfileUseCase {
     authUserId: string;
     name: string;
     birthDate?: Date;
-    gender?: "male" | "female" | "other" | "prefer_not_to_say";
+    gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
   }): void {
     if (!input.authUserId) {
       throw new CreateUserProfileError(
         CREATE_USER_PROFILE_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
     if (!input.name || input.name.length < 2 || input.name.length > 80) {
       throw new CreateUserProfileError(
         CREATE_USER_PROFILE_ERROR_CODES.INVALID_INPUT,
-        "Invalid user profile input.",
+        'Invalid user profile input.',
       );
     }
 
     if (input.gender && !ALLOWED_GENDERS.has(input.gender)) {
       throw new CreateUserProfileError(
         CREATE_USER_PROFILE_ERROR_CODES.INVALID_INPUT,
-        "Invalid user profile input.",
+        'Invalid user profile input.',
       );
     }
   }
@@ -120,10 +120,10 @@ export class CreateUserProfileUseCase {
       return undefined;
     }
 
-    if (typeof birthDate !== "string" || !birthDate.trim()) {
+    if (typeof birthDate !== 'string' || !birthDate.trim()) {
       throw new CreateUserProfileError(
         CREATE_USER_PROFILE_ERROR_CODES.INVALID_INPUT,
-        "Invalid user profile input.",
+        'Invalid user profile input.',
       );
     }
 
@@ -132,7 +132,7 @@ export class CreateUserProfileUseCase {
     if (Number.isNaN(normalizedBirthDate.getTime())) {
       throw new CreateUserProfileError(
         CREATE_USER_PROFILE_ERROR_CODES.INVALID_INPUT,
-        "Invalid user profile input.",
+        'Invalid user profile input.',
       );
     }
 

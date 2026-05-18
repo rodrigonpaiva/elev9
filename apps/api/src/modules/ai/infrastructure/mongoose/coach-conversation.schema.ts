@@ -1,6 +1,7 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
-export type CoachConversationDocument = HydratedDocument<CoachConversationSchemaClass>;
+export type CoachConversationDocument =
+  HydratedDocument<CoachConversationSchemaClass>;
 
 export class CoachConversationSchemaClass {
   _id!: Types.ObjectId;
@@ -9,8 +10,8 @@ export class CoachConversationSchemaClass {
   updatedAt!: Date;
 }
 
-export const COACH_CONVERSATION_MODEL_NAME = "CoachConversation";
-export const COACH_CONVERSATION_COLLECTION_NAME = "coach_conversations";
+export const COACH_CONVERSATION_MODEL_NAME = 'CoachConversation';
+export const COACH_CONVERSATION_COLLECTION_NAME = 'coach_conversations';
 
 export const CoachConversationSchema = new Schema<CoachConversationSchemaClass>(
   {

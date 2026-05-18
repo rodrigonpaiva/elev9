@@ -113,13 +113,13 @@ export class GenerateCoachFeedbackUseCase {
   }
 
   private buildContextSnapshot(
-    healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
   ): {
-    goal?: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel?: "low" | "medium" | "high";
+    goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel?: 'low' | 'medium' | 'high';
     hasTrainingPlan?: boolean;
-    fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
-    recoveryTrend?: "improving" | "stable" | "needs_recovery";
+    fatigueLevel?: 'LOW' | 'MODERATE' | 'HIGH';
+    recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -135,7 +135,7 @@ export class GenerateCoachFeedbackUseCase {
       motivationLevel: number;
     };
     nutritionProfile?: {
-      goal: "fat_loss" | "maintenance" | "muscle_gain";
+      goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
       mealsPerDay: number;
     };
   } {
@@ -171,16 +171,16 @@ export class GenerateCoachFeedbackUseCase {
   }
 
   private resolveRecoveryTrend(
-    fatigueLevel: "LOW" | "MODERATE" | "HIGH",
-  ): "improving" | "stable" | "needs_recovery" {
+    fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH',
+  ): 'improving' | 'stable' | 'needs_recovery' {
     switch (fatigueLevel) {
-      case "LOW":
-        return "improving";
-      case "HIGH":
-        return "needs_recovery";
-      case "MODERATE":
+      case 'LOW':
+        return 'improving';
+      case 'HIGH':
+        return 'needs_recovery';
+      case 'MODERATE':
       default:
-        return "stable";
+        return 'stable';
     }
   }
 }

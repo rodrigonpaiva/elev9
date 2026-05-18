@@ -1,15 +1,15 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   ACCESS_TOKEN_VERIFIER,
   AccessTokenVerifier,
-} from "../../../domain/services/access-token-verifier.service";
+} from '../../../domain/services/access-token-verifier.service';
 import {
   VALIDATE_SESSION_ERROR_CODES,
   ValidateSessionError,
-} from "./validate-session.errors";
-import { ValidateSessionInput } from "./validate-session.input";
-import { ValidateSessionOutput } from "./validate-session.output";
+} from './validate-session.errors';
+import { ValidateSessionInput } from './validate-session.input';
+import { ValidateSessionOutput } from './validate-session.output';
 
 @Injectable()
 export class ValidateSessionUseCase {
@@ -20,9 +20,9 @@ export class ValidateSessionUseCase {
 
   async execute(input: ValidateSessionInput): Promise<ValidateSessionOutput> {
     const authorizationHeader =
-      typeof input.authorizationHeader === "string"
+      typeof input.authorizationHeader === 'string'
         ? input.authorizationHeader.trim()
-        : "";
+        : '';
 
     const token = this.extractBearerToken(authorizationHeader);
 
@@ -42,7 +42,7 @@ export class ValidateSessionUseCase {
 
       throw new ValidateSessionError(
         VALIDATE_SESSION_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -51,7 +51,7 @@ export class ValidateSessionUseCase {
     if (!authorizationHeader) {
       throw new ValidateSessionError(
         VALIDATE_SESSION_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -60,7 +60,7 @@ export class ValidateSessionUseCase {
     if (!match) {
       throw new ValidateSessionError(
         VALIDATE_SESSION_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -69,7 +69,7 @@ export class ValidateSessionUseCase {
     if (!token) {
       throw new ValidateSessionError(
         VALIDATE_SESSION_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 

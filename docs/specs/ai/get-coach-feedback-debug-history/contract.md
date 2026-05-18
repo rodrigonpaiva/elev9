@@ -83,8 +83,8 @@ type GetCoachFeedbackDebugHistoryOutput = {
     influences: string[];
     generatorVersion?: string;
     contextSnapshot?: {
-      fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
-      recoveryTrend?: "improving" | "stable" | "needs_recovery";
+      fatigueLevel?: 'LOW' | 'MODERATE' | 'HIGH';
+      recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
       weeklyFrequency?: number;
       currentStreak?: number;
       averageWorkoutDuration?: number;
@@ -95,7 +95,7 @@ type GetCoachFeedbackDebugHistoryOutput = {
         motivationLevel: number;
       };
       nutritionProfile?: {
-        goal: "fat_loss" | "maintenance" | "muscle_gain";
+        goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
         mealsPerDay: number;
       };
     };
@@ -121,16 +121,9 @@ Observações:
     {
       "id": "feedback_002",
       "message": "Great consistency this week.",
-      "insights": [
-        "You trained 4 times this week"
-      ],
-      "recommendations": [
-        "Keep your current rhythm"
-      ],
-      "influences": [
-        "fatigue:high",
-        "nutrition:muscle_gain"
-      ],
+      "insights": ["You trained 4 times this week"],
+      "recommendations": ["Keep your current rhythm"],
+      "influences": ["fatigue:high", "nutrition:muscle_gain"],
       "generatorVersion": "heuristic-v1",
       "contextSnapshot": {
         "fatigueLevel": "HIGH",
@@ -163,12 +156,8 @@ Observações:
     {
       "id": "feedback_legacy",
       "message": "Great consistency this week.",
-      "insights": [
-        "You trained 4 times this week"
-      ],
-      "recommendations": [
-        "Keep your current rhythm"
-      ],
+      "insights": ["You trained 4 times this week"],
+      "recommendations": ["Keep your current rhythm"],
       "influences": [],
       "createdAt": "2026-05-03T10:00:00.000Z"
     }

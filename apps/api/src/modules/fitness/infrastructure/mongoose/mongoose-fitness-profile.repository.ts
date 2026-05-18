@@ -1,21 +1,21 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 import {
   CREATE_FITNESS_PROFILE_ERROR_CODES,
   CreateFitnessProfileError,
-} from "../../application/use-cases/create-fitness-profile/create-fitness-profile.errors";
-import { FitnessProfile } from "../../domain/entities/fitness-profile.entity";
+} from '../../application/use-cases/create-fitness-profile/create-fitness-profile.errors';
+import { FitnessProfile } from '../../domain/entities/fitness-profile.entity';
 import {
   CreateFitnessProfileRepositoryInput,
   FitnessProfileRepository,
-} from "../../domain/repositories/fitness-profile.repository";
+} from '../../domain/repositories/fitness-profile.repository';
 import {
   FITNESS_PROFILE_MODEL_NAME,
   FitnessProfileDocument,
   FitnessProfileSchemaClass,
-} from "./fitness-profile.schema";
+} from './fitness-profile.schema';
 
 @Injectable()
 export class MongooseFitnessProfileRepository implements FitnessProfileRepository {
@@ -25,7 +25,9 @@ export class MongooseFitnessProfileRepository implements FitnessProfileRepositor
   ) {}
 
   async findById(fitnessProfileId: string): Promise<FitnessProfile | null> {
-    const document = await this.fitnessProfileModel.findById(fitnessProfileId).exec();
+    const document = await this.fitnessProfileModel
+      .findById(fitnessProfileId)
+      .exec();
 
     if (!document) {
       return null;
@@ -40,7 +42,7 @@ export class MongooseFitnessProfileRepository implements FitnessProfileRepositor
     const document = await this.fitnessProfileModel
       .findOne({
         userProfileId,
-        status: "active",
+        status: 'active',
       })
       .exec();
 
@@ -62,7 +64,7 @@ export class MongooseFitnessProfileRepository implements FitnessProfileRepositor
       if (this.isDuplicateUserProfileIdError(error)) {
         throw new CreateFitnessProfileError(
           CREATE_FITNESS_PROFILE_ERROR_CODES.ALREADY_EXISTS,
-          "Fitness profile already exists.",
+          'Fitness profile already exists.',
         );
       }
 
@@ -94,7 +96,7 @@ export class MongooseFitnessProfileRepository implements FitnessProfileRepositor
   }
 
   private isDuplicateUserProfileIdError(error: unknown): boolean {
-    if (!error || typeof error !== "object") {
+    if (!error || typeof error !== 'object') {
       return false;
     }
 
@@ -106,8 +108,8 @@ export class MongooseFitnessProfileRepository implements FitnessProfileRepositor
 
     return (
       maybeError.code === 11000 &&
-      ("userProfileId" in (maybeError.keyPattern ?? {}) ||
-        "userProfileId" in (maybeError.keyValue ?? {}))
+      ('userProfileId' in (maybeError.keyPattern ?? {}) ||
+        'userProfileId' in (maybeError.keyValue ?? {}))
     );
   }
 }

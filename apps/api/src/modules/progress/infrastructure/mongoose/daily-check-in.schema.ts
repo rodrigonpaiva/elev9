@@ -1,4 +1,4 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
 export type DailyCheckInDocument = HydratedDocument<DailyCheckInSchemaClass>;
 
@@ -13,8 +13,8 @@ export class DailyCheckInSchemaClass {
   updatedAt!: Date;
 }
 
-export const DAILY_CHECK_IN_MODEL_NAME = "DailyCheckIn";
-export const DAILY_CHECK_IN_COLLECTION_NAME = "daily_check_ins";
+export const DAILY_CHECK_IN_MODEL_NAME = 'DailyCheckIn';
+export const DAILY_CHECK_IN_COLLECTION_NAME = 'daily_check_ins';
 
 export const DailyCheckInSchema = new Schema<DailyCheckInSchemaClass>(
   {

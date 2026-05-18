@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -6,11 +6,11 @@ import {
   RefreshControl,
   StyleSheet,
   View,
-} from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
-import { ApiClientError } from "@elev9/api-client";
-import type { ProgressSummaryResponse } from "@elev9/types";
+import { ApiClientError } from '@elev9/api-client';
+import type { ProgressSummaryResponse } from '@elev9/types';
 import {
   Badge,
   Button,
@@ -19,52 +19,52 @@ import {
   Screen,
   SectionHeader,
   Text,
-} from "@elev9/ui";
+} from '@elev9/ui';
 
-import { apiClient } from "../api/client";
+import { apiClient } from '../api/client';
 
-type SummaryState = ProgressSummaryResponse["summary"] | null;
-type Period = "week" | "month";
+type SummaryState = ProgressSummaryResponse['summary'] | null;
+type Period = 'week' | 'month';
 
-const PERIOD_OPTIONS: Period[] = ["week", "month"];
+const PERIOD_OPTIONS: Period[] = ['week', 'month'];
 
 export function ProgressSummaryScreen() {
   const [summary, setSummary] = useState<SummaryState>(null);
-  const [period, setPeriod] = useState<Period>("week");
+  const [period, setPeriod] = useState<Period>('week');
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const entrance = useRef(new Animated.Value(0)).current;
 
-  const load = useCallback(async (
-    nextPeriod: Period,
-    options?: { refresh?: boolean },
-  ) => {
-    if (options?.refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-
-    setErrorMessage(null);
-
-    try {
-      const response = await apiClient.progress.getSummary(nextPeriod);
-      setSummary(response.summary);
-    } catch (error) {
-      if (error instanceof ApiClientError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("Unable to load progress summary.");
-      }
-    } finally {
+  const load = useCallback(
+    async (nextPeriod: Period, options?: { refresh?: boolean }) => {
       if (options?.refresh) {
-        setIsRefreshing(false);
+        setIsRefreshing(true);
       } else {
-        setIsLoading(false);
+        setIsLoading(true);
       }
-    }
-  }, []);
+
+      setErrorMessage(null);
+
+      try {
+        const response = await apiClient.progress.getSummary(nextPeriod);
+        setSummary(response.summary);
+      } catch (error) {
+        if (error instanceof ApiClientError) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage('Unable to load progress summary.');
+        }
+      } finally {
+        if (options?.refresh) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
+      }
+    },
+    [],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -83,14 +83,17 @@ export function ProgressSummaryScreen() {
     }
   }, [entrance, isLoading]);
 
-  const handlePeriodChange = useCallback((nextPeriod: Period) => {
-    if (nextPeriod === period) {
-      return;
-    }
+  const handlePeriodChange = useCallback(
+    (nextPeriod: Period) => {
+      if (nextPeriod === period) {
+        return;
+      }
 
-    setPeriod(nextPeriod);
-    void load(nextPeriod);
-  }, [load, period]);
+      setPeriod(nextPeriod);
+      void load(nextPeriod);
+    },
+    [load, period],
+  );
 
   return (
     <Screen
@@ -173,7 +176,11 @@ export function ProgressSummaryScreen() {
           <Card style={styles.feedbackCard}>
             <Text variant="title">Progress unavailable</Text>
             <Text style={styles.errorText}>{errorMessage}</Text>
-            <Button label="Retry" onPress={() => void load(period)} style={styles.fullButton} />
+            <Button
+              label="Retry"
+              onPress={() => void load(period)}
+              style={styles.fullButton}
+            />
           </Card>
         ) : summary ? (
           <>
@@ -186,7 +193,7 @@ export function ProgressSummaryScreen() {
                 <Badge label={capitalize(summary.period)} variant="primary" />
                 <Text style={styles.highlightCopy}>
                   {summary.workoutsCompleted} workout
-                  {summary.workoutsCompleted === 1 ? "" : "s"} logged
+                  {summary.workoutsCompleted === 1 ? '' : 's'} logged
                 </Text>
               </View>
             </Card>
@@ -194,12 +201,13 @@ export function ProgressSummaryScreen() {
             <Card style={styles.streakCard}>
               <Text style={styles.streakLabel}>🔥 Current streak</Text>
               <Text style={styles.streakValue}>
-                {summary.currentStreak} day{summary.currentStreak === 1 ? "" : "s"}
+                {summary.currentStreak} day
+                {summary.currentStreak === 1 ? '' : 's'}
               </Text>
               <Text style={styles.streakCopy}>
                 {summary.currentStreak === 0
-                  ? "Start your first streak today."
-                  : "Keep the momentum going with another session today."}
+                  ? 'Start your first streak today.'
+                  : 'Keep the momentum going with another session today.'}
               </Text>
             </Card>
 
@@ -221,7 +229,7 @@ export function ProgressSummaryScreen() {
                 value={
                   summary.lastWorkoutDate
                     ? formatDate(summary.lastWorkoutDate)
-                    : "No activity yet"
+                    : 'No activity yet'
                 }
               />
             </View>
@@ -243,11 +251,11 @@ function MetricCard({ label, value }: { label: string; value: string }) {
 
 function formatDate(value: string): string {
   const date = new Date(`${value}T00:00:00.000Z`);
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
   }).format(date);
 }
 
@@ -276,14 +284,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   periodSelector: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 10,
   },
   periodChip: {
     flex: 1,
     minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -298,15 +306,15 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 14,
     lineHeight: 18,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   periodChipLabelActive: {
     color: colors.primaryText,
   },
   loadingState: {
     minHeight: 260,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
   },
   loadingText: {
@@ -331,25 +339,25 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 14,
     lineHeight: 18,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   streakValue: {
     color: colors.text,
     fontSize: 32,
     lineHeight: 36,
-    fontWeight: "800",
+    fontWeight: '800',
   },
   streakCopy: {
     color: colors.mutedText,
   },
   highlightRow: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 12,
   },
   highlightCopy: {
     color: colors.text,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   metricsGrid: {
     gap: 12,
@@ -362,17 +370,17 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "700",
-    textTransform: "uppercase",
+    fontWeight: '700',
+    textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   metricValue: {
     color: colors.primary,
     fontSize: 28,
     lineHeight: 32,
-    fontWeight: "800",
+    fontWeight: '800',
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
 });

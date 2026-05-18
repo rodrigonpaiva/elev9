@@ -1,11 +1,11 @@
-import { Injectable } from "@nestjs/common";
-import OpenAI from "openai";
+import { Injectable } from '@nestjs/common';
+import OpenAI from 'openai';
 
 import {
   AiLlmGenerateReplyInput,
   AiLlmProvider,
-} from "../../application/services/llm/ai-llm.types";
-import { AiLlmConfigService } from "../../application/services/llm/ai-llm-config.service";
+} from '../../application/services/llm/ai-llm.types';
+import { AiLlmConfigService } from '../../application/services/llm/ai-llm-config.service';
 
 @Injectable()
 export class OpenAiLlmProvider implements AiLlmProvider {
@@ -15,7 +15,7 @@ export class OpenAiLlmProvider implements AiLlmProvider {
     const apiKey = this.config.getApiKey();
 
     if (!apiKey) {
-      throw new Error("OPENAI_API_KEY is required when AI_LLM_ENABLED=true.");
+      throw new Error('OPENAI_API_KEY is required when AI_LLM_ENABLED=true.');
     }
 
     const client = new OpenAI({
@@ -25,7 +25,7 @@ export class OpenAiLlmProvider implements AiLlmProvider {
     const completion = await client.chat.completions.create({
       model: input.model,
       messages: input.messages as Array<{
-        role: "system" | "user" | "assistant";
+        role: 'system' | 'user' | 'assistant';
         content: string;
       }>,
       temperature: 0.2,
@@ -34,7 +34,7 @@ export class OpenAiLlmProvider implements AiLlmProvider {
     const reply = completion.choices[0]?.message?.content?.trim();
 
     if (!reply) {
-      throw new Error("OpenAI returned an empty reply.");
+      throw new Error('OpenAI returned an empty reply.');
     }
 
     return reply;

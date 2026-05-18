@@ -8,7 +8,7 @@ export type LogWorkoutRequest = {
     repsDone: number;
   }>;
   feedback?: {
-    difficulty: "easy" | "medium" | "hard";
+    difficulty: 'easy' | 'medium' | 'hard';
     notes?: string;
   };
 };
@@ -25,7 +25,7 @@ export type LogWorkoutResponse = {
       repsDone: number;
     }>;
     feedback?: {
-      difficulty: "easy" | "medium" | "hard";
+      difficulty: 'easy' | 'medium' | 'hard';
       notes?: string;
     };
     date: string;
@@ -63,7 +63,7 @@ export type DailyCheckInHistoryResponse = {
 
 export type ProgressSummaryResponse = {
   summary: {
-    period: "week" | "month";
+    period: 'week' | 'month';
     workoutsCompleted: number;
     totalDurationMinutes: number;
     averageDurationMinutes: number;
@@ -84,7 +84,7 @@ export type WorkoutHistoryResponse = {
       repsDone: number;
     }>;
     feedback?: {
-      difficulty: "easy" | "medium" | "hard";
+      difficulty: 'easy' | 'medium' | 'hard';
       notes?: string;
     };
     date: string;

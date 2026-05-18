@@ -1,19 +1,19 @@
-import { useEffect, useRef, useState } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from 'react';
+import { Animated, StyleSheet, View } from 'react-native';
 
-import { ApiClientError } from "@elev9/api-client";
-import { Button, Card, Input, Screen, Text } from "@elev9/ui";
-import { colors } from "@elev9/ui";
+import { ApiClientError } from '@elev9/api-client';
+import { Button, Card, Input, Screen, Text } from '@elev9/ui';
+import { colors } from '@elev9/ui';
 
-import { useAuth } from "../auth/auth-provider";
+import { useAuth } from '../auth/auth-provider';
 
 const isDemoModeEnabled =
-  __DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === "true";
+  __DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
 
 export function LoginScreen() {
   const { signIn, signInDemo } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
@@ -37,7 +37,7 @@ export function LoginScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to login.");
+        setErrorMessage('Unable to login.');
       }
     } finally {
       setIsSubmitting(false);
@@ -54,7 +54,7 @@ export function LoginScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to start demo mode.");
+        setErrorMessage('Unable to start demo mode.');
       }
     } finally {
       setIsDemoSubmitting(false);
@@ -79,64 +79,66 @@ export function LoginScreen() {
           },
         ]}
       >
-      <View style={styles.hero}>
-        <Text style={styles.eyebrow}>Performance coaching</Text>
-        <Text variant="headline" style={styles.title}>
-          Elev9 Coach
-        </Text>
-        <Text style={styles.subtitle}>
-          A focused mobile companion for training structure, daily execution,
-          and steady progress.
-        </Text>
-      </View>
-
-      <Card style={styles.card}>
-        <View style={styles.formHeader}>
-          <Text variant="title">Welcome back</Text>
-          <Text style={styles.formSubtitle}>
-            Sign in to access your dashboard and current training context.
+        <View style={styles.hero}>
+          <Text style={styles.eyebrow}>Performance coaching</Text>
+          <Text variant="headline" style={styles.title}>
+            Elev9 Coach
+          </Text>
+          <Text style={styles.subtitle}>
+            A focused mobile companion for training structure, daily execution,
+            and steady progress.
           </Text>
         </View>
 
-        <View style={styles.fields}>
-          <Input
-            autoCapitalize="none"
-            keyboardType="email-address"
-            label="Email"
-            onChangeText={setEmail}
-            placeholder="you@example.com"
-            value={email}
-          />
+        <Card style={styles.card}>
+          <View style={styles.formHeader}>
+            <Text variant="title">Welcome back</Text>
+            <Text style={styles.formSubtitle}>
+              Sign in to access your dashboard and current training context.
+            </Text>
+          </View>
 
-          <Input
-            label="Password"
-            onChangeText={setPassword}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-          />
-        </View>
+          <View style={styles.fields}>
+            <Input
+              autoCapitalize="none"
+              keyboardType="email-address"
+              label="Email"
+              onChangeText={setEmail}
+              placeholder="you@example.com"
+              value={email}
+            />
 
-        {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+            <Input
+              label="Password"
+              onChangeText={setPassword}
+              placeholder="Password"
+              secureTextEntry
+              value={password}
+            />
+          </View>
 
-        <View style={styles.buttonBlock}>
-          <Button
-            label="Sign in"
-            loading={isSubmitting}
-            onPress={handleLogin}
-            style={styles.button}
-          />
-          {isDemoModeEnabled ? (
+          {errorMessage ? (
+            <Text style={styles.error}>{errorMessage}</Text>
+          ) : null}
+
+          <View style={styles.buttonBlock}>
             <Button
-              label="Try demo"
-              loading={isDemoSubmitting}
-              onPress={handleDemoLogin}
-              variant="secondary"
+              label="Sign in"
+              loading={isSubmitting}
+              onPress={handleLogin}
               style={styles.button}
             />
-          ) : null}
-        </View>
-      </Card>
+            {isDemoModeEnabled ? (
+              <Button
+                label="Try demo"
+                loading={isDemoSubmitting}
+                onPress={handleDemoLogin}
+                variant="secondary"
+                style={styles.button}
+              />
+            ) : null}
+          </View>
+        </Card>
       </Animated.View>
     </Screen>
   );
@@ -144,7 +146,7 @@ export function LoginScreen() {
 
 const styles = StyleSheet.create({
   screenContent: {
-    justifyContent: "center",
+    justifyContent: 'center',
     gap: 24,
     paddingTop: 36,
     paddingBottom: 36,
@@ -158,9 +160,9 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 1.1,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     color: colors.primary,
   },
   title: {
@@ -186,14 +188,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   error: {
-    color: "#fca5a5",
+    color: '#fca5a5',
   },
   buttonBlock: {
     gap: 10,
-    width: "100%",
+    width: '100%',
   },
   button: {
     marginTop: 4,
-    width: "100%",
+    width: '100%',
   },
 });

@@ -1,20 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import type { RouteProp } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { ApiClientError } from "@elev9/api-client";
-import { Badge, Button, Card, colors, Input, Screen, Text } from "@elev9/ui";
+import { ApiClientError } from '@elev9/api-client';
+import { Badge, Button, Card, colors, Input, Screen, Text } from '@elev9/ui';
 
-import { mobileApiClient } from "../api/client";
-import type { RootStackParamList } from "../navigation/app-navigator";
+import { mobileApiClient } from '../api/client';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 type ExerciseLogState = {
   name: string;
@@ -25,20 +19,20 @@ type ExerciseLogState = {
   repsDone: string;
 };
 
-type Difficulty = "easy" | "medium" | "hard";
+type Difficulty = 'easy' | 'medium' | 'hard';
 
-const DIFFICULTY_OPTIONS: Difficulty[] = ["easy", "medium", "hard"];
+const DIFFICULTY_OPTIONS: Difficulty[] = ['easy', 'medium', 'hard'];
 
 export function WorkoutScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, "Workout">>();
+  const route = useRoute<RouteProp<RootStackParamList, 'Workout'>>();
   const { trainingPlanId, workout } = route.params;
   const [durationMinutes, setDurationMinutes] = useState(
     String(Math.max(20, workout.exercises.length * 12)),
   );
   const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -67,14 +61,14 @@ export function WorkoutScreen() {
     const duration = parseInteger(durationMinutes);
     const durationError =
       duration === null || duration < 1 || duration > 300
-        ? "Duration must be an integer between 1 and 300."
+        ? 'Duration must be an integer between 1 and 300.'
         : null;
 
     const notesError =
-      notes.length > 500 ? "Notes must be at most 500 characters." : null;
+      notes.length > 500 ? 'Notes must be at most 500 characters.' : null;
     const feedbackError =
       notes.trim().length > 0 && !difficulty
-        ? "Select a difficulty to include feedback notes."
+        ? 'Select a difficulty to include feedback notes.'
         : null;
 
     const exerciseErrors = exerciseLogs.map((exercise) => {
@@ -84,11 +78,11 @@ export function WorkoutScreen() {
       return {
         setsDone:
           setsDone === null || setsDone < 0
-            ? "Sets done must be an integer greater than or equal to 0."
+            ? 'Sets done must be an integer greater than or equal to 0.'
             : null,
         repsDone:
           repsDone === null || repsDone < 0
-            ? "Reps done must be an integer greater than or equal to 0."
+            ? 'Reps done must be an integer greater than or equal to 0.'
             : null,
       };
     });
@@ -103,7 +97,8 @@ export function WorkoutScreen() {
       notesError,
       feedbackError,
       exerciseErrors,
-      isValid: !durationError && !notesError && !feedbackError && !firstExerciseError,
+      isValid:
+        !durationError && !notesError && !feedbackError && !firstExerciseError,
     };
   }, [difficulty, durationMinutes, exerciseLogs, notes]);
 
@@ -112,13 +107,12 @@ export function WorkoutScreen() {
       return null;
     }
 
-    const feedback =
-      difficulty
-        ? {
-            difficulty,
-            ...(notes.trim() ? { notes: notes.trim() } : {}),
-          }
-        : undefined;
+    const feedback = difficulty
+      ? {
+          difficulty,
+          ...(notes.trim() ? { notes: notes.trim() } : {}),
+        }
+      : undefined;
 
     return {
       trainingPlanId,
@@ -131,7 +125,14 @@ export function WorkoutScreen() {
       })),
       feedback,
     };
-  }, [difficulty, exerciseLogs, notes, trainingPlanId, validation, workout.dayIndex]);
+  }, [
+    difficulty,
+    exerciseLogs,
+    notes,
+    trainingPlanId,
+    validation,
+    workout.dayIndex,
+  ]);
 
   const summary = useMemo(() => {
     const totalSets = exerciseLogs.reduce(
@@ -152,7 +153,7 @@ export function WorkoutScreen() {
 
   async function handleCompleteWorkout() {
     if (!payload) {
-      setErrorMessage("Please fix the highlighted fields before submitting.");
+      setErrorMessage('Please fix the highlighted fields before submitting.');
       return;
     }
 
@@ -162,7 +163,7 @@ export function WorkoutScreen() {
 
     try {
       await mobileApiClient.progress.logWorkout(payload);
-      setSuccessMessage("Workout completed 🎉");
+      setSuccessMessage('Workout completed 🎉');
       Animated.sequence([
         Animated.timing(successPulse, {
           toValue: 1,
@@ -183,7 +184,7 @@ export function WorkoutScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to complete workout.");
+        setErrorMessage('Unable to complete workout.');
       }
     } finally {
       setIsSubmitting(false);
@@ -192,7 +193,7 @@ export function WorkoutScreen() {
 
   function updateExerciseField(
     index: number,
-    field: "setsDone" | "repsDone",
+    field: 'setsDone' | 'repsDone',
     value: string,
   ) {
     setSuccessMessage(null);
@@ -217,10 +218,10 @@ export function WorkoutScreen() {
 
   function adjustExerciseValue(
     index: number,
-    field: "setsDone" | "repsDone",
+    field: 'setsDone' | 'repsDone',
     delta: number,
   ) {
-    const currentValue = parseInteger(exerciseLogs[index]?.[field] ?? "0") ?? 0;
+    const currentValue = parseInteger(exerciseLogs[index]?.[field] ?? '0') ?? 0;
     const nextValue = Math.max(0, currentValue + delta);
     updateExerciseField(index, field, String(nextValue));
   }
@@ -264,7 +265,9 @@ export function WorkoutScreen() {
               <Text variant="headline" style={styles.title}>
                 Today&apos;s Workout
               </Text>
-              <Text style={styles.subtitle}>Workout Day {workout.dayIndex + 1}</Text>
+              <Text style={styles.subtitle}>
+                Workout Day {workout.dayIndex + 1}
+              </Text>
             </View>
             <Badge label={capitalize(workout.intensity)} variant="primary" />
           </View>
@@ -315,10 +318,14 @@ export function WorkoutScreen() {
                   <View style={styles.exerciseCopy}>
                     <Text style={styles.exerciseName}>{exercise.name}</Text>
                     <Text style={styles.exerciseMeta}>
-                      Planned: {exercise.targetSets} sets x {exercise.targetReps}
+                      Planned: {exercise.targetSets} sets x{' '}
+                      {exercise.targetReps}
                     </Text>
                   </View>
-                  <Badge label={`${exercise.restSeconds}s rest`} variant="muted" />
+                  <Badge
+                    label={`${exercise.restSeconds}s rest`}
+                    variant="muted"
+                  />
                 </View>
 
                 <View style={styles.exerciseControls}>
@@ -326,17 +333,29 @@ export function WorkoutScreen() {
                     label="Sets done"
                     value={exercise.setsDone}
                     errorMessage={validation.exerciseErrors[index]?.setsDone}
-                    onChangeText={(value) => updateExerciseField(index, "setsDone", value)}
-                    onDecrement={() => adjustExerciseValue(index, "setsDone", -1)}
-                    onIncrement={() => adjustExerciseValue(index, "setsDone", 1)}
+                    onChangeText={(value) =>
+                      updateExerciseField(index, 'setsDone', value)
+                    }
+                    onDecrement={() =>
+                      adjustExerciseValue(index, 'setsDone', -1)
+                    }
+                    onIncrement={() =>
+                      adjustExerciseValue(index, 'setsDone', 1)
+                    }
                   />
                   <StepperField
                     label="Reps done"
                     value={exercise.repsDone}
                     errorMessage={validation.exerciseErrors[index]?.repsDone}
-                    onChangeText={(value) => updateExerciseField(index, "repsDone", value)}
-                    onDecrement={() => adjustExerciseValue(index, "repsDone", -1)}
-                    onIncrement={() => adjustExerciseValue(index, "repsDone", 1)}
+                    onChangeText={(value) =>
+                      updateExerciseField(index, 'repsDone', value)
+                    }
+                    onDecrement={() =>
+                      adjustExerciseValue(index, 'repsDone', -1)
+                    }
+                    onIncrement={() =>
+                      adjustExerciseValue(index, 'repsDone', 1)
+                    }
                   />
                 </View>
               </Card>
@@ -351,7 +370,10 @@ export function WorkoutScreen() {
             subtitle="Optional feedback helps capture the quality of the session."
           />
           <View style={styles.metricsRow}>
-            <SummaryPill label="Exercises" value={String(summary.exerciseCount)} />
+            <SummaryPill
+              label="Exercises"
+              value={String(summary.exerciseCount)}
+            />
             <SummaryPill label="Sets" value={String(summary.totalSets)} />
             <SummaryPill label="Reps" value={String(summary.totalReps)} />
           </View>
@@ -364,7 +386,9 @@ export function WorkoutScreen() {
                   key={option}
                   onPress={() => {
                     setSuccessMessage(null);
-                    setDifficulty((current) => (current === option ? null : option));
+                    setDifficulty((current) =>
+                      current === option ? null : option,
+                    );
                   }}
                   style={[
                     styles.difficultyChip,
@@ -460,13 +484,17 @@ function StepperField(input: {
         <TextInput
           keyboardType="number-pad"
           value={input.value}
-          onChangeText={(value) => input.onChangeText(sanitizeNumericInput(value))}
+          onChangeText={(value) =>
+            input.onChangeText(sanitizeNumericInput(value))
+          }
           style={styles.stepperInput}
           selectionColor={colors.primary}
         />
         <StepperButton label="+" onPress={input.onIncrement} compact />
       </View>
-      {input.errorMessage ? <Text style={styles.error}>{input.errorMessage}</Text> : null}
+      {input.errorMessage ? (
+        <Text style={styles.error}>{input.errorMessage}</Text>
+      ) : null}
     </View>
   );
 }
@@ -512,7 +540,7 @@ function parseInteger(value: string): number | null {
 }
 
 function sanitizeNumericInput(value: string): string {
-  return value.replace(/[^\d]/g, "");
+  return value.replace(/[^\d]/g, '');
 }
 
 function capitalize(value: string): string {
@@ -531,9 +559,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   heroTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     gap: 12,
   },
   heroCopy: {
@@ -545,7 +573,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: colors.mutedText,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   workoutName: {
     color: colors.text,
@@ -563,9 +591,9 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 1,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
   },
   sectionSubtitle: {
     color: colors.mutedText,
@@ -580,11 +608,11 @@ const styles = StyleSheet.create({
   },
   durationLabel: {
     color: colors.mutedText,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   durationControls: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   durationInput: {
@@ -596,8 +624,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     color: colors.text,
     fontSize: 24,
-    fontWeight: "800",
-    textAlign: "center",
+    fontWeight: '800',
+    textAlign: 'center',
     paddingHorizontal: 12,
   },
   exerciseList: {
@@ -608,9 +636,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   exerciseHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     gap: 12,
   },
   exerciseCopy: {
@@ -621,13 +649,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     lineHeight: 24,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   exerciseMeta: {
     color: colors.mutedText,
   },
   exerciseControls: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   stepperField: {
@@ -638,11 +666,11 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   stepperControl: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   stepperInput: {
@@ -654,15 +682,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     color: colors.text,
     fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
+    fontWeight: '700',
+    textAlign: 'center',
     paddingHorizontal: 10,
   },
   stepperButton: {
     minWidth: 72,
     minHeight: 56,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
@@ -677,10 +705,10 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     lineHeight: 22,
-    fontWeight: "800",
+    fontWeight: '800',
   },
   metricsRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 10,
   },
   summaryPill: {
@@ -696,25 +724,25 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "700",
-    textTransform: "uppercase",
+    fontWeight: '700',
+    textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   summaryValue: {
     color: colors.text,
     fontSize: 22,
     lineHeight: 28,
-    fontWeight: "800",
+    fontWeight: '800',
   },
   difficultyGroup: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 10,
   },
   difficultyChip: {
     flex: 1,
     minHeight: 48,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -729,7 +757,7 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 14,
     lineHeight: 18,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   difficultyChipLabelActive: {
     color: colors.primaryText,
@@ -746,8 +774,8 @@ const styles = StyleSheet.create({
     color: colors.primaryText,
     fontSize: 16,
     lineHeight: 22,
-    fontWeight: "800",
-    textAlign: "center",
+    fontWeight: '800',
+    textAlign: 'center',
   },
   completeCard: {
     gap: 12,
@@ -763,6 +791,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
 });

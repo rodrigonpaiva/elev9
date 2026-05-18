@@ -1,16 +1,16 @@
 export type SendCoachChatRequest = {
-    message: string;
+  message: string;
 };
 export type SendCoachChatResponse = {
-    conversationId: string;
-    reply: string;
+  conversationId: string;
+  reply: string;
 };
 export type CoachChatHistoryMessage = {
-    role: "user" | "assistant";
-    content: string;
-    createdAt: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: string;
 };
 export type GetCoachChatHistoryQuery = {
-    limit?: number;
+  limit?: number;
 };
 export type CoachChatHistoryResponse = CoachChatHistoryMessage[];

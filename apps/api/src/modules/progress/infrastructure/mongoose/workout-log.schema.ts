@@ -1,4 +1,4 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
 export type WorkoutLogDocument = HydratedDocument<WorkoutLogSchemaClass>;
 
@@ -13,7 +13,7 @@ export class WorkoutLogSchemaClass {
     repsDone: number;
   }>;
   feedback?: {
-    difficulty: "easy" | "medium" | "hard";
+    difficulty: 'easy' | 'medium' | 'hard';
     notes?: string;
   };
   date!: string;
@@ -21,8 +21,8 @@ export class WorkoutLogSchemaClass {
   updatedAt!: Date;
 }
 
-export const WORKOUT_LOG_MODEL_NAME = "WorkoutLog";
-export const WORKOUT_LOG_COLLECTION_NAME = "workout_logs";
+export const WORKOUT_LOG_MODEL_NAME = 'WorkoutLog';
+export const WORKOUT_LOG_COLLECTION_NAME = 'workout_logs';
 
 export const WorkoutLogSchema = new Schema<WorkoutLogSchemaClass>(
   {

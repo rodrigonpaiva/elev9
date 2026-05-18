@@ -1,14 +1,14 @@
-import "reflect-metadata";
+import 'reflect-metadata';
 
-import { plainToInstance } from "class-transformer";
-import { validate } from "class-validator";
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 
-import { GetDailyCheckInHistoryQueryDto } from "./get-daily-check-in-history.query.dto";
+import { GetDailyCheckInHistoryQueryDto } from './get-daily-check-in-history.query.dto';
 
-describe("GetDailyCheckInHistoryQueryDto", () => {
-  it("accepts a valid limit", async () => {
+describe('GetDailyCheckInHistoryQueryDto', () => {
+  it('accepts a valid limit', async () => {
     const dto = plainToInstance(GetDailyCheckInHistoryQueryDto, {
-      limit: "10",
+      limit: '10',
     });
 
     const errors = await validate(dto);
@@ -17,9 +17,9 @@ describe("GetDailyCheckInHistoryQueryDto", () => {
     expect(dto.limit).toBe(10);
   });
 
-  it("rejects a limit greater than 100", async () => {
+  it('rejects a limit greater than 100', async () => {
     const dto = plainToInstance(GetDailyCheckInHistoryQueryDto, {
-      limit: "101",
+      limit: '101',
     });
 
     const errors = await validate(dto);
@@ -27,9 +27,9 @@ describe("GetDailyCheckInHistoryQueryDto", () => {
     expect(errors).toHaveLength(1);
   });
 
-  it("rejects a non-integer limit", async () => {
+  it('rejects a non-integer limit', async () => {
     const dto = plainToInstance(GetDailyCheckInHistoryQueryDto, {
-      limit: "abc",
+      limit: 'abc',
     });
 
     const errors = await validate(dto);

@@ -130,13 +130,13 @@ O usuário deve sentir:
 
 ### 🔥 Contra apps tradicionais
 
-| Feature                  | Apps tradicionais | Elev9 Coach |
-|------------------------|------------------|------------|
-| Personalização         | Baixa            | Alta       |
-| Adaptação diária       | Não              | Sim        |
-| Integra treino + dieta | Não              | Sim        |
-| IA                     | Limitada         | Central    |
-| Feedback loop          | Não              | Sim        |
+| Feature                | Apps tradicionais | Elev9 Coach |
+| ---------------------- | ----------------- | ----------- |
+| Personalização         | Baixa             | Alta        |
+| Adaptação diária       | Não               | Sim         |
+| Integra treino + dieta | Não               | Sim         |
+| IA                     | Limitada          | Central     |
+| Feedback loop          | Não               | Sim         |
 
 ---
 
@@ -188,7 +188,7 @@ Muito importante:
 ❌ Não somos um app de exercícios  
 ❌ Não somos um contador de calorias  
 ❌ Não somos uma rede social fitness  
-❌ Não substituímos médicos  
+❌ Não substituímos médicos
 
 ---
 

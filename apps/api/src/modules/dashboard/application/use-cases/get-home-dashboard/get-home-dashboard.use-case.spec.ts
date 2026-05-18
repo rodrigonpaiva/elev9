@@ -1,22 +1,20 @@
-import { FitnessProfile } from "../../../../fitness/domain/entities/fitness-profile.entity";
-import { FitnessProfileRepository } from "../../../../fitness/domain/repositories/fitness-profile.repository";
-import { DailyCheckIn } from "../../../../progress/domain/entities/daily-check-in.entity";
-import { DailyCheckInRepository } from "../../../../progress/domain/repositories/daily-check-in.repository";
-import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
-import { WorkoutLogRepository } from "../../../../progress/domain/repositories/workout-log.repository";
-import { Clock } from "../../../../progress/domain/services/clock.service";
-import { TrainingPlan } from "../../../../training/domain/entities/training-plan.entity";
-import { TrainingPlanRepository } from "../../../../training/domain/repositories/training-plan.repository";
-import { UserProfile } from "../../../../users/domain/entities/user-profile.entity";
-import { UserProfileRepository } from "../../../../users/domain/repositories/user-profile.repository";
-import { BuildUserHealthContextService } from "../../../../ai/application/services/context-builder/build-user-health-context.service";
-import { DashboardAdaptiveSignalsService } from "../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service";
-import {
-  GET_HOME_DASHBOARD_ERROR_CODES,
-} from "./get-home-dashboard.errors";
-import { GetHomeDashboardUseCase } from "./get-home-dashboard.use-case";
+import { FitnessProfile } from '../../../../fitness/domain/entities/fitness-profile.entity';
+import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
+import { DailyCheckIn } from '../../../../progress/domain/entities/daily-check-in.entity';
+import { DailyCheckInRepository } from '../../../../progress/domain/repositories/daily-check-in.repository';
+import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
+import { WorkoutLogRepository } from '../../../../progress/domain/repositories/workout-log.repository';
+import { Clock } from '../../../../progress/domain/services/clock.service';
+import { TrainingPlan } from '../../../../training/domain/entities/training-plan.entity';
+import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
+import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
+import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
+import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
+import { DashboardAdaptiveSignalsService } from '../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service';
+import { GET_HOME_DASHBOARD_ERROR_CODES } from './get-home-dashboard.errors';
+import { GetHomeDashboardUseCase } from './get-home-dashboard.use-case';
 
-describe("GetHomeDashboardUseCase", () => {
+describe('GetHomeDashboardUseCase', () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
   let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
@@ -24,7 +22,7 @@ describe("GetHomeDashboardUseCase", () => {
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let clock: jest.Mocked<Clock>;
   let buildUserHealthContextService: {
-    build: jest.MockedFunction<BuildUserHealthContextService["build"]>;
+    build: jest.MockedFunction<BuildUserHealthContextService['build']>;
   };
   let dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService;
   let useCase: GetHomeDashboardUseCase;
@@ -56,26 +54,26 @@ describe("GetHomeDashboardUseCase", () => {
       findManyByUserProfileId: jest.fn().mockResolvedValue([]),
     };
     clock = {
-      now: jest.fn().mockReturnValue(new Date("2026-04-30T10:00:00.000Z")),
-      todayUtcDateString: jest.fn().mockReturnValue("2026-04-30"),
+      now: jest.fn().mockReturnValue(new Date('2026-04-30T10:00:00.000Z')),
+      todayUtcDateString: jest.fn().mockReturnValue('2026-04-30'),
     };
     buildUserHealthContextService = {
       build: jest.fn().mockResolvedValue({
-        authUserId: "auth_user_123",
-        userProfileId: "profile_123",
-        userName: "Rodrigo Paiva",
-        goal: "gain_muscle",
-        activityLevel: "high",
+        authUserId: 'auth_user_123',
+        userProfileId: 'profile_123',
+        userName: 'Rodrigo Paiva',
+        goal: 'gain_muscle',
+        activityLevel: 'high',
         weeklyFrequency: 4,
         adherenceScore: 0,
         currentStreak: 0,
         averageWorkoutDuration: 0,
-        fatigueLevel: "MODERATE",
+        fatigueLevel: 'MODERATE',
         availableEquipment: [],
         limitations: [],
         todayWorkout: null,
         recentWorkoutLogs: [],
-        generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+        generatedAt: new Date('2026-04-30T10:00:00.000Z'),
       }),
     };
     dashboardAdaptiveSignalsService = new DashboardAdaptiveSignalsService();
@@ -95,12 +93,12 @@ describe("GetHomeDashboardUseCase", () => {
   function mockUserProfile(): void {
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       new UserProfile({
-        id: "profile_123",
-        authUserId: "auth_user_123",
-        name: "Rodrigo Paiva",
-        language: "en-US",
-        timezone: "UTC",
-        status: "active",
+        id: 'profile_123',
+        authUserId: 'auth_user_123',
+        name: 'Rodrigo Paiva',
+        language: 'en-US',
+        timezone: 'UTC',
+        status: 'active',
         createdAt: new Date(),
         updatedAt: new Date(),
       }),
@@ -110,46 +108,48 @@ describe("GetHomeDashboardUseCase", () => {
   function mockFitnessProfile(): void {
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(
       new FitnessProfile({
-        id: "fitness_123",
-        userProfileId: "profile_123",
+        id: 'fitness_123',
+        userProfileId: 'profile_123',
         heightCm: 180,
         weightKg: 82.5,
-        goal: "gain_muscle",
-        activityLevel: "high",
+        goal: 'gain_muscle',
+        activityLevel: 'high',
         trainingAvailability: {
           daysPerWeek: 4,
           minutesPerSession: 60,
         },
         limitations: [],
-        status: "active",
+        status: 'active',
         createdAt: new Date(),
         updatedAt: new Date(),
       }),
     );
   }
 
-  function mockTrainingPlan(weeklySchedule?: TrainingPlan["weeklySchedule"]): void {
+  function mockTrainingPlan(
+    weeklySchedule?: TrainingPlan['weeklySchedule'],
+  ): void {
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
       new TrainingPlan({
-        id: "training_123",
-        fitnessProfileId: "fitness_123",
-        goal: "gain_muscle",
-        activityLevel: "high",
+        id: 'training_123',
+        fitnessProfileId: 'fitness_123',
+        goal: 'gain_muscle',
+        activityLevel: 'high',
         weeklySchedule: weeklySchedule ?? [
           {
             dayIndex: 4,
-            title: "Upper Body Strength",
-            focus: "upper_body_strength",
-            format: "strength",
-            intensity: "high",
+            title: 'Upper Body Strength',
+            focus: 'upper_body_strength',
+            format: 'strength',
+            intensity: 'high',
             exercises: [
-              { name: "push_up", sets: 4, reps: "8-12", restSeconds: 90 },
+              { name: 'push_up', sets: 4, reps: '8-12', restSeconds: 90 },
             ],
           },
         ],
-        status: "active",
-        createdAt: new Date("2026-04-29T10:00:00.000Z"),
-        updatedAt: new Date("2026-04-29T10:00:00.000Z"),
+        status: 'active',
+        createdAt: new Date('2026-04-29T10:00:00.000Z'),
+        updatedAt: new Date('2026-04-29T10:00:00.000Z'),
       }),
     );
   }
@@ -169,7 +169,7 @@ describe("GetHomeDashboardUseCase", () => {
         (entry) =>
           new DailyCheckIn({
             id: entry.id,
-            userProfileId: "profile_123",
+            userProfileId: 'profile_123',
             energyLevel: entry.energyLevel,
             sleepQuality: entry.sleepQuality,
             muscleSoreness: entry.muscleSoreness,
@@ -181,173 +181,186 @@ describe("GetHomeDashboardUseCase", () => {
     );
   }
 
-  it("returns fitnessProfile and trainingPlan as null when no active fitness profile exists", async () => {
+  it('returns fitnessProfile and trainingPlan as null when no active fitness profile exists', async () => {
     mockUserProfile();
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
 
     const result = await useCase.execute({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
 
     expect(result).toEqual({
       dashboard: {
         user: {
-          name: "Rodrigo Paiva",
+          name: 'Rodrigo Paiva',
         },
         fitnessProfile: null,
         trainingPlan: null,
         progressSummary: {
-          period: "week",
+          period: 'week',
           workoutsCompleted: 0,
           totalDurationMinutes: 0,
           averageDurationMinutes: 0,
           lastWorkoutDate: null,
         },
         recovery: {
-          fatigueLevel: "MODERATE",
-          recommendedIntensity: "medium",
-          recoveryTrend: "stable",
+          fatigueLevel: 'MODERATE',
+          recommendedIntensity: 'medium',
+          recoveryTrend: 'stable',
         },
         nutritionGuidance: {
-          priority: "consistency",
-          message: "Keep your meals consistent today to support recovery and routine.",
-          signals: ["low_consistency"],
+          priority: 'consistency',
+          message:
+            'Keep your meals consistent today to support recovery and routine.',
+          signals: ['low_consistency'],
         },
       },
     });
-    expect(trainingPlanRepository.findActiveByFitnessProfileId).not.toHaveBeenCalled();
-    expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).not.toHaveBeenCalled();
+    expect(
+      trainingPlanRepository.findActiveByFitnessProfileId,
+    ).not.toHaveBeenCalled();
+    expect(
+      workoutLogRepository.findByTrainingPlanIdsAndDateRange,
+    ).not.toHaveBeenCalled();
   });
 
-  it("returns trainingPlan as null and zero summary when no active training plan exists", async () => {
+  it('returns trainingPlan as null and zero summary when no active training plan exists', async () => {
     mockUserProfile();
     mockFitnessProfile();
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
 
     const result = await useCase.execute({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
 
     expect(result.dashboard.trainingPlan).toBeNull();
     expect(result.dashboard.progressSummary).toEqual({
-      period: "week",
+      period: 'week',
       workoutsCompleted: 0,
       totalDurationMinutes: 0,
       averageDurationMinutes: 0,
       lastWorkoutDate: null,
     });
     expect(result.dashboard.recovery).toEqual({
-      fatigueLevel: "MODERATE",
-      recommendedIntensity: "medium",
-      recoveryTrend: "stable",
+      fatigueLevel: 'MODERATE',
+      recommendedIntensity: 'medium',
+      recoveryTrend: 'stable',
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
-      priority: "consistency",
-      message: "Keep your meals consistent today to support recovery and routine.",
-      signals: ["low_consistency"],
+      priority: 'consistency',
+      message:
+        'Keep your meals consistent today to support recovery and routine.',
+      signals: ['low_consistency'],
     });
-    expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).not.toHaveBeenCalled();
+    expect(
+      workoutLogRepository.findByTrainingPlanIdsAndDateRange,
+    ).not.toHaveBeenCalled();
   });
 
-  it("returns todayWorkout when the UTC weekday matches weeklySchedule.dayIndex", async () => {
+  it('returns todayWorkout when the UTC weekday matches weeklySchedule.dayIndex', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
 
     const result = await useCase.execute({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
 
     expect(result.dashboard.trainingPlan).toEqual({
-      id: "training_123",
+      id: 'training_123',
       todayWorkout: {
         dayIndex: 4,
-        title: "Upper Body Strength",
-        focus: "upper_body_strength",
-        format: "strength",
-        intensity: "high",
+        title: 'Upper Body Strength',
+        focus: 'upper_body_strength',
+        format: 'strength',
+        intensity: 'high',
         exercises: [
-          { name: "push_up", sets: 4, reps: "8-12", restSeconds: 90 },
+          { name: 'push_up', sets: 4, reps: '8-12', restSeconds: 90 },
         ],
       },
     });
   });
 
-  it("returns todayWorkout as null when weeklySchedule does not contain the current UTC day", async () => {
+  it('returns todayWorkout as null when weeklySchedule does not contain the current UTC day', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan([
       {
         dayIndex: 1,
-        title: "Upper Body Strength",
-        focus: "upper_body_strength",
-        format: "strength",
-        intensity: "high",
+        title: 'Upper Body Strength',
+        focus: 'upper_body_strength',
+        format: 'strength',
+        intensity: 'high',
         exercises: [
-          { name: "push_up", sets: 4, reps: "8-12", restSeconds: 90 },
+          { name: 'push_up', sets: 4, reps: '8-12', restSeconds: 90 },
         ],
       },
     ]);
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
 
     const result = await useCase.execute({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
 
     expect(result.dashboard.trainingPlan).toEqual({
-      id: "training_123",
+      id: 'training_123',
       todayWorkout: null,
     });
   });
 
-  it("builds the weekly summary correctly", async () => {
+  it('builds the weekly summary correctly', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
     workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
       new WorkoutLog({
-        id: "log_1",
-        trainingPlanId: "training_123",
+        id: 'log_1',
+        trainingPlanId: 'training_123',
         workoutDayIndex: 1,
         durationMinutes: 45,
         completedExercises: [],
-        date: "2026-04-29",
+        date: '2026-04-29',
         createdAt: new Date(),
         updatedAt: new Date(),
       }),
       new WorkoutLog({
-        id: "log_2",
-        trainingPlanId: "training_123",
+        id: 'log_2',
+        trainingPlanId: 'training_123',
         workoutDayIndex: 4,
         durationMinutes: 50,
         completedExercises: [],
-        date: "2026-04-30",
+        date: '2026-04-30',
         createdAt: new Date(),
         updatedAt: new Date(),
       }),
     ]);
 
     const result = await useCase.execute({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
 
     expect(result.dashboard.progressSummary).toEqual({
-      period: "week",
+      period: 'week',
       workoutsCompleted: 2,
       totalDurationMinutes: 95,
       averageDurationMinutes: 47.5,
-      lastWorkoutDate: "2026-04-30",
+      lastWorkoutDate: '2026-04-30',
     });
     expect(result.dashboard.recovery).toEqual({
-      fatigueLevel: "MODERATE",
-      recommendedIntensity: "medium",
-      recoveryTrend: "stable",
+      fatigueLevel: 'MODERATE',
+      recommendedIntensity: 'medium',
+      recoveryTrend: 'stable',
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
-      priority: "consistency",
-      message: "Keep your meals consistent today to support recovery and routine.",
-      signals: ["low_consistency"],
+      priority: 'consistency',
+      message:
+        'Keep your meals consistent today to support recovery and routine.',
+      signals: ['low_consistency'],
     });
   });
 
@@ -355,135 +368,146 @@ describe("GetHomeDashboardUseCase", () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
 
     await useCase.execute({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
     });
 
-    expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).toHaveBeenCalledWith({
-      trainingPlanIds: ["training_123"],
-      startDate: "2026-04-24",
-      endDate: "2026-04-30",
+    expect(
+      workoutLogRepository.findByTrainingPlanIdsAndDateRange,
+    ).toHaveBeenCalledWith({
+      trainingPlanIds: ['training_123'],
+      startDate: '2026-04-24',
+      endDate: '2026-04-30',
     });
   });
 
-  it("returns USER_PROFILE_NOT_FOUND when the session user has no user profile", async () => {
+  it('returns USER_PROFILE_NOT_FOUND when the session user has no user profile', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);
 
     await expect(
       useCase.execute({
-        authUserId: "auth_user_123",
+        authUserId: 'auth_user_123',
       }),
     ).rejects.toMatchObject({
       code: GET_HOME_DASHBOARD_ERROR_CODES.USER_PROFILE_NOT_FOUND,
     });
   });
 
-  it("returns recovery with HIGH fatigue mapped to low intensity", async () => {
+  it('returns recovery with HIGH fatigue mapped to low intensity', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     buildUserHealthContextService.build.mockResolvedValue({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       adherenceScore: 0,
       currentStreak: 6,
       averageWorkoutDuration: 80,
-      fatigueLevel: "HIGH",
+      fatigueLevel: 'HIGH',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
       recentWorkoutLogs: [],
-      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
       latestCheckIn: {
         energyLevel: 2,
         sleepQuality: 2,
         muscleSoreness: 4,
         motivationLevel: 3,
-        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+        createdAt: new Date('2026-04-30T09:00:00.000Z'),
       },
     });
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.recovery).toEqual({
-      fatigueLevel: "HIGH",
-      recommendedIntensity: "low",
-      recoveryTrend: "stable",
+      fatigueLevel: 'HIGH',
+      recommendedIntensity: 'low',
+      recoveryTrend: 'stable',
       latestCheckIn: {
         energyLevel: 2,
         sleepQuality: 2,
         muscleSoreness: 4,
         motivationLevel: 3,
-        createdAt: "2026-04-30T09:00:00.000Z",
+        createdAt: '2026-04-30T09:00:00.000Z',
       },
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
-      priority: "recovery",
-      message: "Focus on recovery meals and hydration today.",
-      signals: ["high_fatigue", "poor_sleep", "high_soreness"],
+      priority: 'recovery',
+      message: 'Focus on recovery meals and hydration today.',
+      signals: ['high_fatigue', 'poor_sleep', 'high_soreness'],
     });
   });
 
-  it("returns recovery with LOW fatigue mapped to normal intensity", async () => {
+  it('returns recovery with LOW fatigue mapped to normal intensity', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     buildUserHealthContextService.build.mockResolvedValue({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       adherenceScore: 0,
       currentStreak: 3,
       averageWorkoutDuration: 40,
-      fatigueLevel: "LOW",
+      fatigueLevel: 'LOW',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
       recentWorkoutLogs: [],
-      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
       latestCheckIn: undefined,
     });
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.recovery).toEqual({
-      fatigueLevel: "LOW",
-      recommendedIntensity: "normal",
-      recoveryTrend: "stable",
+      fatigueLevel: 'LOW',
+      recommendedIntensity: 'normal',
+      recoveryTrend: 'stable',
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
-      priority: "consistency",
-      message: "Keep your meals consistent today to support recovery and routine.",
-      signals: ["low_consistency"],
+      priority: 'consistency',
+      message:
+        'Keep your meals consistent today to support recovery and routine.',
+      signals: ['low_consistency'],
     });
   });
 
-  it("returns consistency guidance when meal frequency is low", async () => {
+  it('returns consistency guidance when meal frequency is low', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     buildUserHealthContextService.build.mockResolvedValue({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       adherenceScore: 76,
       currentStreak: 2,
       averageWorkoutDuration: 48,
-      fatigueLevel: "MODERATE",
+      fatigueLevel: 'MODERATE',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
       recentWorkoutLogs: [],
-      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
       latestCheckIn: {
         energyLevel: 3,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 3,
-        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+        createdAt: new Date('2026-04-30T09:00:00.000Z'),
       },
       nutritionProfile: {
-        goal: "maintenance",
+        goal: 'maintenance',
         mealsPerDay: 2,
         dietaryRestrictions: [],
         allergies: [],
@@ -492,168 +516,178 @@ describe("GetHomeDashboardUseCase", () => {
       },
     });
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.nutritionGuidance).toEqual({
-      priority: "consistency",
-      message: "Keep your meals consistent today to support recovery and routine.",
-      signals: ["low_meal_frequency"],
+      priority: 'consistency',
+      message:
+        'Keep your meals consistent today to support recovery and routine.',
+      signals: ['low_meal_frequency'],
     });
   });
 
-  it("returns performance guidance when recovery is low-fatigue and muscle gain is active", async () => {
+  it('returns performance guidance when recovery is low-fatigue and muscle gain is active', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     buildUserHealthContextService.build.mockResolvedValue({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       adherenceScore: 82,
       currentStreak: 4,
       averageWorkoutDuration: 55,
-      fatigueLevel: "LOW",
+      fatigueLevel: 'LOW',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
       recentWorkoutLogs: [],
-      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
       latestCheckIn: {
         energyLevel: 4,
         sleepQuality: 4,
         muscleSoreness: 1,
         motivationLevel: 5,
-        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+        createdAt: new Date('2026-04-30T09:00:00.000Z'),
       },
       nutritionProfile: {
-        goal: "muscle_gain",
+        goal: 'muscle_gain',
         mealsPerDay: 4,
         dietaryRestrictions: [],
         allergies: [],
         dislikedFoods: [],
-        preferredFoods: ["rice", "eggs"],
+        preferredFoods: ['rice', 'eggs'],
       },
     });
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.nutritionGuidance).toEqual({
-      priority: "performance",
-      message: "Support today's training with consistent meals around your session.",
-      signals: ["muscle_gain_goal", "high_motivation", "low_fatigue"],
+      priority: 'performance',
+      message:
+        "Support today's training with consistent meals around your session.",
+      signals: ['muscle_gain_goal', 'high_motivation', 'low_fatigue'],
     });
   });
 
-  it("returns a safe consistency fallback when no nutrition profile exists", async () => {
+  it('returns a safe consistency fallback when no nutrition profile exists', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     buildUserHealthContextService.build.mockResolvedValue({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       adherenceScore: 88,
       currentStreak: 3,
       averageWorkoutDuration: 42,
-      fatigueLevel: "LOW",
+      fatigueLevel: 'LOW',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
       recentWorkoutLogs: [],
-      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
       latestCheckIn: undefined,
     });
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.nutritionGuidance).toEqual({
-      priority: "consistency",
-      message: "Keep your nutrition routine consistent today.",
-      signals: ["general_consistency"],
+      priority: 'consistency',
+      message: 'Keep your nutrition routine consistent today.',
+      signals: ['general_consistency'],
     });
   });
 
-  it("includes recovery trend in recovery guidance signals when recovery is declining", async () => {
+  it('includes recovery trend in recovery guidance signals when recovery is declining', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     buildUserHealthContextService.build.mockResolvedValue({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       adherenceScore: 82,
       currentStreak: 3,
       averageWorkoutDuration: 50,
-      fatigueLevel: "MODERATE",
+      fatigueLevel: 'MODERATE',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
       recentWorkoutLogs: [],
-      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
       latestCheckIn: {
         energyLevel: 3,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 3,
-        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+        createdAt: new Date('2026-04-30T09:00:00.000Z'),
       },
     });
     mockDailyCheckInHistory([
       {
-        id: "check_in_3",
+        id: 'check_in_3',
         energyLevel: 2,
         sleepQuality: 2,
         muscleSoreness: 4,
         motivationLevel: 2,
-        createdAt: "2026-04-30T09:00:00.000Z",
+        createdAt: '2026-04-30T09:00:00.000Z',
       },
       {
-        id: "check_in_2",
+        id: 'check_in_2',
         energyLevel: 3,
         sleepQuality: 3,
         muscleSoreness: 3,
         motivationLevel: 3,
-        createdAt: "2026-04-29T09:00:00.000Z",
+        createdAt: '2026-04-29T09:00:00.000Z',
       },
       {
-        id: "check_in_1",
+        id: 'check_in_1',
         energyLevel: 4,
         sleepQuality: 4,
         muscleSoreness: 1,
         motivationLevel: 4,
-        createdAt: "2026-04-28T09:00:00.000Z",
+        createdAt: '2026-04-28T09:00:00.000Z',
       },
     ]);
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.nutritionGuidance.signals).toContain(
-      "needs_recovery_trend",
+      'needs_recovery_trend',
     );
   });
 
-  it("includes improving recovery in performance guidance signals when available", async () => {
+  it('includes improving recovery in performance guidance signals when available', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     buildUserHealthContextService.build.mockResolvedValue({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       adherenceScore: 82,
       currentStreak: 4,
       averageWorkoutDuration: 55,
-      fatigueLevel: "LOW",
+      fatigueLevel: 'LOW',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
       recentWorkoutLogs: [],
-      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
       latestCheckIn: {
         energyLevel: 4,
         sleepQuality: 4,
         muscleSoreness: 1,
         motivationLevel: 5,
-        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+        createdAt: new Date('2026-04-30T09:00:00.000Z'),
       },
       nutritionProfile: {
-        goal: "muscle_gain",
+        goal: 'muscle_gain',
         mealsPerDay: 4,
         dietaryRestrictions: [],
         allergies: [],
@@ -663,177 +697,185 @@ describe("GetHomeDashboardUseCase", () => {
     });
     mockDailyCheckInHistory([
       {
-        id: "check_in_3",
+        id: 'check_in_3',
         energyLevel: 4,
         sleepQuality: 4,
         muscleSoreness: 1,
         motivationLevel: 4,
-        createdAt: "2026-04-30T09:00:00.000Z",
+        createdAt: '2026-04-30T09:00:00.000Z',
       },
       {
-        id: "check_in_2",
+        id: 'check_in_2',
         energyLevel: 3,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 3,
-        createdAt: "2026-04-29T09:00:00.000Z",
+        createdAt: '2026-04-29T09:00:00.000Z',
       },
       {
-        id: "check_in_1",
+        id: 'check_in_1',
         energyLevel: 2,
         sleepQuality: 2,
         muscleSoreness: 4,
         motivationLevel: 3,
-        createdAt: "2026-04-28T09:00:00.000Z",
+        createdAt: '2026-04-28T09:00:00.000Z',
       },
     ]);
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.nutritionGuidance.signals).toEqual([
-      "muscle_gain_goal",
-      "high_motivation",
-      "low_fatigue",
+      'muscle_gain_goal',
+      'high_motivation',
+      'low_fatigue',
     ]);
   });
 
-  it("returns improving recovery trend with positive recent check-in signals", async () => {
+  it('returns improving recovery trend with positive recent check-in signals', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     mockDailyCheckInHistory([
       {
-        id: "check_in_3",
+        id: 'check_in_3',
         energyLevel: 4,
         sleepQuality: 4,
         muscleSoreness: 1,
         motivationLevel: 4,
-        createdAt: "2026-04-30T09:00:00.000Z",
+        createdAt: '2026-04-30T09:00:00.000Z',
       },
       {
-        id: "check_in_2",
+        id: 'check_in_2',
         energyLevel: 3,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 3,
-        createdAt: "2026-04-29T09:00:00.000Z",
+        createdAt: '2026-04-29T09:00:00.000Z',
       },
       {
-        id: "check_in_1",
+        id: 'check_in_1',
         energyLevel: 2,
         sleepQuality: 2,
         muscleSoreness: 4,
         motivationLevel: 3,
-        createdAt: "2026-04-28T09:00:00.000Z",
+        createdAt: '2026-04-28T09:00:00.000Z',
       },
     ]);
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(result.dashboard.recovery.recoveryTrend).toBe("improving");
+    expect(result.dashboard.recovery.recoveryTrend).toBe('improving');
   });
 
-  it("returns needs_recovery trend with negative recent check-in signals", async () => {
+  it('returns needs_recovery trend with negative recent check-in signals', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     mockDailyCheckInHistory([
       {
-        id: "check_in_3",
+        id: 'check_in_3',
         energyLevel: 2,
         sleepQuality: 2,
         muscleSoreness: 4,
         motivationLevel: 2,
-        createdAt: "2026-04-30T09:00:00.000Z",
+        createdAt: '2026-04-30T09:00:00.000Z',
       },
       {
-        id: "check_in_2",
+        id: 'check_in_2',
         energyLevel: 3,
         sleepQuality: 3,
         muscleSoreness: 3,
         motivationLevel: 3,
-        createdAt: "2026-04-29T09:00:00.000Z",
+        createdAt: '2026-04-29T09:00:00.000Z',
       },
       {
-        id: "check_in_1",
+        id: 'check_in_1',
         energyLevel: 4,
         sleepQuality: 4,
         muscleSoreness: 1,
         motivationLevel: 4,
-        createdAt: "2026-04-28T09:00:00.000Z",
+        createdAt: '2026-04-28T09:00:00.000Z',
       },
     ]);
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(result.dashboard.recovery.recoveryTrend).toBe("needs_recovery");
+    expect(result.dashboard.recovery.recoveryTrend).toBe('needs_recovery');
   });
 
-  it("returns stable recovery trend with mixed recent check-in signals", async () => {
+  it('returns stable recovery trend with mixed recent check-in signals', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     mockDailyCheckInHistory([
       {
-        id: "check_in_3",
+        id: 'check_in_3',
         energyLevel: 4,
         sleepQuality: 2,
         muscleSoreness: 2,
         motivationLevel: 3,
-        createdAt: "2026-04-30T09:00:00.000Z",
+        createdAt: '2026-04-30T09:00:00.000Z',
       },
       {
-        id: "check_in_2",
+        id: 'check_in_2',
         energyLevel: 3,
         sleepQuality: 3,
         muscleSoreness: 3,
         motivationLevel: 3,
-        createdAt: "2026-04-29T09:00:00.000Z",
+        createdAt: '2026-04-29T09:00:00.000Z',
       },
       {
-        id: "check_in_1",
+        id: 'check_in_1',
         energyLevel: 2,
         sleepQuality: 4,
         muscleSoreness: 4,
         motivationLevel: 3,
-        createdAt: "2026-04-28T09:00:00.000Z",
+        createdAt: '2026-04-28T09:00:00.000Z',
       },
     ]);
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(result.dashboard.recovery.recoveryTrend).toBe("stable");
+    expect(result.dashboard.recovery.recoveryTrend).toBe('stable');
   });
 
-  it("returns stable recovery trend when there are fewer than three check-ins", async () => {
+  it('returns stable recovery trend when there are fewer than three check-ins', async () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     mockDailyCheckInHistory([
       {
-        id: "check_in_2",
+        id: 'check_in_2',
         energyLevel: 4,
         sleepQuality: 4,
         muscleSoreness: 2,
         motivationLevel: 4,
-        createdAt: "2026-04-30T09:00:00.000Z",
+        createdAt: '2026-04-30T09:00:00.000Z',
       },
       {
-        id: "check_in_1",
+        id: 'check_in_1',
         energyLevel: 3,
         sleepQuality: 3,
         muscleSoreness: 3,
         motivationLevel: 3,
-        createdAt: "2026-04-29T09:00:00.000Z",
+        createdAt: '2026-04-29T09:00:00.000Z',
       },
     ]);
 
-    const result = await useCase.execute({ authUserId: "auth_user_123" });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(result.dashboard.recovery.recoveryTrend).toBe("stable");
+    expect(result.dashboard.recovery.recoveryTrend).toBe('stable');
   });
 });

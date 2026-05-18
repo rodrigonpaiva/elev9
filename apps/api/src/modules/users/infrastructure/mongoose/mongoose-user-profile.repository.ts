@@ -1,21 +1,21 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 import {
   CREATE_USER_PROFILE_ERROR_CODES,
   CreateUserProfileError,
-} from "../../application/use-cases/create-user-profile/create-user-profile.errors";
-import { UserProfile } from "../../domain/entities/user-profile.entity";
+} from '../../application/use-cases/create-user-profile/create-user-profile.errors';
+import { UserProfile } from '../../domain/entities/user-profile.entity';
 import {
   CreateUserProfileRepositoryInput,
   UserProfileRepository,
-} from "../../domain/repositories/user-profile.repository";
+} from '../../domain/repositories/user-profile.repository';
 import {
   USER_PROFILE_MODEL_NAME,
   UserProfileDocument,
   UserProfileSchemaClass,
-} from "./user-profile.schema";
+} from './user-profile.schema';
 
 @Injectable()
 export class MongooseUserProfileRepository implements UserProfileRepository {
@@ -43,7 +43,7 @@ export class MongooseUserProfileRepository implements UserProfileRepository {
       if (this.isDuplicateAuthUserIdError(error)) {
         throw new CreateUserProfileError(
           CREATE_USER_PROFILE_ERROR_CODES.ALREADY_EXISTS,
-          "User profile already exists.",
+          'User profile already exists.',
         );
       }
 
@@ -67,7 +67,7 @@ export class MongooseUserProfileRepository implements UserProfileRepository {
   }
 
   private isDuplicateAuthUserIdError(error: unknown): boolean {
-    if (!error || typeof error !== "object") {
+    if (!error || typeof error !== 'object') {
       return false;
     }
 
@@ -79,8 +79,8 @@ export class MongooseUserProfileRepository implements UserProfileRepository {
 
     return (
       maybeError.code === 11000 &&
-      ("authUserId" in (maybeError.keyPattern ?? {}) ||
-        "authUserId" in (maybeError.keyValue ?? {}))
+      ('authUserId' in (maybeError.keyPattern ?? {}) ||
+        'authUserId' in (maybeError.keyValue ?? {}))
     );
   }
 }

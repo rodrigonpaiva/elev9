@@ -2,14 +2,14 @@ export class CreateTrainingPlanResponseDto {
   trainingPlan!: {
     id: string;
     fitnessProfileId: string;
-    goal: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel: "low" | "medium" | "high";
+    goal: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel: 'low' | 'medium' | 'high';
     weeklySchedule: Array<{
       dayIndex: number;
       title: string;
       focus: string;
-      format: "strength" | "circuit";
-      intensity: "low" | "moderate" | "high";
+      format: 'strength' | 'circuit';
+      intensity: 'low' | 'moderate' | 'high';
       exercises: Array<{
         name: string;
         sets: number;
@@ -17,7 +17,7 @@ export class CreateTrainingPlanResponseDto {
         restSeconds: number;
       }>;
     }>;
-    status: "active";
+    status: 'active';
     createdAt: string;
   };
 }

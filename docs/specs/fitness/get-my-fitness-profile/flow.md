@@ -77,16 +77,16 @@ Retornar apenas:
 ```ts
 {
   fitnessProfile: {
-    id,
-    userProfileId,
-    heightCm,
-    weightKg,
-    goal,
-    activityLevel,
-    trainingAvailability,
-    limitations,
-    status,
-    createdAt
+    (id,
+      userProfileId,
+      heightCm,
+      weightKg,
+      goal,
+      activityLevel,
+      trainingAvailability,
+      limitations,
+      status,
+      createdAt);
   }
 }
 ```

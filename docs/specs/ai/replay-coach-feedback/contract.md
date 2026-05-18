@@ -122,9 +122,7 @@ Observações:
       "Focus on finishing your planned workout window",
       "Keep your current plan and monitor recovery between sessions"
     ],
-    "influences": [
-      "training:low_consistency"
-    ]
+    "influences": ["training:low_consistency"]
   },
   "replayed": {
     "message": "Good start this week. You already logged your first workouts and can build consistency from here.",
@@ -138,9 +136,7 @@ Observações:
       "Focus on finishing your planned workout window",
       "Keep your current plan and monitor recovery between sessions"
     ],
-    "influences": [
-      "training:low_consistency"
-    ]
+    "influences": ["training:low_consistency"]
   },
   "matches": {
     "message": true,

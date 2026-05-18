@@ -2,7 +2,7 @@ import {
   ActivityLevel,
   FitnessGoal,
   FitnessProfileLimitation,
-} from "../../../domain/entities/fitness-profile.entity";
+} from '../../../domain/entities/fitness-profile.entity';
 
 export type CreateFitnessProfileOutput = {
   fitnessProfile: {
@@ -17,7 +17,7 @@ export type CreateFitnessProfileOutput = {
       minutesPerSession: number;
     };
     limitations: FitnessProfileLimitation[];
-    status: "active";
+    status: 'active';
     createdAt: Date;
   };
 };

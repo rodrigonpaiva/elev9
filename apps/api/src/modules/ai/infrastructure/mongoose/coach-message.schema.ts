@@ -1,14 +1,14 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
 export type CoachMessageDocument = HydratedDocument<CoachMessageSchemaClass>;
 
 export class CoachMessageSchemaClass {
   _id!: Types.ObjectId;
   conversationId!: string;
-  role!: "user" | "assistant";
+  role!: 'user' | 'assistant';
   content!: string;
   metadata?: {
-    source?: "heuristic" | "llm";
+    source?: 'heuristic' | 'llm';
     provider?: string;
     model?: string;
     promptVersion?: string;
@@ -17,8 +17,8 @@ export class CoachMessageSchemaClass {
   updatedAt!: Date;
 }
 
-export const COACH_MESSAGE_MODEL_NAME = "CoachMessage";
-export const COACH_MESSAGE_COLLECTION_NAME = "coach_messages";
+export const COACH_MESSAGE_MODEL_NAME = 'CoachMessage';
+export const COACH_MESSAGE_COLLECTION_NAME = 'coach_messages';
 
 export const CoachMessageSchema = new Schema<CoachMessageSchemaClass>(
   {

@@ -1,12 +1,12 @@
-import { Injectable } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
 import {
   AccessTokenSigner,
   AccessTokenSignerPayload,
-} from "../../domain/services/access-token-signer.service";
+} from '../../domain/services/access-token-signer.service';
 
-const ACCESS_TOKEN_EXPIRES_IN = "15m";
+const ACCESS_TOKEN_EXPIRES_IN = '15m';
 
 @Injectable()
 export class JwtAccessTokenSignerService implements AccessTokenSigner {

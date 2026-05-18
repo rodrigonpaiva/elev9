@@ -1,15 +1,15 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren } from 'react';
 import {
   Platform,
   StyleSheet,
   View,
   type ViewProps,
   type ViewStyle,
-} from "react-native";
+} from 'react-native';
 
-import { colors } from "../theme/colors";
-import { radius } from "../theme/radius";
-import { spacing } from "../theme/spacing";
+import { colors } from '../theme/colors';
+import { radius } from '../theme/radius';
+import { spacing } from '../theme/spacing';
 
 export type CardProps = PropsWithChildren<
   ViewProps & {
@@ -32,8 +32,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.card,
     padding: spacing.xl,
-    shadowColor: "#000000",
-    shadowOpacity: Platform.OS === "web" ? 0.18 : 0.24,
+    shadowColor: '#000000',
+    shadowOpacity: Platform.OS === 'web' ? 0.18 : 0.24,
     shadowRadius: 20,
     shadowOffset: {
       width: 0,

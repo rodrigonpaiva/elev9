@@ -1,4 +1,4 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
 export type AuthUserDocument = HydratedDocument<AuthUserSchemaClass>;
 
@@ -11,8 +11,8 @@ export class AuthUserSchemaClass {
   updatedAt!: Date;
 }
 
-export const AUTH_USER_MODEL_NAME = "AuthUser";
-export const AUTH_USER_COLLECTION_NAME = "auth_users";
+export const AUTH_USER_MODEL_NAME = 'AuthUser';
+export const AUTH_USER_COLLECTION_NAME = 'auth_users';
 
 export const AuthUserSchema = new Schema<AuthUserSchemaClass>(
   {

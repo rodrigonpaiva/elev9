@@ -96,8 +96,7 @@ Retornar apenas:
 ```ts
 {
   user: {
-    id,
-    email
+    (id, email);
   }
 }
 ```

@@ -1,19 +1,19 @@
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
-import type { RouteProp } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { ApiClientError } from "@elev9/api-client";
-import { Button, Card, Screen, Text, colors } from "@elev9/ui";
+import { ApiClientError } from '@elev9/api-client';
+import { Button, Card, Screen, Text, colors } from '@elev9/ui';
 
-import { mobileApiClient } from "../api/client";
-import type { RootStackParamList } from "../navigation/app-navigator";
+import { mobileApiClient } from '../api/client';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 export function CreateTrainingPlanScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const route = useRoute<RouteProp<RootStackParamList, "CreateTrainingPlan">>();
+  const route = useRoute<RouteProp<RootStackParamList, 'CreateTrainingPlan'>>();
   const { fitnessProfileId, goal, activityLevel } = route.params;
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,12 +24,12 @@ export function CreateTrainingPlanScreen() {
 
     try {
       await mobileApiClient.training.createPlan({ fitnessProfileId });
-      navigation.replace("MainTabs");
+      navigation.replace('MainTabs');
     } catch (error) {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to generate your training plan.");
+        setErrorMessage('Unable to generate your training plan.');
       }
     } finally {
       setIsSubmitting(false);
@@ -71,7 +71,9 @@ export function CreateTrainingPlanScreen() {
             </View>
           ) : null}
 
-          {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+          {errorMessage ? (
+            <Text style={styles.error}>{errorMessage}</Text>
+          ) : null}
 
           <Button
             label="Generate my plan"
@@ -87,7 +89,7 @@ export function CreateTrainingPlanScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    justifyContent: "center",
+    justifyContent: 'center',
     paddingTop: 32,
     paddingBottom: 32,
   },
@@ -99,9 +101,9 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 1.1,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     color: colors.primary,
   },
   title: {
@@ -118,24 +120,24 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: "#0b1220",
+    backgroundColor: '#0b1220',
     padding: 14,
   },
   summaryText: {
     color: colors.text,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   error: {
-    color: "#fca5a5",
+    color: '#fca5a5',
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
 });
 
 function formatLabel(value: string): string {
   return value
-    .split("_")
+    .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+    .join(' ');
 }

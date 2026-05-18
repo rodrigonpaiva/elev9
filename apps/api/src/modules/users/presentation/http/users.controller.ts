@@ -10,16 +10,16 @@ import {
   Req,
   UnauthorizedException,
   UseGuards,
-} from "@nestjs/common";
+} from '@nestjs/common';
 
 import {
   CREATE_USER_PROFILE_ERROR_CODES,
   CreateUserProfileError,
-} from "../../application/use-cases/create-user-profile/create-user-profile.errors";
-import { CreateUserProfileUseCase } from "../../application/use-cases/create-user-profile/create-user-profile.use-case";
-import { CreateUserProfileRequestDto } from "./dto/create-user-profile.request.dto";
-import { CreateUserProfileResponseDto } from "./dto/create-user-profile.response.dto";
-import { AuthSessionGuard } from "./guards/auth-session.guard";
+} from '../../application/use-cases/create-user-profile/create-user-profile.errors';
+import { CreateUserProfileUseCase } from '../../application/use-cases/create-user-profile/create-user-profile.use-case';
+import { CreateUserProfileRequestDto } from './dto/create-user-profile.request.dto';
+import { CreateUserProfileResponseDto } from './dto/create-user-profile.response.dto';
+import { AuthSessionGuard } from './guards/auth-session.guard';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -28,13 +28,13 @@ type RequestWithAuthUser = {
   };
 };
 
-@Controller("users")
+@Controller('users')
 export class UsersController {
   constructor(
     private readonly createUserProfileUseCase: CreateUserProfileUseCase,
   ) {}
 
-  @Post("profile")
+  @Post('profile')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.CREATED)
   async createProfile(
@@ -43,7 +43,7 @@ export class UsersController {
   ): Promise<CreateUserProfileResponseDto> {
     try {
       const result = await this.createUserProfileUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         name: body.name,
         birthDate: body.birthDate,
         gender: body.gender,
@@ -69,7 +69,7 @@ export class UsersController {
 
   private handleError(error: unknown): never {
     if (!(error instanceof CreateUserProfileError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -95,7 +95,7 @@ export class UsersController {
       default:
         throw new InternalServerErrorException({
           code: CREATE_USER_PROFILE_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }

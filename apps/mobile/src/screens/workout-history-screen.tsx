@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
   RefreshControl,
   StyleSheet,
   View,
-} from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
-import { ApiClientError } from "@elev9/api-client";
-import type { WorkoutHistoryResponse } from "@elev9/types";
+import { ApiClientError } from '@elev9/api-client';
+import type { WorkoutHistoryResponse } from '@elev9/types';
 import {
   Badge,
   Button,
@@ -18,11 +18,11 @@ import {
   Screen,
   SectionHeader,
   Text,
-} from "@elev9/ui";
+} from '@elev9/ui';
 
-import { mobileApiClient } from "../api/client";
+import { mobileApiClient } from '../api/client';
 
-type WorkoutHistoryItem = WorkoutHistoryResponse["workoutLogs"][number];
+type WorkoutHistoryItem = WorkoutHistoryResponse['workoutLogs'][number];
 
 const INITIAL_LIMIT = 20;
 
@@ -33,34 +33,36 @@ export function WorkoutHistoryScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const entrance = useRef(new Animated.Value(0)).current;
 
-  const loadWorkoutHistory = useCallback(async (options?: { refresh?: boolean }) => {
-    if (options?.refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-
-    setErrorMessage(null);
-
-    try {
-      const response = await mobileApiClient.progress.getWorkoutHistory(
-        INITIAL_LIMIT,
-      );
-      setWorkoutLogs(response.workoutLogs);
-    } catch (error) {
-      if (error instanceof ApiClientError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("Unable to load workout history.");
-      }
-    } finally {
+  const loadWorkoutHistory = useCallback(
+    async (options?: { refresh?: boolean }) => {
       if (options?.refresh) {
-        setIsRefreshing(false);
+        setIsRefreshing(true);
       } else {
-        setIsLoading(false);
+        setIsLoading(true);
       }
-    }
-  }, []);
+
+      setErrorMessage(null);
+
+      try {
+        const response =
+          await mobileApiClient.progress.getWorkoutHistory(INITIAL_LIMIT);
+        setWorkoutLogs(response.workoutLogs);
+      } catch (error) {
+        if (error instanceof ApiClientError) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage('Unable to load workout history.');
+        }
+      } finally {
+        if (options?.refresh) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
+      }
+    },
+    [],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -146,7 +148,7 @@ export function WorkoutHistoryScreen() {
           <View style={styles.listContent}>
             <SectionHeader
               title="Recent sessions"
-              subtitle={`${workoutLogs.length} logged workout${workoutLogs.length > 1 ? "s" : ""}.`}
+              subtitle={`${workoutLogs.length} logged workout${workoutLogs.length > 1 ? 's' : ''}.`}
             />
             {workoutLogs.map((item) => (
               <Card key={item.id} style={styles.itemCard}>
@@ -157,7 +159,10 @@ export function WorkoutHistoryScreen() {
                       Workout Day {item.workoutDayIndex + 1}
                     </Text>
                   </View>
-                  <Badge label={`${item.durationMinutes} min`} variant="primary" />
+                  <Badge
+                    label={`${item.durationMinutes} min`}
+                    variant="primary"
+                  />
                 </View>
 
                 <View style={styles.metricRow}>
@@ -166,7 +171,7 @@ export function WorkoutHistoryScreen() {
                     value={
                       item.feedback?.difficulty
                         ? capitalize(item.feedback.difficulty)
-                        : "Not rated"
+                        : 'Not rated'
                     }
                   />
                   <MetricPill
@@ -202,12 +207,12 @@ function MetricPill({ label, value }: { label: string; value: string }) {
 function formatDate(value: string): string {
   const date = new Date(`${value}T00:00:00.000Z`);
 
-  return new Intl.DateTimeFormat("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
   }).format(date);
 }
 
@@ -234,8 +239,8 @@ const styles = StyleSheet.create({
   },
   loadingState: {
     minHeight: 260,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
   },
   loadingText: {
@@ -248,7 +253,7 @@ const styles = StyleSheet.create({
     color: colors.danger,
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
   listContent: {
     gap: 14,
@@ -258,9 +263,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   itemTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     gap: 12,
   },
   itemTitleBlock: {
@@ -271,14 +276,14 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     lineHeight: 24,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   itemDay: {
     color: colors.mutedText,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   metricRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   metricPill: {
@@ -294,15 +299,15 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "700",
-    textTransform: "uppercase",
+    fontWeight: '700',
+    textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   metricValue: {
     color: colors.text,
     fontSize: 16,
     lineHeight: 22,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   notesBox: {
     gap: 6,
@@ -316,8 +321,8 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "700",
-    textTransform: "uppercase",
+    fontWeight: '700',
+    textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   notesText: {

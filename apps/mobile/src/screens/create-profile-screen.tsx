@@ -1,18 +1,18 @@
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { ApiClientError } from "@elev9/api-client";
-import { Button, Card, Input, Screen, Text, colors } from "@elev9/ui";
+import { ApiClientError } from '@elev9/api-client';
+import { Button, Card, Input, Screen, Text, colors } from '@elev9/ui';
 
-import { mobileApiClient } from "../api/client";
-import type { RootStackParamList } from "../navigation/app-navigator";
+import { mobileApiClient } from '../api/client';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 export function CreateProfileScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,12 +22,12 @@ export function CreateProfileScreen() {
     name.length === 0
       ? null
       : !isValid
-        ? "Enter a name between 2 and 80 characters."
+        ? 'Enter a name between 2 and 80 characters.'
         : null;
 
   async function handleCreateProfile() {
     if (!isValid) {
-      setErrorMessage("Name must contain between 2 and 80 characters.");
+      setErrorMessage('Name must contain between 2 and 80 characters.');
       return;
     }
 
@@ -38,12 +38,12 @@ export function CreateProfileScreen() {
       await mobileApiClient.users.createProfile({
         name: trimmedName,
       });
-      navigation.replace("HomeResolver");
+      navigation.replace('HomeResolver');
     } catch (error) {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to create your profile.");
+        setErrorMessage('Unable to create your profile.');
       }
     } finally {
       setIsSubmitting(false);
@@ -78,7 +78,9 @@ export function CreateProfileScreen() {
             errorMessage={nameError}
           />
 
-          {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+          {errorMessage ? (
+            <Text style={styles.error}>{errorMessage}</Text>
+          ) : null}
 
           <Button
             label="Continue"
@@ -95,7 +97,7 @@ export function CreateProfileScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    justifyContent: "center",
+    justifyContent: 'center',
     paddingTop: 32,
     paddingBottom: 32,
   },
@@ -107,9 +109,9 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 1.1,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     color: colors.primary,
   },
   title: {
@@ -128,9 +130,9 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
   },
   error: {
-    color: "#fca5a5",
+    color: '#fca5a5',
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
 });

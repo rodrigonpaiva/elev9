@@ -42,11 +42,11 @@ type UserProfile = {
   authUserId: string;
   name: string;
   birthDate?: Date;
-  gender?: "male" | "female" | "other" | "prefer_not_to_say";
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
   avatarUrl?: string;
-  language: "pt-BR" | "fr-FR" | "en-US";
+  language: 'pt-BR' | 'fr-FR' | 'en-US';
   timezone: string;
-  status: "active" | "inactive" | "deleted";
+  status: 'active' | 'inactive' | 'deleted';
   createdAt: Date;
   updatedAt: Date;
 };
@@ -65,8 +65,8 @@ type FitnessProfile = {
   heightCm: number;
   weightKg: number;
   bodyFatPercentage?: number;
-  level: "beginner" | "intermediate" | "advanced";
-  goal: "lose_weight" | "gain_muscle" | "maintain" | "improve_health";
+  level: 'beginner' | 'intermediate' | 'advanced';
+  goal: 'lose_weight' | 'gain_muscle' | 'maintain' | 'improve_health';
   limitations: PhysicalLimitation[];
   availability: TrainingAvailability;
   equipment: string[];
@@ -81,7 +81,7 @@ type FitnessProfile = {
 type PhysicalLimitation = {
   type: string;
   description?: string;
-  severity: "low" | "medium" | "high";
+  severity: 'low' | 'medium' | 'high';
 };
 ```
 
@@ -106,11 +106,11 @@ type TrainingPlan = {
   id: string;
   userId: string;
   fitnessProfileId: string;
-  status: "active" | "archived" | "replaced";
+  status: 'active' | 'archived' | 'replaced';
   weekStartDate: Date;
   weekEndDate: Date;
   goal: string;
-  generatedBy: "ai" | "manual";
+  generatedBy: 'ai' | 'manual';
   sourceContextId?: string;
   days: WorkoutDay[];
   createdAt: Date;
@@ -127,7 +127,7 @@ type WorkoutDay = {
   title: string;
   focus: string;
   estimatedDurationMinutes: number;
-  intensity: "low" | "moderate" | "high";
+  intensity: 'low' | 'moderate' | 'high';
   exercises: Exercise[];
 };
 ```
@@ -176,7 +176,7 @@ type WorkoutLog = {
 type NutritionProfile = {
   id: string;
   userId: string;
-  goal: "lose_weight" | "gain_muscle" | "maintain" | "improve_health";
+  goal: 'lose_weight' | 'gain_muscle' | 'maintain' | 'improve_health';
   dietaryRestrictions: string[];
   allergies: string[];
   dislikedFoods: string[];
@@ -205,11 +205,11 @@ type NutritionPlan = {
   id: string;
   userId: string;
   nutritionProfileId: string;
-  status: "active" | "archived" | "replaced";
+  status: 'active' | 'archived' | 'replaced';
   weekStartDate: Date;
   weekEndDate: Date;
   macroTargets: MacroTargets;
-  generatedBy: "ai" | "manual";
+  generatedBy: 'ai' | 'manual';
   sourceContextId?: string;
   days: NutritionDay[];
   createdAt: Date;
@@ -231,7 +231,7 @@ type NutritionDay = {
 
 ```ts
 type Meal = {
-  type: "breakfast" | "lunch" | "dinner" | "snack";
+  type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   title: string;
   description: string;
   foodItems: FoodItem[];
@@ -275,7 +275,7 @@ type NutritionLog = {
   userId: string;
   date: Date;
   followedPlan: boolean;
-  mealType?: "breakfast" | "lunch" | "dinner" | "snack";
+  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   notes?: string;
   createdAt: Date;
 };
@@ -348,8 +348,13 @@ type UserHealthContext = {
 type AIRecommendation = {
   id: string;
   userId: string;
-  agentType: "coach" | "nutrition" | "safety";
-  type: "training" | "nutrition" | "recovery" | "motivation" | "plan_adjustment";
+  agentType: 'coach' | 'nutrition' | 'safety';
+  type:
+    | 'training'
+    | 'nutrition'
+    | 'recovery'
+    | 'motivation'
+    | 'plan_adjustment';
   content: string;
   confidence?: number;
   sourceContextId?: string;
@@ -365,7 +370,7 @@ type PlanAdjustment = {
   userId: string;
   sourceContextId: string;
   reason: string;
-  adjustmentType: "training" | "nutrition" | "both";
+  adjustmentType: 'training' | 'nutrition' | 'both';
   changes: {
     training?: Record<string, unknown>;
     nutrition?: Record<string, unknown>;

@@ -3,11 +3,12 @@ services:
     image: mongo:7.0
     container_name: elev9-mongo
     ports:
-      - "27017:27017"
+      - '27017:27017'
     volumes:
       - mongo-data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      test:
+        ['CMD', 'mongosh', '--quiet', '--eval', 'db.runCommand({ ping: 1 }).ok']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,7 +23,7 @@ services:
       mongo:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      - '3000:3000'
     env_file:
       - .env
     environment:

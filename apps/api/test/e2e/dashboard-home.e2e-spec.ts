@@ -1,21 +1,24 @@
-import "reflect-metadata";
+import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { Test, TestingModule } from "@nestjs/testing";
-import { disconnect } from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import request from "supertest";
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+import { disconnect } from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import request from 'supertest';
 
-import { AuthModule } from "../../src/modules/auth/auth.module";
-import { DashboardModule } from "../../src/modules/dashboard/dashboard.module";
-import { FitnessModule } from "../../src/modules/fitness/fitness.module";
-import { Clock, CLOCK } from "../../src/modules/progress/domain/services/clock.service";
-import { ProgressModule } from "../../src/modules/progress/progress.module";
-import { TrainingModule } from "../../src/modules/training/training.module";
-import { UsersModule } from "../../src/modules/users/users.module";
+import { AuthModule } from '../../src/modules/auth/auth.module';
+import { DashboardModule } from '../../src/modules/dashboard/dashboard.module';
+import { FitnessModule } from '../../src/modules/fitness/fitness.module';
+import {
+  Clock,
+  CLOCK,
+} from '../../src/modules/progress/domain/services/clock.service';
+import { ProgressModule } from '../../src/modules/progress/progress.module';
+import { TrainingModule } from '../../src/modules/training/training.module';
+import { UsersModule } from '../../src/modules/users/users.module';
 
-describe("Dashboard Home E2E", () => {
+describe('Dashboard Home E2E', () => {
   let app: INestApplication;
   let mongoMemoryServer: MongoMemoryServer;
   let currentNow: Date;
@@ -23,7 +26,7 @@ describe("Dashboard Home E2E", () => {
   beforeAll(async () => {
     mongoMemoryServer = await MongoMemoryServer.create();
     const mongoUri = mongoMemoryServer.getUri();
-    currentNow = new Date("2026-04-30T10:00:00.000Z");
+    currentNow = new Date('2026-04-30T10:00:00.000Z');
 
     const testClock: Clock = {
       now: () => currentNow,
@@ -67,30 +70,30 @@ describe("Dashboard Home E2E", () => {
     }
   });
 
-  it("full flow", async () => {
-    currentNow = new Date("2026-04-30T10:00:00.000Z");
+  it('full flow', async () => {
+    currentNow = new Date('2026-04-30T10:00:00.000Z');
     const { token } = await createDashboardFlow(
-      "dashboard-home-success@email.com",
+      'dashboard-home-success@email.com',
       {
         createFitnessProfile: true,
         createTrainingPlan: true,
-        activityLevel: "high",
+        activityLevel: 'high',
         logWorkout: true,
       },
     );
 
     const response = await request(app.getHttpServer())
-      .get("/dashboard/home")
-      .set("Authorization", `Bearer ${token}`)
+      .get('/dashboard/home')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     expect(response.body.dashboard.user).toEqual({
-      name: "Rodrigo Paiva",
+      name: 'Rodrigo Paiva',
     });
     expect(response.body.dashboard.fitnessProfile).toEqual({
       id: expect.any(String),
-      goal: "gain_muscle",
-      activityLevel: "high",
+      goal: 'gain_muscle',
+      activityLevel: 'high',
     });
     expect(response.body.dashboard.trainingPlan).toEqual({
       id: expect.any(String),
@@ -104,17 +107,17 @@ describe("Dashboard Home E2E", () => {
       },
     });
     expect(response.body.dashboard.progressSummary).toEqual({
-      period: "week",
+      period: 'week',
       workoutsCompleted: 1,
       totalDurationMinutes: 45,
       averageDurationMinutes: 45,
-      lastWorkoutDate: "2026-04-30",
+      lastWorkoutDate: '2026-04-30',
     });
   });
 
-  it("returns null fitnessProfile and trainingPlan when no active fitness profile exists", async () => {
+  it('returns null fitnessProfile and trainingPlan when no active fitness profile exists', async () => {
     const { token } = await createDashboardFlow(
-      "dashboard-home-no-fitness@email.com",
+      'dashboard-home-no-fitness@email.com',
       {
         createFitnessProfile: false,
         createTrainingPlan: false,
@@ -122,14 +125,14 @@ describe("Dashboard Home E2E", () => {
     );
 
     const response = await request(app.getHttpServer())
-      .get("/dashboard/home")
-      .set("Authorization", `Bearer ${token}`)
+      .get('/dashboard/home')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     expect(response.body.dashboard.fitnessProfile).toBeNull();
     expect(response.body.dashboard.trainingPlan).toBeNull();
     expect(response.body.dashboard.progressSummary).toEqual({
-      period: "week",
+      period: 'week',
       workoutsCompleted: 0,
       totalDurationMinutes: 0,
       averageDurationMinutes: 0,
@@ -137,9 +140,9 @@ describe("Dashboard Home E2E", () => {
     });
   });
 
-  it("returns null trainingPlan when no active training plan exists", async () => {
+  it('returns null trainingPlan when no active training plan exists', async () => {
     const { token } = await createDashboardFlow(
-      "dashboard-home-no-plan@email.com",
+      'dashboard-home-no-plan@email.com',
       {
         createFitnessProfile: true,
         createTrainingPlan: false,
@@ -147,28 +150,28 @@ describe("Dashboard Home E2E", () => {
     );
 
     const response = await request(app.getHttpServer())
-      .get("/dashboard/home")
-      .set("Authorization", `Bearer ${token}`)
+      .get('/dashboard/home')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     expect(response.body.dashboard.fitnessProfile).not.toBeNull();
     expect(response.body.dashboard.trainingPlan).toBeNull();
   });
 
-  it("returns todayWorkout as null when weeklySchedule does not contain the current UTC day", async () => {
-    currentNow = new Date("2026-04-30T10:00:00.000Z");
+  it('returns todayWorkout as null when weeklySchedule does not contain the current UTC day', async () => {
+    currentNow = new Date('2026-04-30T10:00:00.000Z');
     const { token } = await createDashboardFlow(
-      "dashboard-home-today-null@email.com",
+      'dashboard-home-today-null@email.com',
       {
         createFitnessProfile: true,
         createTrainingPlan: true,
-        activityLevel: "medium",
+        activityLevel: 'medium',
       },
     );
 
     const response = await request(app.getHttpServer())
-      .get("/dashboard/home")
-      .set("Authorization", `Bearer ${token}`)
+      .get('/dashboard/home')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     expect(response.body.dashboard.trainingPlan).toEqual({
@@ -178,35 +181,35 @@ describe("Dashboard Home E2E", () => {
   });
 
   it("returns weekly summary based on current user's logs only", async () => {
-    currentNow = new Date("2026-04-30T10:00:00.000Z");
+    currentNow = new Date('2026-04-30T10:00:00.000Z');
     const { token } = await createDashboardFlow(
-      "dashboard-home-summary@email.com",
+      'dashboard-home-summary@email.com',
       {
         createFitnessProfile: true,
         createTrainingPlan: true,
-        activityLevel: "high",
+        activityLevel: 'high',
         logWorkout: true,
       },
     );
 
-    await createDashboardFlow("dashboard-home-other-user@email.com", {
+    await createDashboardFlow('dashboard-home-other-user@email.com', {
       createFitnessProfile: true,
       createTrainingPlan: true,
-      activityLevel: "high",
+      activityLevel: 'high',
       logWorkout: true,
     });
 
     const response = await request(app.getHttpServer())
-      .get("/dashboard/home")
-      .set("Authorization", `Bearer ${token}`)
+      .get('/dashboard/home')
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     expect(response.body.dashboard.progressSummary).toEqual({
-      period: "week",
+      period: 'week',
       workoutsCompleted: 1,
       totalDurationMinutes: 45,
       averageDurationMinutes: 45,
-      lastWorkoutDate: "2026-04-30",
+      lastWorkoutDate: '2026-04-30',
     });
   });
 
@@ -215,33 +218,33 @@ describe("Dashboard Home E2E", () => {
     options: {
       createFitnessProfile: boolean;
       createTrainingPlan: boolean;
-      activityLevel?: "low" | "medium" | "high";
+      activityLevel?: 'low' | 'medium' | 'high';
       logWorkout?: boolean;
     },
   ): Promise<{ token: string }> {
     await request(app.getHttpServer())
-      .post("/auth/register")
+      .post('/auth/register')
       .send({
-        name: "Rodrigo Paiva",
+        name: 'Rodrigo Paiva',
         email,
-        password: "StrongPassword123",
+        password: 'StrongPassword123',
       })
       .expect(201);
 
     const loginResponse = await request(app.getHttpServer())
-      .post("/auth/login")
+      .post('/auth/login')
       .send({
         email,
-        password: "StrongPassword123",
+        password: 'StrongPassword123',
       })
       .expect(200);
 
     const token = loginResponse.body.accessToken as string;
 
     await request(app.getHttpServer())
-      .post("/users/profile")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ name: "Rodrigo Paiva" })
+      .post('/users/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Rodrigo Paiva' })
       .expect(201);
 
     if (!options.createFitnessProfile) {
@@ -249,15 +252,15 @@ describe("Dashboard Home E2E", () => {
     }
 
     const fitnessResponse = await request(app.getHttpServer())
-      .post("/fitness/profile")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/fitness/profile')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         heightCm: 180,
         weightKg: 82.5,
-        goal: "gain_muscle",
-        activityLevel: options.activityLevel ?? "high",
+        goal: 'gain_muscle',
+        activityLevel: options.activityLevel ?? 'high',
         trainingAvailability: {
-          daysPerWeek: options.activityLevel === "medium" ? 3 : 4,
+          daysPerWeek: options.activityLevel === 'medium' ? 3 : 4,
           minutesPerSession: 60,
         },
       })
@@ -268,8 +271,8 @@ describe("Dashboard Home E2E", () => {
     }
 
     const trainingResponse = await request(app.getHttpServer())
-      .post("/training/plans")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/training/plans')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         fitnessProfileId: fitnessResponse.body.fitnessProfile.id,
       })
@@ -277,13 +280,13 @@ describe("Dashboard Home E2E", () => {
 
     if (options.logWorkout) {
       await request(app.getHttpServer())
-        .post("/progress/workout-logs")
-        .set("Authorization", `Bearer ${token}`)
+        .post('/progress/workout-logs')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           trainingPlanId: trainingResponse.body.trainingPlan.id,
           workoutDayIndex: 4,
           durationMinutes: 45,
-          completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+          completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
         })
         .expect(201);
     }

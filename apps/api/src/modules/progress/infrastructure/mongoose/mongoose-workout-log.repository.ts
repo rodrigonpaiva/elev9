@@ -1,21 +1,21 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 import {
   LOG_WORKOUT_ERROR_CODES,
   LogWorkoutError,
-} from "../../application/use-cases/log-workout/log-workout.errors";
-import { WorkoutLog } from "../../domain/entities/workout-log.entity";
+} from '../../application/use-cases/log-workout/log-workout.errors';
+import { WorkoutLog } from '../../domain/entities/workout-log.entity';
 import {
   CreateWorkoutLogRepositoryInput,
   WorkoutLogRepository,
-} from "../../domain/repositories/workout-log.repository";
+} from '../../domain/repositories/workout-log.repository';
 import {
   WORKOUT_LOG_MODEL_NAME,
   WorkoutLogDocument,
   WorkoutLogSchemaClass,
-} from "./workout-log.schema";
+} from './workout-log.schema';
 
 @Injectable()
 export class MongooseWorkoutLogRepository implements WorkoutLogRepository {
@@ -63,7 +63,9 @@ export class MongooseWorkoutLogRepository implements WorkoutLogRepository {
       })
       .exec();
 
-    return documents.map((document) => this.toEntity(document as WorkoutLogDocument));
+    return documents.map((document) =>
+      this.toEntity(document as WorkoutLogDocument),
+    );
   }
 
   async findByTrainingPlanIdsOrdered(input: {
@@ -85,7 +87,9 @@ export class MongooseWorkoutLogRepository implements WorkoutLogRepository {
       .limit(input.limit)
       .exec();
 
-    return documents.map((document) => this.toEntity(document as WorkoutLogDocument));
+    return documents.map((document) =>
+      this.toEntity(document as WorkoutLogDocument),
+    );
   }
 
   async create(input: CreateWorkoutLogRepositoryInput): Promise<WorkoutLog> {
@@ -97,7 +101,7 @@ export class MongooseWorkoutLogRepository implements WorkoutLogRepository {
       if (this.isDuplicateWorkoutLogError(error)) {
         throw new LogWorkoutError(
           LOG_WORKOUT_ERROR_CODES.ALREADY_EXISTS,
-          "Workout log already exists.",
+          'Workout log already exists.',
         );
       }
 
@@ -129,7 +133,7 @@ export class MongooseWorkoutLogRepository implements WorkoutLogRepository {
   }
 
   private isDuplicateWorkoutLogError(error: unknown): boolean {
-    if (!error || typeof error !== "object") {
+    if (!error || typeof error !== 'object') {
       return false;
     }
 
@@ -141,8 +145,8 @@ export class MongooseWorkoutLogRepository implements WorkoutLogRepository {
 
     return (
       maybeError.code === 11000 &&
-      ("trainingPlanId" in (maybeError.keyPattern ?? {}) ||
-        "trainingPlanId" in (maybeError.keyValue ?? {}))
+      ('trainingPlanId' in (maybeError.keyPattern ?? {}) ||
+        'trainingPlanId' in (maybeError.keyValue ?? {}))
     );
   }
 }

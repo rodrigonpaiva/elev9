@@ -1,17 +1,17 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { DailyCheckIn } from "../../domain/entities/daily-check-in.entity";
+import { DailyCheckIn } from '../../domain/entities/daily-check-in.entity';
 import {
   CreateDailyCheckInRepositoryInput,
   DailyCheckInRepository,
-} from "../../domain/repositories/daily-check-in.repository";
+} from '../../domain/repositories/daily-check-in.repository';
 import {
   DAILY_CHECK_IN_MODEL_NAME,
   DailyCheckInDocument,
   DailyCheckInSchemaClass,
-} from "./daily-check-in.schema";
+} from './daily-check-in.schema';
 
 @Injectable()
 export class MongooseDailyCheckInRepository implements DailyCheckInRepository {
@@ -43,7 +43,9 @@ export class MongooseDailyCheckInRepository implements DailyCheckInRepository {
     return this.toEntity(document as DailyCheckInDocument);
   }
 
-  async findManyByUserProfileId(userProfileId: string): Promise<DailyCheckIn[]> {
+  async findManyByUserProfileId(
+    userProfileId: string,
+  ): Promise<DailyCheckIn[]> {
     const documents = await this.dailyCheckInModel
       .find({ userProfileId })
       .sort({ createdAt: -1 })

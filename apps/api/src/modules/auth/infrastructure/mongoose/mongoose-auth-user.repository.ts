@@ -1,21 +1,21 @@
-import { InjectModel } from "@nestjs/mongoose";
-import { Injectable } from "@nestjs/common";
-import { Model } from "mongoose";
+import { InjectModel } from '@nestjs/mongoose';
+import { Injectable } from '@nestjs/common';
+import { Model } from 'mongoose';
 
-import { AuthUser } from "../../domain/entities/auth-user.entity";
+import { AuthUser } from '../../domain/entities/auth-user.entity';
 import {
   AuthUserRepository,
   CreateAuthUserRepositoryInput,
-} from "../../domain/repositories/auth-user.repository";
+} from '../../domain/repositories/auth-user.repository';
 import {
   REGISTER_USER_ERROR_CODES,
   RegisterUserError,
-} from "../../application/use-cases/register-user/register-user.errors";
+} from '../../application/use-cases/register-user/register-user.errors';
 import {
   AUTH_USER_MODEL_NAME,
   AuthUserDocument,
   AuthUserSchemaClass,
-} from "./auth-user.schema";
+} from './auth-user.schema';
 
 @Injectable()
 export class MongooseAuthUserRepository implements AuthUserRepository {
@@ -43,7 +43,7 @@ export class MongooseAuthUserRepository implements AuthUserRepository {
       if (this.isDuplicateEmailError(error)) {
         throw new RegisterUserError(
           REGISTER_USER_ERROR_CODES.EMAIL_ALREADY_EXISTS,
-          "Email already exists.",
+          'Email already exists.',
         );
       }
 
@@ -63,7 +63,7 @@ export class MongooseAuthUserRepository implements AuthUserRepository {
   }
 
   private isDuplicateEmailError(error: unknown): boolean {
-    if (!error || typeof error !== "object") {
+    if (!error || typeof error !== 'object') {
       return false;
     }
 
@@ -75,8 +75,8 @@ export class MongooseAuthUserRepository implements AuthUserRepository {
 
     return (
       maybeError.code === 11000 &&
-      ("email" in (maybeError.keyPattern ?? {}) ||
-        "email" in (maybeError.keyValue ?? {}))
+      ('email' in (maybeError.keyPattern ?? {}) ||
+        'email' in (maybeError.keyValue ?? {}))
     );
   }
 }

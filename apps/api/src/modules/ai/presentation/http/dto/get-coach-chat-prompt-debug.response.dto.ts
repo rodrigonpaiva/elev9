@@ -6,8 +6,8 @@ export type GetCoachChatPromptDebugResponseDto = {
     model: string;
   };
   context: {
-    fatigueLevel: "LOW" | "MODERATE" | "HIGH";
-    recoveryTrend: "improving" | "stable" | "needs_recovery";
+    fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH';
+    recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
     hasNutritionProfile: boolean;
     hasLatestCheckIn: boolean;
     recentWorkoutCount: number;

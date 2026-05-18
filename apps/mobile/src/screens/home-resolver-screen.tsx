@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { ApiClientError } from "@elev9/api-client";
-import { Button, Card, colors, Screen, Text } from "@elev9/ui";
+import { ApiClientError } from '@elev9/api-client';
+import { Button, Card, colors, Screen, Text } from '@elev9/ui';
 
-import { apiClient } from "../api/client";
-import { useAuth } from "../auth/auth-provider";
-import type { RootStackParamList } from "../navigation/app-navigator";
+import { apiClient } from '../api/client';
+import { useAuth } from '../auth/auth-provider';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 export function HomeResolverScreen() {
   const navigation =
@@ -30,12 +30,12 @@ export function HomeResolverScreen() {
       const dashboard = response.dashboard;
 
       if (!dashboard.fitnessProfile) {
-        navigation.replace("CreateFitnessProfile");
+        navigation.replace('CreateFitnessProfile');
         return;
       }
 
       if (!dashboard.trainingPlan) {
-        navigation.replace("CreateTrainingPlan", {
+        navigation.replace('CreateTrainingPlan', {
           fitnessProfileId: dashboard.fitnessProfile.id,
           goal: dashboard.fitnessProfile.goal,
           activityLevel: dashboard.fitnessProfile.activityLevel,
@@ -43,19 +43,19 @@ export function HomeResolverScreen() {
         return;
       }
 
-      navigation.replace("MainTabs");
+      navigation.replace('MainTabs');
     } catch (error) {
       if (
         error instanceof ApiClientError &&
-        error.code === "USER_PROFILE_NOT_FOUND"
+        error.code === 'USER_PROFILE_NOT_FOUND'
       ) {
-        navigation.replace("CreateProfile");
+        navigation.replace('CreateProfile');
         return;
       }
 
       if (
         error instanceof ApiClientError &&
-        error.code === "AUTH_INVALID_SESSION"
+        error.code === 'AUTH_INVALID_SESSION'
       ) {
         await signOut();
         return;
@@ -64,7 +64,7 @@ export function HomeResolverScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to prepare your workspace.");
+        setErrorMessage('Unable to prepare your workspace.');
       }
     } finally {
       setIsLoading(false);
@@ -82,7 +82,7 @@ export function HomeResolverScreen() {
         <Card style={styles.card}>
           <Text variant="title">Unable to continue</Text>
           <Text style={styles.errorText}>
-            {errorMessage ?? "Unable to prepare your onboarding flow."}
+            {errorMessage ?? 'Unable to prepare your onboarding flow.'}
           </Text>
           <Button
             label="Retry"
@@ -103,11 +103,11 @@ export function HomeResolverScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   loadingState: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
   },
   loadingText: {
@@ -117,9 +117,9 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   errorText: {
-    color: "#fca5a5",
+    color: '#fca5a5',
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
 });

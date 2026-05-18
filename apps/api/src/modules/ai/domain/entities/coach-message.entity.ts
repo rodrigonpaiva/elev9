@@ -1,4 +1,4 @@
-export type CoachMessageRole = "user" | "assistant";
+export type CoachMessageRole = 'user' | 'assistant';
 
 export type CoachMessageProps = {
   id: string;
@@ -10,7 +10,7 @@ export type CoachMessageProps = {
 };
 
 export type CoachMessageMetadata = {
-  source?: "heuristic" | "llm";
+  source?: 'heuristic' | 'llm';
   provider?: string;
   model?: string;
   promptVersion?: string;

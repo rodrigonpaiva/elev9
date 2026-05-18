@@ -3,4 +3,4 @@ export interface PasswordHasher {
   compare(rawPassword: string, passwordHash: string): Promise<boolean>;
 }
 
-export const PASSWORD_HASHER = Symbol("PASSWORD_HASHER");
+export const PASSWORD_HASHER = Symbol('PASSWORD_HASHER');

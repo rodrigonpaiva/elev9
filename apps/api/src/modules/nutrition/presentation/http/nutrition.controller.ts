@@ -12,22 +12,22 @@ import {
   Req,
   UnauthorizedException,
   UseGuards,
-} from "@nestjs/common";
+} from '@nestjs/common';
 
-import { AuthSessionGuard } from "../../../users/presentation/http/guards/auth-session.guard";
+import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
 import {
   CREATE_NUTRITION_PROFILE_ERROR_CODES,
   CreateNutritionProfileError,
-} from "../../application/use-cases/create-nutrition-profile/create-nutrition-profile.errors";
-import { CreateNutritionProfileUseCase } from "../../application/use-cases/create-nutrition-profile/create-nutrition-profile.use-case";
+} from '../../application/use-cases/create-nutrition-profile/create-nutrition-profile.errors';
+import { CreateNutritionProfileUseCase } from '../../application/use-cases/create-nutrition-profile/create-nutrition-profile.use-case';
 import {
   GET_NUTRITION_PROFILE_ERROR_CODES,
   GetNutritionProfileError,
-} from "../../application/use-cases/get-nutrition-profile/get-nutrition-profile.errors";
-import { GetNutritionProfileUseCase } from "../../application/use-cases/get-nutrition-profile/get-nutrition-profile.use-case";
-import { CreateNutritionProfileRequestDto } from "./dto/create-nutrition-profile.request.dto";
-import { CreateNutritionProfileResponseDto } from "./dto/create-nutrition-profile.response.dto";
-import { GetNutritionProfileResponseDto } from "./dto/get-nutrition-profile.response.dto";
+} from '../../application/use-cases/get-nutrition-profile/get-nutrition-profile.errors';
+import { GetNutritionProfileUseCase } from '../../application/use-cases/get-nutrition-profile/get-nutrition-profile.use-case';
+import { CreateNutritionProfileRequestDto } from './dto/create-nutrition-profile.request.dto';
+import { CreateNutritionProfileResponseDto } from './dto/create-nutrition-profile.response.dto';
+import { GetNutritionProfileResponseDto } from './dto/get-nutrition-profile.response.dto';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -40,14 +40,14 @@ class GetNutritionProfileQueryDto {}
 
 class GetNutritionProfileBodyDto {}
 
-@Controller("nutrition")
+@Controller('nutrition')
 export class NutritionController {
   constructor(
     private readonly createNutritionProfileUseCase: CreateNutritionProfileUseCase,
     private readonly getNutritionProfileUseCase: GetNutritionProfileUseCase,
   ) {}
 
-  @Post("profile")
+  @Post('profile')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.CREATED)
   async createProfile(
@@ -56,7 +56,7 @@ export class NutritionController {
   ): Promise<CreateNutritionProfileResponseDto> {
     try {
       const result = await this.createNutritionProfileUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         goal: body.goal,
         mealsPerDay: body.mealsPerDay,
         dietaryRestrictions: body.dietaryRestrictions,
@@ -85,7 +85,7 @@ export class NutritionController {
     }
   }
 
-  @Get("profile")
+  @Get('profile')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getProfile(
@@ -95,7 +95,7 @@ export class NutritionController {
   ): Promise<GetNutritionProfileResponseDto> {
     try {
       const result = await this.getNutritionProfileUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
       });
 
       return {
@@ -120,7 +120,7 @@ export class NutritionController {
 
   private handleError(error: unknown): never {
     if (!(error instanceof CreateNutritionProfileError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -146,14 +146,14 @@ export class NutritionController {
       default:
         throw new InternalServerErrorException({
           code: CREATE_NUTRITION_PROFILE_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleGetProfileError(error: unknown): never {
     if (!(error instanceof GetNutritionProfileError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -174,7 +174,7 @@ export class NutritionController {
       default:
         throw new InternalServerErrorException({
           code: GET_NUTRITION_PROFILE_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }

@@ -1,12 +1,12 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import {
   AI_LLM_PROVIDER,
   AiLlmGenerateReplyResult,
   AiLlmProvider,
   AiLlmPrompt,
-} from "./ai-llm.types";
-import { AiLlmConfigService } from "./ai-llm-config.service";
+} from './ai-llm.types';
+import { AiLlmConfigService } from './ai-llm-config.service';
 
 @Injectable()
 export class AiLlmService {
@@ -22,7 +22,7 @@ export class AiLlmService {
     prompt: AiLlmPrompt,
   ): Promise<AiLlmGenerateReplyResult | null> {
     if (!this.config.isEnabled()) {
-      this.logger.log("llm disabled");
+      this.logger.log('llm disabled');
       return null;
     }
 
@@ -31,7 +31,7 @@ export class AiLlmService {
     this.logger.log(`llm enabled`);
     this.logger.log(`provider used: ${providerName}`);
 
-    if (providerName !== "openai") {
+    if (providerName !== 'openai') {
       this.logger.warn(`provider "${providerName}" is not supported`);
       return null;
     }
@@ -50,7 +50,7 @@ export class AiLlmService {
       };
     } catch (error) {
       this.logger.warn(
-        `provider failure: ${error instanceof Error ? error.message : "Unknown provider failure"}`,
+        `provider failure: ${error instanceof Error ? error.message : 'Unknown provider failure'}`,
       );
       throw error;
     }

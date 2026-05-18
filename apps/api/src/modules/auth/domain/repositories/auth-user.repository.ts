@@ -1,4 +1,4 @@
-import { AuthUser } from "../entities/auth-user.entity";
+import { AuthUser } from '../entities/auth-user.entity';
 
 export interface CreateAuthUserRepositoryInput {
   email: string;
@@ -11,4 +11,4 @@ export interface AuthUserRepository {
   create(input: CreateAuthUserRepositoryInput): Promise<AuthUser>;
 }
 
-export const AUTH_USER_REPOSITORY = Symbol("AUTH_USER_REPOSITORY");
+export const AUTH_USER_REPOSITORY = Symbol('AUTH_USER_REPOSITORY');

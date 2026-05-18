@@ -1,18 +1,18 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   NUTRITION_PROFILE_REPOSITORY,
   NutritionProfileRepository,
-} from "../../../domain/repositories/nutrition-profile.repository";
+} from '../../../domain/repositories/nutrition-profile.repository';
 import {
   GET_NUTRITION_PROFILE_ERROR_CODES,
   GetNutritionProfileError,
-} from "./get-nutrition-profile.errors";
-import { GetNutritionProfileOutput } from "./get-nutrition-profile.output";
+} from './get-nutrition-profile.errors';
+import { GetNutritionProfileOutput } from './get-nutrition-profile.output';
 
 @Injectable()
 export class GetNutritionProfileUseCase {
@@ -23,14 +23,16 @@ export class GetNutritionProfileUseCase {
     private readonly nutritionProfileRepository: NutritionProfileRepository,
   ) {}
 
-  async execute(input: { authUserId: string }): Promise<GetNutritionProfileOutput> {
+  async execute(input: {
+    authUserId: string;
+  }): Promise<GetNutritionProfileOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
     if (!authUserId) {
       throw new GetNutritionProfileError(
         GET_NUTRITION_PROFILE_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -41,7 +43,7 @@ export class GetNutritionProfileUseCase {
       if (!userProfile) {
         throw new GetNutritionProfileError(
           GET_NUTRITION_PROFILE_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -53,7 +55,7 @@ export class GetNutritionProfileUseCase {
       if (!nutritionProfile) {
         throw new GetNutritionProfileError(
           GET_NUTRITION_PROFILE_ERROR_CODES.NUTRITION_PROFILE_NOT_FOUND,
-          "Nutrition profile not found.",
+          'Nutrition profile not found.',
         );
       }
 
@@ -79,7 +81,7 @@ export class GetNutritionProfileUseCase {
 
       throw new GetNutritionProfileError(
         GET_NUTRITION_PROFILE_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }

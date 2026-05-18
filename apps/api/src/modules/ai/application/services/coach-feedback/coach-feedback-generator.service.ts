@@ -1,16 +1,16 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 
 import {
   ActivityLevel,
   FitnessGoal,
-} from "../../../../fitness/domain/entities/fitness-profile.entity";
-import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
+} from '../../../../fitness/domain/entities/fitness-profile.entity';
+import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import {
   FatigueLevel,
   UserHealthContextNutritionProfile,
-} from "../context-builder/build-user-health-context.service";
+} from '../context-builder/build-user-health-context.service';
 
-export const COACH_FEEDBACK_GENERATOR_VERSION = "heuristic-v1";
+export const COACH_FEEDBACK_GENERATOR_VERSION = 'heuristic-v1';
 
 export type CoachFeedbackGeneratorInput = {
   goal: FitnessGoal;
@@ -39,17 +39,16 @@ export type CoachFeedbackGeneratorOutput = {
 
 @Injectable()
 export class CoachFeedbackGenerator {
-  generate(
-    input: CoachFeedbackGeneratorInput,
-  ): CoachFeedbackGeneratorOutput {
+  generate(input: CoachFeedbackGeneratorInput): CoachFeedbackGeneratorOutput {
     const logsCount = input.workoutLogs.length;
     const hasHighStreak = input.currentStreak >= 3;
     const isNoLogs = logsCount === 0;
     const isBeginner = logsCount === 1 || logsCount === 2;
     const isConsistent = logsCount >= input.expectedWorkouts;
     const isInconsistent = logsCount < input.expectedWorkouts;
-    const hasDurationTrendIncrease =
-      this.hasIncreasingDurationTrend(input.workoutLogs);
+    const hasDurationTrendIncrease = this.hasIncreasingDurationTrend(
+      input.workoutLogs,
+    );
 
     const message = this.limitMessage(
       this.buildMessage({
@@ -67,36 +66,38 @@ export class CoachFeedbackGenerator {
     const insights: string[] = [];
     const recommendations: string[] = [];
     const influences = new Set<string>();
-    const fatigueLevel = input.fatigueLevel ?? "MODERATE";
+    const fatigueLevel = input.fatigueLevel ?? 'MODERATE';
     const hasExplicitFatigueLevel = input.fatigueLevel !== undefined;
 
     if (isNoLogs) {
-      insights.push("No completed workouts were found in the last 7 days");
-      recommendations.push("Complete your first workout today");
+      insights.push('No completed workouts were found in the last 7 days');
+      recommendations.push('Complete your first workout today');
       recommendations.push(
         input.hasTrainingPlan
-          ? "Start with your active plan to build momentum"
-          : "Start with one manageable session to build momentum",
+          ? 'Start with your active plan to build momentum'
+          : 'Start with one manageable session to build momentum',
       );
     } else {
       insights.push(
-        `You completed ${logsCount} workout${logsCount === 1 ? "" : "s"} in the last 7 days`,
+        `You completed ${logsCount} workout${logsCount === 1 ? '' : 's'} in the last 7 days`,
       );
 
       if (hasHighStreak) {
         insights.push(`Your current streak is ${input.currentStreak} days`);
       } else if (isConsistent) {
-        insights.push("Your weekly frequency is aligned with your expected target");
+        insights.push(
+          'Your weekly frequency is aligned with your expected target',
+        );
       } else if (isBeginner) {
-        insights.push("You already started building a weekly training rhythm");
+        insights.push('You already started building a weekly training rhythm');
       } else if (isInconsistent) {
         insights.push(
-          "Your current pace is below your expected weekly availability",
+          'Your current pace is below your expected weekly availability',
         );
       }
 
       if (hasDurationTrendIncrease) {
-        insights.push("Your average duration improved across the week");
+        insights.push('Your average duration improved across the week');
       } else if (input.averageDurationMinutes > 0 && insights.length < 3) {
         insights.push(
           `Your average workout duration is ${this.formatDuration(input.averageDurationMinutes)}`,
@@ -104,21 +105,29 @@ export class CoachFeedbackGenerator {
       }
 
       if (hasHighStreak) {
-        recommendations.push("Keep your current rhythm");
-        recommendations.push("Increase intensity only if your recovery feels good");
+        recommendations.push('Keep your current rhythm');
+        recommendations.push(
+          'Increase intensity only if your recovery feels good',
+        );
       } else if (isConsistent) {
-        recommendations.push("Keep the same training cadence next week");
-        recommendations.push("Maintain your current session quality and recovery");
+        recommendations.push('Keep the same training cadence next week');
+        recommendations.push(
+          'Maintain your current session quality and recovery',
+        );
       } else if (isBeginner) {
-        recommendations.push("Repeat this rhythm for one more session this week");
-        recommendations.push("Focus on finishing your planned workout window");
+        recommendations.push(
+          'Repeat this rhythm for one more session this week',
+        );
+        recommendations.push('Focus on finishing your planned workout window');
       } else if (isInconsistent) {
-        recommendations.push("Schedule your next session within the next 24 hours");
+        recommendations.push(
+          'Schedule your next session within the next 24 hours',
+        );
         recommendations.push(
           `Aim to match your weekly target of ${input.expectedWorkouts} workouts`,
         );
       } else {
-        recommendations.push("Keep showing up for your next planned session");
+        recommendations.push('Keep showing up for your next planned session');
       }
     }
 
@@ -157,7 +166,7 @@ export class CoachFeedbackGenerator {
     recommendations.push(this.buildGoalAwareRecommendation(input.goal));
 
     if (!input.hasTrainingPlan && recommendations.length < 3) {
-      recommendations.push("Keep your next session simple and easy to repeat");
+      recommendations.push('Keep your next session simple and easy to repeat');
     }
 
     return {
@@ -179,7 +188,7 @@ export class CoachFeedbackGenerator {
     isInconsistent: boolean;
   }): string {
     if (input.isNoLogs) {
-      return "You are ready to start your first training streak today.";
+      return 'You are ready to start your first training streak today.';
     }
 
     if (input.hasHighStreak) {
@@ -187,15 +196,15 @@ export class CoachFeedbackGenerator {
     }
 
     if (input.isConsistent) {
-      return "You matched your expected training rhythm this week.";
+      return 'You matched your expected training rhythm this week.';
     }
 
     if (input.isBeginner) {
-      return "Good start this week. You already logged your first workouts and can build consistency from here.";
+      return 'Good start this week. You already logged your first workouts and can build consistency from here.';
     }
 
     if (input.isInconsistent) {
-      return "You have room to rebuild your rhythm this week.";
+      return 'You have room to rebuild your rhythm this week.';
     }
 
     return `You're making progress. Aim for ${input.expectedWorkouts} workouts this week to keep momentum.`;
@@ -203,13 +212,13 @@ export class CoachFeedbackGenerator {
 
   private buildGoalAwareRecommendation(goal: FitnessGoal): string {
     switch (goal) {
-      case "gain_muscle":
-        return "Prioritize full, high-quality sessions to support muscle gain";
-      case "lose_weight":
-        return "Keep your sessions regular to support your fat-loss goal";
-      case "maintain":
+      case 'gain_muscle':
+        return 'Prioritize full, high-quality sessions to support muscle gain';
+      case 'lose_weight':
+        return 'Keep your sessions regular to support your fat-loss goal';
+      case 'maintain':
       default:
-        return "Keep your routine steady to maintain your current fitness";
+        return 'Keep your routine steady to maintain your current fitness';
     }
   }
 
@@ -227,43 +236,43 @@ export class CoachFeedbackGenerator {
     }
 
     switch (input.fatigueLevel) {
-      case "HIGH":
-        input.influences.add("fatigue:high");
-        input.influences.add("recovery:needs_recovery");
+      case 'HIGH':
+        input.influences.add('fatigue:high');
+        input.influences.add('recovery:needs_recovery');
         this.upsertInsight(
           input.insights,
-          "Your recent training load suggests elevated fatigue",
+          'Your recent training load suggests elevated fatigue',
         );
         input.recommendations.unshift(
-          "Prioritize recovery and consider a lighter session if needed",
+          'Prioritize recovery and consider a lighter session if needed',
         );
         input.recommendations.push(
-          "Avoid increasing intensity until your recovery feels more stable",
+          'Avoid increasing intensity until your recovery feels more stable',
         );
         return;
-      case "LOW":
-        input.influences.add("fatigue:low");
-        input.influences.add("recovery:improving");
+      case 'LOW':
+        input.influences.add('fatigue:low');
+        input.influences.add('recovery:improving');
         this.upsertInsight(
           input.insights,
-          "Your recent workload looks manageable",
+          'Your recent workload looks manageable',
         );
         input.recommendations.push(
           input.hasTrainingPlan
-            ? "You can consider a small progression if your form stays solid"
-            : "Build consistency first, then progress intensity gradually",
+            ? 'You can consider a small progression if your form stays solid'
+            : 'Build consistency first, then progress intensity gradually',
         );
         return;
-      case "MODERATE":
+      case 'MODERATE':
       default:
         if (input.insights.length < 3) {
-          input.insights.push("Your current workload looks balanced overall");
+          input.insights.push('Your current workload looks balanced overall');
         } else if (input.hasExplicitFatigueLevel) {
           input.insights[input.insights.length - 1] =
-            "Your current workload looks balanced overall";
+            'Your current workload looks balanced overall';
         }
         input.recommendations.push(
-          "Keep your current plan and monitor recovery between sessions",
+          'Keep your current plan and monitor recovery between sessions',
         );
     }
   }
@@ -287,15 +296,15 @@ export class CoachFeedbackGenerator {
     }
 
     if (input.latestCheckIn.sleepQuality <= 2) {
-      input.influences.add("checkin:poor_sleep");
+      input.influences.add('checkin:poor_sleep');
       this.upsertInsight(
         input.insights,
-        "Your latest check-in suggests sleep may be limiting recovery",
+        'Your latest check-in suggests sleep may be limiting recovery',
       );
     }
 
     if (input.latestCheckIn.energyLevel <= 2) {
-      input.influences.add("checkin:low_energy");
+      input.influences.add('checkin:low_energy');
       this.prependRecommendation(
         input.recommendations,
         "Keep today's session lighter if your energy still feels low",
@@ -303,34 +312,34 @@ export class CoachFeedbackGenerator {
     }
 
     if (input.latestCheckIn.muscleSoreness >= 4) {
-      input.influences.add("checkin:high_soreness");
+      input.influences.add('checkin:high_soreness');
       this.prependRecommendation(
         input.recommendations,
-        "Consider mobility work, a lighter session, or extra recovery today",
+        'Consider mobility work, a lighter session, or extra recovery today',
       );
     }
 
     if (
       input.latestCheckIn.motivationLevel >= 4 &&
-      input.fatigueLevel === "LOW"
+      input.fatigueLevel === 'LOW'
     ) {
-      input.influences.add("checkin:high_motivation");
+      input.influences.add('checkin:high_motivation');
       this.prependRecommendation(
         input.recommendations,
         input.hasTrainingPlan
-          ? "Your motivation looks strong, so a small progression can make sense if recovery stays solid"
-          : "Use this motivation to stay consistent before adding more intensity",
+          ? 'Your motivation looks strong, so a small progression can make sense if recovery stays solid'
+          : 'Use this motivation to stay consistent before adding more intensity',
       );
     }
 
     if (input.latestCheckIn.motivationLevel <= 2) {
       this.upsertInsight(
         input.insights,
-        "Your latest check-in shows motivation is lower right now",
+        'Your latest check-in shows motivation is lower right now',
       );
       this.prependRecommendation(
         input.recommendations,
-        "Focus on consistency with a lighter, easier-to-start session today",
+        'Focus on consistency with a lighter, easier-to-start session today',
       );
     }
   }
@@ -347,57 +356,57 @@ export class CoachFeedbackGenerator {
     }
 
     if (input.nutritionProfile.mealsPerDay <= 2) {
-      input.influences.add("nutrition:low_meal_frequency");
+      input.influences.add('nutrition:low_meal_frequency');
       this.upsertInsight(
         input.insights,
-        "Your meal distribution may be too sparse to consistently support training and recovery",
+        'Your meal distribution may be too sparse to consistently support training and recovery',
       );
       this.prependRecommendation(
         input.recommendations,
-        "Try to spread your meals more evenly across the day to support recovery",
+        'Try to spread your meals more evenly across the day to support recovery',
       );
     }
 
     if (input.nutritionProfile.dietaryRestrictions.length > 0) {
-      input.influences.add("nutrition:dietary_restrictions");
+      input.influences.add('nutrition:dietary_restrictions');
       this.upsertInsight(
         input.insights,
-        "Your nutrition approach should stay consistent within your dietary restrictions",
+        'Your nutrition approach should stay consistent within your dietary restrictions',
       );
       this.prependRecommendation(
         input.recommendations,
-        "Keep your food choices consistent within your dietary restrictions to support recovery",
+        'Keep your food choices consistent within your dietary restrictions to support recovery',
       );
     }
 
     switch (input.nutritionProfile.goal) {
-      case "muscle_gain":
-        input.influences.add("nutrition:muscle_gain");
+      case 'muscle_gain':
+        input.influences.add('nutrition:muscle_gain');
         this.prependRecommendation(
           input.recommendations,
           input.isNoLogs
-            ? "Build meal consistency so your training sessions are supported when you resume"
-            : "Support muscle gain with consistent meals around training and recovery",
+            ? 'Build meal consistency so your training sessions are supported when you resume'
+            : 'Support muscle gain with consistent meals around training and recovery',
         );
         return;
-      case "fat_loss":
-        input.influences.add("nutrition:fat_loss");
+      case 'fat_loss':
+        input.influences.add('nutrition:fat_loss');
         this.prependRecommendation(
           input.recommendations,
-          "Keep meal timing consistent so your fat-loss routine stays easier to maintain",
+          'Keep meal timing consistent so your fat-loss routine stays easier to maintain',
         );
         if (!input.isNoLogs) {
           this.prependRecommendation(
             input.recommendations,
-            "Avoid skipping recovery meals after training even while pushing fat loss",
+            'Avoid skipping recovery meals after training even while pushing fat loss',
           );
         }
         return;
-      case "maintenance":
+      case 'maintenance':
       default:
         this.prependRecommendation(
           input.recommendations,
-          "Keep your meal routine steady so training and recovery stay predictable",
+          'Keep your meal routine steady so training and recovery stay predictable',
         );
     }
   }
@@ -409,12 +418,12 @@ export class CoachFeedbackGenerator {
     influences: Set<string>;
   }): void {
     if (input.logsCount >= input.expectedWorkouts || input.currentStreak >= 3) {
-      input.influences.add("training:high_consistency");
+      input.influences.add('training:high_consistency');
       return;
     }
 
     if (input.logsCount > 0 && input.logsCount < input.expectedWorkouts) {
-      input.influences.add("training:low_consistency");
+      input.influences.add('training:low_consistency');
     }
   }
 
@@ -495,7 +504,10 @@ export class CoachFeedbackGenerator {
   private limitItems(items: string[]): string[] {
     return items
       .map((item) => item.slice(0, 160))
-      .filter((item, index, array) => item.length > 0 && array.indexOf(item) === index)
+      .filter(
+        (item, index, array) =>
+          item.length > 0 && array.indexOf(item) === index,
+      )
       .slice(0, 3);
   }
 }

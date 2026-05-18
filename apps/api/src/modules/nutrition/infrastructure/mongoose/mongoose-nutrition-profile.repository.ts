@@ -1,22 +1,20 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { NutritionProfile } from "../../domain/entities/nutrition-profile.entity";
+import { NutritionProfile } from '../../domain/entities/nutrition-profile.entity';
 import {
   NutritionProfileRepository,
   UpsertNutritionProfileRepositoryInput,
-} from "../../domain/repositories/nutrition-profile.repository";
+} from '../../domain/repositories/nutrition-profile.repository';
 import {
   NUTRITION_PROFILE_MODEL_NAME,
   NutritionProfileDocument,
   NutritionProfileSchemaClass,
-} from "./nutrition-profile.schema";
+} from './nutrition-profile.schema';
 
 @Injectable()
-export class MongooseNutritionProfileRepository
-  implements NutritionProfileRepository
-{
+export class MongooseNutritionProfileRepository implements NutritionProfileRepository {
   constructor(
     @InjectModel(NUTRITION_PROFILE_MODEL_NAME)
     private readonly nutritionProfileModel: Model<NutritionProfileSchemaClass>,
@@ -28,7 +26,7 @@ export class MongooseNutritionProfileRepository
     const document = await this.nutritionProfileModel
       .findOne({
         userProfileId,
-        status: "active",
+        status: 'active',
       })
       .exec();
 

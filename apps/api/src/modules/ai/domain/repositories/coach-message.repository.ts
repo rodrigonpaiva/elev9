@@ -2,7 +2,7 @@ import {
   CoachMessage,
   CoachMessageMetadata,
   CoachMessageRole,
-} from "../entities/coach-message.entity";
+} from '../entities/coach-message.entity';
 
 export interface CreateCoachMessageRepositoryInput {
   conversationId: string;
@@ -19,4 +19,4 @@ export interface CoachMessageRepository {
   }): Promise<CoachMessage[]>;
 }
 
-export const COACH_MESSAGE_REPOSITORY = Symbol("COACH_MESSAGE_REPOSITORY");
+export const COACH_MESSAGE_REPOSITORY = Symbol('COACH_MESSAGE_REPOSITORY');

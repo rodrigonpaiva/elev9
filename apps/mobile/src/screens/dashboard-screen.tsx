@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -6,11 +6,11 @@ import {
   RefreshControl,
   StyleSheet,
   View,
-} from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+} from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { ApiClientError } from "@elev9/api-client";
+import { ApiClientError } from '@elev9/api-client';
 import {
   Badge,
   Button,
@@ -19,17 +19,17 @@ import {
   Screen,
   SectionHeader,
   Text,
-} from "@elev9/ui";
+} from '@elev9/ui';
 import type {
   CreateDailyCheckInRequest,
   DashboardHomeDebugResponse,
   DashboardHomeResponse,
   TodayWorkout,
-} from "@elev9/types";
+} from '@elev9/types';
 
-import { apiClient, mobileApiClient } from "../api/client";
-import { useAuth } from "../auth/auth-provider";
-import type { RootStackParamList } from "../navigation/app-navigator";
+import { apiClient, mobileApiClient } from '../api/client';
+import { useAuth } from '../auth/auth-provider';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 type DashboardScreenProps = {
   onOpenHistory?: () => void;
@@ -50,8 +50,9 @@ export function DashboardScreen({
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut } = useAuth();
-  const [dashboard, setDashboard] =
-    useState<DashboardHomeResponse["dashboard"] | null>(null);
+  const [dashboard, setDashboard] = useState<
+    DashboardHomeResponse['dashboard'] | null
+  >(null);
   const [dashboardDebug, setDashboardDebug] =
     useState<DashboardHomeDebugResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -63,47 +64,50 @@ export function DashboardScreen({
     useState<CreateDailyCheckInRequest>(DEFAULT_DAILY_CHECK_IN);
   const entrance = useRef(new Animated.Value(0)).current;
 
-  const loadDashboard = useCallback(async (options?: { refresh?: boolean }) => {
-    if (options?.refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-    setErrorMessage(null);
-    setDashboardDebug(null);
-
-    try {
-      const [response, progressSummary, debugResponse] = await Promise.all([
-        apiClient.dashboard.getHome(),
-        apiClient.progress.getSummary("week"),
-        mobileApiClient.dashboard.getHomeDebug().catch(() => null),
-      ]);
-
-      setDashboard(response.dashboard);
-      setDashboardDebug(debugResponse);
-      setCurrentStreak(progressSummary.summary.currentStreak);
-    } catch (error) {
-      if (
-        error instanceof ApiClientError &&
-        error.code === "AUTH_INVALID_SESSION"
-      ) {
-        await signOut();
-        return;
-      }
-
-      if (error instanceof ApiClientError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("Unable to load dashboard.");
-      }
-    } finally {
+  const loadDashboard = useCallback(
+    async (options?: { refresh?: boolean }) => {
       if (options?.refresh) {
-        setIsRefreshing(false);
+        setIsRefreshing(true);
       } else {
-        setIsLoading(false);
+        setIsLoading(true);
       }
-    }
-  }, [signOut]);
+      setErrorMessage(null);
+      setDashboardDebug(null);
+
+      try {
+        const [response, progressSummary, debugResponse] = await Promise.all([
+          apiClient.dashboard.getHome(),
+          apiClient.progress.getSummary('week'),
+          mobileApiClient.dashboard.getHomeDebug().catch(() => null),
+        ]);
+
+        setDashboard(response.dashboard);
+        setDashboardDebug(debugResponse);
+        setCurrentStreak(progressSummary.summary.currentStreak);
+      } catch (error) {
+        if (
+          error instanceof ApiClientError &&
+          error.code === 'AUTH_INVALID_SESSION'
+        ) {
+          await signOut();
+          return;
+        }
+
+        if (error instanceof ApiClientError) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage('Unable to load dashboard.');
+        }
+      } finally {
+        if (options?.refresh) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
+      }
+    },
+    [signOut],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -142,7 +146,7 @@ export function DashboardScreen({
     } catch (error) {
       if (
         error instanceof ApiClientError &&
-        error.code === "AUTH_INVALID_SESSION"
+        error.code === 'AUTH_INVALID_SESSION'
       ) {
         await signOut();
         return;
@@ -151,7 +155,7 @@ export function DashboardScreen({
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to save daily check-in.");
+        setErrorMessage('Unable to save daily check-in.');
       }
     } finally {
       setIsSubmittingCheckIn(false);
@@ -173,10 +177,14 @@ export function DashboardScreen({
         <Card style={styles.sectionCard}>
           <Text variant="title">Dashboard unavailable</Text>
           <Text style={styles.mutedText}>
-            {errorMessage ?? "Unable to load your home dashboard."}
+            {errorMessage ?? 'Unable to load your home dashboard.'}
           </Text>
         </Card>
-        <Button label="Retry" onPress={() => void loadDashboard()} style={styles.fullButton} />
+        <Button
+          label="Retry"
+          onPress={() => void loadDashboard()}
+          style={styles.fullButton}
+        />
         <Button
           label="Logout"
           onPress={() => void signOut()}
@@ -204,7 +212,9 @@ export function DashboardScreen({
         ),
       }}
     >
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 0)]}>
+      <Animated.View
+        style={[styles.animatedSection, animatedStyle(entrance, 0)]}
+      >
         <Card style={styles.heroCard}>
           <Badge variant="primary" label="Elev9 Home" />
           <Text variant="headline" style={styles.heroTitle}>
@@ -217,14 +227,16 @@ export function DashboardScreen({
             <Text style={styles.streakBannerLabel}>🔥 Current streak</Text>
             <Text style={styles.streakBannerValue}>
               {currentStreak === 0
-                ? "Start your first streak today"
-                : `${currentStreak} day${currentStreak === 1 ? "" : "s"}`}
+                ? 'Start your first streak today'
+                : `${currentStreak} day${currentStreak === 1 ? '' : 's'}`}
             </Text>
           </View>
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 1)]}>
+      <Animated.View
+        style={[styles.animatedSection, animatedStyle(entrance, 1)]}
+      >
         <Card style={styles.sectionCard}>
           <SectionHeader
             title="Weekly Progress"
@@ -248,15 +260,17 @@ export function DashboardScreen({
             <View style={[styles.metricCard, styles.metricCardAccent]}>
               <Text style={styles.metricLabel}>🔥 Streak</Text>
               <Text style={styles.metricHighlight}>
-                {currentStreak} day{currentStreak === 1 ? "" : "s"}
+                {currentStreak} day{currentStreak === 1 ? '' : 's'}
               </Text>
             </View>
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Last workout</Text>
               <Text style={styles.metricSecondary}>
                 {dashboard.progressSummary.lastWorkoutDate
-                  ? formatDashboardDate(dashboard.progressSummary.lastWorkoutDate)
-                  : "No activity yet"}
+                  ? formatDashboardDate(
+                      dashboard.progressSummary.lastWorkoutDate,
+                    )
+                  : 'No activity yet'}
               </Text>
             </View>
           </View>
@@ -264,14 +278,16 @@ export function DashboardScreen({
             <View style={styles.metricCard}>
               <Text style={styles.metricLabel}>Fitness goal</Text>
               <Text style={styles.metricSecondary}>
-                {dashboard.fitnessProfile?.goal ?? "Not created yet"}
+                {dashboard.fitnessProfile?.goal ?? 'Not created yet'}
               </Text>
             </View>
           </View>
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 2)]}>
+      <Animated.View
+        style={[styles.animatedSection, animatedStyle(entrance, 2)]}
+      >
         <Card style={styles.sectionCard}>
           <SectionHeader
             title="Recovery Status"
@@ -311,17 +327,18 @@ export function DashboardScreen({
             <View style={styles.recoverySnapshot}>
               <Text style={styles.metricLabel}>Latest check-in</Text>
               <Text style={styles.metricValue}>
-                Energy {dashboard.recovery.latestCheckIn.energyLevel} • Sleep{" "}
-                {dashboard.recovery.latestCheckIn.sleepQuality} • Soreness{" "}
-                {dashboard.recovery.latestCheckIn.muscleSoreness} • Motivation{" "}
+                Energy {dashboard.recovery.latestCheckIn.energyLevel} • Sleep{' '}
+                {dashboard.recovery.latestCheckIn.sleepQuality} • Soreness{' '}
+                {dashboard.recovery.latestCheckIn.muscleSoreness} • Motivation{' '}
                 {dashboard.recovery.latestCheckIn.motivationLevel}
               </Text>
               <Text style={styles.recoveryTimestamp}>
-                Updated {formatDateTime(dashboard.recovery.latestCheckIn.createdAt)}
+                Updated{' '}
+                {formatDateTime(dashboard.recovery.latestCheckIn.createdAt)}
               </Text>
               <Button
                 label="View recovery history"
-                onPress={() => navigation.navigate("DailyCheckInHistory")}
+                onPress={() => navigation.navigate('DailyCheckInHistory')}
                 variant="secondary"
                 style={styles.historyButton}
               />
@@ -334,7 +351,7 @@ export function DashboardScreen({
               </Text>
               <Button
                 label="View recovery history"
-                onPress={() => navigation.navigate("DailyCheckInHistory")}
+                onPress={() => navigation.navigate('DailyCheckInHistory')}
                 variant="secondary"
                 style={styles.historyButton}
               />
@@ -343,7 +360,9 @@ export function DashboardScreen({
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 3)]}>
+      <Animated.View
+        style={[styles.animatedSection, animatedStyle(entrance, 3)]}
+      >
         <Card style={styles.sectionCard}>
           <SectionHeader
             title="Nutrition Guidance"
@@ -352,7 +371,9 @@ export function DashboardScreen({
           <View
             style={[
               styles.metricCard,
-              nutritionGuidanceCardStyleMap[dashboard.nutritionGuidance.priority],
+              nutritionGuidanceCardStyleMap[
+                dashboard.nutritionGuidance.priority
+              ],
             ]}
           >
             <View style={styles.workoutHeader}>
@@ -379,7 +400,9 @@ export function DashboardScreen({
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 4)]}>
+      <Animated.View
+        style={[styles.animatedSection, animatedStyle(entrance, 4)]}
+      >
         <Card style={styles.sectionCard}>
           <SectionHeader
             title="Adaptive Signals"
@@ -409,7 +432,9 @@ export function DashboardScreen({
             </View>
           ) : (
             <View style={styles.fallbackBox}>
-              <Text style={styles.metricValue}>Adaptive signals unavailable</Text>
+              <Text style={styles.metricValue}>
+                Adaptive signals unavailable
+              </Text>
               <Text style={styles.fallbackText}>
                 The internal debug snapshot could not be loaded.
               </Text>
@@ -418,7 +443,9 @@ export function DashboardScreen({
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 5)]}>
+      <Animated.View
+        style={[styles.animatedSection, animatedStyle(entrance, 5)]}
+      >
         <Card style={styles.sectionCard}>
           <SectionHeader
             title="Daily Check-in"
@@ -427,24 +454,26 @@ export function DashboardScreen({
           <RatingField
             label="Energy"
             value={dailyCheckInForm.energyLevel}
-            onChange={(value) => updateDailyCheckInValue("energyLevel", value)}
+            onChange={(value) => updateDailyCheckInValue('energyLevel', value)}
           />
           <RatingField
             label="Sleep"
             value={dailyCheckInForm.sleepQuality}
-            onChange={(value) => updateDailyCheckInValue("sleepQuality", value)}
+            onChange={(value) => updateDailyCheckInValue('sleepQuality', value)}
           />
           <RatingField
             label="Soreness"
             value={dailyCheckInForm.muscleSoreness}
             onChange={(value) =>
-              updateDailyCheckInValue("muscleSoreness", value)
+              updateDailyCheckInValue('muscleSoreness', value)
             }
           />
           <RatingField
             label="Motivation"
             value={dailyCheckInForm.motivationLevel}
-            onChange={(value) => updateDailyCheckInValue("motivationLevel", value)}
+            onChange={(value) =>
+              updateDailyCheckInValue('motivationLevel', value)
+            }
           />
           <Button
             label="Save Daily Check-in"
@@ -455,20 +484,22 @@ export function DashboardScreen({
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 6)]}>
+      <Animated.View
+        style={[styles.animatedSection, animatedStyle(entrance, 6)]}
+      >
         <Card style={styles.sectionCard}>
           <SectionHeader
-            title="Today&apos;s Workout"
+            title="Today's Workout"
             subtitle={
               trainingPlan && todayWorkout
-                ? "Ready when you are."
-                : "No workout is scheduled for today."
+                ? 'Ready when you are.'
+                : 'No workout is scheduled for today.'
             }
           />
           {trainingPlan && todayWorkout ? (
             <Pressable
               onPress={() =>
-                navigation.navigate("Workout", {
+                navigation.navigate('Workout', {
                   trainingPlanId: trainingPlan.id,
                   workout: todayWorkout as TodayWorkout,
                 })
@@ -480,8 +511,12 @@ export function DashboardScreen({
                   <Text style={styles.workoutTitle}>{todayWorkout.title}</Text>
                   <Badge label={todayWorkout.intensity} variant="muted" />
                 </View>
-                <Text style={styles.metricValue}>Focus: {todayWorkout.focus}</Text>
-                <Text style={styles.metricValue}>Format: {todayWorkout.format}</Text>
+                <Text style={styles.metricValue}>
+                  Focus: {todayWorkout.focus}
+                </Text>
+                <Text style={styles.metricValue}>
+                  Format: {todayWorkout.format}
+                </Text>
                 <Text style={styles.metricValue}>
                   Exercises: {todayWorkout.exercises.length}
                 </Text>
@@ -498,7 +533,9 @@ export function DashboardScreen({
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 7)]}>
+      <Animated.View
+        style={[styles.animatedSection, animatedStyle(entrance, 7)]}
+      >
         <Card style={styles.sectionCard}>
           <SectionHeader
             title="Quick Actions"
@@ -507,7 +544,7 @@ export function DashboardScreen({
           <View style={styles.actionsGroup}>
             <Button
               label="Coach Chat"
-              onPress={() => navigation.navigate("CoachChat")}
+              onPress={() => navigation.navigate('CoachChat')}
               variant="secondary"
               style={styles.fullButton}
             />
@@ -515,7 +552,7 @@ export function DashboardScreen({
               label="Start Workout"
               onPress={() =>
                 trainingPlan && todayWorkout
-                  ? navigation.navigate("Workout", {
+                  ? navigation.navigate('Workout', {
                       trainingPlanId: trainingPlan.id,
                       workout: todayWorkout as TodayWorkout,
                     })
@@ -598,15 +635,15 @@ function RatingField({ label, value, onChange }: RatingFieldProps) {
 
 const styles = StyleSheet.create({
   loadingScreen: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
   },
   loadingText: {
     color: colors.mutedText,
   },
   emptyScreen: {
-    justifyContent: "center",
+    justifyContent: 'center',
     gap: 16,
   },
   scrollContent: {
@@ -614,7 +651,7 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   animatedSection: {
-    width: "100%",
+    width: '100%',
   },
   heroCard: {
     backgroundColor: colors.surface,
@@ -639,19 +676,19 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   streakBannerValue: {
     color: colors.text,
     fontSize: 20,
     lineHeight: 26,
-    fontWeight: "800",
+    fontWeight: '800',
   },
   sectionCard: {
     gap: 10,
   },
   metricsGrid: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   metricCard: {
@@ -660,7 +697,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: "#0b1220",
+    backgroundColor: '#0b1220',
     padding: 14,
   },
   metricCardAccent: {
@@ -674,9 +711,9 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 0.8,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     color: colors.mutedText,
   },
   metricValue: {
@@ -686,18 +723,18 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 28,
     lineHeight: 32,
-    fontWeight: "800",
+    fontWeight: '800',
   },
   metricSecondary: {
     color: colors.text,
     fontSize: 15,
     lineHeight: 20,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   workoutTitle: {
     fontSize: 18,
     lineHeight: 24,
-    fontWeight: "700",
+    fontWeight: '700',
     color: colors.text,
   },
   workoutPressable: {
@@ -707,15 +744,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   workoutHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 12,
   },
   fallbackBox: {
     gap: 6,
     borderRadius: 18,
-    backgroundColor: "#0b1220",
+    backgroundColor: '#0b1220',
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
@@ -728,20 +765,20 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: "#0b1220",
+    backgroundColor: '#0b1220',
     padding: 16,
   },
   recoveryTrendRow: {
     marginTop: 4,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 12,
   },
   recoveryTrendValue: {
     fontSize: 15,
     lineHeight: 20,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   recoveryTimestamp: {
     color: colors.mutedText,
@@ -756,24 +793,24 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   ratingHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 12,
   },
   ratingScale: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 10,
   },
   ratingButton: {
     flex: 1,
     minHeight: 42,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: "#0b1220",
+    backgroundColor: '#0b1220',
   },
   ratingButtonActive: {
     borderColor: colors.primary,
@@ -783,13 +820,13 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 16,
     lineHeight: 20,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   ratingButtonTextActive: {
     color: colors.primaryText,
   },
   error: {
-    color: "#fca5a5",
+    color: '#fca5a5',
   },
   mutedText: {
     color: colors.mutedText,
@@ -802,12 +839,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
 });
 
 const recoveryCardStyleMap: Record<
-  DashboardHomeResponse["dashboard"]["recovery"]["fatigueLevel"],
+  DashboardHomeResponse['dashboard']['recovery']['fatigueLevel'],
   object
 > = {
   HIGH: styles.metricCardDanger,
@@ -816,22 +853,22 @@ const recoveryCardStyleMap: Record<
 };
 
 const recoveryTrendStyleMap: Record<
-  DashboardHomeResponse["dashboard"]["recovery"]["recoveryTrend"],
+  DashboardHomeResponse['dashboard']['recovery']['recoveryTrend'],
   object
 > = {
   improving: {
-    color: "#86efac",
+    color: '#86efac',
   },
   stable: {
     color: colors.text,
   },
   needs_recovery: {
-    color: "#fdba74",
+    color: '#fdba74',
   },
 };
 
 const nutritionGuidanceCardStyleMap: Record<
-  DashboardHomeResponse["dashboard"]["nutritionGuidance"]["priority"],
+  DashboardHomeResponse['dashboard']['nutritionGuidance']['priority'],
   object
 > = {
   recovery: styles.metricCardDanger,
@@ -854,58 +891,58 @@ function animatedStyle(value: Animated.Value, index: number) {
 }
 
 function formatNutritionGuidancePriority(
-  value: DashboardHomeResponse["dashboard"]["nutritionGuidance"]["priority"],
+  value: DashboardHomeResponse['dashboard']['nutritionGuidance']['priority'],
 ): string {
   switch (value) {
-    case "recovery":
-      return "Recovery";
-    case "performance":
-      return "Performance";
-    case "consistency":
+    case 'recovery':
+      return 'Recovery';
+    case 'performance':
+      return 'Performance';
+    case 'consistency':
     default:
-      return "Consistency";
+      return 'Consistency';
   }
 }
 
 function formatNutritionGuidanceSignal(signal: string): string {
   return signal
-    .split("_")
+    .split('_')
     .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(" ");
+    .join(' ');
 }
 
 function formatDashboardDate(value: string): string {
   const date = new Date(`${value}T00:00:00.000Z`);
 
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
   }).format(date);
 }
 
 function formatDateTime(value: string): string {
   const date = new Date(value);
 
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   }).format(date);
 }
 
 function formatRecoveryTrend(
-  value: DashboardHomeResponse["dashboard"]["recovery"]["recoveryTrend"],
+  value: DashboardHomeResponse['dashboard']['recovery']['recoveryTrend'],
 ): string {
   switch (value) {
-    case "improving":
-      return "Improving";
-    case "needs_recovery":
-      return "Needs recovery";
-    case "stable":
+    case 'improving':
+      return 'Improving';
+    case 'needs_recovery':
+      return 'Needs recovery';
+    case 'stable':
     default:
-      return "Stable";
+      return 'Stable';
   }
 }

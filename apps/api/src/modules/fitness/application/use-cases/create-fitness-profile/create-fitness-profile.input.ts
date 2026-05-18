@@ -2,7 +2,7 @@ import {
   ActivityLevel,
   FitnessGoal,
   FitnessProfileLimitation,
-} from "../../../domain/entities/fitness-profile.entity";
+} from '../../../domain/entities/fitness-profile.entity';
 
 export type CreateFitnessProfileInput = {
   authUserId: string;

@@ -1,4 +1,4 @@
-export type AiLlmMessageRole = "system" | "user" | "assistant";
+export type AiLlmMessageRole = 'system' | 'user' | 'assistant';
 
 export type AiLlmMessage = {
   role: AiLlmMessageRole;
@@ -26,4 +26,4 @@ export interface AiLlmProvider {
   generateReply(input: AiLlmGenerateReplyInput): Promise<string>;
 }
 
-export const AI_LLM_PROVIDER = Symbol("AI_LLM_PROVIDER");
+export const AI_LLM_PROVIDER = Symbol('AI_LLM_PROVIDER');

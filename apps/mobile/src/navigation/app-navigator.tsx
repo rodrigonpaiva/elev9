@@ -1,20 +1,20 @@
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
-import type { TodayWorkout } from "@elev9/types";
-import { Text } from "@elev9/ui";
+import type { TodayWorkout } from '@elev9/types';
+import { Text } from '@elev9/ui';
 
-import { useAuth } from "../auth/auth-provider";
-import { CreateFitnessProfileScreen } from "../screens/create-fitness-profile-screen";
-import { CreateProfileScreen } from "../screens/create-profile-screen";
-import { CreateTrainingPlanScreen } from "../screens/create-training-plan-screen";
-import { DailyCheckInHistoryScreen } from "../screens/daily-check-in-history-screen";
-import { CoachChatScreen } from "../screens/coach-chat-screen";
-import { HomeResolverScreen } from "../screens/home-resolver-screen";
-import { LoginScreen } from "../screens/login-screen";
-import { MainTabsScreen } from "../screens/main-tabs-screen";
-import { WorkoutScreen } from "../screens/workout-screen";
+import { useAuth } from '../auth/auth-provider';
+import { CreateFitnessProfileScreen } from '../screens/create-fitness-profile-screen';
+import { CreateProfileScreen } from '../screens/create-profile-screen';
+import { CreateTrainingPlanScreen } from '../screens/create-training-plan-screen';
+import { DailyCheckInHistoryScreen } from '../screens/daily-check-in-history-screen';
+import { CoachChatScreen } from '../screens/coach-chat-screen';
+import { HomeResolverScreen } from '../screens/home-resolver-screen';
+import { LoginScreen } from '../screens/login-screen';
+import { MainTabsScreen } from '../screens/main-tabs-screen';
+import { WorkoutScreen } from '../screens/workout-screen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -23,8 +23,8 @@ export type RootStackParamList = {
   CreateFitnessProfile: undefined;
   CreateTrainingPlan: {
     fitnessProfileId: string;
-    goal?: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel?: "low" | "medium" | "high";
+    goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel?: 'low' | 'medium' | 'high';
   };
   MainTabs: undefined;
   CoachChat: undefined;
@@ -40,7 +40,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export function AppNavigator() {
   const { status } = useAuth();
 
-  if (status === "loading") {
+  if (status === 'loading') {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color="#22c55e" />
@@ -52,7 +52,7 @@ export function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {status === "authenticated" ? (
+        {status === 'authenticated' ? (
           <>
             <Stack.Screen
               name="HomeResolver"
@@ -84,11 +84,11 @@ export function AppNavigator() {
               component={CoachChatScreen}
               options={{
                 headerShown: true,
-                title: "Coach Chat",
+                title: 'Coach Chat',
                 headerStyle: {
-                  backgroundColor: "#020617",
+                  backgroundColor: '#020617',
                 },
-                headerTintColor: "#f8fafc",
+                headerTintColor: '#f8fafc',
                 headerShadowVisible: false,
               }}
             />
@@ -97,11 +97,11 @@ export function AppNavigator() {
               component={DailyCheckInHistoryScreen}
               options={{
                 headerShown: true,
-                title: "Recovery History",
+                title: 'Recovery History',
                 headerStyle: {
-                  backgroundColor: "#020617",
+                  backgroundColor: '#020617',
                 },
-                headerTintColor: "#f8fafc",
+                headerTintColor: '#f8fafc',
                 headerShadowVisible: false,
               }}
             />
@@ -110,11 +110,11 @@ export function AppNavigator() {
               component={WorkoutScreen}
               options={{
                 headerShown: true,
-                title: "Workout",
+                title: 'Workout',
                 headerStyle: {
-                  backgroundColor: "#020617",
+                  backgroundColor: '#020617',
                 },
-                headerTintColor: "#f8fafc",
+                headerTintColor: '#f8fafc',
                 headerShadowVisible: false,
               }}
             />
@@ -134,13 +134,13 @@ export function AppNavigator() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#020617",
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#020617',
     paddingHorizontal: 24,
   },
   loadingText: {
     marginTop: 14,
-    color: "#94a3b8",
+    color: '#94a3b8',
   },
 });

@@ -1,15 +1,15 @@
-import "reflect-metadata";
+import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { Test, TestingModule } from "@nestjs/testing";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import { disconnect } from "mongoose";
-import request from "supertest";
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { disconnect } from 'mongoose';
+import request from 'supertest';
 
-import { AuthModule } from "../../src/modules/auth/auth.module";
+import { AuthModule } from '../../src/modules/auth/auth.module';
 
-describe("Auth Login E2E", () => {
+describe('Auth Login E2E', () => {
   let app: INestApplication;
   let mongoMemoryServer: MongoMemoryServer;
 
@@ -38,21 +38,21 @@ describe("Auth Login E2E", () => {
     await mongoMemoryServer.stop();
   });
 
-  it("POST /auth/login success", async () => {
+  it('POST /auth/login success', async () => {
     await request(app.getHttpServer())
-      .post("/auth/register")
+      .post('/auth/register')
       .send({
-        name: "Rodrigo Paiva",
-        email: "login-success@email.com",
-        password: "StrongPassword123",
+        name: 'Rodrigo Paiva',
+        email: 'login-success@email.com',
+        password: 'StrongPassword123',
       })
       .expect(201);
 
     const response = await request(app.getHttpServer())
-      .post("/auth/login")
+      .post('/auth/login')
       .send({
-        email: " Login-Success@Email.com ",
-        password: "StrongPassword123",
+        email: ' Login-Success@Email.com ',
+        password: 'StrongPassword123',
       })
       .expect(200);
 
@@ -60,47 +60,47 @@ describe("Auth Login E2E", () => {
       accessToken: expect.any(String),
       user: {
         id: expect.any(String),
-        email: "login-success@email.com",
+        email: 'login-success@email.com',
       },
     });
   });
 
-  it("login with wrong password returns 401", async () => {
+  it('login with wrong password returns 401', async () => {
     await request(app.getHttpServer())
-      .post("/auth/register")
+      .post('/auth/register')
       .send({
-        name: "Rodrigo Paiva",
-        email: "wrong-password@email.com",
-        password: "StrongPassword123",
+        name: 'Rodrigo Paiva',
+        email: 'wrong-password@email.com',
+        password: 'StrongPassword123',
       })
       .expect(201);
 
     const response = await request(app.getHttpServer())
-      .post("/auth/login")
+      .post('/auth/login')
       .send({
-        email: "wrong-password@email.com",
-        password: "WrongPassword123",
+        email: 'wrong-password@email.com',
+        password: 'WrongPassword123',
       })
       .expect(401);
 
     expect(response.body).toEqual({
-      code: "AUTH_INVALID_CREDENTIALS",
-      message: "Invalid credentials.",
+      code: 'AUTH_INVALID_CREDENTIALS',
+      message: 'Invalid credentials.',
     });
   });
 
-  it("login with nonexistent email returns 401", async () => {
+  it('login with nonexistent email returns 401', async () => {
     const response = await request(app.getHttpServer())
-      .post("/auth/login")
+      .post('/auth/login')
       .send({
-        email: "missing@email.com",
-        password: "StrongPassword123",
+        email: 'missing@email.com',
+        password: 'StrongPassword123',
       })
       .expect(401);
 
     expect(response.body).toEqual({
-      code: "AUTH_INVALID_CREDENTIALS",
-      message: "Invalid credentials.",
+      code: 'AUTH_INVALID_CREDENTIALS',
+      message: 'Invalid credentials.',
     });
   });
 });

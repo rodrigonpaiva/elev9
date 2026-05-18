@@ -1,4 +1,4 @@
-import { Type } from "class-transformer";
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsIn,
@@ -9,7 +9,7 @@ import {
   Max,
   Min,
   ValidateNested,
-} from "class-validator";
+} from 'class-validator';
 
 class TrainingAvailabilityDto {
   @Type(() => Number)
@@ -33,8 +33,8 @@ class FitnessLimitationDto {
   @IsString()
   description?: string;
 
-  @IsIn(["low", "medium", "high"])
-  severity!: "low" | "medium" | "high";
+  @IsIn(['low', 'medium', 'high'])
+  severity!: 'low' | 'medium' | 'high';
 }
 
 export class CreateFitnessProfileRequestDto {
@@ -50,11 +50,11 @@ export class CreateFitnessProfileRequestDto {
   @Max(300)
   weightKg!: number;
 
-  @IsIn(["lose_weight", "gain_muscle", "maintain"])
-  goal!: "lose_weight" | "gain_muscle" | "maintain";
+  @IsIn(['lose_weight', 'gain_muscle', 'maintain'])
+  goal!: 'lose_weight' | 'gain_muscle' | 'maintain';
 
-  @IsIn(["low", "medium", "high"])
-  activityLevel!: "low" | "medium" | "high";
+  @IsIn(['low', 'medium', 'high'])
+  activityLevel!: 'low' | 'medium' | 'high';
 
   @ValidateNested()
   @Type(() => TrainingAvailabilityDto)

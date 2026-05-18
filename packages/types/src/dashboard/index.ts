@@ -1,8 +1,5 @@
-import {
-  FitnessProfileActivityLevel,
-  FitnessProfileGoal,
-} from "../fitness";
-import { TrainingPlanIntensity } from "../training";
+import { FitnessProfileActivityLevel, FitnessProfileGoal } from '../fitness';
+import { TrainingPlanIntensity } from '../training';
 
 export type DashboardHomeResponse = {
   dashboard: {
@@ -31,16 +28,16 @@ export type DashboardHomeResponse = {
       } | null;
     } | null;
     progressSummary: {
-      period: "week";
+      period: 'week';
       workoutsCompleted: number;
       totalDurationMinutes: number;
       averageDurationMinutes: number;
       lastWorkoutDate: string | null;
     };
     recovery: {
-      fatigueLevel: "LOW" | "MODERATE" | "HIGH";
-      recommendedIntensity: "low" | "medium" | "normal";
-      recoveryTrend: "improving" | "stable" | "needs_recovery";
+      fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH';
+      recommendedIntensity: 'low' | 'medium' | 'normal';
+      recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
       latestCheckIn?: {
         energyLevel: number;
         sleepQuality: number;
@@ -50,7 +47,7 @@ export type DashboardHomeResponse = {
       };
     };
     nutritionGuidance: {
-      priority: "recovery" | "consistency" | "performance";
+      priority: 'recovery' | 'consistency' | 'performance';
       message: string;
       signals: string[];
     };
@@ -61,15 +58,17 @@ export type DashboardHomeDebugResponse = {
   generatedAt: string;
   recovery: {
     fatigueLevel: string;
-    recoveryTrend: "improving" | "stable" | "needs_recovery";
+    recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
     recoverySignals: string[];
   };
   nutrition: {
-    priority: "recovery" | "consistency" | "performance";
+    priority: 'recovery' | 'consistency' | 'performance';
     signals: string[];
   };
 };
 
 export type TodayWorkout = NonNullable<
-  NonNullable<DashboardHomeResponse["dashboard"]["trainingPlan"]>["todayWorkout"]
+  NonNullable<
+    DashboardHomeResponse['dashboard']['trainingPlan']
+  >['todayWorkout']
 >;

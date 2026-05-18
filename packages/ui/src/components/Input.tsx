@@ -6,12 +6,12 @@ import {
   type TextInputProps,
   type TextStyle,
   type ViewStyle,
-} from "react-native";
+} from 'react-native';
 
-import { colors } from "../theme/colors";
-import { radius } from "../theme/radius";
-import { spacing } from "../theme/spacing";
-import { Text } from "./Text";
+import { colors } from '../theme/colors';
+import { radius } from '../theme/radius';
+import { spacing } from '../theme/spacing';
+import { Text } from './Text';
 
 export type InputProps = TextInputProps & {
   className?: string;

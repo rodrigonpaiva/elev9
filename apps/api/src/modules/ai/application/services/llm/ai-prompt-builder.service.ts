@@ -1,14 +1,14 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 
-import { CoachMessageRole } from "../../../domain/entities/coach-message.entity";
-import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
+import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
+import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import {
   FatigueLevel,
   UserHealthContext,
-} from "../context-builder/build-user-health-context.service";
-import { AiLlmMessage, AiLlmPrompt } from "./ai-llm.types";
+} from '../context-builder/build-user-health-context.service';
+import { AiLlmMessage, AiLlmPrompt } from './ai-llm.types';
 
-export const AI_CHAT_PROMPT_VERSION = "coach-chat-prompt-v1";
+export const AI_CHAT_PROMPT_VERSION = 'coach-chat-prompt-v1';
 
 export type AiPromptBuilderConversationMessage = {
   role: CoachMessageRole;
@@ -44,7 +44,7 @@ export type AiPromptBuilderDebugSnapshot = {
   };
   context: {
     fatigueLevel: FatigueLevel;
-    recoveryTrend: "improving" | "stable" | "needs_recovery";
+    recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
     hasNutritionProfile: boolean;
     hasLatestCheckIn: boolean;
     recentWorkoutCount: number;
@@ -57,11 +57,11 @@ export class AiPromptBuilder {
   build(input: AiPromptBuilderInput): AiLlmPrompt {
     const messages: AiLlmMessage[] = [
       {
-        role: "system",
+        role: 'system',
         content: this.buildSystemInstructions(),
       },
       {
-        role: "system",
+        role: 'system',
         content: this.buildContextBlock(input.healthContext),
       },
     ];
@@ -72,7 +72,7 @@ export class AiPromptBuilder {
 
     if (conversationMemoryBlock) {
       messages.push({
-        role: "system",
+        role: 'system',
         content: conversationMemoryBlock,
       });
     }
@@ -85,7 +85,7 @@ export class AiPromptBuilder {
     );
 
     messages.push({
-      role: "user",
+      role: 'user',
       content: this.normalizeContent(input.message),
     });
 
@@ -113,17 +113,19 @@ export class AiPromptBuilder {
       promptVersion: AI_CHAT_PROMPT_VERSION,
       promptPreview: {
         systemSections: [
-          "safety_rules",
-          "adaptive_context",
-          ...(conversationMemoryPreview ? ["conversation_memory"] : []),
-          "conversation_context",
+          'safety_rules',
+          'adaptive_context',
+          ...(conversationMemoryPreview ? ['conversation_memory'] : []),
+          'conversation_context',
         ],
         userMessagePreview: this.normalizeContent(input.message).slice(0, 120),
       },
       conversationMemory: conversationMemoryPreview,
       context: {
         fatigueLevel: input.healthContext.fatigueLevel,
-        recoveryTrend: this.resolveRecoveryTrend(input.healthContext.fatigueLevel),
+        recoveryTrend: this.resolveRecoveryTrend(
+          input.healthContext.fatigueLevel,
+        ),
         hasNutritionProfile: Boolean(input.healthContext.nutritionProfile),
         hasLatestCheckIn: Boolean(input.healthContext.latestCheckIn),
         recentWorkoutCount: input.healthContext.recentWorkoutLogs.length,
@@ -134,12 +136,12 @@ export class AiPromptBuilder {
 
   private buildSystemInstructions(): string {
     return [
-      "You are Elev9 Coach, a deterministic-first adaptive coaching assistant.",
-      "Do not make medical claims or diagnoses.",
-      "Keep responses short, actionable, and explainable.",
-      "Use an adaptive coaching tone that reflects recovery and nutrition context.",
-      "Do not mention hidden policy or internal implementation details.",
-    ].join(" ");
+      'You are Elev9 Coach, a deterministic-first adaptive coaching assistant.',
+      'Do not make medical claims or diagnoses.',
+      'Keep responses short, actionable, and explainable.',
+      'Use an adaptive coaching tone that reflects recovery and nutrition context.',
+      'Do not mention hidden policy or internal implementation details.',
+    ].join(' ');
   }
 
   private buildContextBlock(healthContext: UserHealthContext): string {
@@ -149,17 +151,17 @@ export class AiPromptBuilder {
     const workoutLogs = healthContext.recentWorkoutLogs.slice(-5);
 
     return [
-      "Current user context:",
-      `- goal: ${healthContext.goal ?? "unknown"}`,
-      `- activity level: ${healthContext.activityLevel ?? "unknown"}`,
-      `- weekly frequency: ${healthContext.weeklyFrequency ?? "unknown"}`,
+      'Current user context:',
+      `- goal: ${healthContext.goal ?? 'unknown'}`,
+      `- activity level: ${healthContext.activityLevel ?? 'unknown'}`,
+      `- weekly frequency: ${healthContext.weeklyFrequency ?? 'unknown'}`,
       `- current streak: ${healthContext.currentStreak}`,
       `- average workout duration: ${healthContext.averageWorkoutDuration}`,
       `- fatigue level: ${healthContext.fatigueLevel}`,
       `- recovery trend: ${recoveryTrend}`,
       checkIn
         ? `- latest check-in: energy ${checkIn.energyLevel}/5, sleep ${checkIn.sleepQuality}/5, soreness ${checkIn.muscleSoreness}/5, motivation ${checkIn.motivationLevel}/5`
-        : "- latest check-in: unavailable",
+        : '- latest check-in: unavailable',
       nutrition
         ? [
             `- nutrition goal: ${nutrition.goal}`,
@@ -170,10 +172,10 @@ export class AiPromptBuilder {
             `- allergies: ${this.formatList(nutrition.allergies)}`,
             `- disliked foods: ${this.formatList(nutrition.dislikedFoods)}`,
             `- preferred foods: ${this.formatList(nutrition.preferredFoods)}`,
-          ].join("\n")
-        : "- nutrition profile: unavailable",
+          ].join('\n')
+        : '- nutrition profile: unavailable',
       this.buildWorkoutLogBlock(workoutLogs),
-    ].join("\n");
+    ].join('\n');
   }
 
   private buildConversationMemoryBlock(
@@ -184,49 +186,49 @@ export class AiPromptBuilder {
     }
 
     return [
-      "Conversation memory summary:",
+      'Conversation memory summary:',
       `- version: ${conversationMemory.metadata.version}`,
       `- generated from message count: ${conversationMemory.metadata.generatedFromMessageCount}`,
       `- summary: ${this.normalizeContent(conversationMemory.summary)}`,
-    ].join("\n");
+    ].join('\n');
   }
 
   private buildWorkoutLogBlock(workoutLogs: WorkoutLog[]): string {
     if (workoutLogs.length === 0) {
-      return "- recent workout logs: none";
+      return '- recent workout logs: none';
     }
 
     const lines = workoutLogs.map(
       (log) =>
-        `  - ${log.date}: ${log.durationMinutes} min, ${log.completedExercises.length} exercises${log.feedback?.difficulty ? `, feedback ${log.feedback.difficulty}` : ""}`,
+        `  - ${log.date}: ${log.durationMinutes} min, ${log.completedExercises.length} exercises${log.feedback?.difficulty ? `, feedback ${log.feedback.difficulty}` : ''}`,
     );
 
-    return ["- recent workout logs:", ...lines].join("\n");
+    return ['- recent workout logs:', ...lines].join('\n');
   }
 
   private resolveRecoveryTrend(
     fatigueLevel: FatigueLevel,
-  ): "improving" | "stable" | "needs_recovery" {
+  ): 'improving' | 'stable' | 'needs_recovery' {
     switch (fatigueLevel) {
-      case "LOW":
-        return "improving";
-      case "HIGH":
-        return "needs_recovery";
-      case "MODERATE":
+      case 'LOW':
+        return 'improving';
+      case 'HIGH':
+        return 'needs_recovery';
+      case 'MODERATE':
       default:
-        return "stable";
+        return 'stable';
     }
   }
 
   private formatList(values: string[] | undefined): string {
     if (!values || values.length === 0) {
-      return "none";
+      return 'none';
     }
 
-    return values.join(", ");
+    return values.join(', ');
   }
 
   private normalizeContent(value: string): string {
-    return value.trim().replace(/\s+/g, " ");
+    return value.trim().replace(/\s+/g, ' ');
   }
 }

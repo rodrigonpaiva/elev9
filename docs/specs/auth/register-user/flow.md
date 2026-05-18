@@ -97,11 +97,7 @@ Retornar apenas dados seguros:
 ```ts
 {
   user: {
-    id,
-    email,
-    name,
-    isEmailVerified,
-    createdAt
+    (id, email, name, isEmailVerified, createdAt);
   }
 }
 ```

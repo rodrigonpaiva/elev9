@@ -1,4 +1,4 @@
-import { WorkoutLog } from "../../../domain/entities/workout-log.entity";
+import { WorkoutLog } from '../../../domain/entities/workout-log.entity';
 
 export function calculateStreak(workoutLogs: WorkoutLog[]): number {
   if (workoutLogs.length === 0) {

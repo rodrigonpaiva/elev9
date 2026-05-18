@@ -1,28 +1,28 @@
-import { useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { ApiClientError } from "@elev9/api-client";
+import { ApiClientError } from '@elev9/api-client';
 import type {
   FitnessProfileActivityLevel,
   FitnessProfileGoal,
-} from "@elev9/types";
-import { Button, Card, Input, Screen, Text, colors } from "@elev9/ui";
+} from '@elev9/types';
+import { Button, Card, Input, Screen, Text, colors } from '@elev9/ui';
 
-import { mobileApiClient } from "../api/client";
-import type { RootStackParamList } from "../navigation/app-navigator";
+import { mobileApiClient } from '../api/client';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 export function CreateFitnessProfileScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [goal, setGoal] = useState<FitnessProfileGoal>("gain_muscle");
+  const [goal, setGoal] = useState<FitnessProfileGoal>('gain_muscle');
   const [activityLevel, setActivityLevel] =
-    useState<FitnessProfileActivityLevel>("medium");
-  const [heightCm, setHeightCm] = useState("175");
-  const [weightKg, setWeightKg] = useState("75");
-  const [daysPerWeek, setDaysPerWeek] = useState("3");
-  const [minutesPerSession, setMinutesPerSession] = useState("45");
+    useState<FitnessProfileActivityLevel>('medium');
+  const [heightCm, setHeightCm] = useState('175');
+  const [weightKg, setWeightKg] = useState('75');
+  const [daysPerWeek, setDaysPerWeek] = useState('3');
+  const [minutesPerSession, setMinutesPerSession] = useState('45');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,25 +41,25 @@ export function CreateFitnessProfileScreen() {
         heightCm.length === 0
           ? null
           : !Number.isInteger(height) || height < 100 || height > 250
-            ? "Use an integer between 100 and 250."
+            ? 'Use an integer between 100 and 250.'
             : null,
       weightError:
         weightKg.length === 0
           ? null
           : Number.isNaN(weight) || weight < 30 || weight > 300
-            ? "Use a value between 30 and 300."
+            ? 'Use a value between 30 and 300.'
             : null,
       daysError:
         daysPerWeek.length === 0
           ? null
           : !Number.isInteger(days) || days < 1 || days > 7
-            ? "Choose between 1 and 7 days."
+            ? 'Choose between 1 and 7 days.'
             : null,
       minutesError:
         minutesPerSession.length === 0
           ? null
           : !Number.isInteger(minutes) || minutes < 10 || minutes > 180
-            ? "Choose between 10 and 180 minutes."
+            ? 'Choose between 10 and 180 minutes.'
             : null,
       isValid:
         Number.isInteger(height) &&
@@ -79,7 +79,7 @@ export function CreateFitnessProfileScreen() {
 
   async function handleCreateFitnessProfile() {
     if (!validation.isValid) {
-      setErrorMessage("Check your body metrics and training availability.");
+      setErrorMessage('Check your body metrics and training availability.');
       return;
     }
 
@@ -98,7 +98,7 @@ export function CreateFitnessProfileScreen() {
         },
       });
 
-      navigation.replace("CreateTrainingPlan", {
+      navigation.replace('CreateTrainingPlan', {
         fitnessProfileId: response.fitnessProfile.id,
         goal,
         activityLevel,
@@ -107,7 +107,7 @@ export function CreateFitnessProfileScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to create your fitness profile.");
+        setErrorMessage('Unable to create your fitness profile.');
       }
     } finally {
       setIsSubmitting(false);
@@ -161,17 +161,17 @@ export function CreateFitnessProfileScreen() {
             </Text>
           </View>
           <View style={styles.optionsGroup}>
-            {(["gain_muscle", "lose_weight", "maintain"] as FitnessProfileGoal[]).map(
-              (option) => (
-                <Button
-                  key={option}
-                  label={formatLabel(option)}
-                  variant={goal === option ? "primary" : "secondary"}
-                  onPress={() => setGoal(option)}
-                  style={styles.optionButton}
-                />
-              ),
-            )}
+            {(
+              ['gain_muscle', 'lose_weight', 'maintain'] as FitnessProfileGoal[]
+            ).map((option) => (
+              <Button
+                key={option}
+                label={formatLabel(option)}
+                variant={goal === option ? 'primary' : 'secondary'}
+                onPress={() => setGoal(option)}
+                style={styles.optionButton}
+              />
+            ))}
           </View>
 
           <View style={styles.sectionHeader}>
@@ -181,12 +181,12 @@ export function CreateFitnessProfileScreen() {
             </Text>
           </View>
           <View style={styles.optionsGroup}>
-            {(["low", "medium", "high"] as FitnessProfileActivityLevel[]).map(
+            {(['low', 'medium', 'high'] as FitnessProfileActivityLevel[]).map(
               (option) => (
                 <Button
                   key={option}
                   label={formatLabel(option)}
-                  variant={activityLevel === option ? "primary" : "secondary"}
+                  variant={activityLevel === option ? 'primary' : 'secondary'}
                   onPress={() => setActivityLevel(option)}
                   style={styles.optionButton}
                 />
@@ -220,7 +220,9 @@ export function CreateFitnessProfileScreen() {
             />
           </View>
 
-          {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
+          {errorMessage ? (
+            <Text style={styles.error}>{errorMessage}</Text>
+          ) : null}
 
           <Button
             label="Continue"
@@ -237,9 +239,9 @@ export function CreateFitnessProfileScreen() {
 
 function formatLabel(value: string): string {
   return value
-    .split("_")
+    .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+    .join(' ');
 }
 
 const styles = StyleSheet.create({
@@ -255,9 +257,9 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 1.1,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     color: colors.primary,
   },
   title: {
@@ -279,19 +281,19 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   optionButton: {
-    width: "100%",
+    width: '100%',
   },
   row: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   halfField: {
     flex: 1,
   },
   error: {
-    color: "#fca5a5",
+    color: '#fca5a5',
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
 });

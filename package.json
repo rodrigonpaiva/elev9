@@ -11,6 +11,7 @@
   "scripts": {
     "build": "nx run-many -t build -p api,types,api-client,ui,web --outputStyle=stream",
     "dev": "nx run web:dev --outputStyle=stream",
+    "format": "prettier --write . --ignore-path .prettierignore",
     "format:check": "prettier --check . --ignore-path .prettierignore",
     "lint": "nx run-many -t lint -p types,api-client --outputStyle=stream",
     "start": "nx run api:start --outputStyle=stream",

@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren } from 'react';
 import {
   Platform,
   ScrollView,
@@ -8,11 +8,11 @@ import {
   type StyleProp,
   type ViewProps,
   type ViewStyle,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors } from "../theme/colors";
-import { spacing } from "../theme/spacing";
+import { colors } from '../theme/colors';
+import { spacing } from '../theme/spacing';
 
 export type ScreenProps = PropsWithChildren<{
   className?: string;
@@ -34,7 +34,7 @@ export function Screen({
 }: ScreenProps) {
   const rootStyle = [
     styles.root,
-    Platform.OS === "web" ? styles.rootWeb : null,
+    Platform.OS === 'web' ? styles.rootWeb : null,
     style,
   ];
 
@@ -54,7 +54,10 @@ export function Screen({
 
   return (
     <SafeAreaView style={rootStyle}>
-      <View style={[styles.content, contentStyle, viewProps?.style]} {...viewProps}>
+      <View
+        style={[styles.content, contentStyle, viewProps?.style]}
+        {...viewProps}
+      >
         {children}
       </View>
     </SafeAreaView>
@@ -67,7 +70,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   rootWeb: {
-    minHeight: "100%" as unknown as ViewStyle["minHeight"],
+    minHeight: '100%' as unknown as ViewStyle['minHeight'],
   },
   scroll: {
     flex: 1,

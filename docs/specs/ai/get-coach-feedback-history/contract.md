@@ -142,23 +142,15 @@ Observações:
     {
       "id": "feedback_002",
       "message": "Great consistency this week. You're on a 4-day streak.",
-      "insights": [
-        "You trained 4 times this week"
-      ],
-      "recommendations": [
-        "Keep your current rhythm"
-      ],
+      "insights": ["You trained 4 times this week"],
+      "recommendations": ["Keep your current rhythm"],
       "createdAt": "2026-05-04T10:00:00.000Z"
     },
     {
       "id": "feedback_001",
       "message": "Good start this week. You already logged your first workouts and can build consistency from here.",
-      "insights": [
-        "You completed 2 workouts in the last 7 days"
-      ],
-      "recommendations": [
-        "Repeat this rhythm for one more session this week"
-      ],
+      "insights": ["You completed 2 workouts in the last 7 days"],
+      "recommendations": ["Repeat this rhythm for one more session this week"],
       "createdAt": "2026-05-02T10:00:00.000Z"
     }
   ]
@@ -181,12 +173,8 @@ Observações:
     {
       "id": "feedback_002",
       "message": "Great consistency this week. You're on a 4-day streak.",
-      "insights": [
-        "You trained 4 times this week"
-      ],
-      "recommendations": [
-        "Keep your current rhythm"
-      ],
+      "insights": ["You trained 4 times this week"],
+      "recommendations": ["Keep your current rhythm"],
       "createdAt": "2026-05-04T10:00:00.000Z"
     }
   ]

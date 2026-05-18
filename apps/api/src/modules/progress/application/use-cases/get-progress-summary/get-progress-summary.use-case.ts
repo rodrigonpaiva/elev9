@@ -1,26 +1,29 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
-} from "../../../../fitness/domain/repositories/fitness-profile.repository";
+} from '../../../../fitness/domain/repositories/fitness-profile.repository';
 import {
   TRAINING_PLAN_REPOSITORY,
   TrainingPlanRepository,
-} from "../../../../training/domain/repositories/training-plan.repository";
+} from '../../../../training/domain/repositories/training-plan.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
-import { WORKOUT_LOG_REPOSITORY, WorkoutLogRepository } from "../../../domain/repositories/workout-log.repository";
-import { CLOCK, Clock } from "../../../domain/services/clock.service";
+} from '../../../../users/domain/repositories/user-profile.repository';
+import {
+  WORKOUT_LOG_REPOSITORY,
+  WorkoutLogRepository,
+} from '../../../domain/repositories/workout-log.repository';
+import { CLOCK, Clock } from '../../../domain/services/clock.service';
 import {
   GET_PROGRESS_SUMMARY_ERROR_CODES,
   GetProgressSummaryError,
-} from "./get-progress-summary.errors";
-import { calculateStreak } from "./calculate-streak";
-import { GetProgressSummaryInput } from "./get-progress-summary.input";
-import { GetProgressSummaryOutput } from "./get-progress-summary.output";
+} from './get-progress-summary.errors';
+import { calculateStreak } from './calculate-streak';
+import { GetProgressSummaryInput } from './get-progress-summary.input';
+import { GetProgressSummaryOutput } from './get-progress-summary.output';
 
 @Injectable()
 export class GetProgressSummaryUseCase {
@@ -41,13 +44,13 @@ export class GetProgressSummaryUseCase {
     input: GetProgressSummaryInput,
   ): Promise<GetProgressSummaryOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const normalizedPeriod = this.normalizePeriod(input.period);
 
     if (!authUserId) {
       throw new GetProgressSummaryError(
         GET_PROGRESS_SUMMARY_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -58,7 +61,7 @@ export class GetProgressSummaryUseCase {
       if (!userProfile) {
         throw new GetProgressSummaryError(
           GET_PROGRESS_SUMMARY_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -70,7 +73,7 @@ export class GetProgressSummaryUseCase {
       if (!fitnessProfile) {
         throw new GetProgressSummaryError(
           GET_PROGRESS_SUMMARY_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
-          "Fitness profile not found.",
+          'Fitness profile not found.',
         );
       }
 
@@ -107,7 +110,8 @@ export class GetProgressSummaryUseCase {
         totalDurationMinutes / workoutsCompleted,
       );
       const lastWorkoutDate = workoutLogs.reduce(
-        (latest, log) => (latest === null || log.date > latest ? log.date : latest),
+        (latest, log) =>
+          latest === null || log.date > latest ? log.date : latest,
         null as string | null,
       );
       const currentStreak = calculateStreak(workoutLogs);
@@ -129,32 +133,32 @@ export class GetProgressSummaryUseCase {
 
       throw new GetProgressSummaryError(
         GET_PROGRESS_SUMMARY_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
 
-  private normalizePeriod(period?: string): "week" | "month" {
+  private normalizePeriod(period?: string): 'week' | 'month' {
     if (period === undefined) {
-      return "week";
+      return 'week';
     }
 
-    if (period === "week" || period === "month") {
+    if (period === 'week' || period === 'month') {
       return period;
     }
 
     throw new GetProgressSummaryError(
       GET_PROGRESS_SUMMARY_ERROR_CODES.INVALID_INPUT,
-      "Invalid progress summary input.",
+      'Invalid progress summary input.',
     );
   }
 
-  private getUtcDateRange(period: "week" | "month"): {
+  private getUtcDateRange(period: 'week' | 'month'): {
     startDate: string;
     endDate: string;
   } {
     const now = this.clock.now();
-    const daysToSubtract = period === "week" ? 6 : 29;
+    const daysToSubtract = period === 'week' ? 6 : 29;
     const endDate = this.clock.todayUtcDateString();
     const start = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
@@ -171,7 +175,9 @@ export class GetProgressSummaryUseCase {
     return date.toISOString().slice(0, 10);
   }
 
-  private buildEmptySummary(period: "week" | "month"): GetProgressSummaryOutput {
+  private buildEmptySummary(
+    period: 'week' | 'month',
+  ): GetProgressSummaryOutput {
     return {
       summary: {
         period,

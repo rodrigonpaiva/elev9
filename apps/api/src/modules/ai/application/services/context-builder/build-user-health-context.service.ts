@@ -1,41 +1,44 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   ActivityLevel,
   FitnessGoal,
   FitnessProfileLimitation,
-} from "../../../../fitness/domain/entities/fitness-profile.entity";
+} from '../../../../fitness/domain/entities/fitness-profile.entity';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
-} from "../../../../fitness/domain/repositories/fitness-profile.repository";
-import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
+} from '../../../../fitness/domain/repositories/fitness-profile.repository';
+import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import {
   DAILY_CHECK_IN_REPOSITORY,
   DailyCheckInRepository,
-} from "../../../../progress/domain/repositories/daily-check-in.repository";
+} from '../../../../progress/domain/repositories/daily-check-in.repository';
 import {
   WORKOUT_LOG_REPOSITORY,
   WorkoutLogRepository,
-} from "../../../../progress/domain/repositories/workout-log.repository";
-import { CLOCK, Clock } from "../../../../progress/domain/services/clock.service";
+} from '../../../../progress/domain/repositories/workout-log.repository';
+import {
+  CLOCK,
+  Clock,
+} from '../../../../progress/domain/services/clock.service';
 import {
   NUTRITION_PROFILE_REPOSITORY,
   NutritionProfileRepository,
-} from "../../../../nutrition/domain/repositories/nutrition-profile.repository";
-import { calculateStreak } from "../../../../progress/application/use-cases/get-progress-summary/calculate-streak";
+} from '../../../../nutrition/domain/repositories/nutrition-profile.repository';
+import { calculateStreak } from '../../../../progress/application/use-cases/get-progress-summary/calculate-streak';
 import {
   TrainingPlanDay,
   TrainingPlanIntensity,
-} from "../../../../training/domain/entities/training-plan.entity";
+} from '../../../../training/domain/entities/training-plan.entity';
 import {
   TRAINING_PLAN_REPOSITORY,
   TrainingPlanRepository,
-} from "../../../../training/domain/repositories/training-plan.repository";
+} from '../../../../training/domain/repositories/training-plan.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 
 export type UserHealthContextTodayWorkout = {
   dayIndex: number;
@@ -43,13 +46,13 @@ export type UserHealthContextTodayWorkout = {
   focus: string;
   format: string;
   intensity: TrainingPlanIntensity;
-  exercises: TrainingPlanDay["exercises"];
+  exercises: TrainingPlanDay['exercises'];
 };
 
-export type FatigueLevel = "LOW" | "MODERATE" | "HIGH";
+export type FatigueLevel = 'LOW' | 'MODERATE' | 'HIGH';
 
 export type UserHealthContextNutritionProfile = {
-  goal: "fat_loss" | "maintenance" | "muscle_gain";
+  goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
   mealsPerDay: number;
   dietaryRestrictions: string[];
   allergies: string[];
@@ -105,7 +108,7 @@ export class BuildUserHealthContextService {
 
   async build(input: { authUserId: string }): Promise<UserHealthContext> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const generatedAt = this.clock.now();
     const baseContext = this.createBaseContext(authUserId, generatedAt);
 
@@ -113,16 +116,21 @@ export class BuildUserHealthContextService {
       return baseContext;
     }
 
-    const userProfile = await this.userProfileRepository.findByAuthUserId(authUserId);
+    const userProfile =
+      await this.userProfileRepository.findByAuthUserId(authUserId);
 
     if (!userProfile) {
       return baseContext;
     }
 
     const latestCheckIn =
-      await this.dailyCheckInRepository.findLatestByUserProfileId(userProfile.id);
+      await this.dailyCheckInRepository.findLatestByUserProfileId(
+        userProfile.id,
+      );
     const fitnessProfile =
-      await this.fitnessProfileRepository.findActiveByUserProfileId(userProfile.id);
+      await this.fitnessProfileRepository.findActiveByUserProfileId(
+        userProfile.id,
+      );
     const nutritionProfile =
       await this.nutritionProfileRepository.findActiveByUserProfileId(
         userProfile.id,
@@ -167,7 +175,9 @@ export class BuildUserHealthContextService {
     }
 
     const trainingPlan =
-      await this.trainingPlanRepository.findActiveByFitnessProfileId(fitnessProfile.id);
+      await this.trainingPlanRepository.findActiveByFitnessProfileId(
+        fitnessProfile.id,
+      );
 
     if (!trainingPlan) {
       return contextWithoutTrainingPlan;
@@ -198,14 +208,16 @@ export class BuildUserHealthContextService {
       activeTrainingPlanId: trainingPlan.id,
       todayWorkout: this.getTodayWorkout(trainingPlan.weeklySchedule),
       recentWorkoutLogs,
-      currentStreak: workoutsCompleted === 0 ? 0 : calculateStreak(recentWorkoutLogs),
+      currentStreak:
+        workoutsCompleted === 0 ? 0 : calculateStreak(recentWorkoutLogs),
       averageWorkoutDuration,
       adherenceScore: this.calculateAdherenceScore({
         workoutsCompleted,
         weeklyFrequency,
       }),
       fatigueLevel: this.calculateFatigueLevel({
-        currentStreak: workoutsCompleted === 0 ? 0 : calculateStreak(recentWorkoutLogs),
+        currentStreak:
+          workoutsCompleted === 0 ? 0 : calculateStreak(recentWorkoutLogs),
         weeklyFrequency,
         averageWorkoutDuration,
         recentLogsCount: recentWorkoutLogs.length,
@@ -223,7 +235,7 @@ export class BuildUserHealthContextService {
       adherenceScore: 0,
       currentStreak: 0,
       averageWorkoutDuration: 0,
-      fatigueLevel: "MODERATE",
+      fatigueLevel: 'MODERATE',
       availableEquipment: [],
       limitations: [],
       todayWorkout: null,
@@ -237,7 +249,7 @@ export class BuildUserHealthContextService {
     daysPerWeek?: number;
   }): number {
     if (
-      typeof input.daysPerWeek === "number" &&
+      typeof input.daysPerWeek === 'number' &&
       Number.isFinite(input.daysPerWeek) &&
       input.daysPerWeek > 0
     ) {
@@ -245,11 +257,11 @@ export class BuildUserHealthContextService {
     }
 
     switch (input.activityLevel) {
-      case "low":
+      case 'low':
         return 2;
-      case "medium":
+      case 'medium':
         return 3;
-      case "high":
+      case 'high':
       default:
         return 4;
     }
@@ -260,7 +272,7 @@ export class BuildUserHealthContextService {
     weeklyFrequency?: number;
   }): number {
     if (
-      typeof input.weeklyFrequency !== "number" ||
+      typeof input.weeklyFrequency !== 'number' ||
       input.weeklyFrequency <= 0 ||
       input.workoutsCompleted <= 0
     ) {
@@ -291,7 +303,7 @@ export class BuildUserHealthContextService {
         input.latestCheckIn.sleepQuality <= 2 ||
         input.latestCheckIn.muscleSoreness >= 4
       ) {
-        return "HIGH";
+        return 'HIGH';
       }
 
       if (
@@ -302,14 +314,14 @@ export class BuildUserHealthContextService {
         input.currentStreak >= 1 &&
         input.currentStreak <= 4
       ) {
-        return "LOW";
+        return 'LOW';
       }
 
-      return "MODERATE";
+      return 'MODERATE';
     }
 
     if (input.recentLogsCount === 0 || input.weeklyFrequency === undefined) {
-      return "MODERATE";
+      return 'MODERATE';
     }
 
     if (
@@ -317,7 +329,7 @@ export class BuildUserHealthContextService {
       input.averageWorkoutDuration >= 75 ||
       input.recentLogsCount > input.weeklyFrequency + 2
     ) {
-      return "HIGH";
+      return 'HIGH';
     }
 
     if (
@@ -326,17 +338,19 @@ export class BuildUserHealthContextService {
       input.averageWorkoutDuration <= 45 &&
       input.recentLogsCount <= input.weeklyFrequency
     ) {
-      return "LOW";
+      return 'LOW';
     }
 
-    return "MODERATE";
+    return 'MODERATE';
   }
 
   private getTodayWorkout(
     weeklySchedule: TrainingPlanDay[],
   ): UserHealthContextTodayWorkout | null {
     const todayIndex = this.getUtcDayIndex(this.clock.now());
-    const matchingDay = weeklySchedule.find((day) => day.dayIndex === todayIndex);
+    const matchingDay = weeklySchedule.find(
+      (day) => day.dayIndex === todayIndex,
+    );
 
     if (!matchingDay) {
       return null;

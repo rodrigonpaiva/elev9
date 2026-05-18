@@ -5,19 +5,19 @@ import {
   useEffect,
   useMemo,
   useState,
-} from "react";
+} from 'react';
 
-import { ApiClientError } from "@elev9/api-client";
-import type { LoginUserResponse, TrainingPlanResponse } from "@elev9/types";
+import { ApiClientError } from '@elev9/api-client';
+import type { LoginUserResponse, TrainingPlanResponse } from '@elev9/types';
 
-import { apiClient, mobileApiClient } from "../api/client";
+import { apiClient, mobileApiClient } from '../api/client';
 import {
   clearAccessToken,
   getAccessToken,
   setAccessToken,
-} from "../storage/token-storage";
+} from '../storage/token-storage';
 
-export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
 type AuthContextValue = {
   accessToken: string | null;
@@ -30,14 +30,14 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const DEMO_CREDENTIALS = {
-  name: "Demo Athlete",
-  email: "demo@elev9.com",
-  password: "StrongPassword123",
+  name: 'Demo Athlete',
+  email: 'demo@elev9.com',
+  password: 'StrongPassword123',
 } as const;
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
-  const [status, setStatus] = useState<AuthStatus>("loading");
+  const [status, setStatus] = useState<AuthStatus>('loading');
 
   useEffect(() => {
     let isMounted = true;
@@ -48,11 +48,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       try {
         nextToken = await getAccessToken();
       } catch (error) {
-        console.error("AuthProvider bootstrap error:", error);
+        console.error('AuthProvider bootstrap error:', error);
       } finally {
         if (isMounted) {
           setAccessTokenState(nextToken);
-          setStatus(nextToken ? "authenticated" : "unauthenticated");
+          setStatus(nextToken ? 'authenticated' : 'unauthenticated');
         }
       }
     })();
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         );
       },
       async signInDemo() {
-        setStatus("loading");
+        setStatus('loading');
 
         try {
           const response = await loginOrProvisionDemoUser();
@@ -82,18 +82,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
           await ensureDemoWorkspace();
         } catch (error) {
           setAccessTokenState(null);
-          setStatus("unauthenticated");
+          setStatus('unauthenticated');
           throw error;
         }
       },
       async signOut() {
-        setStatus("loading");
+        setStatus('loading');
 
         try {
           await clearAccessToken();
         } finally {
           setAccessTokenState(null);
-          setStatus("unauthenticated");
+          setStatus('unauthenticated');
         }
       },
     }),
@@ -109,7 +109,7 @@ async function loginOrProvisionDemoUser(): Promise<LoginUserResponse> {
   } catch (error) {
     if (
       !(error instanceof ApiClientError) ||
-      error.code !== "INVALID_CREDENTIALS"
+      error.code !== 'INVALID_CREDENTIALS'
     ) {
       throw error;
     }
@@ -120,7 +120,7 @@ async function loginOrProvisionDemoUser(): Promise<LoginUserResponse> {
   } catch (error) {
     if (
       !(error instanceof ApiClientError) ||
-      error.code !== "EMAIL_ALREADY_EXISTS"
+      error.code !== 'EMAIL_ALREADY_EXISTS'
     ) {
       throw error;
     }
@@ -161,7 +161,7 @@ async function getDashboardOrNull() {
   } catch (error) {
     if (
       error instanceof ApiClientError &&
-      error.code === "USER_PROFILE_NOT_FOUND"
+      error.code === 'USER_PROFILE_NOT_FOUND'
     ) {
       return null;
     }
@@ -178,7 +178,7 @@ async function createProfileIfNeeded(): Promise<void> {
   } catch (error) {
     if (
       !(error instanceof ApiClientError) ||
-      error.code !== "USER_PROFILE_ALREADY_EXISTS"
+      error.code !== 'USER_PROFILE_ALREADY_EXISTS'
     ) {
       throw error;
     }
@@ -190,8 +190,8 @@ async function createFitnessProfileIfNeeded() {
     return await mobileApiClient.fitness.createProfile({
       heightCm: 178,
       weightKg: 76,
-      goal: "gain_muscle",
-      activityLevel: "medium",
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
       trainingAvailability: {
         daysPerWeek: 4,
         minutesPerSession: 50,
@@ -200,7 +200,7 @@ async function createFitnessProfileIfNeeded() {
   } catch (error) {
     if (
       error instanceof ApiClientError &&
-      error.code === "FITNESS_PROFILE_ALREADY_EXISTS"
+      error.code === 'FITNESS_PROFILE_ALREADY_EXISTS'
     ) {
       const existingProfile = await apiClient.fitness.getMyProfile();
       return {
@@ -220,7 +220,7 @@ async function createTrainingPlanIfNeeded(
   } catch (error) {
     if (
       !(error instanceof ApiClientError) ||
-      error.code !== "TRAINING_PLAN_ALREADY_EXISTS"
+      error.code !== 'TRAINING_PLAN_ALREADY_EXISTS'
     ) {
       throw error;
     }
@@ -257,14 +257,14 @@ async function ensureDemoWorkoutHistory(): Promise<void> {
         repsDone: parseReps(exercise.reps),
       })),
       feedback: {
-        difficulty: "medium",
-        notes: "Demo workout completed to unlock progress and history views.",
+        difficulty: 'medium',
+        notes: 'Demo workout completed to unlock progress and history views.',
       },
     });
   } catch (error) {
     if (
       !(error instanceof ApiClientError) ||
-      error.code !== "WORKOUT_LOG_ALREADY_EXISTS"
+      error.code !== 'WORKOUT_LOG_ALREADY_EXISTS'
     ) {
       throw error;
     }
@@ -283,14 +283,14 @@ async function persistSession(
 ): Promise<void> {
   await setAccessToken(response.accessToken);
   setAccessTokenState(response.accessToken);
-  setStatus("authenticated");
+  setStatus('authenticated');
 }
 
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth must be used within AuthProvider.");
+    throw new Error('useAuth must be used within AuthProvider.');
   }
 
   return context;

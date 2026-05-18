@@ -84,7 +84,10 @@
   border-radius: 999px;
   border: 1px solid transparent;
   font-weight: 700;
-  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
 }
 
 .primaryButton {
@@ -132,8 +135,11 @@
   padding: 1.25rem;
   border-radius: 2rem;
   border: 1px solid rgba(148, 163, 184, 0.2);
-  background:
-    linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(2, 6, 23, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.98) 0%,
+    rgba(2, 6, 23, 0.98) 100%
+  );
   box-shadow: 0 30px 80px rgba(2, 6, 23, 0.45);
 }
 
@@ -289,7 +295,7 @@
 }
 
 .shotCard::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 1rem;
   border-radius: 1.25rem;

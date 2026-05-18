@@ -3,36 +3,36 @@ import {
   ConflictException,
   NotFoundException,
   UnauthorizedException,
-} from "@nestjs/common";
+} from '@nestjs/common';
 
 import {
   CREATE_DAILY_CHECK_IN_ERROR_CODES,
   CreateDailyCheckInError,
-} from "../../application/use-cases/create-daily-check-in/create-daily-check-in.errors";
-import { CreateDailyCheckInUseCase } from "../../application/use-cases/create-daily-check-in/create-daily-check-in.use-case";
+} from '../../application/use-cases/create-daily-check-in/create-daily-check-in.errors';
+import { CreateDailyCheckInUseCase } from '../../application/use-cases/create-daily-check-in/create-daily-check-in.use-case';
 import {
   GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES,
   GetDailyCheckInHistoryError,
-} from "../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.errors";
-import { GetDailyCheckInHistoryUseCase } from "../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.use-case";
+} from '../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.errors';
+import { GetDailyCheckInHistoryUseCase } from '../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.use-case';
 import {
   GET_WORKOUT_HISTORY_ERROR_CODES,
   GetWorkoutHistoryError,
-} from "../../application/use-cases/get-workout-history/get-workout-history.errors";
-import { GetWorkoutHistoryUseCase } from "../../application/use-cases/get-workout-history/get-workout-history.use-case";
+} from '../../application/use-cases/get-workout-history/get-workout-history.errors';
+import { GetWorkoutHistoryUseCase } from '../../application/use-cases/get-workout-history/get-workout-history.use-case';
 import {
   GET_PROGRESS_SUMMARY_ERROR_CODES,
   GetProgressSummaryError,
-} from "../../application/use-cases/get-progress-summary/get-progress-summary.errors";
-import { GetProgressSummaryUseCase } from "../../application/use-cases/get-progress-summary/get-progress-summary.use-case";
+} from '../../application/use-cases/get-progress-summary/get-progress-summary.errors';
+import { GetProgressSummaryUseCase } from '../../application/use-cases/get-progress-summary/get-progress-summary.use-case';
 import {
   LOG_WORKOUT_ERROR_CODES,
   LogWorkoutError,
-} from "../../application/use-cases/log-workout/log-workout.errors";
-import { LogWorkoutUseCase } from "../../application/use-cases/log-workout/log-workout.use-case";
-import { ProgressController } from "./progress.controller";
+} from '../../application/use-cases/log-workout/log-workout.errors';
+import { LogWorkoutUseCase } from '../../application/use-cases/log-workout/log-workout.use-case';
+import { ProgressController } from './progress.controller';
 
-describe("ProgressController", () => {
+describe('ProgressController', () => {
   let createDailyCheckInUseCase: jest.Mocked<CreateDailyCheckInUseCase>;
   let logWorkoutUseCase: jest.Mocked<LogWorkoutUseCase>;
   let getProgressSummaryUseCase: jest.Mocked<GetProgressSummaryUseCase>;
@@ -66,23 +66,23 @@ describe("ProgressController", () => {
     );
   });
 
-  it("creates a daily check-in for the authenticated user", async () => {
+  it('creates a daily check-in for the authenticated user', async () => {
     createDailyCheckInUseCase.execute.mockResolvedValue({
       dailyCheckIn: {
-        id: "checkin_123",
+        id: 'checkin_123',
         energyLevel: 4,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 5,
-        createdAt: new Date("2026-05-04T10:00:00.000Z"),
+        createdAt: new Date('2026-05-04T10:00:00.000Z'),
       },
     });
 
     const result = await controller.createDailyCheckIn(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       {
@@ -94,7 +94,7 @@ describe("ProgressController", () => {
     );
 
     expect(createDailyCheckInUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       energyLevel: 4,
       sleepQuality: 3,
       muscleSoreness: 2,
@@ -102,21 +102,21 @@ describe("ProgressController", () => {
     });
     expect(result).toEqual({
       dailyCheckIn: {
-        id: "checkin_123",
+        id: 'checkin_123',
         energyLevel: 4,
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 5,
-        createdAt: "2026-05-04T10:00:00.000Z",
+        createdAt: '2026-05-04T10:00:00.000Z',
       },
     });
   });
 
-  it("maps daily check-in invalid input to HTTP 400", async () => {
+  it('maps daily check-in invalid input to HTTP 400', async () => {
     createDailyCheckInUseCase.execute.mockRejectedValue(
       new CreateDailyCheckInError(
         CREATE_DAILY_CHECK_IN_ERROR_CODES.INVALID_INPUT,
-        "Invalid daily check-in input.",
+        'Invalid daily check-in input.',
       ),
     );
 
@@ -124,8 +124,8 @@ describe("ProgressController", () => {
       controller.createDailyCheckIn(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {
@@ -138,11 +138,11 @@ describe("ProgressController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("maps daily check-in missing profile to HTTP 404", async () => {
+  it('maps daily check-in missing profile to HTTP 404', async () => {
     createDailyCheckInUseCase.execute.mockRejectedValue(
       new CreateDailyCheckInError(
         CREATE_DAILY_CHECK_IN_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-        "User profile not found.",
+        'User profile not found.',
       ),
     );
 
@@ -150,8 +150,8 @@ describe("ProgressController", () => {
       controller.createDailyCheckIn(
         {
           authUser: {
-            id: "auth_user_999",
-            email: "other@email.com",
+            id: 'auth_user_999',
+            email: 'other@email.com',
           },
         },
         {
@@ -164,54 +164,50 @@ describe("ProgressController", () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("returns the safe response on success", async () => {
+  it('returns the safe response on success', async () => {
     logWorkoutUseCase.execute.mockResolvedValue({
       workoutLog: {
-        id: "log_123",
-        trainingPlanId: "507f1f77bcf86cd799439011",
+        id: 'log_123',
+        trainingPlanId: '507f1f77bcf86cd799439011',
         workoutDayIndex: 1,
         durationMinutes: 45,
-        completedExercises: [
-          { name: "push_up", setsDone: 4, repsDone: 12 },
-        ],
+        completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
         feedback: {
-          difficulty: "medium",
-          notes: "Good session",
+          difficulty: 'medium',
+          notes: 'Good session',
         },
-        date: "2026-04-30",
-        createdAt: new Date("2026-04-30T10:00:00.000Z"),
+        date: '2026-04-30',
+        createdAt: new Date('2026-04-30T10:00:00.000Z'),
       },
     });
 
     const result = await controller.logWorkout(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       {
-        trainingPlanId: "507f1f77bcf86cd799439011",
+        trainingPlanId: '507f1f77bcf86cd799439011',
         workoutDayIndex: 1,
         durationMinutes: 45,
-        completedExercises: [
-          { name: "push_up", setsDone: 4, repsDone: 12 },
-        ],
+        completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
         feedback: {
-          difficulty: "medium",
-          notes: "Good session",
+          difficulty: 'medium',
+          notes: 'Good session',
         },
       },
     );
 
-    expect(result.workoutLog.createdAt).toBe("2026-04-30T10:00:00.000Z");
+    expect(result.workoutLog.createdAt).toBe('2026-04-30T10:00:00.000Z');
   });
 
-  it("maps invalid input to HTTP 400", async () => {
+  it('maps invalid input to HTTP 400', async () => {
     logWorkoutUseCase.execute.mockRejectedValue(
       new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.INVALID_INPUT,
-        "Invalid workout log input.",
+        'Invalid workout log input.',
       ),
     );
 
@@ -219,27 +215,25 @@ describe("ProgressController", () => {
       controller.logWorkout(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {
-          trainingPlanId: "507f1f77bcf86cd799439011",
+          trainingPlanId: '507f1f77bcf86cd799439011',
           workoutDayIndex: 1,
           durationMinutes: 45,
-          completedExercises: [
-            { name: "push_up", setsDone: 4, repsDone: 12 },
-          ],
+          completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
         },
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("maps duplicate log to HTTP 409", async () => {
+  it('maps duplicate log to HTTP 409', async () => {
     logWorkoutUseCase.execute.mockRejectedValue(
       new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.ALREADY_EXISTS,
-        "Workout log already exists.",
+        'Workout log already exists.',
       ),
     );
 
@@ -247,27 +241,25 @@ describe("ProgressController", () => {
       controller.logWorkout(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {
-          trainingPlanId: "507f1f77bcf86cd799439011",
+          trainingPlanId: '507f1f77bcf86cd799439011',
           workoutDayIndex: 1,
           durationMinutes: 45,
-          completedExercises: [
-            { name: "push_up", setsDone: 4, repsDone: 12 },
-          ],
+          completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
         },
       ),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
-  it("maps training plan not found to HTTP 404", async () => {
+  it('maps training plan not found to HTTP 404', async () => {
     logWorkoutUseCase.execute.mockRejectedValue(
       new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.TRAINING_PLAN_NOT_FOUND,
-        "Training plan not found.",
+        'Training plan not found.',
       ),
     );
 
@@ -275,27 +267,25 @@ describe("ProgressController", () => {
       controller.logWorkout(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {
-          trainingPlanId: "507f1f77bcf86cd799439011",
+          trainingPlanId: '507f1f77bcf86cd799439011',
           workoutDayIndex: 1,
           durationMinutes: 45,
-          completedExercises: [
-            { name: "push_up", setsDone: 4, repsDone: 12 },
-          ],
+          completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
         },
       ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("maps invalid session to HTTP 401", async () => {
+  it('maps invalid session to HTTP 401', async () => {
     logWorkoutUseCase.execute.mockRejectedValue(
       new LogWorkoutError(
         LOG_WORKOUT_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       ),
     );
 
@@ -303,30 +293,28 @@ describe("ProgressController", () => {
       controller.logWorkout(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {
-          trainingPlanId: "507f1f77bcf86cd799439011",
+          trainingPlanId: '507f1f77bcf86cd799439011',
           workoutDayIndex: 1,
           durationMinutes: 45,
-          completedExercises: [
-            { name: "push_up", setsDone: 4, repsDone: 12 },
-          ],
+          completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
         },
       ),
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it("returns the safe summary response on success", async () => {
+  it('returns the safe summary response on success', async () => {
     getProgressSummaryUseCase.execute.mockResolvedValue({
       summary: {
-        period: "week",
+        period: 'week',
         workoutsCompleted: 3,
         totalDurationMinutes: 155,
         averageDurationMinutes: 51.67,
-        lastWorkoutDate: "2026-04-30",
+        lastWorkoutDate: '2026-04-30',
         currentStreak: 4,
       },
     });
@@ -334,33 +322,33 @@ describe("ProgressController", () => {
     const result = await controller.getSummary(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       {
-        period: "week",
+        period: 'week',
       },
       {},
     );
 
     expect(result).toEqual({
       summary: {
-        period: "week",
+        period: 'week',
         workoutsCompleted: 3,
         totalDurationMinutes: 155,
         averageDurationMinutes: 51.67,
-        lastWorkoutDate: "2026-04-30",
+        lastWorkoutDate: '2026-04-30',
         currentStreak: 4,
       },
     });
   });
 
-  it("maps invalid query period to HTTP 400", async () => {
+  it('maps invalid query period to HTTP 400', async () => {
     getProgressSummaryUseCase.execute.mockRejectedValue(
       new GetProgressSummaryError(
         GET_PROGRESS_SUMMARY_ERROR_CODES.INVALID_INPUT,
-        "Invalid progress summary input.",
+        'Invalid progress summary input.',
       ),
     );
 
@@ -368,23 +356,23 @@ describe("ProgressController", () => {
       controller.getSummary(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {
-          period: "year" as "week",
+          period: 'year' as 'week',
         },
         {},
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("maps missing fitness profile to HTTP 404", async () => {
+  it('maps missing fitness profile to HTTP 404', async () => {
     getProgressSummaryUseCase.execute.mockRejectedValue(
       new GetProgressSummaryError(
         GET_PROGRESS_SUMMARY_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
-        "Fitness profile not found.",
+        'Fitness profile not found.',
       ),
     );
 
@@ -392,8 +380,8 @@ describe("ProgressController", () => {
       controller.getSummary(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {},
@@ -402,11 +390,11 @@ describe("ProgressController", () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("maps invalid session on summary to HTTP 401", async () => {
+  it('maps invalid session on summary to HTTP 401', async () => {
     getProgressSummaryUseCase.execute.mockRejectedValue(
       new GetProgressSummaryError(
         GET_PROGRESS_SUMMARY_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       ),
     );
 
@@ -414,8 +402,8 @@ describe("ProgressController", () => {
       controller.getSummary(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {},
@@ -424,18 +412,18 @@ describe("ProgressController", () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it("returns the safe workout history response on success", async () => {
+  it('returns the safe workout history response on success', async () => {
     getWorkoutHistoryUseCase.execute.mockResolvedValue({
       workoutLogs: [
         {
-          id: "log_123",
-          trainingPlanId: "training_plan_123",
+          id: 'log_123',
+          trainingPlanId: 'training_plan_123',
           workoutDayIndex: 1,
           durationMinutes: 45,
-          completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
-          feedback: { difficulty: "medium", notes: "Good session" },
-          date: "2026-04-30",
-          createdAt: "2026-04-30T10:00:00.000Z",
+          completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
+          feedback: { difficulty: 'medium', notes: 'Good session' },
+          date: '2026-04-30',
+          createdAt: '2026-04-30T10:00:00.000Z',
         },
       ],
     });
@@ -443,8 +431,8 @@ describe("ProgressController", () => {
     const result = await controller.getWorkoutHistory(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       { limit: 20 },
@@ -454,29 +442,29 @@ describe("ProgressController", () => {
     expect(result).toEqual({
       workoutLogs: [
         {
-          id: "log_123",
-          trainingPlanId: "training_plan_123",
+          id: 'log_123',
+          trainingPlanId: 'training_plan_123',
           workoutDayIndex: 1,
           durationMinutes: 45,
-          completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
-          feedback: { difficulty: "medium", notes: "Good session" },
-          date: "2026-04-30",
-          createdAt: "2026-04-30T10:00:00.000Z",
+          completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
+          feedback: { difficulty: 'medium', notes: 'Good session' },
+          date: '2026-04-30',
+          createdAt: '2026-04-30T10:00:00.000Z',
         },
       ],
     });
   });
 
-  it("returns the authenticated daily check-in history", async () => {
+  it('returns the authenticated daily check-in history', async () => {
     getDailyCheckInHistoryUseCase.execute.mockResolvedValue({
       dailyCheckIns: [
         {
-          id: "checkin_123",
+          id: 'checkin_123',
           energyLevel: 4,
           sleepQuality: 3,
           muscleSoreness: 2,
           motivationLevel: 5,
-          createdAt: "2026-05-14T10:00:00.000Z",
+          createdAt: '2026-05-14T10:00:00.000Z',
         },
       ],
     });
@@ -484,8 +472,8 @@ describe("ProgressController", () => {
     const result = await controller.getDailyCheckInHistory(
       {
         authUser: {
-          id: "auth_user_123",
-          email: "user@email.com",
+          id: 'auth_user_123',
+          email: 'user@email.com',
         },
       },
       { limit: 10 },
@@ -493,28 +481,28 @@ describe("ProgressController", () => {
     );
 
     expect(getDailyCheckInHistoryUseCase.execute).toHaveBeenCalledWith({
-      authUserId: "auth_user_123",
+      authUserId: 'auth_user_123',
       limit: 10,
     });
     expect(result).toEqual({
       dailyCheckIns: [
         {
-          id: "checkin_123",
+          id: 'checkin_123',
           energyLevel: 4,
           sleepQuality: 3,
           muscleSoreness: 2,
           motivationLevel: 5,
-          createdAt: "2026-05-14T10:00:00.000Z",
+          createdAt: '2026-05-14T10:00:00.000Z',
         },
       ],
     });
   });
 
-  it("maps invalid daily check-in history query to HTTP 400", async () => {
+  it('maps invalid daily check-in history query to HTTP 400', async () => {
     getDailyCheckInHistoryUseCase.execute.mockRejectedValue(
       new GetDailyCheckInHistoryError(
         GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INVALID_INPUT,
-        "Invalid daily check-in history input.",
+        'Invalid daily check-in history input.',
       ),
     );
 
@@ -522,8 +510,8 @@ describe("ProgressController", () => {
       controller.getDailyCheckInHistory(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         { limit: 101 },
@@ -532,11 +520,11 @@ describe("ProgressController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("maps missing user profile on daily check-in history to HTTP 404", async () => {
+  it('maps missing user profile on daily check-in history to HTTP 404', async () => {
     getDailyCheckInHistoryUseCase.execute.mockRejectedValue(
       new GetDailyCheckInHistoryError(
         GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-        "User profile not found.",
+        'User profile not found.',
       ),
     );
 
@@ -544,8 +532,8 @@ describe("ProgressController", () => {
       controller.getDailyCheckInHistory(
         {
           authUser: {
-            id: "auth_user_999",
-            email: "other@email.com",
+            id: 'auth_user_999',
+            email: 'other@email.com',
           },
         },
         {},
@@ -554,11 +542,11 @@ describe("ProgressController", () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("maps invalid session on daily check-in history to HTTP 401", async () => {
+  it('maps invalid session on daily check-in history to HTTP 401', async () => {
     getDailyCheckInHistoryUseCase.execute.mockRejectedValue(
       new GetDailyCheckInHistoryError(
         GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       ),
     );
 
@@ -566,8 +554,8 @@ describe("ProgressController", () => {
       controller.getDailyCheckInHistory(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {},
@@ -576,11 +564,11 @@ describe("ProgressController", () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
-  it("maps invalid history query to HTTP 400", async () => {
+  it('maps invalid history query to HTTP 400', async () => {
     getWorkoutHistoryUseCase.execute.mockRejectedValue(
       new GetWorkoutHistoryError(
         GET_WORKOUT_HISTORY_ERROR_CODES.INVALID_INPUT,
-        "Invalid workout history input.",
+        'Invalid workout history input.',
       ),
     );
 
@@ -588,8 +576,8 @@ describe("ProgressController", () => {
       controller.getWorkoutHistory(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         { limit: 100 },
@@ -598,11 +586,11 @@ describe("ProgressController", () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it("maps missing fitness profile on history to HTTP 404", async () => {
+  it('maps missing fitness profile on history to HTTP 404', async () => {
     getWorkoutHistoryUseCase.execute.mockRejectedValue(
       new GetWorkoutHistoryError(
         GET_WORKOUT_HISTORY_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
-        "Fitness profile not found.",
+        'Fitness profile not found.',
       ),
     );
 
@@ -610,8 +598,8 @@ describe("ProgressController", () => {
       controller.getWorkoutHistory(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {},
@@ -620,11 +608,11 @@ describe("ProgressController", () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it("maps invalid session on history to HTTP 401", async () => {
+  it('maps invalid session on history to HTTP 401', async () => {
     getWorkoutHistoryUseCase.execute.mockRejectedValue(
       new GetWorkoutHistoryError(
         GET_WORKOUT_HISTORY_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       ),
     );
 
@@ -632,8 +620,8 @@ describe("ProgressController", () => {
       controller.getWorkoutHistory(
         {
           authUser: {
-            id: "auth_user_123",
-            email: "user@email.com",
+            id: 'auth_user_123',
+            email: 'user@email.com',
           },
         },
         {},

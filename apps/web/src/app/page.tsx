@@ -1,29 +1,29 @@
-import styles from "./page.module.css";
+import styles from './page.module.css';
 
 const features = [
   {
-    title: "Smart training plans",
+    title: 'Smart training plans',
     description:
-      "Structured workout generation based on goals, activity level and training availability.",
+      'Structured workout generation based on goals, activity level and training availability.',
   },
   {
-    title: "Workout tracking",
+    title: 'Workout tracking',
     description:
-      "Log completed sessions with exercise-level results, duration and difficulty feedback.",
+      'Log completed sessions with exercise-level results, duration and difficulty feedback.',
   },
   {
-    title: "Progress insights",
+    title: 'Progress insights',
     description:
-      "Track streaks, workout history and concise progress metrics in a mobile-first flow.",
+      'Track streaks, workout history and concise progress metrics in a mobile-first flow.',
   },
   {
-    title: "AI-ready architecture",
+    title: 'AI-ready architecture',
     description:
-      "Spec-driven monorepo design prepared for richer coaching, personalization and future AI features.",
+      'Spec-driven monorepo design prepared for richer coaching, personalization and future AI features.',
   },
 ];
 
-const stack = ["NestJS", "React Native / Expo", "MongoDB", "Nx monorepo"];
+const stack = ['NestJS', 'React Native / Expo', 'MongoDB', 'Nx monorepo'];
 
 export default function HomePage() {
   return (
@@ -78,7 +78,9 @@ export default function HomePage() {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <p className={styles.sectionKicker}>Features</p>
-          <h2 className={styles.sectionTitle}>A mobile fitness loop that feels coherent</h2>
+          <h2 className={styles.sectionTitle}>
+            A mobile fitness loop that feels coherent
+          </h2>
           <p className={styles.sectionCopy}>
             The project is designed to show product thinking, clear API
             contracts and a realistic path toward a production-grade coaching
@@ -100,8 +102,8 @@ export default function HomePage() {
           <p className={styles.sectionKicker}>Screenshots</p>
           <h2 className={styles.sectionTitle}>Mobile preview placeholders</h2>
           <p className={styles.sectionCopy}>
-            Reserved slots for app captures from onboarding, dashboard,
-            workout execution and progress views.
+            Reserved slots for app captures from onboarding, dashboard, workout
+            execution and progress views.
           </p>
         </div>
         <div className={styles.shotGrid}>

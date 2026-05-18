@@ -1,7 +1,7 @@
 export const LOGIN_USER_ERROR_CODES = {
-  INVALID_INPUT: "AUTH_INVALID_INPUT",
-  INVALID_CREDENTIALS: "AUTH_INVALID_CREDENTIALS",
-  INTERNAL_ERROR: "AUTH_INTERNAL_ERROR",
+  INVALID_INPUT: 'AUTH_INVALID_INPUT',
+  INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
+  INTERNAL_ERROR: 'AUTH_INTERNAL_ERROR',
 } as const;
 
 export type LoginUserErrorCode =
@@ -17,7 +17,7 @@ export class LoginUserError extends Error {
     details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = "LoginUserError";
+    this.name = 'LoginUserError';
     this.code = code;
     this.details = details;
   }

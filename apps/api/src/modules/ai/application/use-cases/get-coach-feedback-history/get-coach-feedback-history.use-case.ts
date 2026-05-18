@@ -1,19 +1,19 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   COACH_FEEDBACK_REPOSITORY,
   CoachFeedbackRepository,
-} from "../../../domain/repositories/coach-feedback.repository";
+} from '../../../domain/repositories/coach-feedback.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   GET_COACH_FEEDBACK_HISTORY_ERROR_CODES,
   GetCoachFeedbackHistoryError,
-} from "./get-coach-feedback-history.errors";
-import { GetCoachFeedbackHistoryInput } from "./get-coach-feedback-history.input";
-import { GetCoachFeedbackHistoryOutput } from "./get-coach-feedback-history.output";
+} from './get-coach-feedback-history.errors';
+import { GetCoachFeedbackHistoryInput } from './get-coach-feedback-history.input';
+import { GetCoachFeedbackHistoryOutput } from './get-coach-feedback-history.output';
 
 @Injectable()
 export class GetCoachFeedbackHistoryUseCase {
@@ -28,13 +28,13 @@ export class GetCoachFeedbackHistoryUseCase {
     input: GetCoachFeedbackHistoryInput,
   ): Promise<GetCoachFeedbackHistoryOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const normalizedLimit = this.normalizeLimit(input.limit);
 
     if (!authUserId) {
       throw new GetCoachFeedbackHistoryError(
         GET_COACH_FEEDBACK_HISTORY_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -45,7 +45,7 @@ export class GetCoachFeedbackHistoryUseCase {
       if (!userProfile) {
         throw new GetCoachFeedbackHistoryError(
           GET_COACH_FEEDBACK_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -70,7 +70,7 @@ export class GetCoachFeedbackHistoryUseCase {
 
       throw new GetCoachFeedbackHistoryError(
         GET_COACH_FEEDBACK_HISTORY_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -86,7 +86,7 @@ export class GetCoachFeedbackHistoryUseCase {
 
     throw new GetCoachFeedbackHistoryError(
       GET_COACH_FEEDBACK_HISTORY_ERROR_CODES.INVALID_INPUT,
-      "Invalid coach feedback history input.",
+      'Invalid coach feedback history input.',
     );
   }
 }

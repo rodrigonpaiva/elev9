@@ -1,30 +1,30 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
-import { BuildUserHealthContextService } from "../../services/context-builder/build-user-health-context.service";
-import { AiLlmConfigService } from "../../services/llm/ai-llm-config.service";
-import { AiPromptBuilder } from "../../services/llm/ai-prompt-builder.service";
+import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
+import { AiLlmConfigService } from '../../services/llm/ai-llm-config.service';
+import { AiPromptBuilder } from '../../services/llm/ai-prompt-builder.service';
 import {
   COACH_CONVERSATION_MEMORY_REPOSITORY,
   CoachConversationMemoryRepository,
-} from "../../../domain/repositories/coach-conversation-memory.repository";
+} from '../../../domain/repositories/coach-conversation-memory.repository';
 import {
   COACH_CONVERSATION_REPOSITORY,
   CoachConversationRepository,
-} from "../../../domain/repositories/coach-conversation.repository";
+} from '../../../domain/repositories/coach-conversation.repository';
 import {
   COACH_MESSAGE_REPOSITORY,
   CoachMessageRepository,
-} from "../../../domain/repositories/coach-message.repository";
+} from '../../../domain/repositories/coach-message.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   GET_COACH_CHAT_PROMPT_DEBUG_ERROR_CODES,
   GetCoachChatPromptDebugError,
-} from "./get-coach-chat-prompt-debug.errors";
-import { GetCoachChatPromptDebugInput } from "./get-coach-chat-prompt-debug.input";
-import { GetCoachChatPromptDebugOutput } from "./get-coach-chat-prompt-debug.output";
+} from './get-coach-chat-prompt-debug.errors';
+import { GetCoachChatPromptDebugInput } from './get-coach-chat-prompt-debug.input';
+import { GetCoachChatPromptDebugOutput } from './get-coach-chat-prompt-debug.output';
 
 @Injectable()
 export class GetCoachChatPromptDebugUseCase {
@@ -46,12 +46,12 @@ export class GetCoachChatPromptDebugUseCase {
     input: GetCoachChatPromptDebugInput,
   ): Promise<GetCoachChatPromptDebugOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
     if (!authUserId) {
       throw new GetCoachChatPromptDebugError(
         GET_COACH_CHAT_PROMPT_DEBUG_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -62,7 +62,7 @@ export class GetCoachChatPromptDebugUseCase {
       if (!userProfile) {
         throw new GetCoachChatPromptDebugError(
           GET_COACH_CHAT_PROMPT_DEBUG_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -88,11 +88,10 @@ export class GetCoachChatPromptDebugUseCase {
         : null;
 
       const latestUserMessage =
-        [...messages]
-          .reverse()
-          .find((message) => message.role === "user")?.content ??
+        [...messages].reverse().find((message) => message.role === 'user')
+          ?.content ??
         messages.at(-1)?.content ??
-        "";
+        '';
 
       const snapshot = this.aiPromptBuilder.buildDebugSnapshot({
         message: latestUserMessage,
@@ -133,7 +132,7 @@ export class GetCoachChatPromptDebugUseCase {
 
       throw new GetCoachChatPromptDebugError(
         GET_COACH_CHAT_PROMPT_DEBUG_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }

@@ -1,25 +1,25 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
-import { NutritionGoal } from "../../../domain/entities/nutrition-profile.entity";
+} from '../../../../users/domain/repositories/user-profile.repository';
+import { NutritionGoal } from '../../../domain/entities/nutrition-profile.entity';
 import {
   NUTRITION_PROFILE_REPOSITORY,
   NutritionProfileRepository,
-} from "../../../domain/repositories/nutrition-profile.repository";
+} from '../../../domain/repositories/nutrition-profile.repository';
 import {
   CREATE_NUTRITION_PROFILE_ERROR_CODES,
   CreateNutritionProfileError,
-} from "./create-nutrition-profile.errors";
-import { CreateNutritionProfileInput } from "./create-nutrition-profile.input";
-import { CreateNutritionProfileOutput } from "./create-nutrition-profile.output";
+} from './create-nutrition-profile.errors';
+import { CreateNutritionProfileInput } from './create-nutrition-profile.input';
+import { CreateNutritionProfileOutput } from './create-nutrition-profile.output';
 
 const ALLOWED_GOALS = new Set<NutritionGoal>([
-  "fat_loss",
-  "maintenance",
-  "muscle_gain",
+  'fat_loss',
+  'maintenance',
+  'muscle_gain',
 ]);
 
 @Injectable()
@@ -35,7 +35,7 @@ export class CreateNutritionProfileUseCase {
     input: CreateNutritionProfileInput,
   ): Promise<CreateNutritionProfileOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const dietaryRestrictions = this.normalizeStringArray(
       input.dietaryRestrictions,
     );
@@ -60,7 +60,7 @@ export class CreateNutritionProfileUseCase {
       if (!userProfile) {
         throw new CreateNutritionProfileError(
           CREATE_NUTRITION_PROFILE_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -73,7 +73,7 @@ export class CreateNutritionProfileUseCase {
           allergies,
           dislikedFoods,
           preferredFoods,
-          status: "active",
+          status: 'active',
         });
 
       return {
@@ -98,7 +98,7 @@ export class CreateNutritionProfileUseCase {
 
       throw new CreateNutritionProfileError(
         CREATE_NUTRITION_PROFILE_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -115,14 +115,14 @@ export class CreateNutritionProfileUseCase {
     if (!input.authUserId) {
       throw new CreateNutritionProfileError(
         CREATE_NUTRITION_PROFILE_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
     if (!ALLOWED_GOALS.has(input.goal)) {
       throw new CreateNutritionProfileError(
         CREATE_NUTRITION_PROFILE_ERROR_CODES.INVALID_INPUT,
-        "Invalid nutrition profile input.",
+        'Invalid nutrition profile input.',
       );
     }
 
@@ -133,7 +133,7 @@ export class CreateNutritionProfileUseCase {
     ) {
       throw new CreateNutritionProfileError(
         CREATE_NUTRITION_PROFILE_ERROR_CODES.INVALID_INPUT,
-        "Invalid nutrition profile input.",
+        'Invalid nutrition profile input.',
       );
     }
 
@@ -147,7 +147,7 @@ export class CreateNutritionProfileUseCase {
         if (!value) {
           throw new CreateNutritionProfileError(
             CREATE_NUTRITION_PROFILE_ERROR_CODES.INVALID_INPUT,
-            "Invalid nutrition profile input.",
+            'Invalid nutrition profile input.',
           );
         }
       }
@@ -162,12 +162,12 @@ export class CreateNutritionProfileUseCase {
     if (!Array.isArray(values)) {
       throw new CreateNutritionProfileError(
         CREATE_NUTRITION_PROFILE_ERROR_CODES.INVALID_INPUT,
-        "Invalid nutrition profile input.",
+        'Invalid nutrition profile input.',
       );
     }
 
     return values.map((value) =>
-      typeof value === "string" ? value.trim() : "",
+      typeof value === 'string' ? value.trim() : '',
     );
   }
 }

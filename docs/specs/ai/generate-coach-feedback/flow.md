@@ -204,9 +204,7 @@ Retornar apenas:
 
 ```ts
 {
-  message,
-  insights,
-  recommendations
+  (message, insights, recommendations);
 }
 ```
 

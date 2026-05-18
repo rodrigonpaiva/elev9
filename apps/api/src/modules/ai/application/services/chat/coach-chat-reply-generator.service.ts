@@ -1,9 +1,9 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 
-import { BuildUserHealthContextService } from "../context-builder/build-user-health-context.service";
+import { BuildUserHealthContextService } from '../context-builder/build-user-health-context.service';
 
 type UserHealthContext = Awaited<
-  ReturnType<BuildUserHealthContextService["build"]>
+  ReturnType<BuildUserHealthContextService['build']>
 >;
 
 @Injectable()
@@ -14,9 +14,9 @@ export class CoachChatReplyGenerator {
   }): string {
     const normalizedMessage = input.message.trim().toLowerCase();
     const asksAboutTraining =
-      normalizedMessage.includes("train") ||
-      normalizedMessage.includes("workout") ||
-      normalizedMessage.includes("session");
+      normalizedMessage.includes('train') ||
+      normalizedMessage.includes('workout') ||
+      normalizedMessage.includes('session');
     const latestCheckIn = input.healthContext.latestCheckIn;
     const recoveryTrend = this.resolveRecoveryTrend(
       input.healthContext.fatigueLevel,
@@ -31,8 +31,8 @@ export class CoachChatReplyGenerator {
     const nutritionProfile = input.healthContext.nutritionProfile;
 
     if (
-      input.healthContext.fatigueLevel === "HIGH" ||
-      recoveryTrend === "needs_recovery" ||
+      input.healthContext.fatigueLevel === 'HIGH' ||
+      recoveryTrend === 'needs_recovery' ||
       hasLowSleep ||
       hasHighSoreness
     ) {
@@ -42,36 +42,39 @@ export class CoachChatReplyGenerator {
     }
 
     if (
-      nutritionProfile?.goal === "muscle_gain" &&
-      input.healthContext.fatigueLevel === "LOW" &&
+      nutritionProfile?.goal === 'muscle_gain' &&
+      input.healthContext.fatigueLevel === 'LOW' &&
       latestCheckIn &&
       latestCheckIn.motivationLevel >= 4
     ) {
-      return "Your recent consistency looks strong. This may be a good moment for controlled progression.";
+      return 'Your recent consistency looks strong. This may be a good moment for controlled progression.';
     }
 
-    if (nutritionProfile?.mealsPerDay !== undefined && nutritionProfile.mealsPerDay <= 2) {
-      return "Keeping your meals consistent today will support recovery and training.";
+    if (
+      nutritionProfile?.mealsPerDay !== undefined &&
+      nutritionProfile.mealsPerDay <= 2
+    ) {
+      return 'Keeping your meals consistent today will support recovery and training.';
     }
 
     if (hasLowMotivation || input.healthContext.currentStreak >= 3) {
-      return "Your recent consistency looks steady. Keep the routine simple and repeatable today.";
+      return 'Your recent consistency looks steady. Keep the routine simple and repeatable today.';
     }
 
-    return "Your context looks steady. Keep the routine consistent and check in after your session.";
+    return 'Your context looks steady. Keep the routine consistent and check in after your session.';
   }
 
   private resolveRecoveryTrend(
-    fatigueLevel: UserHealthContext["fatigueLevel"],
-  ): "improving" | "stable" | "needs_recovery" {
+    fatigueLevel: UserHealthContext['fatigueLevel'],
+  ): 'improving' | 'stable' | 'needs_recovery' {
     switch (fatigueLevel) {
-      case "LOW":
-        return "improving";
-      case "HIGH":
-        return "needs_recovery";
-      case "MODERATE":
+      case 'LOW':
+        return 'improving';
+      case 'HIGH':
+        return 'needs_recovery';
+      case 'MODERATE':
       default:
-        return "stable";
+        return 'stable';
     }
   }
 }

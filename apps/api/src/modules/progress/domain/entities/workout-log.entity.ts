@@ -5,7 +5,7 @@ export type WorkoutLogExercise = {
 };
 
 export type WorkoutLogFeedback = {
-  difficulty: "easy" | "medium" | "hard";
+  difficulty: 'easy' | 'medium' | 'hard';
   notes?: string;
 };
 

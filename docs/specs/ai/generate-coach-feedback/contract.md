@@ -138,9 +138,7 @@ Postcondition:
 ```json
 {
   "message": "You are ready to start your first training streak.",
-  "insights": [
-    "No completed workouts were found yet"
-  ],
+  "insights": ["No completed workouts were found yet"],
   "recommendations": [
     "Complete your first workout today",
     "Start with the current plan to build momentum"

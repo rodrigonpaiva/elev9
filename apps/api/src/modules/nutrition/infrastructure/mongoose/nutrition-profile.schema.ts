@@ -1,6 +1,6 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
-import { NutritionGoal } from "../../domain/entities/nutrition-profile.entity";
+import { NutritionGoal } from '../../domain/entities/nutrition-profile.entity';
 
 export type NutritionProfileDocument =
   HydratedDocument<NutritionProfileSchemaClass>;
@@ -14,13 +14,13 @@ export class NutritionProfileSchemaClass {
   allergies!: string[];
   dislikedFoods!: string[];
   preferredFoods!: string[];
-  status!: "active";
+  status!: 'active';
   createdAt!: Date;
   updatedAt!: Date;
 }
 
-export const NUTRITION_PROFILE_MODEL_NAME = "NutritionProfile";
-export const NUTRITION_PROFILE_COLLECTION_NAME = "nutrition_profiles";
+export const NUTRITION_PROFILE_MODEL_NAME = 'NutritionProfile';
+export const NUTRITION_PROFILE_COLLECTION_NAME = 'nutrition_profiles';
 
 export const NutritionProfileSchema = new Schema<NutritionProfileSchemaClass>(
   {
@@ -31,7 +31,7 @@ export const NutritionProfileSchema = new Schema<NutritionProfileSchemaClass>(
     allergies: { type: [String], required: true, default: [] },
     dislikedFoods: { type: [String], required: true, default: [] },
     preferredFoods: { type: [String], required: true, default: [] },
-    status: { type: String, required: true, default: "active" },
+    status: { type: String, required: true, default: 'active' },
   },
   {
     collection: NUTRITION_PROFILE_COLLECTION_NAME,

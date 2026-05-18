@@ -1,7 +1,7 @@
 import {
   TrainingPlanExercise,
   TrainingPlanIntensity,
-} from "../../../../training/domain/entities/training-plan.entity";
+} from '../../../../training/domain/entities/training-plan.entity';
 
 export class GetHomeDashboardResponseDto {
   dashboard!: {
@@ -10,8 +10,8 @@ export class GetHomeDashboardResponseDto {
     };
     fitnessProfile: {
       id: string;
-      goal: "lose_weight" | "gain_muscle" | "maintain";
-      activityLevel: "low" | "medium" | "high";
+      goal: 'lose_weight' | 'gain_muscle' | 'maintain';
+      activityLevel: 'low' | 'medium' | 'high';
     } | null;
     trainingPlan: {
       id: string;
@@ -25,16 +25,16 @@ export class GetHomeDashboardResponseDto {
       } | null;
     } | null;
     progressSummary: {
-      period: "week";
+      period: 'week';
       workoutsCompleted: number;
       totalDurationMinutes: number;
       averageDurationMinutes: number;
       lastWorkoutDate: string | null;
     };
     recovery: {
-      fatigueLevel: "LOW" | "MODERATE" | "HIGH";
-      recommendedIntensity: "low" | "medium" | "normal";
-      recoveryTrend: "improving" | "stable" | "needs_recovery";
+      fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH';
+      recommendedIntensity: 'low' | 'medium' | 'normal';
+      recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
       latestCheckIn?: {
         energyLevel: number;
         sleepQuality: number;
@@ -44,7 +44,7 @@ export class GetHomeDashboardResponseDto {
       };
     };
     nutritionGuidance: {
-      priority: "recovery" | "consistency" | "performance";
+      priority: 'recovery' | 'consistency' | 'performance';
       message: string;
       signals: string[];
     };

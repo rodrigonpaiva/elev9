@@ -25,7 +25,7 @@ Ele especifica:
 ## 3. Input
 
 ```ts
-type <UseCaseInput> = {
+type<UseCaseInput> = {
   // fields
 };
 ```
@@ -52,7 +52,7 @@ type <UseCaseInput> = {
 ## 6. Output
 
 ```ts
-type <UseCaseOutput> = {
+type<UseCaseOutput> = {
   // safe output
 };
 ```

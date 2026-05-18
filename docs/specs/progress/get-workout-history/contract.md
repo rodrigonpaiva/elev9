@@ -89,7 +89,7 @@ type GetWorkoutHistoryOutput = {
       repsDone: number;
     }>;
     feedback?: {
-      difficulty: "easy" | "medium" | "hard";
+      difficulty: 'easy' | 'medium' | 'hard';
       notes?: string;
     };
     date: string;

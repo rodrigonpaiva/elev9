@@ -2,7 +2,7 @@ import {
   WorkoutLog,
   WorkoutLogExercise,
   WorkoutLogFeedback,
-} from "../entities/workout-log.entity";
+} from '../entities/workout-log.entity';
 
 export interface CreateWorkoutLogRepositoryInput {
   trainingPlanId: string;
@@ -31,4 +31,4 @@ export interface WorkoutLogRepository {
   create(input: CreateWorkoutLogRepositoryInput): Promise<WorkoutLog>;
 }
 
-export const WORKOUT_LOG_REPOSITORY = Symbol("WORKOUT_LOG_REPOSITORY");
+export const WORKOUT_LOG_REPOSITORY = Symbol('WORKOUT_LOG_REPOSITORY');

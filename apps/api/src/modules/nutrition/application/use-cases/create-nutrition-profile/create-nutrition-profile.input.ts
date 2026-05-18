@@ -1,4 +1,4 @@
-import { NutritionGoal } from "../../../domain/entities/nutrition-profile.entity";
+import { NutritionGoal } from '../../../domain/entities/nutrition-profile.entity';
 
 export type CreateNutritionProfileInput = {
   authUserId: string;

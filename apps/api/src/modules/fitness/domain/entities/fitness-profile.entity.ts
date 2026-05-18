@@ -1,6 +1,6 @@
-export type FitnessGoal = "lose_weight" | "gain_muscle" | "maintain";
-export type ActivityLevel = "low" | "medium" | "high";
-export type LimitationSeverity = "low" | "medium" | "high";
+export type FitnessGoal = 'lose_weight' | 'gain_muscle' | 'maintain';
+export type ActivityLevel = 'low' | 'medium' | 'high';
+export type LimitationSeverity = 'low' | 'medium' | 'high';
 
 export type FitnessProfileLimitation = {
   type: string;
@@ -22,7 +22,7 @@ export type FitnessProfileProps = {
   activityLevel: ActivityLevel;
   trainingAvailability: TrainingAvailability;
   limitations: FitnessProfileLimitation[];
-  status: "active";
+  status: 'active';
   createdAt: Date;
   updatedAt: Date;
 };
@@ -36,7 +36,7 @@ export class FitnessProfile {
   readonly activityLevel: ActivityLevel;
   readonly trainingAvailability: TrainingAvailability;
   readonly limitations: FitnessProfileLimitation[];
-  readonly status: "active";
+  readonly status: 'active';
   readonly createdAt: Date;
   readonly updatedAt: Date;
 

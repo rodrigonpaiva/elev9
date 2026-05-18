@@ -124,10 +124,7 @@ Retornar apenas:
 ```ts
 {
   dashboard: {
-    user,
-    fitnessProfile,
-    trainingPlan,
-    progressSummary
+    (user, fitnessProfile, trainingPlan, progressSummary);
   }
 }
 ```

@@ -1,4 +1,4 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
 export type CoachFeedbackDocument = HydratedDocument<CoachFeedbackSchemaClass>;
 
@@ -11,11 +11,11 @@ export class CoachFeedbackSchemaClass {
   influences?: string[];
   generatorVersion?: string;
   contextSnapshot?: {
-    goal?: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel?: "low" | "medium" | "high";
+    goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel?: 'low' | 'medium' | 'high';
     hasTrainingPlan?: boolean;
-    fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
-    recoveryTrend?: "improving" | "stable" | "needs_recovery";
+    fatigueLevel?: 'LOW' | 'MODERATE' | 'HIGH';
+    recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -31,7 +31,7 @@ export class CoachFeedbackSchemaClass {
       motivationLevel: number;
     };
     nutritionProfile?: {
-      goal: "fat_loss" | "maintenance" | "muscle_gain";
+      goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
       mealsPerDay: number;
     };
   };
@@ -39,8 +39,8 @@ export class CoachFeedbackSchemaClass {
   updatedAt!: Date;
 }
 
-export const COACH_FEEDBACK_MODEL_NAME = "CoachFeedback";
-export const COACH_FEEDBACK_COLLECTION_NAME = "coach_feedbacks";
+export const COACH_FEEDBACK_MODEL_NAME = 'CoachFeedback';
+export const COACH_FEEDBACK_COLLECTION_NAME = 'coach_feedbacks';
 
 export const CoachFeedbackSchema = new Schema<CoachFeedbackSchemaClass>(
   {

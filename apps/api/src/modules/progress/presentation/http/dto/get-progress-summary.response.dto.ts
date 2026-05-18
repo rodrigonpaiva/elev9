@@ -1,6 +1,6 @@
 export class GetProgressSummaryResponseDto {
   summary!: {
-    period: "week" | "month";
+    period: 'week' | 'month';
     workoutsCompleted: number;
     totalDurationMinutes: number;
     averageDurationMinutes: number;

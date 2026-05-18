@@ -1,10 +1,10 @@
 import {
   ActivityLevel,
   FitnessGoal,
-} from "../../../fitness/domain/entities/fitness-profile.entity";
+} from '../../../fitness/domain/entities/fitness-profile.entity';
 
-export type TrainingPlanIntensity = "low" | "moderate" | "high";
-export type TrainingPlanFormat = "strength" | "circuit";
+export type TrainingPlanIntensity = 'low' | 'moderate' | 'high';
+export type TrainingPlanFormat = 'strength' | 'circuit';
 
 export type TrainingPlanExercise = {
   name: string;
@@ -28,7 +28,7 @@ export type TrainingPlanProps = {
   goal: FitnessGoal;
   activityLevel: ActivityLevel;
   weeklySchedule: TrainingPlanDay[];
-  status: "active";
+  status: 'active';
   createdAt: Date;
   updatedAt: Date;
 };
@@ -39,7 +39,7 @@ export class TrainingPlan {
   readonly goal: FitnessGoal;
   readonly activityLevel: ActivityLevel;
   readonly weeklySchedule: TrainingPlanDay[];
-  readonly status: "active";
+  readonly status: 'active';
   readonly createdAt: Date;
   readonly updatedAt: Date;
 

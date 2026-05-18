@@ -3,4 +3,4 @@ export interface Clock {
   todayUtcDateString(): string;
 }
 
-export const CLOCK = Symbol("CLOCK");
+export const CLOCK = Symbol('CLOCK');

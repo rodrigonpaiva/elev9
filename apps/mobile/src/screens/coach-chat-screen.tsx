@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -6,25 +6,18 @@ import {
   ScrollView,
   StyleSheet,
   View,
-} from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
-import { ApiClientError } from "@elev9/api-client";
-import {
-  Button,
-  Card,
-  colors,
-  Input,
-  Screen,
-  Text,
-} from "@elev9/ui";
+import { ApiClientError } from '@elev9/api-client';
+import { Button, Card, colors, Input, Screen, Text } from '@elev9/ui';
 import type {
   CoachChatHistoryMessage,
   CoachChatHistoryResponse,
-} from "@elev9/types";
+} from '@elev9/types';
 
-import { apiClient } from "../api/client";
-import { useAuth } from "../auth/auth-provider";
+import { apiClient } from '../api/client';
+import { useAuth } from '../auth/auth-provider';
 
 type ChatMessage = CoachChatHistoryMessage & {
   localId: string;
@@ -36,7 +29,7 @@ export function CoachChatScreen() {
   const { signOut } = useAuth();
   const scrollViewRef = useRef<ScrollView>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [draftMessage, setDraftMessage] = useState("");
+  const [draftMessage, setDraftMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -58,7 +51,7 @@ export function CoachChatScreen() {
       } catch (error) {
         if (
           error instanceof ApiClientError &&
-          error.code === "AUTH_INVALID_SESSION"
+          error.code === 'AUTH_INVALID_SESSION'
         ) {
           await signOut();
           return;
@@ -67,7 +60,7 @@ export function CoachChatScreen() {
         if (error instanceof ApiClientError) {
           setErrorMessage(error.message);
         } else {
-          setErrorMessage("Unable to load coach chat.");
+          setErrorMessage('Unable to load coach chat.');
         }
       } finally {
         setIsLoadingHistory(false);
@@ -89,12 +82,12 @@ export function CoachChatScreen() {
       return;
     }
 
-    setDraftMessage("");
+    setDraftMessage('');
     setErrorMessage(null);
 
     const userMessage: ChatMessage = {
-      localId: createLocalId("user"),
-      role: "user",
+      localId: createLocalId('user'),
+      role: 'user',
       content: message,
       createdAt: new Date().toISOString(),
     };
@@ -105,8 +98,8 @@ export function CoachChatScreen() {
     try {
       const response = await apiClient.ai.sendChatMessage({ message });
       const assistantMessage: ChatMessage = {
-        localId: createLocalId("assistant"),
-        role: "assistant",
+        localId: createLocalId('assistant'),
+        role: 'assistant',
         content: response.reply,
         createdAt: new Date().toISOString(),
       };
@@ -115,7 +108,7 @@ export function CoachChatScreen() {
     } catch (error) {
       if (
         error instanceof ApiClientError &&
-        error.code === "AUTH_INVALID_SESSION"
+        error.code === 'AUTH_INVALID_SESSION'
       ) {
         await signOut();
         return;
@@ -124,7 +117,7 @@ export function CoachChatScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to send your message.");
+        setErrorMessage('Unable to send your message.');
       }
     } finally {
       setIsSending(false);
@@ -139,7 +132,7 @@ export function CoachChatScreen() {
     <Screen contentStyle={styles.root}>
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>Coach Chat</Text>
@@ -169,10 +162,7 @@ export function CoachChatScreen() {
               }}
             >
               {messages.map((message) => (
-                <MessageBubble
-                  key={message.localId}
-                  message={message}
-                />
+                <MessageBubble key={message.localId} message={message} />
               ))}
             </ScrollView>
           ) : (
@@ -181,8 +171,8 @@ export function CoachChatScreen() {
                 Start the conversation
               </Text>
               <Text style={styles.emptyText}>
-                Ask your coach about today&apos;s session, recovery, or nutrition
-                priorities.
+                Ask your coach about today&apos;s session, recovery, or
+                nutrition priorities.
               </Text>
             </View>
           )}
@@ -216,7 +206,7 @@ export function CoachChatScreen() {
 }
 
 function MessageBubble({ message }: { message: ChatMessage }) {
-  const isUser = message.role === "user";
+  const isUser = message.role === 'user';
 
   return (
     <View
@@ -238,7 +228,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
               isUser ? styles.messageRoleUser : styles.messageRoleAssistant,
             ]}
           >
-            {isUser ? "You" : "Coach"}
+            {isUser ? 'You' : 'Coach'}
           </Text>
           <Text
             style={[
@@ -262,9 +252,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   );
 }
 
-function normalizeHistory(
-  response: CoachChatHistoryResponse,
-): ChatMessage[] {
+function normalizeHistory(response: CoachChatHistoryResponse): ChatMessage[] {
   return response.map((message, index) => ({
     ...message,
     localId: `${message.createdAt}-${index}`,
@@ -278,11 +266,11 @@ function createLocalId(prefix: string): string {
 function formatTimestamp(value: string): string {
   const date = new Date(value);
 
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   }).format(date);
 }
 
@@ -299,9 +287,9 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 1.1,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
     color: colors.primary,
   },
   title: {
@@ -314,15 +302,15 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 0,
     padding: 0,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   messagesScroll: {
     flex: 1,
   },
   loadingState: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
     padding: 24,
   },
@@ -335,8 +323,8 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
     padding: 24,
   },
@@ -345,19 +333,19 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     color: colors.mutedText,
-    textAlign: "center",
+    textAlign: 'center',
   },
   messageRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
   },
   messageRowUser: {
-    justifyContent: "flex-end",
+    justifyContent: 'flex-end',
   },
   messageRowAssistant: {
-    justifyContent: "flex-start",
+    justifyContent: 'flex-start',
   },
   messageBubble: {
-    maxWidth: "88%",
+    maxWidth: '88%',
     gap: 8,
     borderRadius: 18,
     borderWidth: 1,
@@ -369,20 +357,20 @@ const styles = StyleSheet.create({
     borderColor: colors.primaryDark,
   },
   messageBubbleAssistant: {
-    backgroundColor: "#0b1220",
+    backgroundColor: '#0b1220',
     borderColor: colors.border,
   },
   messageHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 12,
   },
   messageRole: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: '700',
     letterSpacing: 0.7,
-    textTransform: "uppercase",
+    textTransform: 'uppercase',
   },
   messageRoleUser: {
     color: colors.primaryText,
@@ -410,7 +398,7 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   error: {
-    color: "#fca5a5",
+    color: '#fca5a5',
   },
   composerCard: {
     gap: 14,
@@ -420,9 +408,9 @@ const styles = StyleSheet.create({
   },
   composerInput: {
     minHeight: 110,
-    textAlignVertical: "top",
+    textAlignVertical: 'top',
   },
   sendButton: {
-    width: "100%",
+    width: '100%',
   },
 });

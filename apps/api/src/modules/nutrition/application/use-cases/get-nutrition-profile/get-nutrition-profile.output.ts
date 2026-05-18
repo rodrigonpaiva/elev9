@@ -1,4 +1,4 @@
-import { NutritionGoal } from "../../../domain/entities/nutrition-profile.entity";
+import { NutritionGoal } from '../../../domain/entities/nutrition-profile.entity';
 
 export type GetNutritionProfileOutput = {
   nutritionProfile: {
@@ -10,7 +10,7 @@ export type GetNutritionProfileOutput = {
     allergies: string[];
     dislikedFoods: string[];
     preferredFoods: string[];
-    status: "active";
+    status: 'active';
     createdAt: Date;
     updatedAt: Date;
   };

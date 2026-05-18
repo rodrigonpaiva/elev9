@@ -1,8 +1,8 @@
 export const GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES = {
-  INVALID_SESSION: "AUTH_INVALID_SESSION",
-  USER_PROFILE_NOT_FOUND: "USER_PROFILE_NOT_FOUND",
-  INVALID_INPUT: "AI_CHAT_REPLY_PATH_DEBUG_INVALID_INPUT",
-  INTERNAL_ERROR: "AI_CHAT_REPLY_PATH_DEBUG_INTERNAL_ERROR",
+  INVALID_SESSION: 'AUTH_INVALID_SESSION',
+  USER_PROFILE_NOT_FOUND: 'USER_PROFILE_NOT_FOUND',
+  INVALID_INPUT: 'AI_CHAT_REPLY_PATH_DEBUG_INVALID_INPUT',
+  INTERNAL_ERROR: 'AI_CHAT_REPLY_PATH_DEBUG_INTERNAL_ERROR',
 } as const;
 
 export type GetCoachChatReplyPathDebugErrorCode =
@@ -18,7 +18,7 @@ export class GetCoachChatReplyPathDebugError extends Error {
     details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = "GetCoachChatReplyPathDebugError";
+    this.name = 'GetCoachChatReplyPathDebugError';
     this.code = code;
     this.details = details;
   }

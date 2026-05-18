@@ -98,13 +98,13 @@ Retornar apenas:
 ```ts
 {
   trainingPlan: {
-    id,
-    fitnessProfileId,
-    status,
-    goal,
-    activityLevel,
-    weeklySchedule,
-    createdAt
+    (id,
+      fitnessProfileId,
+      status,
+      goal,
+      activityLevel,
+      weeklySchedule,
+      createdAt);
   }
 }
 ```

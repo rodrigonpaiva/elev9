@@ -111,7 +111,7 @@ Retornar apenas:
 
 ```ts
 {
-  feedbacks
+  feedbacks;
 }
 ```
 

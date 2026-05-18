@@ -1,19 +1,19 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   DAILY_CHECK_IN_REPOSITORY,
   DailyCheckInRepository,
-} from "../../../domain/repositories/daily-check-in.repository";
+} from '../../../domain/repositories/daily-check-in.repository';
 import {
   GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES,
   GetDailyCheckInHistoryError,
-} from "./get-daily-check-in-history.errors";
-import { GetDailyCheckInHistoryInput } from "./get-daily-check-in-history.input";
-import { GetDailyCheckInHistoryOutput } from "./get-daily-check-in-history.output";
+} from './get-daily-check-in-history.errors';
+import { GetDailyCheckInHistoryInput } from './get-daily-check-in-history.input';
+import { GetDailyCheckInHistoryOutput } from './get-daily-check-in-history.output';
 
 @Injectable()
 export class GetDailyCheckInHistoryUseCase {
@@ -28,13 +28,13 @@ export class GetDailyCheckInHistoryUseCase {
     input: GetDailyCheckInHistoryInput,
   ): Promise<GetDailyCheckInHistoryOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const normalizedLimit = this.normalizeLimit(input.limit);
 
     if (!authUserId) {
       throw new GetDailyCheckInHistoryError(
         GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -45,16 +45,19 @@ export class GetDailyCheckInHistoryUseCase {
       if (!userProfile) {
         throw new GetDailyCheckInHistoryError(
           GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
-      const dailyCheckIns = await this.dailyCheckInRepository.findManyByUserProfileId(
-        userProfile.id,
-      );
+      const dailyCheckIns =
+        await this.dailyCheckInRepository.findManyByUserProfileId(
+          userProfile.id,
+        );
 
       const orderedCheckIns = [...dailyCheckIns]
-        .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())
+        .sort(
+          (left, right) => right.createdAt.getTime() - left.createdAt.getTime(),
+        )
         .slice(0, normalizedLimit);
 
       return {
@@ -74,7 +77,7 @@ export class GetDailyCheckInHistoryUseCase {
 
       throw new GetDailyCheckInHistoryError(
         GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -90,7 +93,7 @@ export class GetDailyCheckInHistoryUseCase {
 
     throw new GetDailyCheckInHistoryError(
       GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INVALID_INPUT,
-      "Invalid daily check-in history input.",
+      'Invalid daily check-in history input.',
     );
   }
 }

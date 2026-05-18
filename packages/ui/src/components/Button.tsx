@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactNode } from "react";
+import type { PropsWithChildren, ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,17 +8,17 @@ import {
   type StyleProp,
   type TextStyle,
   type ViewStyle,
-} from "react-native";
+} from 'react-native';
 
-import { colors } from "../theme/colors";
-import { radius } from "../theme/radius";
-import { spacing } from "../theme/spacing";
-import { Text } from "./Text";
+import { colors } from '../theme/colors';
+import { radius } from '../theme/radius';
+import { spacing } from '../theme/spacing';
+import { Text } from './Text';
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 
 export type ButtonProps = PropsWithChildren<
-  Omit<PressableProps, "children" | "style"> & {
+  Omit<PressableProps, 'children' | 'style'> & {
     label?: string;
     title?: string;
     loading?: boolean;
@@ -34,7 +34,7 @@ export function Button({
   title,
   loading = false,
   children,
-  variant = "primary",
+  variant = 'primary',
   style,
   ...props
 }: ButtonProps) {
@@ -73,13 +73,13 @@ const styles = StyleSheet.create({
   base: {
     minHeight: 48,
     minWidth: 160,
-    width: "100%",
-    alignSelf: "stretch",
+    width: '100%',
+    alignSelf: 'stretch',
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: "transparent",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: 'transparent',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
   },
@@ -101,15 +101,15 @@ const styles = StyleSheet.create({
     borderColor: colors.danger,
   },
   content: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "100%",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   label: {
     fontSize: 16,
-    fontWeight: "700",
-    textAlign: "center",
+    fontWeight: '700',
+    textAlign: 'center',
   },
   labelWithSpinner: {
     marginLeft: 10,
@@ -149,7 +149,7 @@ const labelStyleMap: Record<ButtonVariant, TextStyle> = {
 };
 
 function spinnerColor(variant: ButtonVariant): string {
-  return variant === "primary" ? colors.primaryText : colors.text;
+  return variant === 'primary' ? colors.primaryText : colors.text;
 }
 
 function resolveLabel(input: {
@@ -158,7 +158,7 @@ function resolveLabel(input: {
   children?: ReactNode;
   loading: boolean;
 }): string {
-  if (typeof input.children === "string" && input.children.trim().length > 0) {
+  if (typeof input.children === 'string' && input.children.trim().length > 0) {
     return input.children;
   }
 
@@ -170,5 +170,5 @@ function resolveLabel(input: {
     return input.label;
   }
 
-  return input.loading ? "Loading..." : "Button";
+  return input.loading ? 'Loading...' : 'Button';
 }

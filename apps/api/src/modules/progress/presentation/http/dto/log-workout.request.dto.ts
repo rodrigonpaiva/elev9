@@ -1,4 +1,4 @@
-import { Type } from "class-transformer";
+import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
@@ -10,7 +10,7 @@ import {
   MaxLength,
   Min,
   ValidateNested,
-} from "class-validator";
+} from 'class-validator';
 
 class CompletedExerciseDto {
   @IsString()
@@ -28,8 +28,8 @@ class CompletedExerciseDto {
 }
 
 class WorkoutFeedbackDto {
-  @IsIn(["easy", "medium", "hard"])
-  difficulty!: "easy" | "medium" | "hard";
+  @IsIn(['easy', 'medium', 'hard'])
+  difficulty!: 'easy' | 'medium' | 'hard';
 
   @IsOptional()
   @IsString()

@@ -1,8 +1,8 @@
 export const GET_NUTRITION_PROFILE_ERROR_CODES = {
-  INVALID_SESSION: "AUTH_INVALID_SESSION",
-  USER_PROFILE_NOT_FOUND: "USER_PROFILE_NOT_FOUND",
-  NUTRITION_PROFILE_NOT_FOUND: "NUTRITION_PROFILE_NOT_FOUND",
-  INTERNAL_ERROR: "NUTRITION_PROFILE_INTERNAL_ERROR",
+  INVALID_SESSION: 'AUTH_INVALID_SESSION',
+  USER_PROFILE_NOT_FOUND: 'USER_PROFILE_NOT_FOUND',
+  NUTRITION_PROFILE_NOT_FOUND: 'NUTRITION_PROFILE_NOT_FOUND',
+  INTERNAL_ERROR: 'NUTRITION_PROFILE_INTERNAL_ERROR',
 } as const;
 
 export type GetNutritionProfileErrorCode =
@@ -18,7 +18,7 @@ export class GetNutritionProfileError extends Error {
     details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = "GetNutritionProfileError";
+    this.name = 'GetNutritionProfileError';
     this.code = code;
     this.details = details;
   }

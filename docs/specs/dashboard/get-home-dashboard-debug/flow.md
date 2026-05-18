@@ -50,4 +50,3 @@ Se a sessão for inválida ou o usuário não existir:
 Se o contexto não puder ser calculado:
 
 - o endpoint retorna erro interno padronizado
-

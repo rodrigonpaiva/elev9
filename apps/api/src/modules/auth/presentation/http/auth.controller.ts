@@ -10,30 +10,30 @@ import {
   InternalServerErrorException,
   Post,
   UnauthorizedException,
-} from "@nestjs/common";
+} from '@nestjs/common';
 
 import {
   REGISTER_USER_ERROR_CODES,
   RegisterUserError,
-} from "../../application/use-cases/register-user/register-user.errors";
+} from '../../application/use-cases/register-user/register-user.errors';
 import {
   LOGIN_USER_ERROR_CODES,
   LoginUserError,
-} from "../../application/use-cases/login-user/login-user.errors";
+} from '../../application/use-cases/login-user/login-user.errors';
 import {
   VALIDATE_SESSION_ERROR_CODES,
   ValidateSessionError,
-} from "../../application/use-cases/validate-session/validate-session.errors";
-import { LoginUserUseCase } from "../../application/use-cases/login-user/login-user.use-case";
-import { RegisterUserUseCase } from "../../application/use-cases/register-user/register-user.use-case";
-import { ValidateSessionUseCase } from "../../application/use-cases/validate-session/validate-session.use-case";
-import { LoginUserRequestDto } from "./dto/login-user.request.dto";
-import { LoginUserResponseDto } from "./dto/login-user.response.dto";
-import { RegisterUserRequestDto } from "./dto/register-user.request.dto";
-import { RegisterUserResponseDto } from "./dto/register-user.response.dto";
-import { ValidateSessionResponseDto } from "./dto/validate-session.response.dto";
+} from '../../application/use-cases/validate-session/validate-session.errors';
+import { LoginUserUseCase } from '../../application/use-cases/login-user/login-user.use-case';
+import { RegisterUserUseCase } from '../../application/use-cases/register-user/register-user.use-case';
+import { ValidateSessionUseCase } from '../../application/use-cases/validate-session/validate-session.use-case';
+import { LoginUserRequestDto } from './dto/login-user.request.dto';
+import { LoginUserResponseDto } from './dto/login-user.response.dto';
+import { RegisterUserRequestDto } from './dto/register-user.request.dto';
+import { RegisterUserResponseDto } from './dto/register-user.response.dto';
+import { ValidateSessionResponseDto } from './dto/validate-session.response.dto';
 
-@Controller("auth")
+@Controller('auth')
 export class AuthController {
   constructor(
     private readonly registerUserUseCase: RegisterUserUseCase,
@@ -41,7 +41,7 @@ export class AuthController {
     private readonly validateSessionUseCase: ValidateSessionUseCase,
   ) {}
 
-  @Post("register")
+  @Post('register')
   @HttpCode(HttpStatus.CREATED)
   async register(
     @Body() body: RegisterUserRequestDto,
@@ -69,7 +69,7 @@ export class AuthController {
 
   private handleError(error: unknown): never {
     if (!(error instanceof RegisterUserError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -90,14 +90,16 @@ export class AuthController {
       default:
         throw new InternalServerErrorException({
           code: REGISTER_USER_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
-  @Post("login")
+  @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() body: LoginUserRequestDto): Promise<LoginUserResponseDto> {
+  async login(
+    @Body() body: LoginUserRequestDto,
+  ): Promise<LoginUserResponseDto> {
     try {
       const result = await this.loginUserUseCase.execute({
         email: body.email,
@@ -109,7 +111,7 @@ export class AuthController {
         user: {
           id: result.user.id,
           email: result.user.email,
-        } as LoginUserResponseDto["user"],
+        } as LoginUserResponseDto['user'],
       };
     } catch (error) {
       this.handleLoginError(error);
@@ -118,7 +120,7 @@ export class AuthController {
 
   private handleLoginError(error: unknown): never {
     if (!(error instanceof LoginUserError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -138,19 +140,19 @@ export class AuthController {
       default:
         throw new InternalServerErrorException({
           code: LOGIN_USER_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
-  @Get("me")
+  @Get('me')
   @HttpCode(HttpStatus.OK)
   async me(
-    @Headers("authorization") authorizationHeader?: string,
+    @Headers('authorization') authorizationHeader?: string,
   ): Promise<ValidateSessionResponseDto> {
     try {
       const result = await this.validateSessionUseCase.execute({
-        authorizationHeader: authorizationHeader ?? "",
+        authorizationHeader: authorizationHeader ?? '',
       });
 
       return {
@@ -166,7 +168,7 @@ export class AuthController {
 
   private handleValidateSessionError(error: unknown): never {
     if (!(error instanceof ValidateSessionError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -186,7 +188,7 @@ export class AuthController {
       default:
         throw new InternalServerErrorException({
           code: VALIDATE_SESSION_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }

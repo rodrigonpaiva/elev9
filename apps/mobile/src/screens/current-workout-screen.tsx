@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
   RefreshControl,
   StyleSheet,
   View,
-} from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+} from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { ApiClientError } from "@elev9/api-client";
-import type { DashboardHomeResponse, TodayWorkout } from "@elev9/types";
+import { ApiClientError } from '@elev9/api-client';
+import type { DashboardHomeResponse, TodayWorkout } from '@elev9/types';
 import {
   Badge,
   Button,
@@ -19,16 +19,17 @@ import {
   Screen,
   SectionHeader,
   Text,
-} from "@elev9/ui";
+} from '@elev9/ui';
 
-import { apiClient } from "../api/client";
-import type { RootStackParamList } from "../navigation/app-navigator";
+import { apiClient } from '../api/client';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 export function CurrentWorkoutScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [dashboard, setDashboard] =
-    useState<DashboardHomeResponse["dashboard"] | null>(null);
+  const [dashboard, setDashboard] = useState<
+    DashboardHomeResponse['dashboard'] | null
+  >(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -49,7 +50,7 @@ export function CurrentWorkoutScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to load today’s workout.");
+        setErrorMessage('Unable to load today’s workout.');
       }
     } finally {
       if (options?.refresh) {
@@ -141,7 +142,9 @@ export function CurrentWorkoutScreen() {
               <SectionHeader
                 title={todayWorkout.title}
                 subtitle={`${todayWorkout.focus} • ${todayWorkout.format}`}
-                action={<Badge label={todayWorkout.intensity} variant="muted" />}
+                action={
+                  <Badge label={todayWorkout.intensity} variant="muted" />
+                }
               />
               <Text style={styles.bodyText}>
                 {todayWorkout.exercises.length} exercises planned for today.
@@ -151,7 +154,8 @@ export function CurrentWorkoutScreen() {
                   <View key={exercise.name} style={styles.exerciseRow}>
                     <Text style={styles.exerciseName}>{exercise.name}</Text>
                     <Text style={styles.exerciseMeta}>
-                      {exercise.sets} sets • {exercise.reps} reps • {exercise.restSeconds}s rest
+                      {exercise.sets} sets • {exercise.reps} reps •{' '}
+                      {exercise.restSeconds}s rest
                     </Text>
                   </View>
                 ))}
@@ -161,7 +165,7 @@ export function CurrentWorkoutScreen() {
             <Button
               label="Start Workout"
               onPress={() =>
-                navigation.navigate("Workout", {
+                navigation.navigate('Workout', {
                   trainingPlanId: trainingPlan.id,
                   workout: todayWorkout as TodayWorkout,
                 })
@@ -173,7 +177,8 @@ export function CurrentWorkoutScreen() {
           <Card style={styles.feedbackCard}>
             <Text variant="title">No training today</Text>
             <Text style={styles.subtitle}>
-              Your current plan does not include a session for today. Check back tomorrow or review your history.
+              Your current plan does not include a session for today. Check back
+              tomorrow or review your history.
             </Text>
             <Button
               label="Refresh"
@@ -206,8 +211,8 @@ const styles = StyleSheet.create({
   },
   loadingState: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
   },
   loadingText: {
@@ -217,7 +222,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   errorText: {
-    color: "#fca5a5",
+    color: '#fca5a5',
   },
   card: {
     gap: 16,
@@ -233,17 +238,17 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: "#0b1220",
+    backgroundColor: '#0b1220',
     padding: 14,
   },
   exerciseName: {
     color: colors.text,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   exerciseMeta: {
     color: colors.mutedText,
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
 });

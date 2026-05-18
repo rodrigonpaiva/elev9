@@ -1,17 +1,17 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { CoachFeedback } from "../../domain/entities/coach-feedback.entity";
+import { CoachFeedback } from '../../domain/entities/coach-feedback.entity';
 import {
   CoachFeedbackRepository,
   CreateCoachFeedbackRepositoryInput,
-} from "../../domain/repositories/coach-feedback.repository";
+} from '../../domain/repositories/coach-feedback.repository';
 import {
   COACH_FEEDBACK_MODEL_NAME,
   CoachFeedbackDocument,
   CoachFeedbackSchemaClass,
-} from "./coach-feedback.schema";
+} from './coach-feedback.schema';
 
 @Injectable()
 export class MongooseCoachFeedbackRepository implements CoachFeedbackRepository {
@@ -76,7 +76,8 @@ export class MongooseCoachFeedbackRepository implements CoachFeedbackRepository 
             recoveryTrend: document.contextSnapshot.recoveryTrend,
             weeklyFrequency: document.contextSnapshot.weeklyFrequency,
             currentStreak: document.contextSnapshot.currentStreak,
-            averageWorkoutDuration: document.contextSnapshot.averageWorkoutDuration,
+            averageWorkoutDuration:
+              document.contextSnapshot.averageWorkoutDuration,
             recentWorkoutLogs: document.contextSnapshot.recentWorkoutLogs
               ? document.contextSnapshot.recentWorkoutLogs.map((log) => ({
                   date: log.date,
@@ -86,16 +87,21 @@ export class MongooseCoachFeedbackRepository implements CoachFeedbackRepository 
               : undefined,
             latestCheckIn: document.contextSnapshot.latestCheckIn
               ? {
-                  energyLevel: document.contextSnapshot.latestCheckIn.energyLevel,
-                  sleepQuality: document.contextSnapshot.latestCheckIn.sleepQuality,
-                  muscleSoreness: document.contextSnapshot.latestCheckIn.muscleSoreness,
-                  motivationLevel: document.contextSnapshot.latestCheckIn.motivationLevel,
+                  energyLevel:
+                    document.contextSnapshot.latestCheckIn.energyLevel,
+                  sleepQuality:
+                    document.contextSnapshot.latestCheckIn.sleepQuality,
+                  muscleSoreness:
+                    document.contextSnapshot.latestCheckIn.muscleSoreness,
+                  motivationLevel:
+                    document.contextSnapshot.latestCheckIn.motivationLevel,
                 }
               : undefined,
             nutritionProfile: document.contextSnapshot.nutritionProfile
               ? {
                   goal: document.contextSnapshot.nutritionProfile.goal,
-                  mealsPerDay: document.contextSnapshot.nutritionProfile.mealsPerDay,
+                  mealsPerDay:
+                    document.contextSnapshot.nutritionProfile.mealsPerDay,
                 }
               : undefined,
           }

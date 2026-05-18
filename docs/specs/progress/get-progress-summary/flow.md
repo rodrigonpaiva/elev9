@@ -179,11 +179,11 @@ Retornar apenas:
 ```ts
 {
   summary: {
-    period,
-    workoutsCompleted,
-    totalDurationMinutes,
-    averageDurationMinutes,
-    lastWorkoutDate
+    (period,
+      workoutsCompleted,
+      totalDurationMinutes,
+      averageDurationMinutes,
+      lastWorkoutDate);
   }
 }
 ```

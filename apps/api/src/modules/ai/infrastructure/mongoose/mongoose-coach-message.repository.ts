@@ -1,17 +1,17 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { CoachMessage } from "../../domain/entities/coach-message.entity";
+import { CoachMessage } from '../../domain/entities/coach-message.entity';
 import {
   CoachMessageRepository,
   CreateCoachMessageRepositoryInput,
-} from "../../domain/repositories/coach-message.repository";
+} from '../../domain/repositories/coach-message.repository';
 import {
   COACH_MESSAGE_MODEL_NAME,
   CoachMessageDocument,
   CoachMessageSchemaClass,
-} from "./coach-message.schema";
+} from './coach-message.schema';
 
 @Injectable()
 export class MongooseCoachMessageRepository implements CoachMessageRepository {

@@ -1,7 +1,7 @@
 export const GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES = {
-  INVALID_SESSION: "AUTH_INVALID_SESSION",
-  INVALID_INPUT: "AI_CHAT_DEBUG_INDEX_INVALID_INPUT",
-  INTERNAL_ERROR: "AI_CHAT_DEBUG_INDEX_INTERNAL_ERROR",
+  INVALID_SESSION: 'AUTH_INVALID_SESSION',
+  INVALID_INPUT: 'AI_CHAT_DEBUG_INDEX_INVALID_INPUT',
+  INTERNAL_ERROR: 'AI_CHAT_DEBUG_INDEX_INTERNAL_ERROR',
 } as const;
 
 export type GetCoachChatDebugIndexErrorCode =
@@ -17,7 +17,7 @@ export class GetCoachChatDebugIndexError extends Error {
     details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = "GetCoachChatDebugIndexError";
+    this.name = 'GetCoachChatDebugIndexError';
     this.code = code;
     this.details = details;
   }

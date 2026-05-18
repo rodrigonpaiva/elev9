@@ -1,9 +1,9 @@
 export type GetCoachChatDebugIndexResponseDto = {
   generatedAt: string;
   replyPath: {
-    source: "llm" | "heuristic";
+    source: 'llm' | 'heuristic';
     fallbackActivated: boolean;
-    fallbackReason?: "provider_failure" | "llm_disabled" | "invalid_provider";
+    fallbackReason?: 'provider_failure' | 'llm_disabled' | 'invalid_provider';
   };
   llm: {
     enabled: boolean;
@@ -27,17 +27,17 @@ export type GetCoachChatDebugIndexResponseDto = {
     updatedAt: string;
   };
   context: {
-    fatigueLevel: "LOW" | "MODERATE" | "HIGH";
-    recoveryTrend: "improving" | "stable" | "needs_recovery";
+    fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH';
+    recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
     hasNutritionProfile: boolean;
     recentWorkoutCount: number;
   };
   recentMessages: Array<{
-    role: "user" | "assistant";
+    role: 'user' | 'assistant';
     content: string;
     createdAt: string;
     metadata?: {
-      source?: "heuristic" | "llm";
+      source?: 'heuristic' | 'llm';
       provider?: string;
       model?: string;
       promptVersion?: string;

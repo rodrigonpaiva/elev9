@@ -1,40 +1,38 @@
-import { Logger, Inject, Injectable } from "@nestjs/common";
+import { Logger, Inject, Injectable } from '@nestjs/common';
 
-import {
-  AiLlmService,
-} from "../../services/llm/ai-llm.service";
+import { AiLlmService } from '../../services/llm/ai-llm.service';
 import {
   AiPromptBuilder,
   type AiPromptBuilderConversationMessage,
-} from "../../services/llm/ai-prompt-builder.service";
-import { BuildUserHealthContextService } from "../../services/context-builder/build-user-health-context.service";
-import { CoachChatReplyGenerator } from "../../services/chat/coach-chat-reply-generator.service";
+} from '../../services/llm/ai-prompt-builder.service';
+import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
+import { CoachChatReplyGenerator } from '../../services/chat/coach-chat-reply-generator.service';
 import {
   COACH_CONVERSATION_MEMORY_REPOSITORY,
   CoachConversationMemoryRepository,
-} from "../../../domain/repositories/coach-conversation-memory.repository";
+} from '../../../domain/repositories/coach-conversation-memory.repository';
 import {
   COACH_CONVERSATION_REPOSITORY,
   CoachConversationRepository,
-} from "../../../domain/repositories/coach-conversation.repository";
+} from '../../../domain/repositories/coach-conversation.repository';
 import {
   COACH_MESSAGE_REPOSITORY,
   CoachMessageRepository,
-} from "../../../domain/repositories/coach-message.repository";
+} from '../../../domain/repositories/coach-message.repository';
 import {
   CoachConversationMemorySummarizer,
   COACH_CONVERSATION_MEMORY_VERSION,
-} from "../../services/memory/coach-conversation-memory-summarizer.service";
+} from '../../services/memory/coach-conversation-memory-summarizer.service';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   CREATE_COACH_CHAT_ERROR_CODES,
   CreateCoachChatError,
-} from "./create-coach-chat.errors";
-import { CreateCoachChatInput } from "./create-coach-chat.input";
-import { CreateCoachChatOutput } from "./create-coach-chat.output";
+} from './create-coach-chat.errors';
+import { CreateCoachChatInput } from './create-coach-chat.input';
+import { CreateCoachChatOutput } from './create-coach-chat.output';
 
 @Injectable()
 export class CreateCoachChatUseCase {
@@ -58,21 +56,21 @@ export class CreateCoachChatUseCase {
 
   async execute(input: CreateCoachChatInput): Promise<CreateCoachChatOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const message =
-      typeof input.message === "string" ? input.message.trim() : "";
+      typeof input.message === 'string' ? input.message.trim() : '';
 
     if (!authUserId) {
       throw new CreateCoachChatError(
         CREATE_COACH_CHAT_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
     if (!message) {
       throw new CreateCoachChatError(
         CREATE_COACH_CHAT_ERROR_CODES.INVALID_INPUT,
-        "Invalid chat message input.",
+        'Invalid chat message input.',
       );
     }
 
@@ -83,7 +81,7 @@ export class CreateCoachChatUseCase {
       if (!userProfile) {
         throw new CreateCoachChatError(
           CREATE_COACH_CHAT_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -124,7 +122,7 @@ export class CreateCoachChatUseCase {
 
       await this.coachMessageRepository.create({
         conversationId: conversation.id,
-        role: "user",
+        role: 'user',
         content: message,
       });
 
@@ -140,26 +138,24 @@ export class CreateCoachChatUseCase {
           : undefined,
       });
 
-      let reply:
-        | {
-            content: string;
-            provider: string;
-            model: string;
-            promptVersion: string;
-          }
-        | null = null;
+      let reply: {
+        content: string;
+        provider: string;
+        model: string;
+        promptVersion: string;
+      } | null = null;
       let fallbackTriggered = false;
 
       try {
         reply = await this.aiLlmService.generateReply(prompt);
       } catch (_error) {
         fallbackTriggered = true;
-        this.logger.warn("fallback activated");
+        this.logger.warn('fallback activated');
       }
 
       if (!reply) {
         if (!fallbackTriggered) {
-          this.logger.log("fallback activated");
+          this.logger.log('fallback activated');
         }
         const fallbackReply = this.coachChatReplyGenerator.generate({
           message,
@@ -168,10 +164,10 @@ export class CreateCoachChatUseCase {
 
         await this.coachMessageRepository.create({
           conversationId: conversation.id,
-          role: "assistant",
+          role: 'assistant',
           content: fallbackReply,
           metadata: {
-            source: "heuristic",
+            source: 'heuristic',
           },
         });
 
@@ -191,10 +187,10 @@ export class CreateCoachChatUseCase {
 
       await this.coachMessageRepository.create({
         conversationId: conversation.id,
-        role: "assistant",
+        role: 'assistant',
         content: reply.content,
         metadata: {
-          source: "llm",
+          source: 'llm',
           provider: reply.provider,
           model: reply.model,
           promptVersion: reply.promptVersion,
@@ -220,16 +216,14 @@ export class CreateCoachChatUseCase {
 
       throw new CreateCoachChatError(
         CREATE_COACH_CHAT_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
 
   private async updateConversationMemory(input: {
     conversationId: string;
-    healthContext: Awaited<
-      ReturnType<BuildUserHealthContextService["build"]>
-    >;
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>;
     conversationHistory: AiPromptBuilderConversationMessage[];
     userMessage: string;
     assistantReply: string;
@@ -239,12 +233,12 @@ export class CreateCoachChatUseCase {
       conversationMessages: [
         ...input.conversationHistory,
         {
-          role: "user",
+          role: 'user',
           content: input.userMessage,
           createdAt: new Date().toISOString(),
         },
         {
-          role: "assistant",
+          role: 'assistant',
           content: input.assistantReply,
           createdAt: new Date().toISOString(),
         },
@@ -256,8 +250,7 @@ export class CreateCoachChatUseCase {
       summary: memory.summary,
       metadata: {
         generatedFromMessageCount: memory.metadata.generatedFromMessageCount,
-        version:
-          memory.metadata.version ?? COACH_CONVERSATION_MEMORY_VERSION,
+        version: memory.metadata.version ?? COACH_CONVERSATION_MEMORY_VERSION,
       },
     });
   }

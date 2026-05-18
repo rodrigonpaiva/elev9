@@ -13,44 +13,44 @@ import {
   Req,
   UnauthorizedException,
   UseGuards,
-} from "@nestjs/common";
+} from '@nestjs/common';
 
-import { AuthSessionGuard } from "../../../users/presentation/http/guards/auth-session.guard";
+import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
 import {
   CREATE_DAILY_CHECK_IN_ERROR_CODES,
   CreateDailyCheckInError,
-} from "../../application/use-cases/create-daily-check-in/create-daily-check-in.errors";
-import { CreateDailyCheckInUseCase } from "../../application/use-cases/create-daily-check-in/create-daily-check-in.use-case";
+} from '../../application/use-cases/create-daily-check-in/create-daily-check-in.errors';
+import { CreateDailyCheckInUseCase } from '../../application/use-cases/create-daily-check-in/create-daily-check-in.use-case';
 import {
   GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES,
   GetDailyCheckInHistoryError,
-} from "../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.errors";
-import { GetDailyCheckInHistoryUseCase } from "../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.use-case";
+} from '../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.errors';
+import { GetDailyCheckInHistoryUseCase } from '../../application/use-cases/get-daily-check-in-history/get-daily-check-in-history.use-case';
 import {
   GET_WORKOUT_HISTORY_ERROR_CODES,
   GetWorkoutHistoryError,
-} from "../../application/use-cases/get-workout-history/get-workout-history.errors";
-import { GetWorkoutHistoryUseCase } from "../../application/use-cases/get-workout-history/get-workout-history.use-case";
+} from '../../application/use-cases/get-workout-history/get-workout-history.errors';
+import { GetWorkoutHistoryUseCase } from '../../application/use-cases/get-workout-history/get-workout-history.use-case';
 import {
   GET_PROGRESS_SUMMARY_ERROR_CODES,
   GetProgressSummaryError,
-} from "../../application/use-cases/get-progress-summary/get-progress-summary.errors";
-import { GetProgressSummaryUseCase } from "../../application/use-cases/get-progress-summary/get-progress-summary.use-case";
+} from '../../application/use-cases/get-progress-summary/get-progress-summary.errors';
+import { GetProgressSummaryUseCase } from '../../application/use-cases/get-progress-summary/get-progress-summary.use-case';
 import {
   LOG_WORKOUT_ERROR_CODES,
   LogWorkoutError,
-} from "../../application/use-cases/log-workout/log-workout.errors";
-import { LogWorkoutUseCase } from "../../application/use-cases/log-workout/log-workout.use-case";
-import { CreateDailyCheckInRequestDto } from "./dto/create-daily-check-in.request.dto";
-import { CreateDailyCheckInResponseDto } from "./dto/create-daily-check-in.response.dto";
-import { GetDailyCheckInHistoryQueryDto } from "./dto/get-daily-check-in-history.query.dto";
-import { GetDailyCheckInHistoryResponseDto } from "./dto/get-daily-check-in-history.response.dto";
-import { GetProgressSummaryQueryDto } from "./dto/get-progress-summary.query.dto";
-import { GetProgressSummaryResponseDto } from "./dto/get-progress-summary.response.dto";
-import { GetWorkoutHistoryQueryDto } from "./dto/get-workout-history.query.dto";
-import { GetWorkoutHistoryResponseDto } from "./dto/get-workout-history.response.dto";
-import { LogWorkoutRequestDto } from "./dto/log-workout.request.dto";
-import { LogWorkoutResponseDto } from "./dto/log-workout.response.dto";
+} from '../../application/use-cases/log-workout/log-workout.errors';
+import { LogWorkoutUseCase } from '../../application/use-cases/log-workout/log-workout.use-case';
+import { CreateDailyCheckInRequestDto } from './dto/create-daily-check-in.request.dto';
+import { CreateDailyCheckInResponseDto } from './dto/create-daily-check-in.response.dto';
+import { GetDailyCheckInHistoryQueryDto } from './dto/get-daily-check-in-history.query.dto';
+import { GetDailyCheckInHistoryResponseDto } from './dto/get-daily-check-in-history.response.dto';
+import { GetProgressSummaryQueryDto } from './dto/get-progress-summary.query.dto';
+import { GetProgressSummaryResponseDto } from './dto/get-progress-summary.response.dto';
+import { GetWorkoutHistoryQueryDto } from './dto/get-workout-history.query.dto';
+import { GetWorkoutHistoryResponseDto } from './dto/get-workout-history.response.dto';
+import { LogWorkoutRequestDto } from './dto/log-workout.request.dto';
+import { LogWorkoutResponseDto } from './dto/log-workout.response.dto';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -63,7 +63,7 @@ class GetProgressSummaryBodyDto {}
 class GetDailyCheckInHistoryBodyDto {}
 class GetWorkoutHistoryBodyDto {}
 
-@Controller("progress")
+@Controller('progress')
 export class ProgressController {
   constructor(
     private readonly createDailyCheckInUseCase: CreateDailyCheckInUseCase,
@@ -73,7 +73,7 @@ export class ProgressController {
     private readonly getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
   ) {}
 
-  @Post("daily-check-in")
+  @Post('daily-check-in')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.CREATED)
   async createDailyCheckIn(
@@ -82,7 +82,7 @@ export class ProgressController {
   ): Promise<CreateDailyCheckInResponseDto> {
     try {
       const result = await this.createDailyCheckInUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         energyLevel: body.energyLevel,
         sleepQuality: body.sleepQuality,
         muscleSoreness: body.muscleSoreness,
@@ -104,7 +104,7 @@ export class ProgressController {
     }
   }
 
-  @Post("workout-logs")
+  @Post('workout-logs')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.CREATED)
   async logWorkout(
@@ -113,7 +113,7 @@ export class ProgressController {
   ): Promise<LogWorkoutResponseDto> {
     try {
       const result = await this.logWorkoutUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         trainingPlanId: body.trainingPlanId,
         workoutDayIndex: body.workoutDayIndex,
         durationMinutes: body.durationMinutes,
@@ -138,7 +138,7 @@ export class ProgressController {
     }
   }
 
-  @Get("summary")
+  @Get('summary')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getSummary(
@@ -148,7 +148,7 @@ export class ProgressController {
   ): Promise<GetProgressSummaryResponseDto> {
     try {
       const result = await this.getProgressSummaryUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         period: query.period,
       });
 
@@ -167,7 +167,7 @@ export class ProgressController {
     }
   }
 
-  @Get("workout-logs")
+  @Get('workout-logs')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getWorkoutHistory(
@@ -177,7 +177,7 @@ export class ProgressController {
   ): Promise<GetWorkoutHistoryResponseDto> {
     try {
       const result = await this.getWorkoutHistoryUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         limit: query.limit,
       });
 
@@ -189,7 +189,7 @@ export class ProgressController {
     }
   }
 
-  @Get("daily-check-ins")
+  @Get('daily-check-ins')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getDailyCheckInHistory(
@@ -199,7 +199,7 @@ export class ProgressController {
   ): Promise<GetDailyCheckInHistoryResponseDto> {
     try {
       const result = await this.getDailyCheckInHistoryUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         limit: query.limit,
       });
 
@@ -213,7 +213,7 @@ export class ProgressController {
 
   private handleCreateDailyCheckInError(error: unknown): never {
     if (!(error instanceof CreateDailyCheckInError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -239,14 +239,14 @@ export class ProgressController {
       default:
         throw new InternalServerErrorException({
           code: CREATE_DAILY_CHECK_IN_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleError(error: unknown): never {
     if (!(error instanceof LogWorkoutError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -280,14 +280,14 @@ export class ProgressController {
       default:
         throw new InternalServerErrorException({
           code: LOG_WORKOUT_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleGetProgressSummaryError(error: unknown): never {
     if (!(error instanceof GetProgressSummaryError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -314,14 +314,14 @@ export class ProgressController {
       default:
         throw new InternalServerErrorException({
           code: GET_PROGRESS_SUMMARY_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleGetWorkoutHistoryError(error: unknown): never {
     if (!(error instanceof GetWorkoutHistoryError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -348,14 +348,14 @@ export class ProgressController {
       default:
         throw new InternalServerErrorException({
           code: GET_WORKOUT_HISTORY_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleGetDailyCheckInHistoryError(error: unknown): never {
     if (!(error instanceof GetDailyCheckInHistoryError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -381,7 +381,7 @@ export class ProgressController {
       default:
         throw new InternalServerErrorException({
           code: GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }

@@ -1,22 +1,20 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
-import { CoachConversation } from "../../domain/entities/coach-conversation.entity";
+import { CoachConversation } from '../../domain/entities/coach-conversation.entity';
 import {
   CoachConversationRepository,
   CreateCoachConversationRepositoryInput,
-} from "../../domain/repositories/coach-conversation.repository";
+} from '../../domain/repositories/coach-conversation.repository';
 import {
   COACH_CONVERSATION_MODEL_NAME,
   CoachConversationDocument,
   CoachConversationSchemaClass,
-} from "./coach-conversation.schema";
+} from './coach-conversation.schema';
 
 @Injectable()
-export class MongooseCoachConversationRepository
-  implements CoachConversationRepository
-{
+export class MongooseCoachConversationRepository implements CoachConversationRepository {
   constructor(
     @InjectModel(COACH_CONVERSATION_MODEL_NAME)
     private readonly coachConversationModel: Model<CoachConversationSchemaClass>,

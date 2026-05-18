@@ -73,19 +73,19 @@ type GetAiContextOutput = {
   adherenceScore: number;
   currentStreak: number;
   averageWorkoutDuration: number;
-  fatigueLevel: "LOW" | "MODERATE" | "HIGH";
+  fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH';
   availableEquipment: string[];
   limitations: Array<{
     type: string;
     description?: string;
-    severity: "low" | "medium" | "high";
+    severity: 'low' | 'medium' | 'high';
   }>;
   todayWorkout: {
     dayIndex: number;
     title: string;
     focus: string;
     format: string;
-    intensity: "low" | "moderate" | "high";
+    intensity: 'low' | 'moderate' | 'high';
     exercises: Array<{
       name: string;
       sets: number;
@@ -102,7 +102,7 @@ type GetAiContextOutput = {
     createdAt: string;
   };
   nutritionProfile?: {
-    goal: "fat_loss" | "maintenance" | "muscle_gain";
+    goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
     mealsPerDay: number;
     dietaryRestrictions: string[];
     allergies: string[];
@@ -120,7 +120,7 @@ type GetAiContextOutput = {
       repsDone: number;
     }>;
     feedback?: {
-      difficulty: "easy" | "medium" | "hard";
+      difficulty: 'easy' | 'medium' | 'hard';
       notes?: string;
     };
     date: string;

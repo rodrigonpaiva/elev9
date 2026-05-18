@@ -1,4 +1,7 @@
-import { NutritionGoal, NutritionProfile } from "../entities/nutrition-profile.entity";
+import {
+  NutritionGoal,
+  NutritionProfile,
+} from '../entities/nutrition-profile.entity';
 
 export interface UpsertNutritionProfileRepositoryInput {
   userProfileId: string;
@@ -8,16 +11,18 @@ export interface UpsertNutritionProfileRepositoryInput {
   allergies: string[];
   dislikedFoods: string[];
   preferredFoods: string[];
-  status: "active";
+  status: 'active';
 }
 
 export interface NutritionProfileRepository {
-  findActiveByUserProfileId(userProfileId: string): Promise<NutritionProfile | null>;
+  findActiveByUserProfileId(
+    userProfileId: string,
+  ): Promise<NutritionProfile | null>;
   upsertByUserProfileId(
     input: UpsertNutritionProfileRepositoryInput,
   ): Promise<NutritionProfile>;
 }
 
 export const NUTRITION_PROFILE_REPOSITORY = Symbol(
-  "NUTRITION_PROFILE_REPOSITORY",
+  'NUTRITION_PROFILE_REPOSITORY',
 );

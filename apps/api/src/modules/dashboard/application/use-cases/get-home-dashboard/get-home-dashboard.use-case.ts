@@ -1,34 +1,37 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
-import { BuildUserHealthContextService } from "../../../../ai/application/services/context-builder/build-user-health-context.service";
+import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
-} from "../../../../fitness/domain/repositories/fitness-profile.repository";
+} from '../../../../fitness/domain/repositories/fitness-profile.repository';
 import {
   DAILY_CHECK_IN_REPOSITORY,
   DailyCheckInRepository,
-} from "../../../../progress/domain/repositories/daily-check-in.repository";
+} from '../../../../progress/domain/repositories/daily-check-in.repository';
 import {
   WORKOUT_LOG_REPOSITORY,
   WorkoutLogRepository,
-} from "../../../../progress/domain/repositories/workout-log.repository";
-import { CLOCK, Clock } from "../../../../progress/domain/services/clock.service";
-import { DashboardAdaptiveSignalsService } from "../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service";
+} from '../../../../progress/domain/repositories/workout-log.repository';
+import {
+  CLOCK,
+  Clock,
+} from '../../../../progress/domain/services/clock.service';
+import { DashboardAdaptiveSignalsService } from '../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service';
 import {
   TRAINING_PLAN_REPOSITORY,
   TrainingPlanRepository,
-} from "../../../../training/domain/repositories/training-plan.repository";
+} from '../../../../training/domain/repositories/training-plan.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   GET_HOME_DASHBOARD_ERROR_CODES,
   GetHomeDashboardError,
-} from "./get-home-dashboard.errors";
-import { GetHomeDashboardInput } from "./get-home-dashboard.input";
-import { GetHomeDashboardOutput } from "./get-home-dashboard.output";
+} from './get-home-dashboard.errors';
+import { GetHomeDashboardInput } from './get-home-dashboard.input';
+import { GetHomeDashboardOutput } from './get-home-dashboard.output';
 
 @Injectable()
 export class GetHomeDashboardUseCase {
@@ -51,12 +54,12 @@ export class GetHomeDashboardUseCase {
 
   async execute(input: GetHomeDashboardInput): Promise<GetHomeDashboardOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
     if (!authUserId) {
       throw new GetHomeDashboardError(
         GET_HOME_DASHBOARD_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -70,12 +73,14 @@ export class GetHomeDashboardUseCase {
       if (!userProfile) {
         throw new GetHomeDashboardError(
           GET_HOME_DASHBOARD_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
       const recentDailyCheckIns = (
-        await this.dailyCheckInRepository.findManyByUserProfileId(userProfile.id)
+        await this.dailyCheckInRepository.findManyByUserProfileId(
+          userProfile.id,
+        )
       ).slice(0, 3);
       const recovery = this.buildRecoverySummary(
         healthContext,
@@ -111,7 +116,7 @@ export class GetHomeDashboardUseCase {
           fitnessProfile.id,
         );
 
-      if (!trainingPlan || trainingPlan.status !== "active") {
+      if (!trainingPlan || trainingPlan.status !== 'active') {
         return {
           dashboard: {
             user: {
@@ -166,7 +171,7 @@ export class GetHomeDashboardUseCase {
 
       throw new GetHomeDashboardError(
         GET_HOME_DASHBOARD_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
@@ -177,7 +182,7 @@ export class GetHomeDashboardUseCase {
       title: string;
       focus: string;
       format: string;
-      intensity: "low" | "moderate" | "high";
+      intensity: 'low' | 'moderate' | 'high';
       exercises: Array<{
         name: string;
         sets: number;
@@ -187,7 +192,9 @@ export class GetHomeDashboardUseCase {
     }>,
   ) {
     const todayIndex = this.getUtcDayIndex(this.clock.now());
-    const matchingDay = weeklySchedule.find((day) => day.dayIndex === todayIndex);
+    const matchingDay = weeklySchedule.find(
+      (day) => day.dayIndex === todayIndex,
+    );
 
     if (!matchingDay) {
       return null;
@@ -229,9 +236,9 @@ export class GetHomeDashboardUseCase {
     return date.toISOString().slice(0, 10);
   }
 
-  private buildEmptySummary(): GetHomeDashboardOutput["dashboard"]["progressSummary"] {
+  private buildEmptySummary(): GetHomeDashboardOutput['dashboard']['progressSummary'] {
     return {
-      period: "week",
+      period: 'week',
       workoutsCompleted: 0,
       totalDurationMinutes: 0,
       averageDurationMinutes: 0,
@@ -244,7 +251,7 @@ export class GetHomeDashboardUseCase {
       durationMinutes: number;
       date: string;
     }>,
-  ): GetHomeDashboardOutput["dashboard"]["progressSummary"] {
+  ): GetHomeDashboardOutput['dashboard']['progressSummary'] {
     if (workoutLogs.length === 0) {
       return this.buildEmptySummary();
     }
@@ -258,12 +265,13 @@ export class GetHomeDashboardUseCase {
       totalDurationMinutes / workoutsCompleted,
     );
     const lastWorkoutDate = workoutLogs.reduce(
-      (latest, log) => (latest === null || log.date > latest ? log.date : latest),
+      (latest, log) =>
+        latest === null || log.date > latest ? log.date : latest,
       null as string | null,
     );
 
     return {
-      period: "week",
+      period: 'week',
       workoutsCompleted,
       totalDurationMinutes,
       averageDurationMinutes,
@@ -272,13 +280,13 @@ export class GetHomeDashboardUseCase {
   }
 
   private buildRecoverySummary(
-    healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
     recentDailyCheckIns: Array<{
       energyLevel: number;
       sleepQuality: number;
       muscleSoreness: number;
     }>,
-  ): GetHomeDashboardOutput["dashboard"]["recovery"] {
+  ): GetHomeDashboardOutput['dashboard']['recovery'] {
     return this.dashboardAdaptiveSignalsService.buildRecoverySummary(
       healthContext,
       recentDailyCheckIns,
@@ -286,9 +294,9 @@ export class GetHomeDashboardUseCase {
   }
 
   private buildNutritionGuidance(
-    healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
-    recoveryTrend: GetHomeDashboardOutput["dashboard"]["recovery"]["recoveryTrend"],
-  ): GetHomeDashboardOutput["dashboard"]["nutritionGuidance"] {
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
+    recoveryTrend: GetHomeDashboardOutput['dashboard']['recovery']['recoveryTrend'],
+  ): GetHomeDashboardOutput['dashboard']['nutritionGuidance'] {
     return this.dashboardAdaptiveSignalsService.buildNutritionGuidance(
       healthContext,
       recoveryTrend,

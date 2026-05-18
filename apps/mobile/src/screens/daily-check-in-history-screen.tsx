@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
   RefreshControl,
   StyleSheet,
   View,
-} from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
-import { ApiClientError } from "@elev9/api-client";
-import type { DailyCheckInHistoryResponse } from "@elev9/types";
+import { ApiClientError } from '@elev9/api-client';
+import type { DailyCheckInHistoryResponse } from '@elev9/types';
 import {
   Badge,
   Button,
@@ -18,16 +18,19 @@ import {
   Screen,
   SectionHeader,
   Text,
-} from "@elev9/ui";
+} from '@elev9/ui';
 
-import { mobileApiClient } from "../api/client";
+import { mobileApiClient } from '../api/client';
 
-type DailyCheckInHistoryItem = DailyCheckInHistoryResponse["dailyCheckIns"][number];
+type DailyCheckInHistoryItem =
+  DailyCheckInHistoryResponse['dailyCheckIns'][number];
 
 const INITIAL_LIMIT = 20;
 
 export function DailyCheckInHistoryScreen() {
-  const [dailyCheckIns, setDailyCheckIns] = useState<DailyCheckInHistoryItem[]>([]);
+  const [dailyCheckIns, setDailyCheckIns] = useState<DailyCheckInHistoryItem[]>(
+    [],
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -52,7 +55,7 @@ export function DailyCheckInHistoryScreen() {
         if (error instanceof ApiClientError) {
           setErrorMessage(error.message);
         } else {
-          setErrorMessage("Unable to load recovery history.");
+          setErrorMessage('Unable to load recovery history.');
         }
       } finally {
         if (options?.refresh) {
@@ -149,7 +152,7 @@ export function DailyCheckInHistoryScreen() {
           <View style={styles.listContent}>
             <SectionHeader
               title="Recent check-ins"
-              subtitle={`${dailyCheckIns.length} recovery update${dailyCheckIns.length === 1 ? "" : "s"}.`}
+              subtitle={`${dailyCheckIns.length} recovery update${dailyCheckIns.length === 1 ? '' : 's'}.`}
             />
             {dailyCheckIns.map((item) => (
               <Card key={item.id} style={styles.itemCard}>
@@ -203,19 +206,19 @@ function MetricPill({ label, value }: { label: string; value: string }) {
 function formatDate(value: string): string {
   const date = new Date(value);
 
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   }).format(date);
 }
 
 function formatTime(value: string): string {
   const date = new Date(value);
 
-  return new Intl.DateTimeFormat("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
   }).format(date);
 }
 
@@ -225,7 +228,7 @@ function badgeLabelForCheckIn(item: DailyCheckInHistoryItem): string {
     item.sleepQuality <= 2 ||
     item.muscleSoreness >= 4
   ) {
-    return "High";
+    return 'High';
   }
 
   if (
@@ -234,25 +237,25 @@ function badgeLabelForCheckIn(item: DailyCheckInHistoryItem): string {
     item.muscleSoreness <= 2 &&
     item.motivationLevel >= 4
   ) {
-    return "Low";
+    return 'Low';
   }
 
-  return "Moderate";
+  return 'Moderate';
 }
 
 function badgeVariantForCheckIn(
   item: DailyCheckInHistoryItem,
-): "primary" | "secondary" | "muted" {
+): 'primary' | 'secondary' | 'muted' {
   const label = badgeLabelForCheckIn(item);
 
   switch (label) {
-    case "High":
-      return "secondary";
-    case "Low":
-      return "primary";
-    case "Moderate":
+    case 'High':
+      return 'secondary';
+    case 'Low':
+      return 'primary';
+    case 'Moderate':
     default:
-      return "muted";
+      return 'muted';
   }
 }
 
@@ -275,8 +278,8 @@ const styles = StyleSheet.create({
   },
   loadingState: {
     minHeight: 260,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
   },
   loadingText: {
@@ -289,7 +292,7 @@ const styles = StyleSheet.create({
     color: colors.danger,
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
   listContent: {
     gap: 14,
@@ -299,9 +302,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
   },
   itemTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     gap: 12,
   },
   itemTitleBlock: {
@@ -312,14 +315,14 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     lineHeight: 24,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   itemTime: {
     color: colors.mutedText,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   metricRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 12,
   },
   metricPill: {
@@ -335,14 +338,14 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
     fontSize: 12,
     lineHeight: 16,
-    fontWeight: "700",
-    textTransform: "uppercase",
+    fontWeight: '700',
+    textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   metricValue: {
     color: colors.text,
     fontSize: 16,
     lineHeight: 22,
-    fontWeight: "700",
+    fontWeight: '700',
   },
 });

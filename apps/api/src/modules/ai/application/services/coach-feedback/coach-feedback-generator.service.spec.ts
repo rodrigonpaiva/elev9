@@ -1,17 +1,17 @@
-import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
-import { CoachFeedbackGenerator } from "./coach-feedback-generator.service";
+import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
+import { CoachFeedbackGenerator } from './coach-feedback-generator.service';
 
-describe("CoachFeedbackGenerator", () => {
+describe('CoachFeedbackGenerator', () => {
   let generator: CoachFeedbackGenerator;
 
   beforeEach(() => {
     generator = new CoachFeedbackGenerator();
   });
 
-  it("returns motivational feedback when there are no logs", () => {
+  it('returns motivational feedback when there are no logs', () => {
     const result = generator.generate({
-      goal: "gain_muscle",
-      activityLevel: "medium",
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 0,
       averageDurationMinutes: 0,
@@ -20,121 +20,119 @@ describe("CoachFeedbackGenerator", () => {
     });
 
     expect(result.message).toBe(
-      "You are ready to start your first training streak today.",
+      'You are ready to start your first training streak today.',
     );
     expect(result.insights).toEqual([
-      "No completed workouts were found in the last 7 days",
+      'No completed workouts were found in the last 7 days',
     ]);
     expect(result.recommendations).toContain(
-      "Complete your first workout today",
+      'Complete your first workout today',
     );
   });
 
-  it("prioritizes recovery guidance when fatigueLevel is HIGH", () => {
+  it('prioritizes recovery guidance when fatigueLevel is HIGH', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 6,
       averageDurationMinutes: 78,
       workoutLogs: [
-        buildWorkoutLog("2026-04-29", 70),
-        buildWorkoutLog("2026-04-30", 75),
-        buildWorkoutLog("2026-05-01", 80),
-        buildWorkoutLog("2026-05-02", 82),
-        buildWorkoutLog("2026-05-03", 78),
-        buildWorkoutLog("2026-05-04", 83),
+        buildWorkoutLog('2026-04-29', 70),
+        buildWorkoutLog('2026-04-30', 75),
+        buildWorkoutLog('2026-05-01', 80),
+        buildWorkoutLog('2026-05-02', 82),
+        buildWorkoutLog('2026-05-03', 78),
+        buildWorkoutLog('2026-05-04', 83),
       ],
       hasTrainingPlan: true,
-      fatigueLevel: "HIGH",
+      fatigueLevel: 'HIGH',
     });
 
     expect(result.insights).toContain(
-      "Your recent training load suggests elevated fatigue",
+      'Your recent training load suggests elevated fatigue',
     );
     expect(result.recommendations).toContain(
-      "Prioritize recovery and consider a lighter session if needed",
+      'Prioritize recovery and consider a lighter session if needed',
     );
     expect(result.influences).toEqual(
-      expect.arrayContaining(["fatigue:high", "recovery:needs_recovery"]),
+      expect.arrayContaining(['fatigue:high', 'recovery:needs_recovery']),
     );
   });
 
-  it("supports controlled progression guidance when fatigueLevel is LOW", () => {
+  it('supports controlled progression guidance when fatigueLevel is LOW', () => {
     const result = generator.generate({
-      goal: "gain_muscle",
-      activityLevel: "medium",
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 40,
       workoutLogs: [
-        buildWorkoutLog("2026-05-03", 38),
-        buildWorkoutLog("2026-05-04", 42),
+        buildWorkoutLog('2026-05-03', 38),
+        buildWorkoutLog('2026-05-04', 42),
       ],
       hasTrainingPlan: true,
-      fatigueLevel: "LOW",
+      fatigueLevel: 'LOW',
     });
 
-    expect(result.insights).toContain(
-      "Your recent workload looks manageable",
-    );
+    expect(result.insights).toContain('Your recent workload looks manageable');
     expect(result.recommendations).toContain(
-      "You can consider a small progression if your form stays solid",
+      'You can consider a small progression if your form stays solid',
     );
   });
 
-  it("keeps balanced recovery messaging when fatigueLevel is MODERATE", () => {
+  it('keeps balanced recovery messaging when fatigueLevel is MODERATE', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 1,
       averageDurationMinutes: 46,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 45),
-        buildWorkoutLog("2026-05-04", 47),
+        buildWorkoutLog('2026-05-02', 45),
+        buildWorkoutLog('2026-05-04', 47),
       ],
       hasTrainingPlan: true,
-      fatigueLevel: "MODERATE",
+      fatigueLevel: 'MODERATE',
     });
 
     expect(result.recommendations).toContain(
-      "Keep your current plan and monitor recovery between sessions",
+      'Keep your current plan and monitor recovery between sessions',
     );
   });
 
-  it("falls back to MODERATE messaging when fatigueLevel is not provided", () => {
+  it('falls back to MODERATE messaging when fatigueLevel is not provided', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 1,
       averageDurationMinutes: 46,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 45),
-        buildWorkoutLog("2026-05-04", 47),
+        buildWorkoutLog('2026-05-02', 45),
+        buildWorkoutLog('2026-05-04', 47),
       ],
       hasTrainingPlan: true,
     });
 
     expect(result.recommendations).toContain(
-      "Keep your current plan and monitor recovery between sessions",
+      'Keep your current plan and monitor recovery between sessions',
     );
   });
 
-  it("considers low energy from the latest check-in", () => {
+  it('considers low energy from the latest check-in', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
-      fatigueLevel: "HIGH",
+      fatigueLevel: 'HIGH',
       latestCheckIn: {
         energyLevel: 2,
         sleepQuality: 3,
@@ -148,19 +146,19 @@ describe("CoachFeedbackGenerator", () => {
     );
   });
 
-  it("considers poor sleep from the latest check-in", () => {
+  it('considers poor sleep from the latest check-in', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
-      fatigueLevel: "HIGH",
+      fatigueLevel: 'HIGH',
       latestCheckIn: {
         energyLevel: 3,
         sleepQuality: 2,
@@ -170,24 +168,24 @@ describe("CoachFeedbackGenerator", () => {
     });
 
     expect(result.insights).toContain(
-      "Your latest check-in suggests sleep may be limiting recovery",
+      'Your latest check-in suggests sleep may be limiting recovery',
     );
-    expect(result.influences).toContain("checkin:poor_sleep");
+    expect(result.influences).toContain('checkin:poor_sleep');
   });
 
-  it("considers high muscle soreness from the latest check-in", () => {
+  it('considers high muscle soreness from the latest check-in', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
-      fatigueLevel: "HIGH",
+      fatigueLevel: 'HIGH',
       latestCheckIn: {
         energyLevel: 3,
         sleepQuality: 3,
@@ -197,24 +195,24 @@ describe("CoachFeedbackGenerator", () => {
     });
 
     expect(result.recommendations).toContain(
-      "Consider mobility work, a lighter session, or extra recovery today",
+      'Consider mobility work, a lighter session, or extra recovery today',
     );
   });
 
-  it("considers high motivation with low fatigue", () => {
+  it('considers high motivation with low fatigue', () => {
     const result = generator.generate({
-      goal: "gain_muscle",
-      activityLevel: "medium",
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 3,
       averageDurationMinutes: 40,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 38),
-        buildWorkoutLog("2026-05-03", 40),
-        buildWorkoutLog("2026-05-04", 42),
+        buildWorkoutLog('2026-05-02', 38),
+        buildWorkoutLog('2026-05-03', 40),
+        buildWorkoutLog('2026-05-04', 42),
       ],
       hasTrainingPlan: true,
-      fatigueLevel: "LOW",
+      fatigueLevel: 'LOW',
       latestCheckIn: {
         energyLevel: 4,
         sleepQuality: 4,
@@ -224,22 +222,20 @@ describe("CoachFeedbackGenerator", () => {
     });
 
     expect(result.recommendations).toContain(
-      "Your motivation looks strong, so a small progression can make sense if recovery stays solid",
+      'Your motivation looks strong, so a small progression can make sense if recovery stays solid',
     );
   });
 
-  it("considers low motivation from the latest check-in", () => {
+  it('considers low motivation from the latest check-in', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 1,
       averageDurationMinutes: 35,
-      workoutLogs: [
-        buildWorkoutLog("2026-05-04", 35),
-      ],
+      workoutLogs: [buildWorkoutLog('2026-05-04', 35)],
       hasTrainingPlan: true,
-      fatigueLevel: "MODERATE",
+      fatigueLevel: 'MODERATE',
       latestCheckIn: {
         energyLevel: 3,
         sleepQuality: 3,
@@ -249,104 +245,104 @@ describe("CoachFeedbackGenerator", () => {
     });
 
     expect(result.insights).toContain(
-      "Your latest check-in shows motivation is lower right now",
+      'Your latest check-in shows motivation is lower right now',
     );
     expect(result.recommendations).toContain(
-      "Focus on consistency with a lighter, easier-to-start session today",
+      'Focus on consistency with a lighter, easier-to-start session today',
     );
   });
 
-  it("keeps fallback behavior when latestCheckIn is not provided", () => {
+  it('keeps fallback behavior when latestCheckIn is not provided', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
-      fatigueLevel: "MODERATE",
+      fatigueLevel: 'MODERATE',
     });
 
     expect(result.insights).not.toContain(
-      "Your latest check-in suggests sleep may be limiting recovery",
+      'Your latest check-in suggests sleep may be limiting recovery',
     );
     expect(result.recommendations).not.toContain(
       "Keep today's session lighter if your energy still feels low",
     );
   });
 
-  it("adds nutrition-aware feedback for muscle_gain", () => {
+  it('adds nutrition-aware feedback for muscle_gain', () => {
     const result = generator.generate({
-      goal: "gain_muscle",
-      activityLevel: "medium",
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
       nutritionProfile: {
-        goal: "muscle_gain",
+        goal: 'muscle_gain',
         mealsPerDay: 4,
         dietaryRestrictions: [],
         allergies: [],
         dislikedFoods: [],
-        preferredFoods: ["rice", "eggs"],
+        preferredFoods: ['rice', 'eggs'],
       },
     });
 
     expect(result.recommendations).toContain(
-      "Support muscle gain with consistent meals around training and recovery",
+      'Support muscle gain with consistent meals around training and recovery',
     );
   });
 
-  it("adds nutrition-aware feedback for fat_loss", () => {
+  it('adds nutrition-aware feedback for fat_loss', () => {
     const result = generator.generate({
-      goal: "lose_weight",
-      activityLevel: "medium",
+      goal: 'lose_weight',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
       nutritionProfile: {
-        goal: "fat_loss",
+        goal: 'fat_loss',
         mealsPerDay: 3,
         dietaryRestrictions: [],
         allergies: [],
         dislikedFoods: [],
-        preferredFoods: ["oats"],
+        preferredFoods: ['oats'],
       },
     });
 
     expect(result.recommendations).toContain(
-      "Keep meal timing consistent so your fat-loss routine stays easier to maintain",
+      'Keep meal timing consistent so your fat-loss routine stays easier to maintain',
     );
   });
 
-  it("adds contextual feedback when mealsPerDay is low", () => {
+  it('adds contextual feedback when mealsPerDay is low', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
       nutritionProfile: {
-        goal: "maintenance",
+        goal: 'maintenance',
         mealsPerDay: 2,
         dietaryRestrictions: [],
         allergies: [],
@@ -356,26 +352,26 @@ describe("CoachFeedbackGenerator", () => {
     });
 
     expect(result.insights).toContain(
-      "Your meal distribution may be too sparse to consistently support training and recovery",
+      'Your meal distribution may be too sparse to consistently support training and recovery',
     );
   });
 
-  it("adds contextual feedback for dietaryRestrictions", () => {
+  it('adds contextual feedback for dietaryRestrictions', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
       nutritionProfile: {
-        goal: "maintenance",
+        goal: 'maintenance',
         mealsPerDay: 4,
-        dietaryRestrictions: ["vegetarian"],
+        dietaryRestrictions: ['vegetarian'],
         allergies: [],
         dislikedFoods: [],
         preferredFoods: [],
@@ -383,80 +379,80 @@ describe("CoachFeedbackGenerator", () => {
     });
 
     expect(result.insights).toContain(
-      "Your nutrition approach should stay consistent within your dietary restrictions",
+      'Your nutrition approach should stay consistent within your dietary restrictions',
     );
     expect(result.influences).toEqual(
       expect.arrayContaining([
-        "nutrition:dietary_restrictions",
-        "training:low_consistency",
+        'nutrition:dietary_restrictions',
+        'training:low_consistency',
       ]),
     );
   });
 
-  it("tracks nutrition influences for muscle_gain and low meal frequency", () => {
+  it('tracks nutrition influences for muscle_gain and low meal frequency', () => {
     const result = generator.generate({
-      goal: "gain_muscle",
-      activityLevel: "medium",
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
       nutritionProfile: {
-        goal: "muscle_gain",
+        goal: 'muscle_gain',
         mealsPerDay: 2,
         dietaryRestrictions: [],
         allergies: [],
         dislikedFoods: [],
-        preferredFoods: ["rice", "eggs"],
+        preferredFoods: ['rice', 'eggs'],
       },
     });
 
     expect(result.influences).toEqual(
       expect.arrayContaining([
-        "nutrition:muscle_gain",
-        "nutrition:low_meal_frequency",
+        'nutrition:muscle_gain',
+        'nutrition:low_meal_frequency',
       ]),
     );
   });
 
-  it("keeps fallback behavior when nutritionProfile is not provided", () => {
+  it('keeps fallback behavior when nutritionProfile is not provided', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 40),
-        buildWorkoutLog("2026-05-04", 44),
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
       ],
       hasTrainingPlan: true,
     });
 
     expect(result.insights).not.toContain(
-      "Your meal distribution may be too sparse to consistently support training and recovery",
+      'Your meal distribution may be too sparse to consistently support training and recovery',
     );
     expect(result.insights).not.toContain(
-      "Your nutrition approach should stay consistent within your dietary restrictions",
+      'Your nutrition approach should stay consistent within your dietary restrictions',
     );
   });
 
-  it("prioritizes high streak messaging over other classifications", () => {
+  it('prioritizes high streak messaging over other classifications', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "medium",
+      goal: 'maintain',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 4,
       averageDurationMinutes: 42,
       workoutLogs: [
-        buildWorkoutLog("2026-05-01", 30, "2026-05-01T08:00:00.000Z"),
-        buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
-        buildWorkoutLog("2026-05-03", 45, "2026-05-03T08:00:00.000Z"),
-        buildWorkoutLog("2026-05-04", 50, "2026-05-04T08:00:00.000Z"),
+        buildWorkoutLog('2026-05-01', 30, '2026-05-01T08:00:00.000Z'),
+        buildWorkoutLog('2026-05-02', 35, '2026-05-02T08:00:00.000Z'),
+        buildWorkoutLog('2026-05-03', 45, '2026-05-03T08:00:00.000Z'),
+        buildWorkoutLog('2026-05-04', 50, '2026-05-04T08:00:00.000Z'),
       ],
       hasTrainingPlan: true,
     });
@@ -464,113 +460,113 @@ describe("CoachFeedbackGenerator", () => {
     expect(result.message).toBe(
       "Great consistency this week. You're on a 4-day streak.",
     );
-    expect(result.insights).toContain("Your current streak is 4 days");
+    expect(result.insights).toContain('Your current streak is 4 days');
     expect(result.insights).toContain(
-      "Your average duration improved across the week",
+      'Your average duration improved across the week',
     );
   });
 
-  it("returns a consistent message without high streak when expected frequency is met", () => {
+  it('returns a consistent message without high streak when expected frequency is met', () => {
     const result = generator.generate({
-      goal: "gain_muscle",
-      activityLevel: "high",
+      goal: 'gain_muscle',
+      activityLevel: 'high',
       expectedWorkouts: 3,
       currentStreak: 1,
       averageDurationMinutes: 47.5,
       workoutLogs: [
-        buildWorkoutLog("2026-04-28", 45),
-        buildWorkoutLog("2026-04-30", 50),
-        buildWorkoutLog("2026-05-02", 48),
+        buildWorkoutLog('2026-04-28', 45),
+        buildWorkoutLog('2026-04-30', 50),
+        buildWorkoutLog('2026-05-02', 48),
       ],
       hasTrainingPlan: true,
     });
 
     expect(result.message).toBe(
-      "You matched your expected training rhythm this week.",
+      'You matched your expected training rhythm this week.',
     );
     expect(result.insights).toContain(
-      "Your weekly frequency is aligned with your expected target",
+      'Your weekly frequency is aligned with your expected target',
     );
   });
 
-  it("returns beginner feedback for one or two logs", () => {
+  it('returns beginner feedback for one or two logs', () => {
     const result = generator.generate({
-      goal: "lose_weight",
-      activityLevel: "low",
+      goal: 'lose_weight',
+      activityLevel: 'low',
       expectedWorkouts: 4,
       currentStreak: 1,
       averageDurationMinutes: 35,
       workoutLogs: [
-        buildWorkoutLog("2026-05-03", 35),
-        buildWorkoutLog("2026-05-04", 35),
+        buildWorkoutLog('2026-05-03', 35),
+        buildWorkoutLog('2026-05-04', 35),
       ],
       hasTrainingPlan: true,
     });
 
-    expect(result.message).toContain("Good start this week");
+    expect(result.message).toContain('Good start this week');
     expect(result.recommendations).toContain(
-      "Repeat this rhythm for one more session this week",
+      'Repeat this rhythm for one more session this week',
     );
   });
 
-  it("returns inconsistency feedback when frequency is below expected", () => {
+  it('returns inconsistency feedback when frequency is below expected', () => {
     const result = generator.generate({
-      goal: "maintain",
-      activityLevel: "high",
+      goal: 'maintain',
+      activityLevel: 'high',
       expectedWorkouts: 4,
       currentStreak: 1,
       averageDurationMinutes: 32,
       workoutLogs: [
-        buildWorkoutLog("2026-04-28", 30),
-        buildWorkoutLog("2026-05-01", 35),
-        buildWorkoutLog("2026-05-04", 31),
+        buildWorkoutLog('2026-04-28', 30),
+        buildWorkoutLog('2026-05-01', 35),
+        buildWorkoutLog('2026-05-04', 31),
       ],
       hasTrainingPlan: false,
     });
 
     expect(result.message).toBe(
-      "You have room to rebuild your rhythm this week.",
+      'You have room to rebuild your rhythm this week.',
     );
     expect(result.recommendations).toContain(
-      "Schedule your next session within the next 24 hours",
+      'Schedule your next session within the next 24 hours',
     );
   });
 
-  it("does not generate a duration trend insight with fewer than four logs", () => {
+  it('does not generate a duration trend insight with fewer than four logs', () => {
     const result = generator.generate({
-      goal: "gain_muscle",
-      activityLevel: "medium",
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 2,
       averageDurationMinutes: 40,
       workoutLogs: [
-        buildWorkoutLog("2026-05-02", 30),
-        buildWorkoutLog("2026-05-03", 40),
-        buildWorkoutLog("2026-05-04", 50),
+        buildWorkoutLog('2026-05-02', 30),
+        buildWorkoutLog('2026-05-03', 40),
+        buildWorkoutLog('2026-05-04', 50),
       ],
       hasTrainingPlan: true,
     });
 
     expect(result.insights).not.toContain(
-      "Your average duration improved across the week",
+      'Your average duration improved across the week',
     );
   });
 
-  it("enforces output limits", () => {
+  it('enforces output limits', () => {
     const result = generator.generate({
-      goal: "gain_muscle",
-      activityLevel: "medium",
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
       expectedWorkouts: 3,
       currentStreak: 10,
       averageDurationMinutes: 55,
       workoutLogs: [
-        buildWorkoutLog("2026-04-28", 20, "2026-04-28T08:00:00.000Z"),
-        buildWorkoutLog("2026-04-29", 30, "2026-04-29T08:00:00.000Z"),
-        buildWorkoutLog("2026-04-30", 60, "2026-04-30T08:00:00.000Z"),
-        buildWorkoutLog("2026-05-01", 80, "2026-05-01T08:00:00.000Z"),
+        buildWorkoutLog('2026-04-28', 20, '2026-04-28T08:00:00.000Z'),
+        buildWorkoutLog('2026-04-29', 30, '2026-04-29T08:00:00.000Z'),
+        buildWorkoutLog('2026-04-30', 60, '2026-04-30T08:00:00.000Z'),
+        buildWorkoutLog('2026-05-01', 80, '2026-05-01T08:00:00.000Z'),
       ],
       hasTrainingPlan: true,
-      fatigueLevel: "HIGH",
+      fatigueLevel: 'HIGH',
     });
 
     expect(result.message.length).toBeLessThanOrEqual(240);
@@ -591,7 +587,7 @@ function buildWorkoutLog(
 ): WorkoutLog {
   return new WorkoutLog({
     id: `${date}-${durationMinutes}`,
-    trainingPlanId: "training_123",
+    trainingPlanId: 'training_123',
     workoutDayIndex: 1,
     durationMinutes,
     completedExercises: [],

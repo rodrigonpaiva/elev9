@@ -7,4 +7,4 @@ export interface AccessTokenSigner {
   signAccessToken(payload: AccessTokenSignerPayload): Promise<string>;
 }
 
-export const ACCESS_TOKEN_SIGNER = Symbol("ACCESS_TOKEN_SIGNER");
+export const ACCESS_TOKEN_SIGNER = Symbol('ACCESS_TOKEN_SIGNER');

@@ -1,8 +1,8 @@
 export const CREATE_USER_PROFILE_ERROR_CODES = {
-  INVALID_INPUT: "USER_PROFILE_INVALID_INPUT",
-  ALREADY_EXISTS: "USER_PROFILE_ALREADY_EXISTS",
-  INVALID_SESSION: "AUTH_INVALID_SESSION",
-  INTERNAL_ERROR: "USER_PROFILE_INTERNAL_ERROR",
+  INVALID_INPUT: 'USER_PROFILE_INVALID_INPUT',
+  ALREADY_EXISTS: 'USER_PROFILE_ALREADY_EXISTS',
+  INVALID_SESSION: 'AUTH_INVALID_SESSION',
+  INTERNAL_ERROR: 'USER_PROFILE_INTERNAL_ERROR',
 } as const;
 
 export type CreateUserProfileErrorCode =
@@ -18,7 +18,7 @@ export class CreateUserProfileError extends Error {
     details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = "CreateUserProfileError";
+    this.name = 'CreateUserProfileError';
     this.code = code;
     this.details = details;
   }

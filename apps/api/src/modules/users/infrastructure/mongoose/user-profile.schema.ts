@@ -1,4 +1,4 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
 export type UserProfileDocument = HydratedDocument<UserProfileSchemaClass>;
 
@@ -7,16 +7,16 @@ export class UserProfileSchemaClass {
   authUserId!: string;
   name!: string;
   birthDate?: Date;
-  gender?: "male" | "female" | "other" | "prefer_not_to_say";
-  language!: "en-US";
-  timezone!: "UTC";
-  status!: "active";
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  language!: 'en-US';
+  timezone!: 'UTC';
+  status!: 'active';
   createdAt!: Date;
   updatedAt!: Date;
 }
 
-export const USER_PROFILE_MODEL_NAME = "UserProfile";
-export const USER_PROFILE_COLLECTION_NAME = "user_profiles";
+export const USER_PROFILE_MODEL_NAME = 'UserProfile';
+export const USER_PROFILE_COLLECTION_NAME = 'user_profiles';
 
 export const UserProfileSchema = new Schema<UserProfileSchemaClass>(
   {
@@ -24,9 +24,9 @@ export const UserProfileSchema = new Schema<UserProfileSchemaClass>(
     name: { type: String, required: true },
     birthDate: { type: Date, required: false },
     gender: { type: String, required: false },
-    language: { type: String, required: true, default: "en-US" },
-    timezone: { type: String, required: true, default: "UTC" },
-    status: { type: String, required: true, default: "active" },
+    language: { type: String, required: true, default: 'en-US' },
+    timezone: { type: String, required: true, default: 'UTC' },
+    status: { type: String, required: true, default: 'active' },
   },
   {
     collection: USER_PROFILE_COLLECTION_NAME,

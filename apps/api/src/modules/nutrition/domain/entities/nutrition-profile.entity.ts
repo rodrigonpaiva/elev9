@@ -1,4 +1,4 @@
-export type NutritionGoal = "fat_loss" | "maintenance" | "muscle_gain";
+export type NutritionGoal = 'fat_loss' | 'maintenance' | 'muscle_gain';
 
 export type NutritionProfileProps = {
   id: string;
@@ -9,7 +9,7 @@ export type NutritionProfileProps = {
   allergies: string[];
   dislikedFoods: string[];
   preferredFoods: string[];
-  status: "active";
+  status: 'active';
   createdAt: Date;
   updatedAt: Date;
 };
@@ -23,7 +23,7 @@ export class NutritionProfile {
   readonly allergies: string[];
   readonly dislikedFoods: string[];
   readonly preferredFoods: string[];
-  readonly status: "active";
+  readonly status: 'active';
   readonly createdAt: Date;
   readonly updatedAt: Date;
 

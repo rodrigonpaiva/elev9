@@ -1,19 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
   RefreshControl,
   StyleSheet,
   View,
-} from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+} from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
-import { ApiClientError } from "@elev9/api-client";
-import type { DashboardHomeResponse } from "@elev9/types";
+import { ApiClientError } from '@elev9/api-client';
+import type { DashboardHomeResponse } from '@elev9/types';
 import type {
   FitnessProfileActivityLevel,
   FitnessProfileGoal,
-} from "@elev9/types";
+} from '@elev9/types';
 import {
   Badge,
   Button,
@@ -22,55 +22,59 @@ import {
   Screen,
   SectionHeader,
   Text,
-} from "@elev9/ui";
+} from '@elev9/ui';
 
-import { apiClient } from "../api/client";
-import { useAuth } from "../auth/auth-provider";
+import { apiClient } from '../api/client';
+import { useAuth } from '../auth/auth-provider';
 
 export function ProfileScreen() {
   const { signOut, status } = useAuth();
-  const [dashboard, setDashboard] =
-    useState<DashboardHomeResponse["dashboard"] | null>(null);
+  const [dashboard, setDashboard] = useState<
+    DashboardHomeResponse['dashboard'] | null
+  >(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const entrance = useRef(new Animated.Value(0)).current;
 
-  const load = useCallback(async (options?: { refresh?: boolean }) => {
-    if (options?.refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-
-    setErrorMessage(null);
-
-    try {
-      const response = await apiClient.dashboard.getHome();
-      setDashboard(response.dashboard);
-    } catch (error) {
-      if (
-        error instanceof ApiClientError &&
-        error.code === "AUTH_INVALID_SESSION"
-      ) {
-        await signOut();
-        return;
-      }
-
-      if (error instanceof ApiClientError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("Unable to load your profile.");
-      }
-    } finally {
+  const load = useCallback(
+    async (options?: { refresh?: boolean }) => {
       if (options?.refresh) {
-        setIsRefreshing(false);
+        setIsRefreshing(true);
       } else {
-        setIsLoading(false);
+        setIsLoading(true);
       }
-    }
-  }, [signOut]);
+
+      setErrorMessage(null);
+
+      try {
+        const response = await apiClient.dashboard.getHome();
+        setDashboard(response.dashboard);
+      } catch (error) {
+        if (
+          error instanceof ApiClientError &&
+          error.code === 'AUTH_INVALID_SESSION'
+        ) {
+          await signOut();
+          return;
+        }
+
+        if (error instanceof ApiClientError) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage('Unable to load your profile.');
+        }
+      } finally {
+        if (options?.refresh) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
+      }
+    },
+    [signOut],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -134,7 +138,7 @@ export function ProfileScreen() {
         <Card style={styles.heroCard}>
           <Badge variant="primary" label="Profile" />
           <Text variant="headline" style={styles.title}>
-            {dashboard?.user.name ?? "Elev9 User"}
+            {dashboard?.user.name ?? 'Elev9 User'}
           </Text>
           <Text style={styles.subtitle}>
             Your account snapshot, training setup and secure session controls.
@@ -150,7 +154,11 @@ export function ProfileScreen() {
           <Card style={styles.feedbackCard}>
             <Text variant="title">Profile unavailable</Text>
             <Text style={styles.errorText}>{errorMessage}</Text>
-            <Button label="Retry" onPress={() => void load()} style={styles.fullButton} />
+            <Button
+              label="Retry"
+              onPress={() => void load()}
+              style={styles.fullButton}
+            />
           </Card>
         ) : (
           <>
@@ -159,10 +167,15 @@ export function ProfileScreen() {
                 title="Account"
                 subtitle="Basic identity tied to your current session."
               />
-              <InfoRow label="Name" value={dashboard?.user.name ?? "Not available"} />
+              <InfoRow
+                label="Name"
+                value={dashboard?.user.name ?? 'Not available'}
+              />
               <InfoRow
                 label="Session"
-                value={status === "authenticated" ? "Authenticated" : "Inactive"}
+                value={
+                  status === 'authenticated' ? 'Authenticated' : 'Inactive'
+                }
               />
             </Card>
 
@@ -177,7 +190,9 @@ export function ProfileScreen() {
               />
               <InfoRow
                 label="Activity level"
-                value={formatActivityLevel(dashboard?.fitnessProfile?.activityLevel)}
+                value={formatActivityLevel(
+                  dashboard?.fitnessProfile?.activityLevel,
+                )}
               />
             </Card>
 
@@ -187,7 +202,10 @@ export function ProfileScreen() {
                 subtitle="Current plan availability and workout readiness."
               />
               <InfoRow label="Plan status" value={trainingPlanStatus.status} />
-              <InfoRow label="Today workout" value={trainingPlanStatus.todayWorkout} />
+              <InfoRow
+                label="Today workout"
+                value={trainingPlanStatus.todayWorkout}
+              />
               <InfoRow
                 label="Weekly progress"
                 value={`${dashboard?.progressSummary.workoutsCompleted ?? 0} workouts`}
@@ -233,49 +251,49 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 function formatGoal(goal?: FitnessProfileGoal) {
   switch (goal) {
-    case "gain_muscle":
-      return "Gain muscle";
-    case "lose_weight":
-      return "Lose weight";
-    case "maintain":
-      return "Maintain";
+    case 'gain_muscle':
+      return 'Gain muscle';
+    case 'lose_weight':
+      return 'Lose weight';
+    case 'maintain':
+      return 'Maintain';
     default:
-      return "Not set";
+      return 'Not set';
   }
 }
 
 function formatActivityLevel(activityLevel?: FitnessProfileActivityLevel) {
   switch (activityLevel) {
-    case "high":
-      return "High";
-    case "medium":
-      return "Medium";
-    case "low":
-      return "Low";
+    case 'high':
+      return 'High';
+    case 'medium':
+      return 'Medium';
+    case 'low':
+      return 'Low';
     default:
-      return "Not set";
+      return 'Not set';
   }
 }
 
 function resolveTrainingPlanStatus(
-  dashboard: DashboardHomeResponse["dashboard"] | null,
+  dashboard: DashboardHomeResponse['dashboard'] | null,
 ) {
   if (!dashboard?.trainingPlan) {
     return {
-      status: "No plan created",
-      todayWorkout: "Unavailable",
+      status: 'No plan created',
+      todayWorkout: 'Unavailable',
     };
   }
 
   if (!dashboard.trainingPlan.todayWorkout) {
     return {
-      status: "Plan active",
-      todayWorkout: "No workout for today",
+      status: 'Plan active',
+      todayWorkout: 'No workout for today',
     };
   }
 
   return {
-    status: "Plan active",
+    status: 'Plan active',
     todayWorkout: dashboard.trainingPlan.todayWorkout.title,
   };
 }
@@ -299,8 +317,8 @@ const styles = StyleSheet.create({
   },
   loadingState: {
     minHeight: 240,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 12,
   },
   loadingText: {
@@ -316,9 +334,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: 12,
     borderRadius: 14,
     borderWidth: 1,
@@ -329,18 +347,18 @@ const styles = StyleSheet.create({
   label: {
     flex: 1,
     color: colors.mutedText,
-    fontWeight: "600",
+    fontWeight: '600',
   },
   value: {
     flex: 1,
     color: colors.text,
-    fontWeight: "700",
-    textAlign: "right",
+    fontWeight: '700',
+    textAlign: 'right',
   },
   actions: {
     gap: 12,
   },
   fullButton: {
-    width: "100%",
+    width: '100%',
   },
 });

@@ -1,8 +1,8 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
-import { Text, View } from "react-native";
+import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Text, View } from 'react-native';
 
-import { AuthProvider } from "./src/auth/auth-provider";
-import { AppNavigator } from "./src/navigation/app-navigator";
+import { AuthProvider } from './src/auth/auth-provider';
+import { AppNavigator } from './src/navigation/app-navigator';
 
 type AppErrorBoundaryState = {
   errorMessage: string | null;
@@ -23,7 +23,7 @@ class AppErrorBoundary extends Component<
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("App error boundary caught:", error, errorInfo);
+    console.error('App error boundary caught:', error, errorInfo);
   }
 
   override render() {
@@ -32,13 +32,13 @@ class AppErrorBoundary extends Component<
         <View
           style={{
             flex: 1,
-            backgroundColor: "#fef2f2",
-            alignItems: "center",
-            justifyContent: "center",
+            backgroundColor: '#fef2f2',
+            alignItems: 'center',
+            justifyContent: 'center',
             padding: 24,
           }}
         >
-          <Text style={{ color: "#991b1b", fontSize: 16, textAlign: "center" }}>
+          <Text style={{ color: '#991b1b', fontSize: 16, textAlign: 'center' }}>
             {this.state.errorMessage}
           </Text>
         </View>
@@ -54,7 +54,7 @@ function AppBootstrap() {
     <View
       style={{
         flex: 1,
-        backgroundColor: "#f3f7fb",
+        backgroundColor: '#f3f7fb',
       }}
     >
       <AuthProvider>

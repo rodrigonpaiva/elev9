@@ -1,18 +1,18 @@
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren } from 'react';
 import {
   StyleSheet,
   View,
   type TextStyle,
   type StyleProp,
   type ViewStyle,
-} from "react-native";
+} from 'react-native';
 
-import { colors } from "../theme/colors";
-import { radius } from "../theme/radius";
-import { spacing } from "../theme/spacing";
-import { Text } from "./Text";
+import { colors } from '../theme/colors';
+import { radius } from '../theme/radius';
+import { spacing } from '../theme/spacing';
+import { Text } from './Text';
 
-type BadgeVariant = "primary" | "muted" | "danger";
+type BadgeVariant = 'primary' | 'muted' | 'danger';
 
 export type BadgeProps = PropsWithChildren<{
   label?: string;
@@ -23,10 +23,10 @@ export type BadgeProps = PropsWithChildren<{
 export function Badge({
   children,
   label,
-  variant = "muted",
+  variant = 'muted',
   style,
 }: BadgeProps) {
-  const resolved = typeof children === "string" ? children : label;
+  const resolved = typeof children === 'string' ? children : label;
 
   if (!resolved) {
     return null;
@@ -41,7 +41,7 @@ export function Badge({
 
 const styles = StyleSheet.create({
   base: {
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     borderRadius: radius.lg,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
@@ -50,19 +50,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     lineHeight: 14,
-    fontWeight: "700",
+    fontWeight: '700',
   },
   primary: {
-    backgroundColor: "rgba(34, 197, 94, 0.14)",
-    borderColor: "rgba(34, 197, 94, 0.3)",
+    backgroundColor: 'rgba(34, 197, 94, 0.14)',
+    borderColor: 'rgba(34, 197, 94, 0.3)',
   },
   muted: {
-    backgroundColor: "#0b1220",
+    backgroundColor: '#0b1220',
     borderColor: colors.border,
   },
   danger: {
-    backgroundColor: "rgba(239, 68, 68, 0.12)",
-    borderColor: "rgba(239, 68, 68, 0.25)",
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderColor: 'rgba(239, 68, 68, 0.25)',
   },
   labelPrimary: {
     color: colors.primary,
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     color: colors.mutedText,
   },
   labelDanger: {
-    color: "#fca5a5",
+    color: '#fca5a5',
   },
 });
 

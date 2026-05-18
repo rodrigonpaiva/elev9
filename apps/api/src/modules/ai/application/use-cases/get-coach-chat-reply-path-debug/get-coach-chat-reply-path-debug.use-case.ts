@@ -1,30 +1,30 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
-import { BuildUserHealthContextService } from "../../services/context-builder/build-user-health-context.service";
-import { AiLlmConfigService } from "../../services/llm/ai-llm-config.service";
-import { AiPromptBuilder } from "../../services/llm/ai-prompt-builder.service";
+import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
+import { AiLlmConfigService } from '../../services/llm/ai-llm-config.service';
+import { AiPromptBuilder } from '../../services/llm/ai-prompt-builder.service';
 import {
   COACH_CONVERSATION_MEMORY_REPOSITORY,
   CoachConversationMemoryRepository,
-} from "../../../domain/repositories/coach-conversation-memory.repository";
+} from '../../../domain/repositories/coach-conversation-memory.repository';
 import {
   COACH_CONVERSATION_REPOSITORY,
   CoachConversationRepository,
-} from "../../../domain/repositories/coach-conversation.repository";
+} from '../../../domain/repositories/coach-conversation.repository';
 import {
   COACH_MESSAGE_REPOSITORY,
   CoachMessageRepository,
-} from "../../../domain/repositories/coach-message.repository";
+} from '../../../domain/repositories/coach-message.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES,
   GetCoachChatReplyPathDebugError,
-} from "./get-coach-chat-reply-path-debug.errors";
-import { GetCoachChatReplyPathDebugInput } from "./get-coach-chat-reply-path-debug.input";
-import { GetCoachChatReplyPathDebugOutput } from "./get-coach-chat-reply-path-debug.output";
+} from './get-coach-chat-reply-path-debug.errors';
+import { GetCoachChatReplyPathDebugInput } from './get-coach-chat-reply-path-debug.input';
+import { GetCoachChatReplyPathDebugOutput } from './get-coach-chat-reply-path-debug.output';
 
 @Injectable()
 export class GetCoachChatReplyPathDebugUseCase {
@@ -46,12 +46,12 @@ export class GetCoachChatReplyPathDebugUseCase {
     input: GetCoachChatReplyPathDebugInput,
   ): Promise<GetCoachChatReplyPathDebugOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
     if (!authUserId) {
       throw new GetCoachChatReplyPathDebugError(
         GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -62,7 +62,7 @@ export class GetCoachChatReplyPathDebugUseCase {
       if (!userProfile) {
         throw new GetCoachChatReplyPathDebugError(
           GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -88,11 +88,10 @@ export class GetCoachChatReplyPathDebugUseCase {
         : null;
 
       const latestUserMessage =
-        [...messages]
-          .reverse()
-          .find((message) => message.role === "user")?.content ??
+        [...messages].reverse().find((message) => message.role === 'user')
+          ?.content ??
         messages.at(-1)?.content ??
-        "";
+        '';
 
       const promptSnapshot = this.aiPromptBuilder.buildDebugSnapshot({
         message: latestUserMessage,
@@ -119,16 +118,16 @@ export class GetCoachChatReplyPathDebugUseCase {
       const apiKey = this.aiLlmConfigService.getApiKey();
 
       const fallbackReason = !llmEnabled
-        ? "llm_disabled"
-        : provider !== "openai"
-          ? "invalid_provider"
+        ? 'llm_disabled'
+        : provider !== 'openai'
+          ? 'invalid_provider'
           : apiKey.trim()
             ? undefined
-            : "provider_failure";
+            : 'provider_failure';
 
       return {
         replyPath: {
-          source: fallbackReason ? "heuristic" : "llm",
+          source: fallbackReason ? 'heuristic' : 'llm',
           fallbackActivated: Boolean(fallbackReason),
           ...(fallbackReason ? { fallbackReason } : {}),
           llm: {
@@ -151,7 +150,7 @@ export class GetCoachChatReplyPathDebugUseCase {
 
       throw new GetCoachChatReplyPathDebugError(
         GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }

@@ -1,21 +1,24 @@
-import "reflect-metadata";
+import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from "@nestjs/common";
-import { MongooseModule } from "@nestjs/mongoose";
-import { Test, TestingModule } from "@nestjs/testing";
-import { disconnect } from "mongoose";
-import { MongoMemoryServer } from "mongodb-memory-server";
-import request from "supertest";
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Test, TestingModule } from '@nestjs/testing';
+import { disconnect } from 'mongoose';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import request from 'supertest';
 
-import { AiModule } from "../../src/modules/ai/ai.module";
-import { AuthModule } from "../../src/modules/auth/auth.module";
-import { FitnessModule } from "../../src/modules/fitness/fitness.module";
-import { Clock, CLOCK } from "../../src/modules/progress/domain/services/clock.service";
-import { ProgressModule } from "../../src/modules/progress/progress.module";
-import { TrainingModule } from "../../src/modules/training/training.module";
-import { UsersModule } from "../../src/modules/users/users.module";
+import { AiModule } from '../../src/modules/ai/ai.module';
+import { AuthModule } from '../../src/modules/auth/auth.module';
+import { FitnessModule } from '../../src/modules/fitness/fitness.module';
+import {
+  Clock,
+  CLOCK,
+} from '../../src/modules/progress/domain/services/clock.service';
+import { ProgressModule } from '../../src/modules/progress/progress.module';
+import { TrainingModule } from '../../src/modules/training/training.module';
+import { UsersModule } from '../../src/modules/users/users.module';
 
-describe("AI Coach Feedback E2E", () => {
+describe('AI Coach Feedback E2E', () => {
   let app: INestApplication;
   let mongoMemoryServer: MongoMemoryServer;
   let currentNow: Date;
@@ -23,7 +26,7 @@ describe("AI Coach Feedback E2E", () => {
   beforeAll(async () => {
     mongoMemoryServer = await MongoMemoryServer.create();
     const mongoUri = mongoMemoryServer.getUri();
-    currentNow = new Date("2026-05-04T10:00:00.000Z");
+    currentNow = new Date('2026-05-04T10:00:00.000Z');
 
     const testClock: Clock = {
       now: () => currentNow,
@@ -67,14 +70,14 @@ describe("AI Coach Feedback E2E", () => {
     }
   });
 
-  it("returns coach feedback for an authenticated user", async () => {
+  it('returns coach feedback for an authenticated user', async () => {
     const { token } = await createAuthenticatedTrainingFlow(
-      "ai-coach-success@email.com",
+      'ai-coach-success@email.com',
     );
 
     const response = await request(app.getHttpServer())
-      .post("/ai/coach-feedback")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/ai/coach-feedback')
+      .set('Authorization', `Bearer ${token}`)
       .send({})
       .expect(200);
 
@@ -85,20 +88,20 @@ describe("AI Coach Feedback E2E", () => {
     });
   });
 
-  it("rejects extra body fields with AI_COACH_INVALID_INPUT", async () => {
+  it('rejects extra body fields with AI_COACH_INVALID_INPUT', async () => {
     const { token } = await createAuthenticatedTrainingFlow(
-      "ai-coach-invalid-input@email.com",
+      'ai-coach-invalid-input@email.com',
     );
 
     const response = await request(app.getHttpServer())
-      .post("/ai/coach-feedback")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ authUserId: "forbidden" })
+      .post('/ai/coach-feedback')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ authUserId: 'forbidden' })
       .expect(400);
 
     expect(response.body).toEqual({
-      code: "AI_COACH_INVALID_INPUT",
-      message: "Invalid input.",
+      code: 'AI_COACH_INVALID_INPUT',
+      message: 'Invalid input.',
     });
   });
 
@@ -106,38 +109,38 @@ describe("AI Coach Feedback E2E", () => {
     token: string;
   }> {
     await request(app.getHttpServer())
-      .post("/auth/register")
+      .post('/auth/register')
       .send({
-        name: "Rodrigo Paiva",
+        name: 'Rodrigo Paiva',
         email,
-        password: "StrongPassword123",
+        password: 'StrongPassword123',
       })
       .expect(201);
 
     const loginResponse = await request(app.getHttpServer())
-      .post("/auth/login")
+      .post('/auth/login')
       .send({
         email,
-        password: "StrongPassword123",
+        password: 'StrongPassword123',
       })
       .expect(200);
 
     const token = loginResponse.body.accessToken as string;
 
     await request(app.getHttpServer())
-      .post("/users/profile")
-      .set("Authorization", `Bearer ${token}`)
-      .send({ name: "Rodrigo Paiva" })
+      .post('/users/profile')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Rodrigo Paiva' })
       .expect(201);
 
     const fitnessResponse = await request(app.getHttpServer())
-      .post("/fitness/profile")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/fitness/profile')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         heightCm: 180,
         weightKg: 82.5,
-        goal: "gain_muscle",
-        activityLevel: "medium",
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
         trainingAvailability: {
           daysPerWeek: 3,
           minutesPerSession: 60,
@@ -146,21 +149,21 @@ describe("AI Coach Feedback E2E", () => {
       .expect(201);
 
     const trainingResponse = await request(app.getHttpServer())
-      .post("/training/plans")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/training/plans')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         fitnessProfileId: fitnessResponse.body.fitnessProfile.id,
       })
       .expect(201);
 
     await request(app.getHttpServer())
-      .post("/progress/workout-logs")
-      .set("Authorization", `Bearer ${token}`)
+      .post('/progress/workout-logs')
+      .set('Authorization', `Bearer ${token}`)
       .send({
         trainingPlanId: trainingResponse.body.trainingPlan.id,
         workoutDayIndex: 1,
         durationMinutes: 45,
-        completedExercises: [{ name: "push_up", setsDone: 4, repsDone: 12 }],
+        completedExercises: [{ name: 'push_up', setsDone: 4, repsDone: 12 }],
       })
       .expect(201);
 

@@ -1,8 +1,8 @@
 export const REGISTER_USER_ERROR_CODES = {
-  INVALID_INPUT: "AUTH_INVALID_INPUT",
-  EMAIL_ALREADY_EXISTS: "AUTH_EMAIL_ALREADY_EXISTS",
-  PASSWORD_TOO_WEAK: "AUTH_PASSWORD_TOO_WEAK",
-  INTERNAL_ERROR: "AUTH_INTERNAL_ERROR",
+  INVALID_INPUT: 'AUTH_INVALID_INPUT',
+  EMAIL_ALREADY_EXISTS: 'AUTH_EMAIL_ALREADY_EXISTS',
+  PASSWORD_TOO_WEAK: 'AUTH_PASSWORD_TOO_WEAK',
+  INTERNAL_ERROR: 'AUTH_INTERNAL_ERROR',
 } as const;
 
 export type RegisterUserErrorCode =
@@ -18,7 +18,7 @@ export class RegisterUserError extends Error {
     details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = "RegisterUserError";
+    this.name = 'RegisterUserError';
     this.code = code;
     this.details = details;
   }

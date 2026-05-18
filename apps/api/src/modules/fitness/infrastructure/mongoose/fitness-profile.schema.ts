@@ -1,12 +1,13 @@
-import { HydratedDocument, Schema, Types } from "mongoose";
+import { HydratedDocument, Schema, Types } from 'mongoose';
 
 import {
   ActivityLevel,
   FitnessGoal,
   LimitationSeverity,
-} from "../../domain/entities/fitness-profile.entity";
+} from '../../domain/entities/fitness-profile.entity';
 
-export type FitnessProfileDocument = HydratedDocument<FitnessProfileSchemaClass>;
+export type FitnessProfileDocument =
+  HydratedDocument<FitnessProfileSchemaClass>;
 
 export class FitnessProfileSchemaClass {
   _id!: Types.ObjectId;
@@ -24,13 +25,13 @@ export class FitnessProfileSchemaClass {
     description?: string;
     severity: LimitationSeverity;
   }>;
-  status!: "active";
+  status!: 'active';
   createdAt!: Date;
   updatedAt!: Date;
 }
 
-export const FITNESS_PROFILE_MODEL_NAME = "FitnessProfile";
-export const FITNESS_PROFILE_COLLECTION_NAME = "fitness_profiles";
+export const FITNESS_PROFILE_MODEL_NAME = 'FitnessProfile';
+export const FITNESS_PROFILE_COLLECTION_NAME = 'fitness_profiles';
 
 export const FitnessProfileSchema = new Schema<FitnessProfileSchemaClass>(
   {
@@ -54,7 +55,7 @@ export const FitnessProfileSchema = new Schema<FitnessProfileSchemaClass>(
       required: true,
       default: [],
     },
-    status: { type: String, required: true, default: "active" },
+    status: { type: String, required: true, default: 'active' },
   },
   {
     collection: FITNESS_PROFILE_COLLECTION_NAME,

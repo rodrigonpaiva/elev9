@@ -1,6 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const ACCESS_TOKEN_KEY = "elev9.accessToken";
+const ACCESS_TOKEN_KEY = 'elev9.accessToken';
 
 export async function getAccessToken(): Promise<string | null> {
   return AsyncStorage.getItem(ACCESS_TOKEN_KEY);

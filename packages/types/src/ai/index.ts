@@ -8,7 +8,7 @@ export type SendCoachChatResponse = {
 };
 
 export type CoachChatHistoryMessage = {
-  role: "user" | "assistant";
+  role: 'user' | 'assistant';
   content: string;
   createdAt: string;
 };

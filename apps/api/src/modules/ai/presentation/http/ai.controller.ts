@@ -13,84 +13,84 @@ import {
   Req,
   UnauthorizedException,
   UseGuards,
-} from "@nestjs/common";
+} from '@nestjs/common';
 
-import { AuthSessionGuard } from "../../../users/presentation/http/guards/auth-session.guard";
+import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
 import {
   CREATE_COACH_CHAT_ERROR_CODES,
   CreateCoachChatError,
-} from "../../application/use-cases/create-coach-chat/create-coach-chat.errors";
-import { CreateCoachChatUseCase } from "../../application/use-cases/create-coach-chat/create-coach-chat.use-case";
+} from '../../application/use-cases/create-coach-chat/create-coach-chat.errors';
+import { CreateCoachChatUseCase } from '../../application/use-cases/create-coach-chat/create-coach-chat.use-case';
 import {
   GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES,
   GetCoachFeedbackDebugHistoryError,
-} from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.errors";
-import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
+} from '../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.errors';
+import { GetCoachFeedbackDebugHistoryUseCase } from '../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case';
 import {
   REPLAY_COACH_FEEDBACK_ERROR_CODES,
   ReplayCoachFeedbackError,
-} from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.errors";
-import { ReplayCoachFeedbackUseCase } from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
+} from '../../application/use-cases/replay-coach-feedback/replay-coach-feedback.errors';
+import { ReplayCoachFeedbackUseCase } from '../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case';
 import {
   GET_COACH_FEEDBACK_HISTORY_ERROR_CODES,
   GetCoachFeedbackHistoryError,
-} from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
-import { GetCoachFeedbackHistoryUseCase } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
+} from '../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors';
+import { GetCoachFeedbackHistoryUseCase } from '../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case';
 import {
   GET_COACH_CHAT_HISTORY_ERROR_CODES,
   GetCoachChatHistoryError,
-} from "../../application/use-cases/get-coach-chat-history/get-coach-chat-history.errors";
-import { GetCoachChatHistoryUseCase } from "../../application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case";
+} from '../../application/use-cases/get-coach-chat-history/get-coach-chat-history.errors';
+import { GetCoachChatHistoryUseCase } from '../../application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case';
 import {
   GET_COACH_CHAT_DEBUG_HISTORY_ERROR_CODES,
   GetCoachChatDebugHistoryError,
-} from "../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.errors";
-import { GetCoachChatDebugHistoryUseCase } from "../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case";
+} from '../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.errors';
+import { GetCoachChatDebugHistoryUseCase } from '../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case';
 import {
   GET_COACH_CHAT_MEMORY_DEBUG_ERROR_CODES,
   GetCoachChatMemoryDebugError,
-} from "../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.errors";
-import { GetCoachChatMemoryDebugUseCase } from "../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case";
+} from '../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.errors';
+import { GetCoachChatMemoryDebugUseCase } from '../../application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case';
 import {
   GET_COACH_CHAT_PROMPT_DEBUG_ERROR_CODES,
   GetCoachChatPromptDebugError,
-} from "../../application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.errors";
-import { GetCoachChatPromptDebugUseCase } from "../../application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case";
+} from '../../application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.errors';
+import { GetCoachChatPromptDebugUseCase } from '../../application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case';
 import {
   GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES,
   GetCoachChatReplyPathDebugError,
-} from "../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.errors";
-import { GetCoachChatReplyPathDebugUseCase } from "../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case";
+} from '../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.errors';
+import { GetCoachChatReplyPathDebugUseCase } from '../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case';
 import {
   GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES,
   GetCoachChatDebugIndexError,
-} from "../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.errors";
-import { GetCoachChatDebugIndexUseCase } from "../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.use-case";
+} from '../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.errors';
+import { GetCoachChatDebugIndexUseCase } from '../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.use-case';
 import {
   GENERATE_COACH_FEEDBACK_ERROR_CODES,
   GenerateCoachFeedbackError,
-} from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors";
-import { GenerateCoachFeedbackUseCase } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
+} from '../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors';
+import { GenerateCoachFeedbackUseCase } from '../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case';
 import {
   BuildUserHealthContextService,
   UserHealthContextNutritionProfile,
-} from "../../application/services/context-builder/build-user-health-context.service";
-import { GetCoachFeedbackDebugHistoryQueryDto } from "./dto/get-coach-feedback-debug-history.query.dto";
-import { GetCoachFeedbackDebugHistoryResponseDto } from "./dto/get-coach-feedback-debug-history.response.dto";
-import { GetCoachFeedbackHistoryQueryDto } from "./dto/get-coach-feedback-history.query.dto";
-import { GetCoachFeedbackHistoryResponseDto } from "./dto/get-coach-feedback-history.response.dto";
-import { CreateCoachChatRequestDto } from "./dto/create-coach-chat.request.dto";
-import { CreateCoachChatResponseDto } from "./dto/create-coach-chat.response.dto";
-import { GetCoachChatHistoryQueryDto } from "./dto/get-coach-chat-history.query.dto";
-import { GetCoachChatHistoryResponseDto } from "./dto/get-coach-chat-history.response.dto";
-import { GetCoachChatDebugHistoryQueryDto } from "./dto/get-coach-chat-debug-history.query.dto";
-import { GetCoachChatDebugHistoryResponseDto } from "./dto/get-coach-chat-debug-history.response.dto";
-import { GetCoachChatMemoryDebugResponseDto } from "./dto/get-coach-chat-memory-debug.response.dto";
-import { GetCoachChatPromptDebugResponseDto } from "./dto/get-coach-chat-prompt-debug.response.dto";
-import { GetCoachChatReplyPathDebugResponseDto } from "./dto/get-coach-chat-reply-path-debug.response.dto";
-import { GetCoachChatDebugIndexResponseDto } from "./dto/get-coach-chat-debug-index.response.dto";
-import { GenerateCoachFeedbackResponseDto } from "./dto/generate-coach-feedback.response.dto";
-import { ReplayCoachFeedbackResponseDto } from "./dto/replay-coach-feedback.response.dto";
+} from '../../application/services/context-builder/build-user-health-context.service';
+import { GetCoachFeedbackDebugHistoryQueryDto } from './dto/get-coach-feedback-debug-history.query.dto';
+import { GetCoachFeedbackDebugHistoryResponseDto } from './dto/get-coach-feedback-debug-history.response.dto';
+import { GetCoachFeedbackHistoryQueryDto } from './dto/get-coach-feedback-history.query.dto';
+import { GetCoachFeedbackHistoryResponseDto } from './dto/get-coach-feedback-history.response.dto';
+import { CreateCoachChatRequestDto } from './dto/create-coach-chat.request.dto';
+import { CreateCoachChatResponseDto } from './dto/create-coach-chat.response.dto';
+import { GetCoachChatHistoryQueryDto } from './dto/get-coach-chat-history.query.dto';
+import { GetCoachChatHistoryResponseDto } from './dto/get-coach-chat-history.response.dto';
+import { GetCoachChatDebugHistoryQueryDto } from './dto/get-coach-chat-debug-history.query.dto';
+import { GetCoachChatDebugHistoryResponseDto } from './dto/get-coach-chat-debug-history.response.dto';
+import { GetCoachChatMemoryDebugResponseDto } from './dto/get-coach-chat-memory-debug.response.dto';
+import { GetCoachChatPromptDebugResponseDto } from './dto/get-coach-chat-prompt-debug.response.dto';
+import { GetCoachChatReplyPathDebugResponseDto } from './dto/get-coach-chat-reply-path-debug.response.dto';
+import { GetCoachChatDebugIndexResponseDto } from './dto/get-coach-chat-debug-index.response.dto';
+import { GenerateCoachFeedbackResponseDto } from './dto/generate-coach-feedback.response.dto';
+import { ReplayCoachFeedbackResponseDto } from './dto/replay-coach-feedback.response.dto';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -99,7 +99,7 @@ type RequestWithAuthUser = {
   };
 };
 
-@Controller("ai")
+@Controller('ai')
 export class AiController {
   constructor(
     private readonly generateCoachFeedbackUseCase: GenerateCoachFeedbackUseCase,
@@ -116,7 +116,7 @@ export class AiController {
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
   ) {}
 
-  @Post("chat")
+  @Post('chat')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async createCoachChat(
@@ -124,24 +124,23 @@ export class AiController {
     @Body() body?: CreateCoachChatRequestDto | Record<string, unknown>,
   ): Promise<CreateCoachChatResponseDto> {
     const message = (body as { message?: unknown } | undefined)?.message;
-    const normalizedMessage =
-      typeof message === "string" ? message : "";
+    const normalizedMessage = typeof message === 'string' ? message : '';
 
     if (
       !body ||
-      typeof body !== "object" ||
-      typeof message !== "string" ||
-      Object.keys(body).some((key) => key !== "message")
+      typeof body !== 'object' ||
+      typeof message !== 'string' ||
+      Object.keys(body).some((key) => key !== 'message')
     ) {
       throw new BadRequestException({
         code: CREATE_COACH_CHAT_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid chat message input.",
+        message: 'Invalid chat message input.',
       });
     }
 
     try {
       return await this.createCoachChatUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         message: normalizedMessage,
       });
     } catch (error) {
@@ -149,7 +148,7 @@ export class AiController {
     }
   }
 
-  @Get("chat/history")
+  @Get('chat/history')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getCoachChatHistory(
@@ -160,13 +159,13 @@ export class AiController {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: GET_COACH_CHAT_HISTORY_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid chat history input.",
+        message: 'Invalid chat history input.',
       });
     }
 
     try {
       return await this.getCoachChatHistoryUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         limit: query.limit,
       });
     } catch (error) {
@@ -174,7 +173,7 @@ export class AiController {
     }
   }
 
-  @Get("chat/debug/history")
+  @Get('chat/debug/history')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getCoachChatDebugHistory(
@@ -185,13 +184,13 @@ export class AiController {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: GET_COACH_CHAT_DEBUG_HISTORY_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid chat debug history input.",
+        message: 'Invalid chat debug history input.',
       });
     }
 
     try {
       return await this.getCoachChatDebugHistoryUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         limit: query.limit,
       });
     } catch (error) {
@@ -199,7 +198,7 @@ export class AiController {
     }
   }
 
-  @Get("chat/debug/memory")
+  @Get('chat/debug/memory')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getCoachChatMemoryDebug(
@@ -209,20 +208,20 @@ export class AiController {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: GET_COACH_CHAT_MEMORY_DEBUG_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid chat memory debug input.",
+        message: 'Invalid chat memory debug input.',
       });
     }
 
     try {
       return await this.getCoachChatMemoryDebugUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
       });
     } catch (error) {
       this.handleChatMemoryDebugError(error);
     }
   }
 
-  @Get("chat/debug/prompt")
+  @Get('chat/debug/prompt')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getCoachChatPromptDebug(
@@ -232,20 +231,20 @@ export class AiController {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: GET_COACH_CHAT_PROMPT_DEBUG_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid chat prompt debug input.",
+        message: 'Invalid chat prompt debug input.',
       });
     }
 
     try {
       return await this.getCoachChatPromptDebugUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
       });
     } catch (error) {
       this.handleChatPromptDebugError(error);
     }
   }
 
-  @Get("chat/debug/reply-path")
+  @Get('chat/debug/reply-path')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getCoachChatReplyPathDebug(
@@ -255,20 +254,20 @@ export class AiController {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid chat reply path debug input.",
+        message: 'Invalid chat reply path debug input.',
       });
     }
 
     try {
       return await this.getCoachChatReplyPathDebugUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
       });
     } catch (error) {
       this.handleChatReplyPathDebugError(error);
     }
   }
 
-  @Get("chat/debug")
+  @Get('chat/debug')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getCoachChatDebugIndex(
@@ -278,20 +277,20 @@ export class AiController {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid chat debug input.",
+        message: 'Invalid chat debug input.',
       });
     }
 
     try {
       return await this.getCoachChatDebugIndexUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
       });
     } catch (error) {
       this.handleChatDebugIndexError(error);
     }
   }
 
-  @Post("coach-feedback")
+  @Post('coach-feedback')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async generateCoachFeedback(
@@ -301,20 +300,20 @@ export class AiController {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: GENERATE_COACH_FEEDBACK_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid input.",
+        message: 'Invalid input.',
       });
     }
 
     try {
       return await this.generateCoachFeedbackUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
       });
     } catch (error) {
       this.handleError(error);
     }
   }
 
-  @Get("coach-feedback")
+  @Get('coach-feedback')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getCoachFeedbackHistory(
@@ -325,13 +324,13 @@ export class AiController {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: GET_COACH_FEEDBACK_HISTORY_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid coach feedback history input.",
+        message: 'Invalid coach feedback history input.',
       });
     }
 
     try {
       return await this.getCoachFeedbackHistoryUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         limit: query.limit,
       });
     } catch (error) {
@@ -339,7 +338,7 @@ export class AiController {
     }
   }
 
-  @Get("debug/coach-feedback")
+  @Get('debug/coach-feedback')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getCoachFeedbackDebugHistory(
@@ -350,13 +349,13 @@ export class AiController {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid coach feedback debug history input.",
+        message: 'Invalid coach feedback debug history input.',
       });
     }
 
     try {
       return await this.getCoachFeedbackDebugHistoryUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         limit: query.limit,
       });
     } catch (error) {
@@ -364,24 +363,24 @@ export class AiController {
     }
   }
 
-  @Get("debug/coach-feedback/:id/replay")
+  @Get('debug/coach-feedback/:id/replay')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async replayCoachFeedback(
     @Req() request: RequestWithAuthUser,
-    @Param("id") feedbackId: string,
+    @Param('id') feedbackId: string,
     @Body() body?: Record<string, unknown>,
   ): Promise<ReplayCoachFeedbackResponseDto> {
     if (body && Object.keys(body).length > 0) {
       throw new BadRequestException({
         code: REPLAY_COACH_FEEDBACK_ERROR_CODES.INVALID_INPUT,
-        message: "Invalid coach feedback replay input.",
+        message: 'Invalid coach feedback replay input.',
       });
     }
 
     try {
       return await this.replayCoachFeedbackUseCase.execute({
-        authUserId: request.authUser?.id ?? "",
+        authUserId: request.authUser?.id ?? '',
         feedbackId,
       });
     } catch (error) {
@@ -389,7 +388,7 @@ export class AiController {
     }
   }
 
-  @Get("context")
+  @Get('context')
   @UseGuards(AuthSessionGuard)
   @HttpCode(HttpStatus.OK)
   async getAiContext(@Req() request: RequestWithAuthUser): Promise<{
@@ -402,19 +401,19 @@ export class AiController {
     adherenceScore: number;
     currentStreak: number;
     averageWorkoutDuration: number;
-    fatigueLevel: "LOW" | "MODERATE" | "HIGH";
+    fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH';
     availableEquipment: string[];
     limitations: Array<{
       type: string;
       description?: string;
-      severity: "low" | "medium" | "high";
+      severity: 'low' | 'medium' | 'high';
     }>;
     todayWorkout: {
       dayIndex: number;
       title: string;
       focus: string;
       format: string;
-      intensity: "low" | "moderate" | "high";
+      intensity: 'low' | 'moderate' | 'high';
       exercises: Array<{
         name: string;
         sets: number;
@@ -442,7 +441,7 @@ export class AiController {
         repsDone: number;
       }>;
       feedback?: {
-        difficulty: "easy" | "medium" | "hard";
+        difficulty: 'easy' | 'medium' | 'hard';
         notes?: string;
       };
       date: string;
@@ -452,7 +451,7 @@ export class AiController {
     generatedAt: string;
   }> {
     const context = await this.buildUserHealthContextService.build({
-      authUserId: request.authUser?.id ?? "",
+      authUserId: request.authUser?.id ?? '',
     });
 
     return {
@@ -497,7 +496,7 @@ export class AiController {
 
   private handleError(error: unknown): never {
     if (!(error instanceof GenerateCoachFeedbackError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -524,14 +523,14 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GENERATE_COACH_FEEDBACK_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleGetHistoryError(error: unknown): never {
     if (!(error instanceof GetCoachFeedbackHistoryError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -557,14 +556,14 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_FEEDBACK_HISTORY_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleChatError(error: unknown): never {
     if (!(error instanceof CreateCoachChatError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -590,14 +589,14 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: CREATE_COACH_CHAT_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleChatHistoryError(error: unknown): never {
     if (!(error instanceof GetCoachChatHistoryError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -623,14 +622,14 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_CHAT_HISTORY_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleChatDebugHistoryError(error: unknown): never {
     if (!(error instanceof GetCoachChatDebugHistoryError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -656,14 +655,14 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_CHAT_DEBUG_HISTORY_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleChatMemoryDebugError(error: unknown): never {
     if (!(error instanceof GetCoachChatMemoryDebugError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -689,14 +688,14 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_CHAT_MEMORY_DEBUG_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleChatPromptDebugError(error: unknown): never {
     if (!(error instanceof GetCoachChatPromptDebugError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -722,14 +721,14 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_CHAT_PROMPT_DEBUG_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleChatReplyPathDebugError(error: unknown): never {
     if (!(error instanceof GetCoachChatReplyPathDebugError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -755,7 +754,7 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
@@ -774,7 +773,7 @@ export class AiController {
     }
 
     if (!(error instanceof GetCoachChatDebugIndexError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -794,14 +793,14 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleGetDebugHistoryError(error: unknown): never {
     if (!(error instanceof GetCoachFeedbackDebugHistoryError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -827,14 +826,14 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }
 
   private handleReplayError(error: unknown): never {
     if (!(error instanceof ReplayCoachFeedbackError)) {
-      throw new InternalServerErrorException("An unexpected error occurred.");
+      throw new InternalServerErrorException('An unexpected error occurred.');
     }
 
     switch (error.code) {
@@ -863,7 +862,7 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: REPLAY_COACH_FEEDBACK_ERROR_CODES.INTERNAL_ERROR,
-          message: "An unexpected error occurred.",
+          message: 'An unexpected error occurred.',
         });
     }
   }

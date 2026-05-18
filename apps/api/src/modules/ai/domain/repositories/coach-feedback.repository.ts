@@ -1,4 +1,4 @@
-import { CoachFeedback } from "../entities/coach-feedback.entity";
+import { CoachFeedback } from '../entities/coach-feedback.entity';
 
 export interface CreateCoachFeedbackRepositoryInput {
   userProfileId: string;
@@ -8,11 +8,11 @@ export interface CreateCoachFeedbackRepositoryInput {
   influences?: string[];
   generatorVersion?: string;
   contextSnapshot?: {
-    goal?: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel?: "low" | "medium" | "high";
+    goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel?: 'low' | 'medium' | 'high';
     hasTrainingPlan?: boolean;
-    fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
-    recoveryTrend?: "improving" | "stable" | "needs_recovery";
+    fatigueLevel?: 'LOW' | 'MODERATE' | 'HIGH';
+    recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -28,7 +28,7 @@ export interface CreateCoachFeedbackRepositoryInput {
       motivationLevel: number;
     };
     nutritionProfile?: {
-      goal: "fat_loss" | "maintenance" | "muscle_gain";
+      goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
       mealsPerDay: number;
     };
   };
@@ -43,4 +43,4 @@ export interface CoachFeedbackRepository {
   }): Promise<CoachFeedback[]>;
 }
 
-export const COACH_FEEDBACK_REPOSITORY = Symbol("COACH_FEEDBACK_REPOSITORY");
+export const COACH_FEEDBACK_REPOSITORY = Symbol('COACH_FEEDBACK_REPOSITORY');

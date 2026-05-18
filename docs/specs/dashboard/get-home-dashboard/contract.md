@@ -69,8 +69,8 @@ type GetHomeDashboardOutput = {
     };
     fitnessProfile: {
       id: string;
-      goal: "lose_weight" | "gain_muscle" | "maintain";
-      activityLevel: "low" | "medium" | "high";
+      goal: 'lose_weight' | 'gain_muscle' | 'maintain';
+      activityLevel: 'low' | 'medium' | 'high';
     } | null;
     trainingPlan: {
       id: string;
@@ -79,7 +79,7 @@ type GetHomeDashboardOutput = {
         title: string;
         focus: string;
         format: string;
-        intensity: "low" | "moderate" | "high";
+        intensity: 'low' | 'moderate' | 'high';
         exercises: Array<{
           name: string;
           sets: number;
@@ -89,7 +89,7 @@ type GetHomeDashboardOutput = {
       } | null;
     } | null;
     progressSummary: {
-      period: "week";
+      period: 'week';
       workoutsCompleted: number;
       totalDurationMinutes: number;
       averageDurationMinutes: number;

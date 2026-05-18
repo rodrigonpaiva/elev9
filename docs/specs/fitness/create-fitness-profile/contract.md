@@ -29,8 +29,8 @@ type CreateFitnessProfileInput = {
   authUserId: string;
   heightCm: number;
   weightKg: number;
-  goal: "lose_weight" | "gain_muscle" | "maintain";
-  activityLevel: "low" | "medium" | "high";
+  goal: 'lose_weight' | 'gain_muscle' | 'maintain';
+  activityLevel: 'low' | 'medium' | 'high';
   trainingAvailability: {
     daysPerWeek: number;
     minutesPerSession: number;
@@ -38,7 +38,7 @@ type CreateFitnessProfileInput = {
   limitations?: Array<{
     type: string;
     description?: string;
-    severity: "low" | "medium" | "high";
+    severity: 'low' | 'medium' | 'high';
   }>;
 };
 ```
@@ -144,8 +144,8 @@ type CreateFitnessProfileOutput = {
     userProfileId: string;
     heightCm: number;
     weightKg: number;
-    goal: "lose_weight" | "gain_muscle" | "maintain";
-    activityLevel: "low" | "medium" | "high";
+    goal: 'lose_weight' | 'gain_muscle' | 'maintain';
+    activityLevel: 'low' | 'medium' | 'high';
     trainingAvailability: {
       daysPerWeek: number;
       minutesPerSession: number;
@@ -153,9 +153,9 @@ type CreateFitnessProfileOutput = {
     limitations?: Array<{
       type: string;
       description?: string;
-      severity: "low" | "medium" | "high";
+      severity: 'low' | 'medium' | 'high';
     }>;
-    status: "active";
+    status: 'active';
     createdAt: Date;
   };
 };

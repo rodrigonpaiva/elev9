@@ -1,18 +1,18 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
-} from "../../../domain/repositories/fitness-profile.repository";
+} from '../../../domain/repositories/fitness-profile.repository';
 import {
   GET_MY_FITNESS_PROFILE_ERROR_CODES,
   GetMyFitnessProfileError,
-} from "./get-my-fitness-profile.errors";
-import { GetMyFitnessProfileOutput } from "./get-my-fitness-profile.output";
+} from './get-my-fitness-profile.errors';
+import { GetMyFitnessProfileOutput } from './get-my-fitness-profile.output';
 
 @Injectable()
 export class GetMyFitnessProfileUseCase {
@@ -27,12 +27,12 @@ export class GetMyFitnessProfileUseCase {
     authUserId: string;
   }): Promise<GetMyFitnessProfileOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
     if (!authUserId) {
       throw new GetMyFitnessProfileError(
         GET_MY_FITNESS_PROFILE_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -43,7 +43,7 @@ export class GetMyFitnessProfileUseCase {
       if (!userProfile) {
         throw new GetMyFitnessProfileError(
           GET_MY_FITNESS_PROFILE_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -55,7 +55,7 @@ export class GetMyFitnessProfileUseCase {
       if (!fitnessProfile) {
         throw new GetMyFitnessProfileError(
           GET_MY_FITNESS_PROFILE_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
-          "Fitness profile not found.",
+          'Fitness profile not found.',
         );
       }
 
@@ -80,7 +80,7 @@ export class GetMyFitnessProfileUseCase {
 
       throw new GetMyFitnessProfileError(
         GET_MY_FITNESS_PROFILE_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }

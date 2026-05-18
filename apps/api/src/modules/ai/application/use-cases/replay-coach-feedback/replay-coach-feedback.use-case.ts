@@ -1,24 +1,24 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
 import {
   COACH_FEEDBACK_REPOSITORY,
   CoachFeedbackRepository,
-} from "../../../domain/repositories/coach-feedback.repository";
+} from '../../../domain/repositories/coach-feedback.repository';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
-} from "../../../../users/domain/repositories/user-profile.repository";
+} from '../../../../users/domain/repositories/user-profile.repository';
 import {
   COACH_FEEDBACK_GENERATOR_VERSION,
   CoachFeedbackGenerator,
   CoachFeedbackGeneratorInput,
-} from "../../services/coach-feedback/coach-feedback-generator.service";
+} from '../../services/coach-feedback/coach-feedback-generator.service';
 import {
   REPLAY_COACH_FEEDBACK_ERROR_CODES,
   ReplayCoachFeedbackError,
-} from "./replay-coach-feedback.errors";
-import { ReplayCoachFeedbackInput } from "./replay-coach-feedback.input";
-import { ReplayCoachFeedbackOutput } from "./replay-coach-feedback.output";
+} from './replay-coach-feedback.errors';
+import { ReplayCoachFeedbackInput } from './replay-coach-feedback.input';
+import { ReplayCoachFeedbackOutput } from './replay-coach-feedback.output';
 
 @Injectable()
 export class ReplayCoachFeedbackUseCase {
@@ -34,14 +34,14 @@ export class ReplayCoachFeedbackUseCase {
     input: ReplayCoachFeedbackInput,
   ): Promise<ReplayCoachFeedbackOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const feedbackId =
-      typeof input.feedbackId === "string" ? input.feedbackId.trim() : "";
+      typeof input.feedbackId === 'string' ? input.feedbackId.trim() : '';
 
     if (!authUserId) {
       throw new ReplayCoachFeedbackError(
         REPLAY_COACH_FEEDBACK_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -52,7 +52,7 @@ export class ReplayCoachFeedbackUseCase {
       if (!userProfile) {
         throw new ReplayCoachFeedbackError(
           REPLAY_COACH_FEEDBACK_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
@@ -61,21 +61,21 @@ export class ReplayCoachFeedbackUseCase {
       if (!feedback || feedback.userProfileId !== userProfile.id) {
         throw new ReplayCoachFeedbackError(
           REPLAY_COACH_FEEDBACK_ERROR_CODES.COACH_FEEDBACK_NOT_FOUND,
-          "Coach feedback not found.",
+          'Coach feedback not found.',
         );
       }
 
       if (!feedback.contextSnapshot) {
         throw new ReplayCoachFeedbackError(
           REPLAY_COACH_FEEDBACK_ERROR_CODES.CONTEXT_MISSING,
-          "Coach feedback replay context is missing.",
+          'Coach feedback replay context is missing.',
         );
       }
 
       if (feedback.generatorVersion !== COACH_FEEDBACK_GENERATOR_VERSION) {
         throw new ReplayCoachFeedbackError(
           REPLAY_COACH_FEEDBACK_ERROR_CODES.GENERATOR_VERSION_UNSUPPORTED,
-          "Coach feedback generator version is unsupported.",
+          'Coach feedback generator version is unsupported.',
         );
       }
 
@@ -105,7 +105,10 @@ export class ReplayCoachFeedbackUseCase {
             feedback.recommendations,
             replayed.recommendations,
           ),
-          influences: this.areArraysEqual(feedback.influences, replayed.influences),
+          influences: this.areArraysEqual(
+            feedback.influences,
+            replayed.influences,
+          ),
         },
       };
     } catch (error) {
@@ -115,13 +118,15 @@ export class ReplayCoachFeedbackUseCase {
 
       throw new ReplayCoachFeedbackError(
         REPLAY_COACH_FEEDBACK_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
 
   private mapSnapshotToGeneratorInput(
-    snapshot: NonNullable<Awaited<ReturnType<CoachFeedbackRepository["findById"]>>>["contextSnapshot"],
+    snapshot: NonNullable<
+      Awaited<ReturnType<CoachFeedbackRepository['findById']>>
+    >['contextSnapshot'],
   ): CoachFeedbackGeneratorInput {
     if (
       !snapshot ||
@@ -131,7 +136,7 @@ export class ReplayCoachFeedbackUseCase {
     ) {
       throw new ReplayCoachFeedbackError(
         REPLAY_COACH_FEEDBACK_ERROR_CODES.CONTEXT_MISSING,
-        "Coach feedback replay context is missing.",
+        'Coach feedback replay context is missing.',
       );
     }
 
@@ -139,12 +144,13 @@ export class ReplayCoachFeedbackUseCase {
       goal: snapshot.goal,
       activityLevel: snapshot.activityLevel,
       expectedWorkouts:
-        snapshot.weeklyFrequency ?? this.resolveExpectedWorkouts(snapshot.activityLevel),
+        snapshot.weeklyFrequency ??
+        this.resolveExpectedWorkouts(snapshot.activityLevel),
       currentStreak: snapshot.currentStreak ?? 0,
       averageDurationMinutes: snapshot.averageWorkoutDuration ?? 0,
       workoutLogs: (snapshot.recentWorkoutLogs ?? []).map((log, index) => ({
         id: `replay-${index}`,
-        trainingPlanId: "replay-training-plan",
+        trainingPlanId: 'replay-training-plan',
         workoutDayIndex: 1,
         durationMinutes: log.durationMinutes,
         completedExercises: [],
@@ -169,14 +175,14 @@ export class ReplayCoachFeedbackUseCase {
   }
 
   private resolveExpectedWorkouts(
-    activityLevel: "low" | "medium" | "high",
+    activityLevel: 'low' | 'medium' | 'high',
   ): number {
     switch (activityLevel) {
-      case "low":
+      case 'low':
         return 2;
-      case "medium":
+      case 'medium':
         return 3;
-      case "high":
+      case 'high':
       default:
         return 4;
     }
