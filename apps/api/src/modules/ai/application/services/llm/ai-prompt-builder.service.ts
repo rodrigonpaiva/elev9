@@ -22,6 +22,22 @@ export type AiPromptBuilderInput = {
   conversationHistory: AiPromptBuilderConversationMessage[];
 };
 
+export type AiPromptBuilderDebugSnapshot = {
+  promptVersion: string;
+  promptPreview: {
+    systemSections: string[];
+    userMessagePreview: string;
+  };
+  context: {
+    fatigueLevel: FatigueLevel;
+    recoveryTrend: "improving" | "stable" | "needs_recovery";
+    hasNutritionProfile: boolean;
+    hasLatestCheckIn: boolean;
+    recentWorkoutCount: number;
+    recentConversationMessages: number;
+  };
+};
+
 @Injectable()
 export class AiPromptBuilder {
   build(input: AiPromptBuilderInput): AiLlmPrompt {
@@ -51,6 +67,30 @@ export class AiPromptBuilder {
     return {
       promptVersion: AI_CHAT_PROMPT_VERSION,
       messages,
+    };
+  }
+
+  buildDebugSnapshot(
+    input: AiPromptBuilderInput,
+  ): AiPromptBuilderDebugSnapshot {
+    return {
+      promptVersion: AI_CHAT_PROMPT_VERSION,
+      promptPreview: {
+        systemSections: [
+          "safety_rules",
+          "adaptive_context",
+          "conversation_context",
+        ],
+        userMessagePreview: this.normalizeContent(input.message).slice(0, 120),
+      },
+      context: {
+        fatigueLevel: input.healthContext.fatigueLevel,
+        recoveryTrend: this.resolveRecoveryTrend(input.healthContext.fatigueLevel),
+        hasNutritionProfile: Boolean(input.healthContext.nutritionProfile),
+        hasLatestCheckIn: Boolean(input.healthContext.latestCheckIn),
+        recentWorkoutCount: input.healthContext.recentWorkoutLogs.length,
+        recentConversationMessages: input.conversationHistory.length,
+      },
     };
   }
 
