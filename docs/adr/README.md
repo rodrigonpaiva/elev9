@@ -19,6 +19,7 @@ Este índice centraliza a navegação das decisões arquiteturais atualmente for
 
 - [ADR-002 — Recovery & Adaptive Coaching System](./adr-002-recovery-system.md)
 - [ADR-003 — Coach Feedback Explainability & Replay System](./adr-003-coach-feedback-explainability.md)
+- [ADR-004 — Conversational Coach Architecture](./adr-004-conversational-coach-architecture.md)
 
 ---
 
@@ -31,6 +32,10 @@ Este índice centraliza a navegação das decisões arquiteturais atualmente for
 ## Explainability & Replay
 
 - [ADR-003 — Coach Feedback Explainability & Replay System](./adr-003-coach-feedback-explainability.md)
+
+## Conversational Coaching
+
+- [ADR-004 — Conversational Coach Architecture](./adr-004-conversational-coach-architecture.md)
 
 ---
 
