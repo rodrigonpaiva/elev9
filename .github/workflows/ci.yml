@@ -29,6 +29,9 @@ jobs:
       - name: Check formatting
         run: npm run format:check
 
+      - name: Run lint validation
+        run: npm run lint
+
       - name: Test API
         run: npm exec nx test api
 
