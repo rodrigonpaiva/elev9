@@ -25,6 +25,7 @@ User data
 → CoachFeedbackGenerator
 → Recovery & Nutrition Awareness
 → Conversational Chat
+→ Conversational Explainability Surfaces
 → Explainability Layer
 → Replay & Debug
 ```
@@ -61,7 +62,14 @@ Hoje, a arquitetura interna do módulo `ai` se apoia principalmente em:
 
 - [create-coach-chat](./create-coach-chat/README.md)
 - [get-coach-chat-history](./get-coach-chat-history/README.md)
+
+## Conversational Explainability Surfaces
+
 - [get-coach-chat-debug](./get-coach-chat-debug/README.md)
+- [get-coach-chat-debug-index](./get-coach-chat-debug-index/README.md)
+- [get-coach-chat-debug-history](./get-coach-chat-debug-history/README.md)
+- [get-coach-chat-prompt-debug](./get-coach-chat-prompt-debug/README.md)
+- [get-coach-chat-reply-path-debug](./get-coach-chat-reply-path-debug/README.md)
 
 ---
 
@@ -86,12 +94,14 @@ O sistema atual do módulo `ai` possui as seguintes características:
 - persisted `contextSnapshot` for replay compatibility
 - conversational chat persistence with deterministic replies
 - authenticated, user-scoped internal debug and replay flows
+- conversational explainability surfaces for deterministic inspection only
 
 Importante:
 
 - `recoveryTrend` existe em partes internas do sistema, mas não é um campo público de `GET /ai/context`
 - `hasTrainingPlan` não é um campo real do `UserHealthContext` atual; a presença de treino ativo é inferida por `activeTrainingPlanId`
 - a camada conversacional ainda não usa LLM, streaming, LangGraph, memória semântica, multi-agent routing, replay ou voz
+- as superfícies internas de debug conversacional são inspection-only e não expõem raw prompts, raw context ou payloads OpenAI internos completos
 
 ---
 
@@ -106,6 +116,10 @@ Possíveis evoluções arquiteturais futuras, ainda não implementadas:
 - adaptive recommendations
 - wearable integrations
 - nutrition intelligence
+- conversation replay
+- streaming
+- voice interface
+- multi-agent routing
 
 Esses itens devem ser tratados como roadmap técnico, não como capacidades atuais do sistema.
 
