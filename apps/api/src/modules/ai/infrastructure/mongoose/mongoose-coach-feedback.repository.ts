@@ -56,6 +56,30 @@ export class MongooseCoachFeedbackRepository implements CoachFeedbackRepository 
       insights: [...document.insights],
       recommendations: [...document.recommendations],
       influences: document.influences ? [...document.influences] : [],
+      generatorVersion: document.generatorVersion,
+      contextSnapshot: document.contextSnapshot
+        ? {
+            fatigueLevel: document.contextSnapshot.fatigueLevel,
+            recoveryTrend: document.contextSnapshot.recoveryTrend,
+            weeklyFrequency: document.contextSnapshot.weeklyFrequency,
+            currentStreak: document.contextSnapshot.currentStreak,
+            averageWorkoutDuration: document.contextSnapshot.averageWorkoutDuration,
+            latestCheckIn: document.contextSnapshot.latestCheckIn
+              ? {
+                  energyLevel: document.contextSnapshot.latestCheckIn.energyLevel,
+                  sleepQuality: document.contextSnapshot.latestCheckIn.sleepQuality,
+                  muscleSoreness: document.contextSnapshot.latestCheckIn.muscleSoreness,
+                  motivationLevel: document.contextSnapshot.latestCheckIn.motivationLevel,
+                }
+              : undefined,
+            nutritionProfile: document.contextSnapshot.nutritionProfile
+              ? {
+                  goal: document.contextSnapshot.nutritionProfile.goal,
+                  mealsPerDay: document.contextSnapshot.nutritionProfile.mealsPerDay,
+                }
+              : undefined,
+          }
+        : undefined,
       createdAt: document.createdAt,
     });
   }

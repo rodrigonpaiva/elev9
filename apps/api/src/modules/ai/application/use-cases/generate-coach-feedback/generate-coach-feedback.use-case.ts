@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { CoachFeedbackGenerator } from '../../services/coach-feedback/coach-feedback-generator.service';
+import {
+  CoachFeedbackGenerator,
+  COACH_FEEDBACK_GENERATOR_VERSION,
+} from '../../services/coach-feedback/coach-feedback-generator.service';
 import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
 import {
   COACH_FEEDBACK_REPOSITORY,
@@ -76,6 +79,8 @@ export class GenerateCoachFeedbackUseCase {
         insights: feedback.insights,
         recommendations: feedback.recommendations,
         influences: feedback.influences,
+        generatorVersion: COACH_FEEDBACK_GENERATOR_VERSION,
+        contextSnapshot: this.buildContextSnapshot(healthContext),
       });
 
       return {
@@ -104,6 +109,62 @@ export class GenerateCoachFeedbackUseCase {
       case 'high':
       default:
         return 4;
+    }
+  }
+
+  private buildContextSnapshot(
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
+  ): {
+    fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
+    recoveryTrend?: "improving" | "stable" | "needs_recovery";
+    weeklyFrequency?: number;
+    currentStreak?: number;
+    averageWorkoutDuration?: number;
+    latestCheckIn?: {
+      energyLevel: number;
+      sleepQuality: number;
+      muscleSoreness: number;
+      motivationLevel: number;
+    };
+    nutritionProfile?: {
+      goal: "fat_loss" | "maintenance" | "muscle_gain";
+      mealsPerDay: number;
+    };
+  } {
+    return {
+      fatigueLevel: healthContext.fatigueLevel,
+      recoveryTrend: this.resolveRecoveryTrend(healthContext.fatigueLevel),
+      weeklyFrequency: healthContext.weeklyFrequency,
+      currentStreak: healthContext.currentStreak,
+      averageWorkoutDuration: healthContext.averageWorkoutDuration,
+      latestCheckIn: healthContext.latestCheckIn
+        ? {
+            energyLevel: healthContext.latestCheckIn.energyLevel,
+            sleepQuality: healthContext.latestCheckIn.sleepQuality,
+            muscleSoreness: healthContext.latestCheckIn.muscleSoreness,
+            motivationLevel: healthContext.latestCheckIn.motivationLevel,
+          }
+        : undefined,
+      nutritionProfile: healthContext.nutritionProfile
+        ? {
+            goal: healthContext.nutritionProfile.goal,
+            mealsPerDay: healthContext.nutritionProfile.mealsPerDay,
+          }
+        : undefined,
+    };
+  }
+
+  private resolveRecoveryTrend(
+    fatigueLevel: "LOW" | "MODERATE" | "HIGH",
+  ): "improving" | "stable" | "needs_recovery" {
+    switch (fatigueLevel) {
+      case "LOW":
+        return "improving";
+      case "HIGH":
+        return "needs_recovery";
+      case "MODERATE":
+      default:
+        return "stable";
     }
   }
 }

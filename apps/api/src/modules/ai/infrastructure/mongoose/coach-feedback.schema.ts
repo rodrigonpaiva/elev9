@@ -9,6 +9,24 @@ export class CoachFeedbackSchemaClass {
   insights!: string[];
   recommendations!: string[];
   influences?: string[];
+  generatorVersion?: string;
+  contextSnapshot?: {
+    fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
+    recoveryTrend?: "improving" | "stable" | "needs_recovery";
+    weeklyFrequency?: number;
+    currentStreak?: number;
+    averageWorkoutDuration?: number;
+    latestCheckIn?: {
+      energyLevel: number;
+      sleepQuality: number;
+      muscleSoreness: number;
+      motivationLevel: number;
+    };
+    nutritionProfile?: {
+      goal: "fat_loss" | "maintenance" | "muscle_gain";
+      mealsPerDay: number;
+    };
+  };
   createdAt!: Date;
   updatedAt!: Date;
 }
@@ -32,6 +50,32 @@ export const CoachFeedbackSchema = new Schema<CoachFeedbackSchemaClass>(
     },
     influences: {
       type: [{ type: String, required: true }],
+      required: false,
+      default: undefined,
+    },
+    generatorVersion: {
+      type: String,
+      required: false,
+      default: undefined,
+    },
+    contextSnapshot: {
+      type: {
+        fatigueLevel: { type: String, required: false },
+        recoveryTrend: { type: String, required: false },
+        weeklyFrequency: { type: Number, required: false },
+        currentStreak: { type: Number, required: false },
+        averageWorkoutDuration: { type: Number, required: false },
+        latestCheckIn: {
+          energyLevel: { type: Number, required: false },
+          sleepQuality: { type: Number, required: false },
+          muscleSoreness: { type: Number, required: false },
+          motivationLevel: { type: Number, required: false },
+        },
+        nutritionProfile: {
+          goal: { type: String, required: false },
+          mealsPerDay: { type: Number, required: false },
+        },
+      },
       required: false,
       default: undefined,
     },

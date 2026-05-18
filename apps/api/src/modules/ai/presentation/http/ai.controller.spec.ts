@@ -72,6 +72,7 @@ describe("AiController", () => {
     });
     expect(result.message).toContain("4-day streak");
     expect(result).not.toHaveProperty("influences");
+    expect(result).not.toHaveProperty("generatorVersion");
   });
 
   it("rejects extra body fields with HTTP 400", async () => {

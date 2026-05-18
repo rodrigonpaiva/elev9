@@ -1,6 +1,7 @@
 import { CoachFeedbackRepository } from "../../../domain/repositories/coach-feedback.repository";
 import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
 import {
+  COACH_FEEDBACK_GENERATOR_VERSION,
   CoachFeedbackGenerator,
   CoachFeedbackGeneratorInput,
 } from "../../services/coach-feedback/coach-feedback-generator.service";
@@ -76,6 +77,8 @@ describe("GenerateCoachFeedbackUseCase", () => {
       insights: expect.any(Array),
       recommendations: expect.any(Array),
       influences: expect.any(Array),
+      generatorVersion: COACH_FEEDBACK_GENERATOR_VERSION,
+      contextSnapshot: expect.any(Object),
     });
     expect(result.message).toBe(
       "Great consistency this week. You're on a 4-day streak.",
@@ -299,6 +302,8 @@ describe("GenerateCoachFeedbackUseCase", () => {
       insights: expect.any(Array),
       recommendations: expect.any(Array),
       influences: expect.any(Array),
+      generatorVersion: COACH_FEEDBACK_GENERATOR_VERSION,
+      contextSnapshot: expect.any(Object),
     });
   });
 
@@ -345,6 +350,56 @@ describe("GenerateCoachFeedbackUseCase", () => {
           "nutrition:dietary_restrictions",
           "training:low_consistency",
         ]),
+        contextSnapshot: {
+          fatigueLevel: "HIGH",
+          recoveryTrend: "needs_recovery",
+          weeklyFrequency: 4,
+          currentStreak: 0,
+          averageWorkoutDuration: 0,
+          latestCheckIn: {
+            energyLevel: 2,
+            sleepQuality: 2,
+            muscleSoreness: 4,
+            motivationLevel: 3,
+          },
+          nutritionProfile: {
+            goal: "fat_loss",
+            mealsPerDay: 2,
+          },
+        },
+        generatorVersion: COACH_FEEDBACK_GENERATOR_VERSION,
+      }),
+    );
+  });
+
+  it("does not persist sensitive fields in contextSnapshot", async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        userName: "Rodrigo Paiva",
+        latestCheckIn: {
+          energyLevel: 4,
+          sleepQuality: 3,
+          muscleSoreness: 2,
+          motivationLevel: 5,
+          createdAt: new Date("2026-05-04T09:00:00.000Z"),
+        },
+      }),
+    );
+
+    await useCase.execute({
+      authUserId: "auth_user_123",
+    });
+
+    expect(coachFeedbackRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contextSnapshot: expect.not.objectContaining({
+          authUserId: expect.anything(),
+          userProfileId: expect.anything(),
+          userName: expect.anything(),
+          latestCheckIn: expect.not.objectContaining({
+            createdAt: expect.anything(),
+          }),
+        }),
       }),
     );
   });

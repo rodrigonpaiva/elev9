@@ -10,6 +10,8 @@ import {
   UserHealthContextNutritionProfile,
 } from "../context-builder/build-user-health-context.service";
 
+export const COACH_FEEDBACK_GENERATOR_VERSION = "heuristic-v1";
+
 export type CoachFeedbackGeneratorInput = {
   goal: FitnessGoal;
   activityLevel: ActivityLevel;

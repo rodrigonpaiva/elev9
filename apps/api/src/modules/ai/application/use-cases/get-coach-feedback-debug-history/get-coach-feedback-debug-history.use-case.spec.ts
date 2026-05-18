@@ -47,6 +47,24 @@ describe("GetCoachFeedbackDebugHistoryUseCase", () => {
         insights: ["You trained 4 times this week"],
         recommendations: ["Keep your current rhythm"],
         influences: ["fatigue:high", "nutrition:muscle_gain"],
+        generatorVersion: "heuristic-v1",
+        contextSnapshot: {
+          fatigueLevel: "HIGH",
+          recoveryTrend: "needs_recovery",
+          weeklyFrequency: 4,
+          currentStreak: 6,
+          averageWorkoutDuration: 82,
+          latestCheckIn: {
+            energyLevel: 2,
+            sleepQuality: 2,
+            muscleSoreness: 4,
+            motivationLevel: 3,
+          },
+          nutritionProfile: {
+            goal: "muscle_gain",
+            mealsPerDay: 4,
+          },
+        },
         createdAt: "2026-05-04T10:00:00.000Z",
       },
     ]);
@@ -119,6 +137,8 @@ describe("GetCoachFeedbackDebugHistoryUseCase", () => {
     });
 
     expect(result.feedbacks[0].influences).toEqual([]);
+    expect(result.feedbacks[0].generatorVersion).toBeUndefined();
+    expect(result.feedbacks[0].contextSnapshot).toBeUndefined();
   });
 
   it("returns USER_PROFILE_NOT_FOUND when user profile is missing", async () => {
@@ -174,6 +194,26 @@ function buildCoachFeedback(
     insights: ["You trained 4 times this week"],
     recommendations: ["Keep your current rhythm"],
     influences,
+    generatorVersion: influences ? "heuristic-v1" : undefined,
+    contextSnapshot: influences
+      ? {
+          fatigueLevel: "HIGH",
+          recoveryTrend: "needs_recovery",
+          weeklyFrequency: 4,
+          currentStreak: 6,
+          averageWorkoutDuration: 82,
+          latestCheckIn: {
+            energyLevel: 2,
+            sleepQuality: 2,
+            muscleSoreness: 4,
+            motivationLevel: 3,
+          },
+          nutritionProfile: {
+            goal: "muscle_gain",
+            mealsPerDay: 4,
+          },
+        }
+      : undefined,
     createdAt: new Date(createdAt),
   });
 }

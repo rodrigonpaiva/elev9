@@ -61,6 +61,8 @@ export class GetCoachFeedbackDebugHistoryUseCase {
           insights: feedback.insights,
           recommendations: feedback.recommendations,
           influences: feedback.influences ?? [],
+          generatorVersion: feedback.generatorVersion,
+          contextSnapshot: feedback.contextSnapshot,
           createdAt: feedback.createdAt.toISOString(),
         })),
       };

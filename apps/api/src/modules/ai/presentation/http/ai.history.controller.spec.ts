@@ -134,6 +134,24 @@ describe("AiController history", () => {
           insights: ["You trained 4 times this week"],
           recommendations: ["Keep your current rhythm"],
           influences: ["fatigue:high", "nutrition:muscle_gain"],
+          generatorVersion: "heuristic-v1",
+          contextSnapshot: {
+            fatigueLevel: "HIGH",
+            recoveryTrend: "needs_recovery",
+            weeklyFrequency: 4,
+            currentStreak: 6,
+            averageWorkoutDuration: 82,
+            latestCheckIn: {
+              energyLevel: 2,
+              sleepQuality: 2,
+              muscleSoreness: 4,
+              motivationLevel: 3,
+            },
+            nutritionProfile: {
+              goal: "muscle_gain",
+              mealsPerDay: 4,
+            },
+          },
           createdAt: "2026-05-04T10:00:00.000Z",
         },
       ],
@@ -158,6 +176,24 @@ describe("AiController history", () => {
       "fatigue:high",
       "nutrition:muscle_gain",
     ]);
+    expect(result.feedbacks[0].generatorVersion).toBe("heuristic-v1");
+    expect(result.feedbacks[0].contextSnapshot).toEqual({
+      fatigueLevel: "HIGH",
+      recoveryTrend: "needs_recovery",
+      weeklyFrequency: 4,
+      currentStreak: 6,
+      averageWorkoutDuration: 82,
+      latestCheckIn: {
+        energyLevel: 2,
+        sleepQuality: 2,
+        muscleSoreness: 4,
+        motivationLevel: 3,
+      },
+      nutritionProfile: {
+        goal: "muscle_gain",
+        mealsPerDay: 4,
+      },
+    });
   });
 
   it("returns empty debug history", async () => {
@@ -177,6 +213,33 @@ describe("AiController history", () => {
     );
 
     expect(result).toEqual({ feedbacks: [] });
+  });
+
+  it("public history still does not expose generatorVersion", async () => {
+    getCoachFeedbackHistoryUseCase.execute.mockResolvedValue({
+      feedbacks: [
+        {
+          id: "feedback_002",
+          message: "Great consistency this week.",
+          insights: ["You trained 4 times this week"],
+          recommendations: ["Keep your current rhythm"],
+          createdAt: "2026-05-04T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const result = await controller.getCoachFeedbackHistory(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      { limit: 1 },
+      {},
+    );
+
+    expect(result.feedbacks[0]).not.toHaveProperty("generatorVersion");
   });
 
   it("rejects unexpected GET body on debug history", async () => {
