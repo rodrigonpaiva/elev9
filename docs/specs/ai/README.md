@@ -8,6 +8,7 @@ O módulo `ai` do Elev9 Coach atualmente cobre uma arquitetura determinística e
 - recovery heuristics
 - nutrition awareness
 - coach feedback generation
+- conversational chat
 - explainability
 - debugging
 - replay
@@ -23,6 +24,7 @@ User data
 → UserHealthContext
 → CoachFeedbackGenerator
 → Recovery & Nutrition Awareness
+→ Conversational Chat
 → Explainability Layer
 → Replay & Debug
 ```
@@ -33,6 +35,7 @@ Hoje, a arquitetura interna do módulo `ai` se apoia principalmente em:
 - `GET /ai/context`
 - `CoachFeedbackGenerator`
 - `CoachFeedback` persistido com metadata interna
+- `CoachConversation` e `CoachMessage` persistidos para chat
 - endpoints internos de debug e replay
 
 ---
@@ -48,6 +51,11 @@ Hoje, a arquitetura interna do módulo `ai` se apoia principalmente em:
 
 - [generate-coach-feedback](./generate-coach-feedback/README.md)
 - [get-coach-feedback-history](./get-coach-feedback-history/README.md)
+
+## Conversational AI
+
+- [create-coach-chat](./create-coach-chat/README.md)
+- [get-coach-chat-history](./get-coach-chat-history/README.md)
 
 ## Explainability & Replay
 
@@ -74,6 +82,7 @@ O sistema atual do módulo `ai` possui as seguintes características:
 - generator versioning through `COACH_FEEDBACK_GENERATOR_VERSION`
 - persisted `influences` for explainability
 - persisted `contextSnapshot` for replay compatibility
+- conversational chat persistence with deterministic replies
 - authenticated, user-scoped internal debug and replay flows
 
 Importante:
