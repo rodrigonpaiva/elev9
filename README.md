@@ -147,6 +147,16 @@ npm run mobile:start
 npm run test
 ```
 
+## Docker Runtime
+
+A minimal local-first Docker foundation is available for the API and MongoDB:
+
+```bash
+docker compose up --build
+```
+
+The compose setup uses the existing `.env.example`, builds the API image deterministically, and starts MongoDB alongside the backend.
+
 ## Project Status
 
 Elev9 Coach is an evolving MVP. The backend domain flow is already structured around explicit specs and modular boundaries, and the mobile app currently covers the minimum functional loop for authentication and home dashboard consumption.

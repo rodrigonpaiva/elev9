@@ -1,17 +1,33 @@
 services:
-  mongodb:
-    image: mongo:7
-    container_name: elev9-mongodb
+  mongo:
+    image: mongo:7.0
+    container_name: elev9-mongo
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - mongo-data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "mongodb://localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 })"]
-      interval: 10s
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
       start_period: 10s
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: elev9-api
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.example
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongo:27017/elev9
+
 volumes:
-  mongodb_data:
+  mongo-data:
