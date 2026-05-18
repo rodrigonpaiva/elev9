@@ -14,6 +14,8 @@ No projeto atual:
 
 Este índice centraliza a navegação das decisões arquiteturais atualmente formalizadas no repositório.
 
+A documentação arquitetural segue [Documentation Governance](../specs/GOVERNANCE.md), que define os princípios de alinhamento entre specs, ADRs e navegação documental.
+
 ---
 
 ## 2. Current ADRs

@@ -15,6 +15,8 @@ O módulo `ai` do Elev9 Coach atualmente cobre uma arquitetura determinística e
 
 O estado atual do sistema é `deterministic-first`. Não existe integração ativa com LLM no fluxo principal atual. Qualquer evolução para providers externos, prompt orchestration ou memória semântica continua sendo futura.
 
+A documentação deste módulo segue [Documentation Governance](../GOVERNANCE.md), que define as regras de navegação, placeholders, `Related Specs` e limites de documentação de debug.
+
 ---
 
 ## 2. Architecture Overview
