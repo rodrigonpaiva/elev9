@@ -1,9 +1,14 @@
-import { CoachMessage, CoachMessageRole } from "../entities/coach-message.entity";
+import {
+  CoachMessage,
+  CoachMessageMetadata,
+  CoachMessageRole,
+} from "../entities/coach-message.entity";
 
 export interface CreateCoachMessageRepositoryInput {
   conversationId: string;
   role: CoachMessageRole;
   content: string;
+  metadata?: CoachMessageMetadata;
 }
 
 export interface CoachMessageRepository {

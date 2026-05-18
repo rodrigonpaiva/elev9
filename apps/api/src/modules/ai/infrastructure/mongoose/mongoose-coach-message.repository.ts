@@ -50,6 +50,14 @@ export class MongooseCoachMessageRepository implements CoachMessageRepository {
       role: document.role,
       content: document.content,
       createdAt: document.createdAt,
+      metadata: document.metadata
+        ? {
+            source: document.metadata.source,
+            provider: document.metadata.provider,
+            model: document.metadata.model,
+            promptVersion: document.metadata.promptVersion,
+          }
+        : undefined,
     });
   }
 }

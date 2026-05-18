@@ -65,9 +65,15 @@ describe("CreateCoachChatUseCase", () => {
     coachConversationRepository.findLatestByUserProfileId.mockResolvedValue(null);
     buildUserHealthContextService.build.mockResolvedValue(buildHealthContext());
     aiPromptBuilder.build.mockReturnValue({
+      promptVersion: "coach-chat-prompt-v1",
       messages: [{ role: "system", content: "prompt" }],
     });
-    aiLlmService.generateReply.mockResolvedValue("OpenAI coach reply");
+    aiLlmService.generateReply.mockResolvedValue({
+      content: "OpenAI coach reply",
+      provider: "openai",
+      model: "gpt-4.1-mini",
+      promptVersion: "coach-chat-prompt-v1",
+    });
     coachMessageRepository.create
       .mockResolvedValueOnce({
         id: "message_user_123",
@@ -106,6 +112,7 @@ describe("CreateCoachChatUseCase", () => {
       conversationHistory: [],
     });
     expect(aiLlmService.generateReply).toHaveBeenCalledWith({
+      promptVersion: "coach-chat-prompt-v1",
       messages: [{ role: "system", content: "prompt" }],
     });
     expect(replyGenerator.generate).not.toHaveBeenCalled();
@@ -118,6 +125,12 @@ describe("CreateCoachChatUseCase", () => {
       conversationId: "conversation_123",
       role: "assistant",
       content: "OpenAI coach reply",
+      metadata: {
+        source: "llm",
+        provider: "openai",
+        model: "gpt-4.1-mini",
+        promptVersion: "coach-chat-prompt-v1",
+      },
     });
     expect(result).toEqual({
       conversationId: "conversation_123",
@@ -162,6 +175,7 @@ describe("CreateCoachChatUseCase", () => {
       },
     }));
     aiPromptBuilder.build.mockReturnValue({
+      promptVersion: "coach-chat-prompt-v1",
       messages: [{ role: "system", content: "prompt" }],
     });
     aiLlmService.generateReply.mockResolvedValue(null);
@@ -220,6 +234,14 @@ describe("CreateCoachChatUseCase", () => {
     expect(result.reply).toBe(
       "Your recovery signals suggest keeping today's session lighter.",
     );
+    expect(coachMessageRepository.create).toHaveBeenNthCalledWith(2, {
+      conversationId: "conversation_456",
+      role: "assistant",
+      content: "Your recovery signals suggest keeping today's session lighter.",
+      metadata: {
+        source: "heuristic",
+      },
+    });
   });
 
   it("falls back to the heuristic reply when the provider fails", async () => {
@@ -227,6 +249,7 @@ describe("CreateCoachChatUseCase", () => {
     coachConversationRepository.findLatestByUserProfileId.mockResolvedValue(null);
     buildUserHealthContextService.build.mockResolvedValue(buildHealthContext());
     aiPromptBuilder.build.mockReturnValue({
+      promptVersion: "coach-chat-prompt-v1",
       messages: [{ role: "system", content: "prompt" }],
     });
     aiLlmService.generateReply.mockRejectedValue(new Error("OpenAI is down"));
@@ -267,6 +290,15 @@ describe("CreateCoachChatUseCase", () => {
     expect(result.reply).toBe(
       "Your context looks steady. Keep the routine consistent and check in after your session.",
     );
+    expect(coachMessageRepository.create).toHaveBeenNthCalledWith(2, {
+      conversationId: "conversation_789",
+      role: "assistant",
+      content:
+        "Your context looks steady. Keep the routine consistent and check in after your session.",
+      metadata: {
+        source: "heuristic",
+      },
+    });
   });
 
   it("keeps the deterministic fallback when health context is sparse", async () => {
@@ -278,6 +310,7 @@ describe("CreateCoachChatUseCase", () => {
       fatigueLevel: "MODERATE",
     }));
     aiPromptBuilder.build.mockReturnValue({
+      promptVersion: "coach-chat-prompt-v1",
       messages: [{ role: "system", content: "prompt" }],
     });
     aiLlmService.generateReply.mockResolvedValue(null);
@@ -315,6 +348,15 @@ describe("CreateCoachChatUseCase", () => {
     });
 
     expect(result.reply).toContain("Keep the routine consistent");
+    expect(coachMessageRepository.create).toHaveBeenNthCalledWith(2, {
+      conversationId: "conversation_999",
+      role: "assistant",
+      content:
+        "Your context looks steady. Keep the routine consistent and check in after your session.",
+      metadata: {
+        source: "heuristic",
+      },
+    });
   });
 });
 

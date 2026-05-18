@@ -118,7 +118,14 @@ export class CreateCoachChatUseCase {
         conversationHistory,
       });
 
-      let reply: string | null = null;
+      let reply:
+        | {
+            content: string;
+            provider: string;
+            model: string;
+            promptVersion: string;
+          }
+        | null = null;
       let fallbackTriggered = false;
 
       try {
@@ -132,21 +139,41 @@ export class CreateCoachChatUseCase {
         if (!fallbackTriggered) {
           this.logger.log("fallback activated");
         }
-        reply = this.coachChatReplyGenerator.generate({
+        const fallbackReply = this.coachChatReplyGenerator.generate({
           message,
           healthContext,
         });
+
+        await this.coachMessageRepository.create({
+          conversationId: conversation.id,
+          role: "assistant",
+          content: fallbackReply,
+          metadata: {
+            source: "heuristic",
+          },
+        });
+
+        return {
+          conversationId: conversation.id,
+          reply: fallbackReply,
+        };
       }
 
       await this.coachMessageRepository.create({
         conversationId: conversation.id,
         role: "assistant",
-        content: reply,
+        content: reply.content,
+        metadata: {
+          source: "llm",
+          provider: reply.provider,
+          model: reply.model,
+          promptVersion: reply.promptVersion,
+        },
       });
 
       return {
         conversationId: conversation.id,
-        reply,
+        reply: reply.content,
       };
     } catch (error) {
       if (error instanceof CreateCoachChatError) {

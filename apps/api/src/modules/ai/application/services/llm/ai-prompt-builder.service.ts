@@ -8,6 +8,8 @@ import {
 } from "../context-builder/build-user-health-context.service";
 import { AiLlmMessage, AiLlmPrompt } from "./ai-llm.types";
 
+export const AI_CHAT_PROMPT_VERSION = "coach-chat-prompt-v1";
+
 export type AiPromptBuilderConversationMessage = {
   role: CoachMessageRole;
   content: string;
@@ -46,7 +48,10 @@ export class AiPromptBuilder {
       content: this.normalizeContent(input.message),
     });
 
-    return { messages };
+    return {
+      promptVersion: AI_CHAT_PROMPT_VERSION,
+      messages,
+    };
   }
 
   private buildSystemInstructions(): string {

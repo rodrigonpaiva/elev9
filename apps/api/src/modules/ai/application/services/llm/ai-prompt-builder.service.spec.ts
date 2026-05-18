@@ -71,6 +71,7 @@ describe("AiPromptBuilder", () => {
     expect(prompt.messages[0]).toMatchObject({
       role: "system",
     });
+    expect(prompt.promptVersion).toBe("coach-chat-prompt-v1");
     expect(joined).toContain("Do not make medical claims");
     expect(joined).toContain("fatigue level: HIGH");
     expect(joined).toContain("nutrition goal: muscle_gain");

@@ -6,12 +6,20 @@ export type AiLlmMessage = {
 };
 
 export type AiLlmPrompt = {
+  promptVersion: string;
   messages: AiLlmMessage[];
 };
 
 export type AiLlmGenerateReplyInput = {
   messages: AiLlmMessage[];
   model: string;
+};
+
+export type AiLlmGenerateReplyResult = {
+  content: string;
+  provider: string;
+  model: string;
+  promptVersion: string;
 };
 
 export interface AiLlmProvider {

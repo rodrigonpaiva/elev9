@@ -7,6 +7,12 @@ export class CoachMessageSchemaClass {
   conversationId!: string;
   role!: "user" | "assistant";
   content!: string;
+  metadata?: {
+    source?: "heuristic" | "llm";
+    provider?: string;
+    model?: string;
+    promptVersion?: string;
+  };
   createdAt!: Date;
   updatedAt!: Date;
 }
@@ -19,6 +25,12 @@ export const CoachMessageSchema = new Schema<CoachMessageSchemaClass>(
     conversationId: { type: String, required: true, index: true },
     role: { type: String, required: true },
     content: { type: String, required: true },
+    metadata: {
+      source: { type: String, required: false },
+      provider: { type: String, required: false },
+      model: { type: String, required: false },
+      promptVersion: { type: String, required: false },
+    },
   },
   {
     collection: COACH_MESSAGE_COLLECTION_NAME,

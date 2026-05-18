@@ -6,6 +6,14 @@ export type CoachMessageProps = {
   role: CoachMessageRole;
   content: string;
   createdAt: Date;
+  metadata?: CoachMessageMetadata;
+};
+
+export type CoachMessageMetadata = {
+  source?: "heuristic" | "llm";
+  provider?: string;
+  model?: string;
+  promptVersion?: string;
 };
 
 export class CoachMessage {
@@ -14,6 +22,7 @@ export class CoachMessage {
   readonly role: CoachMessageRole;
   readonly content: string;
   readonly createdAt: Date;
+  readonly metadata?: CoachMessageMetadata;
 
   constructor(props: CoachMessageProps) {
     this.id = props.id;
@@ -21,5 +30,6 @@ export class CoachMessage {
     this.role = props.role;
     this.content = props.content;
     this.createdAt = props.createdAt;
+    this.metadata = props.metadata;
   }
 }

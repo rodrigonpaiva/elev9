@@ -11,6 +11,7 @@ describe("AiLlmService", () => {
     const service = new AiLlmService(provider, config);
 
     const result = await service.generateReply({
+      promptVersion: "coach-chat-prompt-v1",
       messages: [{ role: "user", content: "Should I train today?" }],
     });
 
@@ -30,6 +31,7 @@ describe("AiLlmService", () => {
     const service = new AiLlmService(provider, config);
 
     const result = await service.generateReply({
+      promptVersion: "coach-chat-prompt-v1",
       messages: [{ role: "user", content: "Should I train today?" }],
     });
 
@@ -37,7 +39,12 @@ describe("AiLlmService", () => {
       messages: [{ role: "user", content: "Should I train today?" }],
       model: "gpt-4.1-mini",
     });
-    expect(result).toBe("Keep it light today.");
+    expect(result).toEqual({
+      content: "Keep it light today.",
+      provider: "openai",
+      model: "gpt-4.1-mini",
+      promptVersion: "coach-chat-prompt-v1",
+    });
   });
 
   it("throws when the provider fails so the caller can fallback", async () => {
@@ -52,6 +59,7 @@ describe("AiLlmService", () => {
 
     await expect(
       service.generateReply({
+        promptVersion: "coach-chat-prompt-v1",
         messages: [{ role: "user", content: "Should I train today?" }],
       }),
     ).rejects.toThrow("OpenAI is down");
