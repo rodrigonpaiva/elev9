@@ -52,11 +52,6 @@ Hoje, a arquitetura interna do módulo `ai` se apoia principalmente em:
 - [generate-coach-feedback](./generate-coach-feedback/README.md)
 - [get-coach-feedback-history](./get-coach-feedback-history/README.md)
 
-## Conversational AI
-
-- [create-coach-chat](./create-coach-chat/README.md)
-- [get-coach-chat-history](./get-coach-chat-history/README.md)
-
 ## Explainability & Replay
 
 - [get-coach-feedback-debug-history](./get-coach-feedback-debug-history/README.md)
