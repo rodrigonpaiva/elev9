@@ -6,7 +6,7 @@
 
 # Elev9 Coach
 
-Elev9 Coach est une plateforme MVP de coaching fitness construite comme un monorepo guidé par des spécifications. Le périmètre actuel se concentre sur une base backend solide, un client mobile fonctionnel et des frontières d’architecture claires pour accompagner la suite du projet.
+Elev9 Coach est une plateforme MVP de coaching fitness construite comme un monorepo guidé par des spécifications. Le périmètre actuel se concentre sur le coaching adaptatif, l’intelligence de recovery, les conseils nutritionnels, le coaching conversationnel et des frontières d’architecture claires pour accompagner la suite du projet.
 
 ## Stack
 
@@ -36,7 +36,8 @@ Des notes d’architecture complémentaires sont disponibles dans [docs/architec
 
 Le projet suit une approche d’architecture `spec-driven` et `deterministic-first`.
 
-Les spécifications documentent les workflows, contrats, règles, tâches et tests. Les ADRs documentent les décisions architecturales qui structurent ces flux. Le module AI possède aussi son propre index documentaire couvrant l’agrégation de contexte, les heuristiques de recovery, l’explainability et le replay.
+Les spécifications documentent les workflows, contrats, règles, tâches et tests. Les ADRs documentent les décisions architecturales qui structurent ces flux. Le module AI possède aussi son propre index documentaire couvrant l’agrégation de contexte, les heuristiques de recovery, l’explainability, le replay et le coaching conversationnel.
+La documentation du dashboard couvre les signaux adaptatifs et les surfaces internes d’explainability/debug, tandis que la documentation du coaching conversationnel couvre un chat déterministe construit sur le même contexte de santé.
 
 ### Spécifications
 
@@ -47,6 +48,8 @@ Les spécifications documentent les workflows, contrats, règles, tâches et tes
 
 - [Index des ADRs](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/adr/README.md)
 
+Cet ensemble de documentation couvre les systèmes adaptatifs, l’explainability du dashboard et la couche de coaching conversationnel du produit.
+
 ## Features Implemented
 
 - Auth : register, login, validation de session
@@ -55,12 +58,14 @@ Les spécifications documentent les workflows, contrats, règles, tâches et tes
 - Training : création et lecture du training plan actif
 - Progress : workout logs et progress summary
 - Dashboard : endpoint home consolidé
+- AI : coach feedback, explainability, replay et chat conversationnel
 - Mobile : flux de login et consommation du dashboard
 
 ## Engineering Highlights
 
 - Développement guidé par spécifications avec une documentation explicite des use cases dans `docs/specs/`
 - Modular monolith en DDD-lite avec bounded contexts
+- Architecture de coaching adaptatif deterministic-first
 - Repository pattern sur les frontières de persistance
 - Authentification JWT et endpoints protégés
 - Contrats partagés via `packages/types`
@@ -150,3 +155,4 @@ Un guide de démonstration pratique est disponible dans [docs/demo/README.fr.md]
 - Introduire des surfaces web pour la landing page et des usages internes/admin
 - Renforcer la couverture end-to-end dans des environnements où le mobile et la base de données peuvent tourner librement
 - Continuer à extraire des contrats partagés stables et des primitives de présentation réutilisables entre applications
+- Continuer à faire évoluer le coaching conversationnel sans perdre le comportement déterministe ni l’explainability
