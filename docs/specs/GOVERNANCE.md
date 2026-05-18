@@ -141,6 +141,8 @@ Isso inclui:
 - índices de bounded context
 - seções `Related Specs` padronizadas
 
+A validação oficial de CI está documentada em [docs/ci.md](../ci.md) e deve seguir a mesma filosofia leve, determinística e alinhada a esta governança.
+
 ---
 
 ## 11. Summary
