@@ -6,7 +6,7 @@
 
 # Elev9 Coach
 
-Elev9 Coach is an MVP fitness coaching platform built as a spec-driven monorepo. The current scope focuses on a solid backend foundation, a functional mobile client, and clear architectural boundaries for future growth.
+Elev9 Coach is an MVP fitness coaching platform built as a spec-driven monorepo. The current scope focuses on adaptive coaching, recovery intelligence, nutrition guidance, conversational coaching, and clear architectural boundaries for future growth.
 
 ## Stack
 
@@ -37,6 +37,7 @@ Additional architectural notes live in [docs/architecture/overview.md](/Users/ro
 The project follows a spec-driven and deterministic-first architecture workflow.
 
 Specifications document workflows, contracts, rules, tasks, and tests. ADRs document the architectural decisions behind those flows. The AI module also has its own documentation index covering context aggregation, recovery heuristics, explainability, and replay.
+The dashboard documentation covers adaptive signals and internal explainability/debug surfaces, while the conversational coaching documentation covers deterministic chat built on top of the same health context.
 
 ### Specifications
 
@@ -47,6 +48,8 @@ Specifications document workflows, contracts, rules, tasks, and tests. ADRs docu
 
 - [ADR Index](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/adr/README.md)
 
+This documentation set covers the adaptive systems, dashboard explainability, and conversational coaching layers of the product.
+
 ## Features Implemented
 
 - Auth: register, login, session validation
@@ -55,12 +58,14 @@ Specifications document workflows, contracts, rules, tasks, and tests. ADRs docu
 - Training: create and fetch active training plan
 - Progress: workout logs and progress summary
 - Dashboard: consolidated home endpoint
+- AI: coach feedback, explainability, replay, and conversational chat
 - Mobile: login flow and dashboard consumption
 
 ## Engineering Highlights
 
 - Spec-driven development with explicit use-case documentation under `docs/specs/`
 - DDD-lite modular monolith with bounded contexts
+- Deterministic-first adaptive coaching architecture
 - Repository pattern across persistence boundaries
 - JWT-based authentication and protected endpoints
 - Shared contracts via `packages/types`
@@ -150,3 +155,4 @@ A practical demo guide is available at [docs/demo/README.md](/Users/rodrigopaiva
 - Introduce web surfaces for landing page and internal/admin use cases
 - Increase end-to-end coverage in environments where mobile and database services can run freely
 - Continue extracting stable shared contracts and presentation primitives across apps
+- Continue evolving conversational coaching without losing deterministic behavior or explainability
