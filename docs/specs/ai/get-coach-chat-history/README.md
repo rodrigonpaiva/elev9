@@ -96,11 +96,13 @@ Observação:
 
 ## 8. Related Specs
 
-- `auth/validate-session`
-- `users/create-user-profile`
-- `ai/create-coach-chat`
-- `ai/build-user-health-context`
-- `ai/generate-coach-feedback`
+- [auth/validate-session](../../auth/validate-session/README.md)
+- [users/create-user-profile](../../users/create-user-profile/README.md)
+- [ai/create-coach-chat](../create-coach-chat/README.md)
+- [ai/build-user-health-context](../build-user-health-context/README.md)
+- [ai/generate-coach-feedback](../generate-coach-feedback/README.md)
+- [ai/get-coach-chat-debug](../get-coach-chat-debug/README.md)
+- [ai/get-coach-chat-memory-debug](../get-coach-chat-memory-debug/README.md)
 
 ---
 

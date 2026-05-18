@@ -98,12 +98,15 @@ Se a persistência falhar:
 
 ## 8. Related Specs
 
-- `auth/validate-session`
-- `users/create-user-profile`
-- `ai/build-user-health-context`
-- `ai/get-ai-context`
-- `ai/generate-coach-feedback`
-- `ai/get-coach-feedback-history`
+- [auth/validate-session](../../auth/validate-session/README.md)
+- [users/create-user-profile](../../users/create-user-profile/README.md)
+- [ai/build-user-health-context](../build-user-health-context/README.md)
+- [ai/get-ai-context](../get-ai-context/README.md)
+- [ai/generate-coach-feedback](../generate-coach-feedback/README.md)
+- [ai/get-coach-feedback-history](../get-coach-feedback-history/README.md)
+- [ai/get-coach-chat-history](../get-coach-chat-history/README.md)
+- [ai/get-coach-chat-debug](../get-coach-chat-debug/README.md)
+- [ai/get-coach-chat-memory-debug](../get-coach-chat-memory-debug/README.md)
 
 ---
 
