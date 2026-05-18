@@ -62,12 +62,18 @@ Hoje, a arquitetura interna do módulo `ai` se apoia principalmente em:
 - [get-coach-feedback-debug-history](./get-coach-feedback-debug-history/README.md)
 - [replay-coach-feedback](./replay-coach-feedback/README.md)
 
+## Conversational Coaching
+
+- [create-coach-chat](./create-coach-chat/README.md)
+- [get-coach-chat-history](./get-coach-chat-history/README.md)
+
 ---
 
 ## 4. ADRs
 
 - [ADR-002 — Recovery & Adaptive Coaching System](../../adr/adr-002-recovery-system.md)
 - [ADR-003 — Coach Feedback Explainability & Replay System](../../adr/adr-003-coach-feedback-explainability.md)
+- [ADR-004 — Conversational Coach Architecture](../../adr/adr-004-conversational-coach-architecture.md)
 
 ---
 
@@ -89,6 +95,7 @@ Importante:
 
 - `recoveryTrend` existe em partes internas do sistema, mas não é um campo público de `GET /ai/context`
 - `hasTrainingPlan` não é um campo real do `UserHealthContext` atual; a presença de treino ativo é inferida por `activeTrainingPlanId`
+- a camada conversacional ainda não usa LLM, streaming, LangGraph, memória semântica, multi-agent routing, replay ou voz
 
 ---
 
