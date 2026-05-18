@@ -38,6 +38,7 @@ Le projet suit une approche d’architecture `spec-driven` et `deterministic-fir
 
 Les spécifications documentent les workflows, contrats, règles, tâches et tests. Les ADRs documentent les décisions architecturales qui structurent ces flux. Le module AI possède aussi son propre index documentaire couvrant l’agrégation de contexte, les heuristiques de recovery, l’explainability, le replay et le coaching conversationnel.
 La documentation du dashboard couvre les signaux adaptatifs et les surfaces internes d’explainability/debug, tandis que la documentation du coaching conversationnel couvre un chat déterministe construit sur le même contexte de santé.
+La gouvernance documentaire du dépôt est disponible dans [docs/specs/GOVERNANCE.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/GOVERNANCE.md) ; elle définit les règles communes pour les specs, l’alignement avec les ADRs, la cohérence de navigation, les placeholders et le wording documentaire deterministic-first.
 
 ### Spécifications
 
@@ -47,6 +48,10 @@ La documentation du dashboard couvre les signaux adaptatifs et les surfaces inte
 ### ADRs
 
 - [Index des ADRs](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/adr/README.md)
+
+### Gouvernance documentaire
+
+- [Gouvernance documentaire](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/GOVERNANCE.md)
 
 Cet ensemble de documentation couvre les systèmes adaptatifs, l’explainability du dashboard et la couche de coaching conversationnel du produit.
 
