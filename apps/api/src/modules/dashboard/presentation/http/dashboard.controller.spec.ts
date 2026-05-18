@@ -62,6 +62,16 @@ describe("DashboardController", () => {
             createdAt: "2026-04-30T09:00:00.000Z",
           },
         },
+        nutritionGuidance: {
+          priority: "recovery",
+          message: "Focus on recovery meals and hydration today.",
+          signals: ["high_fatigue", "poor_sleep", "high_soreness"],
+        },
+        debug: {
+          generatedAt: "2026-04-30T10:00:00.000Z",
+          recoverySignals: ["high_fatigue", "poor_sleep", "high_soreness"],
+          nutritionSignals: ["high_fatigue", "poor_sleep", "high_soreness"],
+        },
       },
     });
 
@@ -83,6 +93,13 @@ describe("DashboardController", () => {
     expect(result.dashboard.progressSummary.period).toBe("week");
     expect(result.dashboard.recovery.recommendedIntensity).toBe("low");
     expect(result.dashboard.recovery.recoveryTrend).toBe("needs_recovery");
+    expect(result.dashboard.nutritionGuidance.priority).toBe("recovery");
+    expect(result.dashboard.nutritionGuidance.signals).toEqual([
+      "high_fatigue",
+      "poor_sleep",
+      "high_soreness",
+    ]);
+    expect(result.dashboard.debug.generatedAt).toBe("2026-04-30T10:00:00.000Z");
   });
 
   it("maps USER_PROFILE_NOT_FOUND to HTTP 404", async () => {

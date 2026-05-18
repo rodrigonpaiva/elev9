@@ -204,6 +204,16 @@ describe("GetHomeDashboardUseCase", () => {
           recommendedIntensity: "medium",
           recoveryTrend: "stable",
         },
+        nutritionGuidance: {
+          priority: "consistency",
+          message: "Keep your meals consistent today to support recovery and routine.",
+          signals: ["low_consistency"],
+        },
+        debug: {
+          generatedAt: "2026-04-30T10:00:00.000Z",
+          recoverySignals: [],
+          nutritionSignals: ["low_consistency"],
+        },
       },
     });
     expect(trainingPlanRepository.findActiveByFitnessProfileId).not.toHaveBeenCalled();
@@ -231,6 +241,16 @@ describe("GetHomeDashboardUseCase", () => {
       fatigueLevel: "MODERATE",
       recommendedIntensity: "medium",
       recoveryTrend: "stable",
+    });
+    expect(result.dashboard.nutritionGuidance).toEqual({
+      priority: "consistency",
+      message: "Keep your meals consistent today to support recovery and routine.",
+      signals: ["low_consistency"],
+    });
+    expect(result.dashboard.debug).toEqual({
+      generatedAt: "2026-04-30T10:00:00.000Z",
+      recoverySignals: [],
+      nutritionSignals: ["low_consistency"],
     });
     expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).not.toHaveBeenCalled();
   });
@@ -330,6 +350,16 @@ describe("GetHomeDashboardUseCase", () => {
       recommendedIntensity: "medium",
       recoveryTrend: "stable",
     });
+    expect(result.dashboard.nutritionGuidance).toEqual({
+      priority: "consistency",
+      message: "Keep your meals consistent today to support recovery and routine.",
+      signals: ["low_consistency"],
+    });
+    expect(result.dashboard.debug).toEqual({
+      generatedAt: "2026-04-30T10:00:00.000Z",
+      recoverySignals: [],
+      nutritionSignals: ["low_consistency"],
+    });
   });
 
   it("isolates the summary by authenticated user's training plan id", async () => {
@@ -400,6 +430,16 @@ describe("GetHomeDashboardUseCase", () => {
         createdAt: "2026-04-30T09:00:00.000Z",
       },
     });
+    expect(result.dashboard.nutritionGuidance).toEqual({
+      priority: "recovery",
+      message: "Focus on recovery meals and hydration today.",
+      signals: ["high_fatigue", "poor_sleep", "high_soreness"],
+    });
+    expect(result.dashboard.debug).toEqual({
+      generatedAt: "2026-04-30T10:00:00.000Z",
+      recoverySignals: ["high_fatigue", "poor_sleep", "high_soreness"],
+      nutritionSignals: ["high_fatigue", "poor_sleep", "high_soreness"],
+    });
   });
 
   it("returns recovery with LOW fatigue mapped to normal intensity", async () => {
@@ -428,6 +468,264 @@ describe("GetHomeDashboardUseCase", () => {
       recommendedIntensity: "normal",
       recoveryTrend: "stable",
     });
+    expect(result.dashboard.nutritionGuidance).toEqual({
+      priority: "consistency",
+      message: "Keep your meals consistent today to support recovery and routine.",
+      signals: ["low_consistency"],
+    });
+    expect(result.dashboard.debug.generatedAt).toBe("2026-04-30T10:00:00.000Z");
+  });
+
+  it("returns consistency guidance when meal frequency is low", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: "auth_user_123",
+      adherenceScore: 76,
+      currentStreak: 2,
+      averageWorkoutDuration: 48,
+      fatigueLevel: "MODERATE",
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      latestCheckIn: {
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 3,
+        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+      },
+      nutritionProfile: {
+        goal: "maintenance",
+        mealsPerDay: 2,
+        dietaryRestrictions: [],
+        allergies: [],
+        dislikedFoods: [],
+        preferredFoods: [],
+      },
+    });
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.nutritionGuidance).toEqual({
+      priority: "consistency",
+      message: "Keep your meals consistent today to support recovery and routine.",
+      signals: ["low_meal_frequency"],
+    });
+    expect(result.dashboard.debug.nutritionSignals).toEqual(["low_meal_frequency"]);
+  });
+
+  it("returns performance guidance when recovery is low-fatigue and muscle gain is active", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: "auth_user_123",
+      adherenceScore: 82,
+      currentStreak: 4,
+      averageWorkoutDuration: 55,
+      fatigueLevel: "LOW",
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      latestCheckIn: {
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 1,
+        motivationLevel: 5,
+        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+      },
+      nutritionProfile: {
+        goal: "muscle_gain",
+        mealsPerDay: 4,
+        dietaryRestrictions: [],
+        allergies: [],
+        dislikedFoods: [],
+        preferredFoods: ["rice", "eggs"],
+      },
+    });
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.nutritionGuidance).toEqual({
+      priority: "performance",
+      message: "Support today's training with consistent meals around your session.",
+      signals: ["muscle_gain_goal", "high_motivation", "low_fatigue"],
+    });
+    expect(result.dashboard.debug.recoverySignals).toEqual([]);
+  });
+
+  it("returns a safe consistency fallback when no nutrition profile exists", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: "auth_user_123",
+      adherenceScore: 88,
+      currentStreak: 3,
+      averageWorkoutDuration: 42,
+      fatigueLevel: "LOW",
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      latestCheckIn: undefined,
+    });
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.nutritionGuidance).toEqual({
+      priority: "consistency",
+      message: "Keep your nutrition routine consistent today.",
+      signals: ["general_consistency"],
+    });
+    expect(result.dashboard.debug).toEqual({
+      generatedAt: "2026-04-30T10:00:00.000Z",
+      recoverySignals: [],
+      nutritionSignals: ["general_consistency"],
+    });
+  });
+
+  it("includes recovery trend in recovery guidance signals when recovery is declining", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: "auth_user_123",
+      adherenceScore: 82,
+      currentStreak: 3,
+      averageWorkoutDuration: 50,
+      fatigueLevel: "MODERATE",
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      latestCheckIn: {
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 3,
+        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+      },
+    });
+    mockDailyCheckInHistory([
+      {
+        id: "check_in_3",
+        energyLevel: 2,
+        sleepQuality: 2,
+        muscleSoreness: 4,
+        motivationLevel: 2,
+        createdAt: "2026-04-30T09:00:00.000Z",
+      },
+      {
+        id: "check_in_2",
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 3,
+        motivationLevel: 3,
+        createdAt: "2026-04-29T09:00:00.000Z",
+      },
+      {
+        id: "check_in_1",
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 1,
+        motivationLevel: 4,
+        createdAt: "2026-04-28T09:00:00.000Z",
+      },
+    ]);
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.nutritionGuidance.signals).toContain(
+      "needs_recovery_trend",
+    );
+    expect(result.dashboard.debug.recoverySignals).toEqual([
+      "needs_recovery_trend",
+    ]);
+  });
+
+  it("includes improving recovery in performance guidance signals when available", async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: "auth_user_123",
+      adherenceScore: 82,
+      currentStreak: 4,
+      averageWorkoutDuration: 55,
+      fatigueLevel: "LOW",
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date("2026-04-30T10:00:00.000Z"),
+      latestCheckIn: {
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 1,
+        motivationLevel: 5,
+        createdAt: new Date("2026-04-30T09:00:00.000Z"),
+      },
+      nutritionProfile: {
+        goal: "muscle_gain",
+        mealsPerDay: 4,
+        dietaryRestrictions: [],
+        allergies: [],
+        dislikedFoods: [],
+        preferredFoods: [],
+      },
+    });
+    mockDailyCheckInHistory([
+      {
+        id: "check_in_3",
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 1,
+        motivationLevel: 4,
+        createdAt: "2026-04-30T09:00:00.000Z",
+      },
+      {
+        id: "check_in_2",
+        energyLevel: 3,
+        sleepQuality: 3,
+        muscleSoreness: 2,
+        motivationLevel: 3,
+        createdAt: "2026-04-29T09:00:00.000Z",
+      },
+      {
+        id: "check_in_1",
+        energyLevel: 2,
+        sleepQuality: 2,
+        muscleSoreness: 4,
+        motivationLevel: 3,
+        createdAt: "2026-04-28T09:00:00.000Z",
+      },
+    ]);
+
+    const result = await useCase.execute({ authUserId: "auth_user_123" });
+
+    expect(result.dashboard.nutritionGuidance.signals).toEqual([
+      "muscle_gain_goal",
+      "high_motivation",
+      "low_fatigue",
+      "improving_recovery",
+    ]);
+    expect(result.dashboard.debug.recoverySignals).toEqual([
+      "improving_recovery",
+    ]);
   });
 
   it("returns improving recovery trend with positive recent check-in signals", async () => {

@@ -45,5 +45,15 @@ export type DashboardHomeResponse = {
                 createdAt: string;
             };
         };
+        nutritionGuidance: {
+            priority: "recovery" | "consistency" | "performance";
+            message: string;
+            signals: string[];
+        };
+        debug: {
+            generatedAt: string;
+            recoverySignals: string[];
+            nutritionSignals: string[];
+        };
     };
 };

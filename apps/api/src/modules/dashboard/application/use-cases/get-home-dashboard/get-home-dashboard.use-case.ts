@@ -75,6 +75,15 @@ export class GetHomeDashboardUseCase {
       const recentDailyCheckIns = (
         await this.dailyCheckInRepository.findManyByUserProfileId(userProfile.id)
       ).slice(0, 3);
+      const recovery = this.buildRecoverySummary(
+        healthContext,
+        recentDailyCheckIns,
+      );
+      const nutritionGuidance = this.buildNutritionGuidance(
+        healthContext,
+        recovery.recoveryTrend,
+      );
+      const debug = this.buildDebugSnapshot(healthContext, recovery, nutritionGuidance);
 
       const fitnessProfile =
         await this.fitnessProfileRepository.findActiveByUserProfileId(
@@ -90,10 +99,9 @@ export class GetHomeDashboardUseCase {
             fitnessProfile: null,
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
-            recovery: this.buildRecoverySummary(
-              healthContext,
-              recentDailyCheckIns,
-            ),
+            recovery,
+            nutritionGuidance,
+            debug,
           },
         };
       }
@@ -116,10 +124,9 @@ export class GetHomeDashboardUseCase {
             },
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
-            recovery: this.buildRecoverySummary(
-              healthContext,
-              recentDailyCheckIns,
-            ),
+            recovery,
+            nutritionGuidance,
+            debug,
           },
         };
       }
@@ -149,7 +156,9 @@ export class GetHomeDashboardUseCase {
             todayWorkout,
           },
           progressSummary: this.buildSummaryFromLogs(workoutLogs),
-          recovery: this.buildRecoverySummary(healthContext, recentDailyCheckIns),
+          recovery,
+          nutritionGuidance,
+          debug,
         },
       };
     } catch (error) {
@@ -287,7 +296,123 @@ export class GetHomeDashboardUseCase {
             createdAt: healthContext.latestCheckIn.createdAt.toISOString(),
           }
         : undefined,
+      };
+  }
+
+  private buildNutritionGuidance(
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
+    recoveryTrend: GetHomeDashboardOutput["dashboard"]["recovery"]["recoveryTrend"],
+  ): GetHomeDashboardOutput["dashboard"]["nutritionGuidance"] {
+    const latestCheckIn = healthContext.latestCheckIn;
+    const nutritionProfile = healthContext.nutritionProfile;
+    const hasLowSleep = latestCheckIn ? latestCheckIn.sleepQuality <= 2 : false;
+    const hasHighSoreness = latestCheckIn
+      ? latestCheckIn.muscleSoreness >= 4
+      : false;
+    const hasLowMotivation = latestCheckIn
+      ? latestCheckIn.motivationLevel <= 2
+      : false;
+    const hasHighMotivation = latestCheckIn
+      ? latestCheckIn.motivationLevel >= 4
+      : false;
+    const hasLowMealFrequency = nutritionProfile
+      ? nutritionProfile.mealsPerDay <= 2
+      : false;
+    const hasLowConsistencySignal =
+      hasLowMealFrequency || hasLowMotivation || healthContext.adherenceScore < 50;
+
+    if (
+      healthContext.fatigueLevel === "HIGH" ||
+      recoveryTrend === "needs_recovery" ||
+      hasLowSleep ||
+      hasHighSoreness
+    ) {
+      const signals = this.buildRecoverySignals(healthContext, recoveryTrend);
+
+      return {
+        priority: "recovery",
+        message: "Focus on recovery meals and hydration today.",
+        signals,
+      };
+    }
+
+    if (
+      nutritionProfile?.goal === "muscle_gain" &&
+      healthContext.fatigueLevel === "LOW" &&
+      hasHighMotivation
+    ) {
+      const signals = this.collectNutritionGuidanceSignals([
+        "muscle_gain_goal",
+        "high_motivation",
+        "low_fatigue",
+        recoveryTrend === "improving" ? "improving_recovery" : null,
+      ]);
+
+      return {
+        priority: "performance",
+        message: "Support today's training with consistent meals around your session.",
+        signals,
+      };
+    }
+
+    if (hasLowConsistencySignal) {
+      const signals = this.collectNutritionGuidanceSignals([
+        hasLowMealFrequency ? "low_meal_frequency" : null,
+        hasLowMotivation ? "low_motivation" : null,
+        healthContext.adherenceScore < 50 ? "low_consistency" : null,
+      ]);
+
+      return {
+        priority: "consistency",
+        message: "Keep your meals consistent today to support recovery and routine.",
+        signals,
+      };
+    }
+
+    return {
+      priority: "consistency",
+      message: nutritionProfile
+        ? "Stay consistent with your meals to support today's training rhythm."
+        : "Keep your nutrition routine consistent today.",
+      signals: nutritionProfile ? ["consistent_meal_rhythm"] : ["general_consistency"],
     };
+  }
+
+  private buildDebugSnapshot(
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
+    recovery: GetHomeDashboardOutput["dashboard"]["recovery"],
+    nutritionGuidance: GetHomeDashboardOutput["dashboard"]["nutritionGuidance"],
+  ): GetHomeDashboardOutput["dashboard"]["debug"] {
+    return {
+      generatedAt: healthContext.generatedAt.toISOString(),
+      recoverySignals: this.buildRecoverySignals(healthContext, recovery.recoveryTrend),
+      nutritionSignals: nutritionGuidance.signals,
+    };
+  }
+
+  private buildRecoverySignals(
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
+    recoveryTrend: GetHomeDashboardOutput["dashboard"]["recovery"]["recoveryTrend"],
+  ): string[] {
+    const latestCheckIn = healthContext.latestCheckIn;
+    const hasLowSleep = latestCheckIn ? latestCheckIn.sleepQuality <= 2 : false;
+    const hasHighSoreness = latestCheckIn
+      ? latestCheckIn.muscleSoreness >= 4
+      : false;
+
+    return this.collectNutritionGuidanceSignals([
+      healthContext.fatigueLevel === "HIGH" ? "high_fatigue" : null,
+      hasLowSleep ? "poor_sleep" : null,
+      hasHighSoreness ? "high_soreness" : null,
+      recoveryTrend === "needs_recovery" ? "needs_recovery_trend" : null,
+      recoveryTrend === "improving" ? "improving_recovery" : null,
+    ]);
+  }
+
+  private collectNutritionGuidanceSignals(
+    signals: Array<string | null>,
+  ): string[] {
+    return signals.filter((signal): signal is string => Boolean(signal));
   }
 
   private calculateRecoveryTrend(

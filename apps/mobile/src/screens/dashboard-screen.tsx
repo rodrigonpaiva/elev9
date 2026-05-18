@@ -340,6 +340,72 @@ export function DashboardScreen({
       <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 3)]}>
         <Card style={styles.sectionCard}>
           <SectionHeader
+            title="Nutrition Guidance"
+            subtitle="A simple adaptive signal based on recovery and routine."
+          />
+          <View
+            style={[
+              styles.metricCard,
+              nutritionGuidanceCardStyleMap[dashboard.nutritionGuidance.priority],
+            ]}
+          >
+            <View style={styles.workoutHeader}>
+              <Text style={styles.metricLabel}>Priority</Text>
+              <Badge
+                label={formatNutritionGuidancePriority(
+                  dashboard.nutritionGuidance.priority,
+                )}
+                variant="muted"
+              />
+            </View>
+            <Text style={styles.metricSecondary}>
+              {dashboard.nutritionGuidance.message}
+            </Text>
+            <View style={styles.nutritionSignalsGroup}>
+              <Text style={styles.metricLabel}>Why this guidance?</Text>
+              {dashboard.nutritionGuidance.signals.map((signal) => (
+                <Text key={signal} style={styles.metricValue}>
+                  • {formatNutritionGuidanceSignal(signal)}
+                </Text>
+              ))}
+            </View>
+          </View>
+        </Card>
+      </Animated.View>
+
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 4)]}>
+        <Card style={styles.sectionCard}>
+          <SectionHeader
+            title="Adaptive Signals"
+            subtitle="Deterministic signals behind today's dashboard decisions."
+          />
+          <View style={styles.metricCard}>
+            <View style={styles.nutritionSignalsGroup}>
+              <Text style={styles.metricLabel}>Recovery signals</Text>
+              {dashboard.debug.recoverySignals.map((signal) => (
+                <Text key={`recovery-${signal}`} style={styles.metricValue}>
+                  • {formatNutritionGuidanceSignal(signal)}
+                </Text>
+              ))}
+            </View>
+            <View style={styles.nutritionSignalsGroup}>
+              <Text style={styles.metricLabel}>Nutrition signals</Text>
+              {dashboard.debug.nutritionSignals.map((signal) => (
+                <Text key={`nutrition-${signal}`} style={styles.metricValue}>
+                  • {formatNutritionGuidanceSignal(signal)}
+                </Text>
+              ))}
+            </View>
+            <Text style={styles.recoveryTimestamp}>
+              Generated {formatDateTime(dashboard.debug.generatedAt)}
+            </Text>
+          </View>
+        </Card>
+      </Animated.View>
+
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 5)]}>
+        <Card style={styles.sectionCard}>
+          <SectionHeader
             title="Daily Check-in"
             subtitle="Track how you feel before today's session."
           />
@@ -374,7 +440,7 @@ export function DashboardScreen({
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 4)]}>
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 6)]}>
         <Card style={styles.sectionCard}>
           <SectionHeader
             title="Today&apos;s Workout"
@@ -417,7 +483,7 @@ export function DashboardScreen({
         </Card>
       </Animated.View>
 
-      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 5)]}>
+      <Animated.View style={[styles.animatedSection, animatedStyle(entrance, 7)]}>
         <Card style={styles.sectionCard}>
           <SectionHeader
             title="Quick Actions"
@@ -710,6 +776,10 @@ const styles = StyleSheet.create({
   actionsGroup: {
     gap: 12,
   },
+  nutritionSignalsGroup: {
+    gap: 6,
+    marginTop: 4,
+  },
   fullButton: {
     width: "100%",
   },
@@ -739,6 +809,15 @@ const recoveryTrendStyleMap: Record<
   },
 };
 
+const nutritionGuidanceCardStyleMap: Record<
+  DashboardHomeResponse["dashboard"]["nutritionGuidance"]["priority"],
+  object
+> = {
+  recovery: styles.metricCardDanger,
+  consistency: styles.metricCardAccent,
+  performance: styles.metricCardCalm,
+};
+
 function animatedStyle(value: Animated.Value, index: number) {
   return {
     opacity: value,
@@ -751,6 +830,27 @@ function animatedStyle(value: Animated.Value, index: number) {
       },
     ],
   };
+}
+
+function formatNutritionGuidancePriority(
+  value: DashboardHomeResponse["dashboard"]["nutritionGuidance"]["priority"],
+): string {
+  switch (value) {
+    case "recovery":
+      return "Recovery";
+    case "performance":
+      return "Performance";
+    case "consistency":
+    default:
+      return "Consistency";
+  }
+}
+
+function formatNutritionGuidanceSignal(signal: string): string {
+  return signal
+    .split("_")
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(" ");
 }
 
 function formatDashboardDate(value: string): string {

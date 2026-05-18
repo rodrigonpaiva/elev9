@@ -20,6 +20,18 @@ type DashboardTodayWorkout = {
   exercises: DashboardWorkoutExercise[];
 };
 
+type DashboardNutritionGuidance = {
+  priority: "recovery" | "consistency" | "performance";
+  message: string;
+  signals: string[];
+};
+
+type DashboardDebugSnapshot = {
+  generatedAt: string;
+  recoverySignals: string[];
+  nutritionSignals: string[];
+};
+
 export type GetHomeDashboardOutput = {
   dashboard: {
     user: {
@@ -53,5 +65,7 @@ export type GetHomeDashboardOutput = {
         createdAt: string;
       };
     };
+    nutritionGuidance: DashboardNutritionGuidance;
+    debug: DashboardDebugSnapshot;
   };
 };
