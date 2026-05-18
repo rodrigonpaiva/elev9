@@ -1,20 +1,18 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable } from '@nestjs/common';
 
-import {
-  CoachFeedbackGenerator,
-} from "../../services/coach-feedback/coach-feedback-generator.service";
-import { BuildUserHealthContextService } from "../../services/context-builder/build-user-health-context.service";
+import { CoachFeedbackGenerator } from '../../services/coach-feedback/coach-feedback-generator.service';
+import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
 import {
   COACH_FEEDBACK_REPOSITORY,
   CoachFeedbackRepository,
-} from "../../../domain/repositories/coach-feedback.repository";
-import { ActivityLevel } from "../../../../fitness/domain/entities/fitness-profile.entity";
+} from '../../../domain/repositories/coach-feedback.repository';
+import { ActivityLevel } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import {
   GENERATE_COACH_FEEDBACK_ERROR_CODES,
   GenerateCoachFeedbackError,
-} from "./generate-coach-feedback.errors";
-import { GenerateCoachFeedbackInput } from "./generate-coach-feedback.input";
-import { GenerateCoachFeedbackOutput } from "./generate-coach-feedback.output";
+} from './generate-coach-feedback.errors';
+import { GenerateCoachFeedbackInput } from './generate-coach-feedback.input';
+import { GenerateCoachFeedbackOutput } from './generate-coach-feedback.output';
 
 @Injectable()
 export class GenerateCoachFeedbackUseCase {
@@ -29,12 +27,12 @@ export class GenerateCoachFeedbackUseCase {
     input: GenerateCoachFeedbackInput,
   ): Promise<GenerateCoachFeedbackOutput> {
     const authUserId =
-      typeof input.authUserId === "string" ? input.authUserId.trim() : "";
+      typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
     if (!authUserId) {
       throw new GenerateCoachFeedbackError(
         GENERATE_COACH_FEEDBACK_ERROR_CODES.INVALID_SESSION,
-        "Invalid session.",
+        'Invalid session.',
       );
     }
 
@@ -46,14 +44,14 @@ export class GenerateCoachFeedbackUseCase {
       if (!healthContext.userProfileId) {
         throw new GenerateCoachFeedbackError(
           GENERATE_COACH_FEEDBACK_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          "User profile not found.",
+          'User profile not found.',
         );
       }
 
       if (!healthContext.goal || !healthContext.activityLevel) {
         throw new GenerateCoachFeedbackError(
           GENERATE_COACH_FEEDBACK_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND,
-          "Fitness profile not found.",
+          'Fitness profile not found.',
         );
       }
 
@@ -86,18 +84,18 @@ export class GenerateCoachFeedbackUseCase {
 
       throw new GenerateCoachFeedbackError(
         GENERATE_COACH_FEEDBACK_ERROR_CODES.INTERNAL_ERROR,
-        "An unexpected error occurred.",
+        'An unexpected error occurred.',
       );
     }
   }
 
   private resolveExpectedWorkouts(activityLevel: ActivityLevel): number {
     switch (activityLevel) {
-      case "low":
+      case 'low':
         return 2;
-      case "medium":
+      case 'medium':
         return 3;
-      case "high":
+      case 'high':
       default:
         return 4;
     }

@@ -7,7 +7,7 @@ import {
   TrainingPlanExercise,
   TrainingPlanIntensity,
 } from "../../../../training/domain/entities/training-plan.entity";
-import { FatigueLevel } from "../../../ai/application/services/context-builder/build-user-health-context.service";
+import { FatigueLevel } from "../../../../ai/application/services/context-builder/build-user-health-context.service";
 
 type DashboardWorkoutExercise = TrainingPlanExercise;
 
