@@ -9,6 +9,13 @@
       "options": {
         "command": "tsc -p packages/api-client/tsconfig.json"
       }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "packages/api-client",
+        "command": "eslint src --ext .ts,.d.ts --config ../../.eslintrc.cjs"
+      }
     }
   }
 }

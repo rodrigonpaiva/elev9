@@ -5,7 +5,6 @@ import { createFitnessApi } from "./fitness-api";
 import {
   createHttpClient,
   type CreateHttpClientOptions,
-  ApiClientError,
 } from "./http-client";
 import { createProgressApi } from "./progress-api";
 import { createTrainingApi } from "./training-api";
