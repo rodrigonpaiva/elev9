@@ -6,6 +6,11 @@ import {
 } from "@nestjs/common";
 
 import { CreateCoachChatUseCase } from "../../application/use-cases/create-coach-chat/create-coach-chat.use-case";
+import { GetCoachChatDebugHistoryUseCase } from "../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case";
+import {
+  GET_COACH_CHAT_DEBUG_HISTORY_ERROR_CODES,
+  GetCoachChatDebugHistoryError,
+} from "../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.errors";
 import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
 import { ReplayCoachFeedbackUseCase } from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
 import {
@@ -32,6 +37,7 @@ describe("AiController", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
   let createCoachChatUseCase: jest.Mocked<CreateCoachChatUseCase>;
   let getCoachChatHistoryUseCase: jest.Mocked<GetCoachChatHistoryUseCase>;
+  let getCoachChatDebugHistoryUseCase: jest.Mocked<GetCoachChatDebugHistoryUseCase>;
   let getCoachFeedbackDebugHistoryUseCase: jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
   let replayCoachFeedbackUseCase: jest.Mocked<ReplayCoachFeedbackUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
@@ -48,6 +54,9 @@ describe("AiController", () => {
     getCoachChatHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachChatHistoryUseCase>;
+    getCoachChatDebugHistoryUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCoachChatDebugHistoryUseCase>;
     getCoachFeedbackDebugHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
@@ -65,6 +74,7 @@ describe("AiController", () => {
       generateCoachFeedbackUseCase,
       createCoachChatUseCase,
       getCoachChatHistoryUseCase,
+      getCoachChatDebugHistoryUseCase,
       getCoachFeedbackDebugHistoryUseCase,
       replayCoachFeedbackUseCase,
       getCoachFeedbackHistoryUseCase,
@@ -133,6 +143,28 @@ describe("AiController", () => {
     ).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
+  it("maps debug chat history invalid input to HTTP 400", async () => {
+    getCoachChatDebugHistoryUseCase.execute.mockRejectedValue(
+      new GetCoachChatDebugHistoryError(
+        GET_COACH_CHAT_DEBUG_HISTORY_ERROR_CODES.INVALID_INPUT,
+        "Invalid chat debug history input.",
+      ),
+    );
+
+    await expect(
+      controller.getCoachChatDebugHistory(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        { limit: 0 as never },
+        {},
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
   it("returns chat history in the internal order", async () => {
     getCoachChatHistoryUseCase.execute.mockResolvedValue([
       {
@@ -163,6 +195,51 @@ describe("AiController", () => {
       limit: 50,
     });
     expect(result).toHaveLength(2);
+  });
+
+  it("returns debug chat history with assistant metadata", async () => {
+    getCoachChatDebugHistoryUseCase.execute.mockResolvedValue({
+      messages: [
+        {
+          role: "user",
+          content: "Should I train today?",
+          createdAt: "2026-05-18T09:00:00.000Z",
+        },
+        {
+          role: "assistant",
+          content: "Keep it light today.",
+          createdAt: "2026-05-18T09:00:01.000Z",
+          metadata: {
+            source: "llm",
+            provider: "openai",
+            model: "gpt-4.1-mini",
+            promptVersion: "coach-chat-prompt-v1",
+          },
+        },
+      ],
+    });
+
+    const result = await controller.getCoachChatDebugHistory(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      { limit: 50 },
+      {},
+    );
+
+    expect(getCoachChatDebugHistoryUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+      limit: 50,
+    });
+    expect(result.messages[1].metadata).toEqual({
+      source: "llm",
+      provider: "openai",
+      model: "gpt-4.1-mini",
+      promptVersion: "coach-chat-prompt-v1",
+    });
   });
 
   it("returns the safe response on success", async () => {

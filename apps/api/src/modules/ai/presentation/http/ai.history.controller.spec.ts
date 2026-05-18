@@ -22,6 +22,7 @@ import {
 } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
 import { GetCoachFeedbackHistoryUseCase } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
 import { GetCoachChatHistoryUseCase } from "../../application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case";
+import { GetCoachChatDebugHistoryUseCase } from "../../application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case";
 import { GenerateCoachFeedbackUseCase } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
 import { BuildUserHealthContextService } from "../../application/services/context-builder/build-user-health-context.service";
 import { AiController } from "./ai.controller";
@@ -30,6 +31,7 @@ describe("AiController history", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
   let createCoachChatUseCase: jest.Mocked<CreateCoachChatUseCase>;
   let getCoachChatHistoryUseCase: jest.Mocked<GetCoachChatHistoryUseCase>;
+  let getCoachChatDebugHistoryUseCase: jest.Mocked<GetCoachChatDebugHistoryUseCase>;
   let getCoachFeedbackDebugHistoryUseCase: jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
   let replayCoachFeedbackUseCase: jest.Mocked<ReplayCoachFeedbackUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
@@ -46,6 +48,9 @@ describe("AiController history", () => {
     getCoachChatHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachChatHistoryUseCase>;
+    getCoachChatDebugHistoryUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCoachChatDebugHistoryUseCase>;
     getCoachFeedbackDebugHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
@@ -63,6 +68,7 @@ describe("AiController history", () => {
       generateCoachFeedbackUseCase,
       createCoachChatUseCase,
       getCoachChatHistoryUseCase,
+      getCoachChatDebugHistoryUseCase,
       getCoachFeedbackDebugHistoryUseCase,
       replayCoachFeedbackUseCase,
       getCoachFeedbackHistoryUseCase,
