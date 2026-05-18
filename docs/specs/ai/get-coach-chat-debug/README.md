@@ -98,12 +98,12 @@ Após sucesso:
 
 ## 8. Related Specs
 
-- `ai/create-coach-chat`
-- `ai/get-coach-chat-history`
-- `ai/get-coach-chat-debug-history`
-- `ai/get-coach-chat-memory-debug` (`./get-coach-chat-memory-debug/README.md`)
-- `ai/get-coach-chat-prompt-debug`
-- `ai/get-coach-chat-reply-path-debug`
+- [create-coach-chat](../create-coach-chat/README.md)
+- [get-coach-chat-history](../get-coach-chat-history/README.md)
+- [get-coach-chat-debug-history](../get-coach-chat-debug-history/README.md)
+- [get-coach-chat-memory-debug](../get-coach-chat-memory-debug/README.md)
+- [get-coach-chat-prompt-debug](../get-coach-chat-prompt-debug/README.md)
+- [get-coach-chat-reply-path-debug](../get-coach-chat-reply-path-debug/README.md)
 
 ---
 
