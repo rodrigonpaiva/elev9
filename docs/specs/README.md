@@ -16,7 +16,13 @@ Este índice funciona como ponto central de navegação da arquitetura documenta
 
 ---
 
-## 2. System Contexts
+## 2. Documentation Governance
+
+- [Documentation Governance](./GOVERNANCE.md)
+
+---
+
+## 3. System Contexts
 
 ## Core Platform
 
@@ -46,7 +52,7 @@ Este índice funciona como ponto central de navegação da arquitetura documenta
 
 ---
 
-## 3. AI Architecture
+## 4. AI Architecture
 
 O módulo `ai` documentado em [docs/specs/ai/README.md](./ai/README.md) atualmente se organiza em torno do seguinte fluxo:
 
@@ -77,14 +83,14 @@ Importante:
 
 ---
 
-## 4. ADRs
+## 5. ADRs
 
 - [ADR-002 — Recovery & Adaptive Coaching System](../adr/adr-002-recovery-system.md)
 - [ADR-003 — Coach Feedback Explainability & Replay System](../adr/adr-003-coach-feedback-explainability.md)
 
 ---
 
-## 5. Current Architecture Characteristics
+## 6. Current Architecture Characteristics
 
 O estado atual da arquitetura pode ser resumido por:
 
@@ -100,7 +106,7 @@ Essas características descrevem o sistema atual e não devem ser lidas como cap
 
 ---
 
-## 6. Future Directions
+## 7. Future Directions
 
 Possíveis direções arquiteturais futuras, ainda não implementadas:
 
@@ -115,6 +121,6 @@ Esses itens devem ser tratados como roadmap técnico, não como comportamento at
 
 ---
 
-## 7. Summary
+## 8. Summary
 
 `docs/specs/README.md` organiza a navegação da arquitetura spec-driven do projeto por bounded context e destaca o módulo `ai` como uma camada contextual determinística já preparada para explainability e replay, mas ainda sem depender de LLM no fluxo principal.
