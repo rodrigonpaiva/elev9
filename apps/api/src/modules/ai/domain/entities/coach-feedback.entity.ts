@@ -4,6 +4,7 @@ export type CoachFeedbackProps = {
   message: string;
   insights: string[];
   recommendations: string[];
+  influences?: string[];
   createdAt: Date;
 };
 
@@ -13,6 +14,7 @@ export class CoachFeedback {
   readonly message: string;
   readonly insights: string[];
   readonly recommendations: string[];
+  readonly influences: string[];
   readonly createdAt: Date;
 
   constructor(props: CoachFeedbackProps) {
@@ -21,6 +23,7 @@ export class CoachFeedback {
     this.message = props.message;
     this.insights = props.insights;
     this.recommendations = props.recommendations;
+    this.influences = props.influences ?? [];
     this.createdAt = props.createdAt;
   }
 }

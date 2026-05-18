@@ -55,6 +55,9 @@ describe("CoachFeedbackGenerator", () => {
     expect(result.recommendations).toContain(
       "Prioritize recovery and consider a lighter session if needed",
     );
+    expect(result.influences).toEqual(
+      expect.arrayContaining(["fatigue:high", "recovery:needs_recovery"]),
+    );
   });
 
   it("supports controlled progression guidance when fatigueLevel is LOW", () => {
@@ -169,6 +172,7 @@ describe("CoachFeedbackGenerator", () => {
     expect(result.insights).toContain(
       "Your latest check-in suggests sleep may be limiting recovery",
     );
+    expect(result.influences).toContain("checkin:poor_sleep");
   });
 
   it("considers high muscle soreness from the latest check-in", () => {
@@ -380,6 +384,42 @@ describe("CoachFeedbackGenerator", () => {
 
     expect(result.insights).toContain(
       "Your nutrition approach should stay consistent within your dietary restrictions",
+    );
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        "nutrition:dietary_restrictions",
+        "training:low_consistency",
+      ]),
+    );
+  });
+
+  it("tracks nutrition influences for muscle_gain and low meal frequency", () => {
+    const result = generator.generate({
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+      nutritionProfile: {
+        goal: "muscle_gain",
+        mealsPerDay: 2,
+        dietaryRestrictions: [],
+        allergies: [],
+        dislikedFoods: [],
+        preferredFoods: ["rice", "eggs"],
+      },
+    });
+
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        "nutrition:muscle_gain",
+        "nutrition:low_meal_frequency",
+      ]),
     );
   });
 

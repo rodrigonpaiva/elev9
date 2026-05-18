@@ -65,6 +65,7 @@ describe("AiController", () => {
       authUserId: "auth_user_123",
     });
     expect(result.message).toContain("4-day streak");
+    expect(result).not.toHaveProperty("influences");
   });
 
   it("rejects extra body fields with HTTP 400", async () => {

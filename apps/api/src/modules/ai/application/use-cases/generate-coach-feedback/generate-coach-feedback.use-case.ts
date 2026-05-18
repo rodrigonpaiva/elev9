@@ -75,9 +75,14 @@ export class GenerateCoachFeedbackUseCase {
         message: feedback.message,
         insights: feedback.insights,
         recommendations: feedback.recommendations,
+        influences: feedback.influences,
       });
 
-      return feedback;
+      return {
+        message: feedback.message,
+        insights: feedback.insights,
+        recommendations: feedback.recommendations,
+      };
     } catch (error) {
       if (error instanceof GenerateCoachFeedbackError) {
         throw error;

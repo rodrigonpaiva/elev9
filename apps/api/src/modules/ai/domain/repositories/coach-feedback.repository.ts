@@ -5,6 +5,7 @@ export interface CreateCoachFeedbackRepositoryInput {
   message: string;
   insights: string[];
   recommendations: string[];
+  influences?: string[];
 }
 
 export interface CoachFeedbackRepository {

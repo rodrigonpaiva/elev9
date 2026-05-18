@@ -32,6 +32,7 @@ export type CoachFeedbackGeneratorOutput = {
   message: string;
   insights: string[];
   recommendations: string[];
+  influences: string[];
 };
 
 @Injectable()
@@ -63,6 +64,7 @@ export class CoachFeedbackGenerator {
 
     const insights: string[] = [];
     const recommendations: string[] = [];
+    const influences = new Set<string>();
     const fatigueLevel = input.fatigueLevel ?? "MODERATE";
     const hasExplicitFatigueLevel = input.fatigueLevel !== undefined;
 
@@ -123,6 +125,7 @@ export class CoachFeedbackGenerator {
       hasExplicitFatigueLevel,
       insights,
       recommendations,
+      influences,
       hasTrainingPlan: input.hasTrainingPlan,
       isNoLogs,
     });
@@ -131,6 +134,7 @@ export class CoachFeedbackGenerator {
       fatigueLevel,
       insights,
       recommendations,
+      influences,
       isNoLogs,
       hasTrainingPlan: input.hasTrainingPlan,
     });
@@ -138,7 +142,14 @@ export class CoachFeedbackGenerator {
       nutritionProfile: input.nutritionProfile,
       insights,
       recommendations,
+      influences,
       isNoLogs,
+    });
+    this.applyTrainingSignals({
+      logsCount,
+      expectedWorkouts: input.expectedWorkouts,
+      currentStreak: input.currentStreak,
+      influences,
     });
 
     recommendations.push(this.buildGoalAwareRecommendation(input.goal));
@@ -151,6 +162,7 @@ export class CoachFeedbackGenerator {
       message,
       insights: this.limitItems(insights),
       recommendations: this.limitItems(recommendations),
+      influences: [...influences],
     };
   }
 
@@ -204,6 +216,7 @@ export class CoachFeedbackGenerator {
     hasExplicitFatigueLevel: boolean;
     insights: string[];
     recommendations: string[];
+    influences: Set<string>;
     hasTrainingPlan: boolean;
     isNoLogs: boolean;
   }): void {
@@ -213,6 +226,8 @@ export class CoachFeedbackGenerator {
 
     switch (input.fatigueLevel) {
       case "HIGH":
+        input.influences.add("fatigue:high");
+        input.influences.add("recovery:needs_recovery");
         this.upsertInsight(
           input.insights,
           "Your recent training load suggests elevated fatigue",
@@ -225,6 +240,8 @@ export class CoachFeedbackGenerator {
         );
         return;
       case "LOW":
+        input.influences.add("fatigue:low");
+        input.influences.add("recovery:improving");
         this.upsertInsight(
           input.insights,
           "Your recent workload looks manageable",
@@ -259,6 +276,7 @@ export class CoachFeedbackGenerator {
     fatigueLevel: FatigueLevel;
     insights: string[];
     recommendations: string[];
+    influences: Set<string>;
     isNoLogs: boolean;
     hasTrainingPlan: boolean;
   }): void {
@@ -267,6 +285,7 @@ export class CoachFeedbackGenerator {
     }
 
     if (input.latestCheckIn.sleepQuality <= 2) {
+      input.influences.add("checkin:poor_sleep");
       this.upsertInsight(
         input.insights,
         "Your latest check-in suggests sleep may be limiting recovery",
@@ -274,6 +293,7 @@ export class CoachFeedbackGenerator {
     }
 
     if (input.latestCheckIn.energyLevel <= 2) {
+      input.influences.add("checkin:low_energy");
       this.prependRecommendation(
         input.recommendations,
         "Keep today's session lighter if your energy still feels low",
@@ -281,6 +301,7 @@ export class CoachFeedbackGenerator {
     }
 
     if (input.latestCheckIn.muscleSoreness >= 4) {
+      input.influences.add("checkin:high_soreness");
       this.prependRecommendation(
         input.recommendations,
         "Consider mobility work, a lighter session, or extra recovery today",
@@ -291,6 +312,7 @@ export class CoachFeedbackGenerator {
       input.latestCheckIn.motivationLevel >= 4 &&
       input.fatigueLevel === "LOW"
     ) {
+      input.influences.add("checkin:high_motivation");
       this.prependRecommendation(
         input.recommendations,
         input.hasTrainingPlan
@@ -315,6 +337,7 @@ export class CoachFeedbackGenerator {
     nutritionProfile?: UserHealthContextNutritionProfile;
     insights: string[];
     recommendations: string[];
+    influences: Set<string>;
     isNoLogs: boolean;
   }): void {
     if (!input.nutritionProfile) {
@@ -322,6 +345,7 @@ export class CoachFeedbackGenerator {
     }
 
     if (input.nutritionProfile.mealsPerDay <= 2) {
+      input.influences.add("nutrition:low_meal_frequency");
       this.upsertInsight(
         input.insights,
         "Your meal distribution may be too sparse to consistently support training and recovery",
@@ -333,6 +357,7 @@ export class CoachFeedbackGenerator {
     }
 
     if (input.nutritionProfile.dietaryRestrictions.length > 0) {
+      input.influences.add("nutrition:dietary_restrictions");
       this.upsertInsight(
         input.insights,
         "Your nutrition approach should stay consistent within your dietary restrictions",
@@ -345,6 +370,7 @@ export class CoachFeedbackGenerator {
 
     switch (input.nutritionProfile.goal) {
       case "muscle_gain":
+        input.influences.add("nutrition:muscle_gain");
         this.prependRecommendation(
           input.recommendations,
           input.isNoLogs
@@ -353,6 +379,7 @@ export class CoachFeedbackGenerator {
         );
         return;
       case "fat_loss":
+        input.influences.add("nutrition:fat_loss");
         this.prependRecommendation(
           input.recommendations,
           "Keep meal timing consistent so your fat-loss routine stays easier to maintain",
@@ -370,6 +397,22 @@ export class CoachFeedbackGenerator {
           input.recommendations,
           "Keep your meal routine steady so training and recovery stay predictable",
         );
+    }
+  }
+
+  private applyTrainingSignals(input: {
+    logsCount: number;
+    expectedWorkouts: number;
+    currentStreak: number;
+    influences: Set<string>;
+  }): void {
+    if (input.logsCount >= input.expectedWorkouts || input.currentStreak >= 3) {
+      input.influences.add("training:high_consistency");
+      return;
+    }
+
+    if (input.logsCount > 0 && input.logsCount < input.expectedWorkouts) {
+      input.influences.add("training:low_consistency");
     }
   }
 

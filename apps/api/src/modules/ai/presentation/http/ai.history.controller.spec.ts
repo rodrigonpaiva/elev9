@@ -88,6 +88,33 @@ describe("AiController history", () => {
     expect(result.feedbacks).toHaveLength(1);
   });
 
+  it("keeps public history response compatible when internal metadata exists", async () => {
+    getCoachFeedbackHistoryUseCase.execute.mockResolvedValue({
+      feedbacks: [
+        {
+          id: "feedback_002",
+          message: "Great consistency this week.",
+          insights: ["You trained 4 times this week"],
+          recommendations: ["Keep your current rhythm"],
+          createdAt: "2026-05-04T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const result = await controller.getCoachFeedbackHistory(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      { limit: 1 },
+      {},
+    );
+
+    expect(result.feedbacks[0]).not.toHaveProperty("influences");
+  });
+
   it("rejects unexpected GET body", async () => {
     await expect(
       controller.getCoachFeedbackHistory(

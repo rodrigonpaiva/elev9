@@ -75,10 +75,12 @@ describe("GenerateCoachFeedbackUseCase", () => {
       message: "Great consistency this week. You're on a 4-day streak.",
       insights: expect.any(Array),
       recommendations: expect.any(Array),
+      influences: expect.any(Array),
     });
     expect(result.message).toBe(
       "Great consistency this week. You're on a 4-day streak.",
     );
+    expect(result).not.toHaveProperty("influences");
   });
 
   it("continues generating feedback with partial context", async () => {
@@ -296,7 +298,55 @@ describe("GenerateCoachFeedbackUseCase", () => {
       message: expect.any(String),
       insights: expect.any(Array),
       recommendations: expect.any(Array),
+      influences: expect.any(Array),
     });
+  });
+
+  it("persists influences generated from context signals", async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        fatigueLevel: "HIGH",
+        latestCheckIn: {
+          energyLevel: 2,
+          sleepQuality: 2,
+          muscleSoreness: 4,
+          motivationLevel: 3,
+          createdAt: new Date("2026-05-04T09:00:00.000Z"),
+        },
+        nutritionProfile: {
+          goal: "fat_loss",
+          mealsPerDay: 2,
+          dietaryRestrictions: ["vegetarian"],
+          allergies: [],
+          dislikedFoods: [],
+          preferredFoods: [],
+        },
+        recentWorkoutLogs: [
+          buildWorkoutLog("2026-05-02", 40),
+          buildWorkoutLog("2026-05-04", 44),
+        ],
+      }),
+    );
+
+    await useCase.execute({
+      authUserId: "auth_user_123",
+    });
+
+    expect(coachFeedbackRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        influences: expect.arrayContaining([
+          "fatigue:high",
+          "recovery:needs_recovery",
+          "checkin:low_energy",
+          "checkin:poor_sleep",
+          "checkin:high_soreness",
+          "nutrition:fat_loss",
+          "nutrition:low_meal_frequency",
+          "nutrition:dietary_restrictions",
+          "training:low_consistency",
+        ]),
+      }),
+    );
   });
 });
 

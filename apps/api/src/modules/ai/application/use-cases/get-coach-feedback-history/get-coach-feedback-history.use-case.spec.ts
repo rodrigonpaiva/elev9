@@ -101,6 +101,30 @@ describe("GetCoachFeedbackHistoryUseCase", () => {
     ]);
   });
 
+  it("keeps public history payload unchanged even when influences exist internally", async () => {
+    mockUserProfile(userProfileRepository);
+    coachFeedbackRepository.findByUserProfileId.mockResolvedValue([
+      buildCoachFeedback("feedback_003", "2026-05-05T10:00:00.000Z", [
+        "fatigue:high",
+        "nutrition:fat_loss",
+      ]),
+    ]);
+
+    const result = await useCase.execute({
+      authUserId: "auth_user_123",
+      limit: 10,
+    });
+
+    expect(result.feedbacks[0]).toEqual({
+      id: "feedback_003",
+      message: "Great consistency this week.",
+      insights: ["You trained 4 times this week"],
+      recommendations: ["Keep your current rhythm"],
+      createdAt: "2026-05-05T10:00:00.000Z",
+    });
+    expect(result.feedbacks[0]).not.toHaveProperty("influences");
+  });
+
   it("returns USER_PROFILE_NOT_FOUND when user profile is missing", async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);
 
@@ -178,13 +202,18 @@ function mockUserProfile(
   );
 }
 
-function buildCoachFeedback(id: string, createdAt: string): CoachFeedback {
+function buildCoachFeedback(
+  id: string,
+  createdAt: string,
+  influences?: string[],
+): CoachFeedback {
   return new CoachFeedback({
     id,
     userProfileId: "profile_123",
     message: "Great consistency this week.",
     insights: ["You trained 4 times this week"],
     recommendations: ["Keep your current rhythm"],
+    influences,
     createdAt: new Date(createdAt),
   });
 }

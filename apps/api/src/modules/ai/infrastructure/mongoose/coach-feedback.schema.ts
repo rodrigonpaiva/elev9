@@ -8,6 +8,7 @@ export class CoachFeedbackSchemaClass {
   message!: string;
   insights!: string[];
   recommendations!: string[];
+  influences?: string[];
   createdAt!: Date;
   updatedAt!: Date;
 }
@@ -28,6 +29,11 @@ export const CoachFeedbackSchema = new Schema<CoachFeedbackSchemaClass>(
       type: [{ type: String, required: true }],
       required: true,
       default: [],
+    },
+    influences: {
+      type: [{ type: String, required: true }],
+      required: false,
+      default: undefined,
     },
   },
   {

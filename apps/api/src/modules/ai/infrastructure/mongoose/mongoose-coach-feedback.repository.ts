@@ -55,6 +55,7 @@ export class MongooseCoachFeedbackRepository implements CoachFeedbackRepository 
       message: document.message,
       insights: [...document.insights],
       recommendations: [...document.recommendations],
+      influences: document.influences ? [...document.influences] : [],
       createdAt: document.createdAt,
     });
   }
