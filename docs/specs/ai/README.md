@@ -65,6 +65,7 @@ Hoje, a arquitetura interna do módulo `ai` se apoia principalmente em:
 
 ## Conversational Explainability Surfaces
 
+- [get-coach-chat-memory-debug](./get-coach-chat-memory-debug/README.md)
 - [get-coach-chat-debug](./get-coach-chat-debug/README.md)
 - [get-coach-chat-debug-index](./get-coach-chat-debug-index/README.md)
 - [get-coach-chat-debug-history](./get-coach-chat-debug-history/README.md)
@@ -93,6 +94,7 @@ O sistema atual do módulo `ai` possui as seguintes características:
 - persisted `influences` for explainability
 - persisted `contextSnapshot` for replay compatibility
 - conversational chat persistence with deterministic replies
+- deterministic conversational memory summarization with inspection-only preview surfaces
 - authenticated, user-scoped internal debug and replay flows
 - conversational explainability surfaces for deterministic inspection only
 

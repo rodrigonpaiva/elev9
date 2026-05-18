@@ -101,7 +101,7 @@ Após sucesso:
 - `ai/create-coach-chat`
 - `ai/get-coach-chat-history`
 - `ai/get-coach-chat-debug-history`
-- `ai/get-coach-chat-memory-debug`
+- `ai/get-coach-chat-memory-debug` (`./get-coach-chat-memory-debug/README.md`)
 - `ai/get-coach-chat-prompt-debug`
 - `ai/get-coach-chat-reply-path-debug`
 
