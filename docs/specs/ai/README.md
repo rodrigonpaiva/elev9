@@ -1,0 +1,104 @@
+# AI Specs Index
+
+## 1. Overview
+
+O módulo `ai` do Elev9 Coach atualmente cobre uma arquitetura determinística e orientada por contexto para:
+
+- context aggregation
+- recovery heuristics
+- nutrition awareness
+- coach feedback generation
+- explainability
+- debugging
+- replay
+
+O estado atual do sistema é `deterministic-first`. Não existe integração ativa com LLM no fluxo principal atual. Qualquer evolução para providers externos, prompt orchestration ou memória semântica continua sendo futura.
+
+---
+
+## 2. Architecture Overview
+
+```txt
+User data
+→ UserHealthContext
+→ CoachFeedbackGenerator
+→ Recovery & Nutrition Awareness
+→ Explainability Layer
+→ Replay & Debug
+```
+
+Hoje, a arquitetura interna do módulo `ai` se apoia principalmente em:
+
+- `BuildUserHealthContextService`
+- `GET /ai/context`
+- `CoachFeedbackGenerator`
+- `CoachFeedback` persistido com metadata interna
+- endpoints internos de debug e replay
+
+---
+
+## 3. Spec Index
+
+## Core Context
+
+- [build-user-health-context](./build-user-health-context/README.md)
+- [get-ai-context](./get-ai-context/README.md)
+
+## Coach Feedback
+
+- [generate-coach-feedback](./generate-coach-feedback/README.md)
+- [get-coach-feedback-history](./get-coach-feedback-history/README.md)
+
+## Explainability & Replay
+
+- [get-coach-feedback-debug-history](./get-coach-feedback-debug-history/README.md)
+- [replay-coach-feedback](./replay-coach-feedback/README.md)
+
+---
+
+## 4. ADRs
+
+- [ADR-002 — Recovery & Adaptive Coaching System](../../adr/adr-002-recovery-system.md)
+- [ADR-003 — Coach Feedback Explainability & Replay System](../../adr/adr-003-coach-feedback-explainability.md)
+
+---
+
+## 5. Current System Characteristics
+
+O sistema atual do módulo `ai` possui as seguintes características:
+
+- deterministic heuristics instead of probabilistic generation
+- safe reduced context for internal orchestration
+- no medical claims in recovery interpretation
+- internal debug endpoints separated from public coach history
+- generator versioning through `COACH_FEEDBACK_GENERATOR_VERSION`
+- persisted `influences` for explainability
+- persisted `contextSnapshot` for replay compatibility
+- authenticated, user-scoped internal debug and replay flows
+
+Importante:
+
+- `recoveryTrend` existe em partes internas do sistema, mas não é um campo público de `GET /ai/context`
+- `hasTrainingPlan` não é um campo real do `UserHealthContext` atual; a presença de treino ativo é inferida por `activeTrainingPlanId`
+
+---
+
+## 6. Future Directions
+
+Possíveis evoluções arquiteturais futuras, ainda não implementadas:
+
+- LLM orchestration
+- prompt versioning
+- semantic memory
+- evaluation engine
+- adaptive recommendations
+- wearable integrations
+- nutrition intelligence
+
+Esses itens devem ser tratados como roadmap técnico, não como capacidades atuais do sistema.
+
+---
+
+## 7. Summary
+
+`docs/specs/ai/` agora documenta a base atual do módulo `ai` como uma arquitetura contextual, determinística e preparada para explainability e replay, sem depender ainda de LLM para o loop principal de coaching.
