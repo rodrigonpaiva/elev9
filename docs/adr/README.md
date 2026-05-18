@@ -38,6 +38,11 @@ Este índice centraliza a navegação das decisões arquiteturais atualmente for
 
 - [ADR-004 — Conversational Coach Architecture](./adr-004-conversational-coach-architecture.md)
 
+## Conversational Explainability Surfaces
+
+- [ADR-003 — Coach Feedback Explainability & Replay System](./adr-003-coach-feedback-explainability.md)
+- [ADR-004 — Conversational Coach Architecture](./adr-004-conversational-coach-architecture.md)
+
 ---
 
 ## 4. Current Architectural Themes
@@ -50,9 +55,25 @@ Os ADRs atuais convergem nos seguintes temas:
 - explainability
 - replay infrastructure
 - conversational coaching
+- conversational explainability surfaces
 - spec-driven evolution
 
 Esses temas descrevem o estado atual do sistema e não devem ser interpretados como uma plataforma de IA avançada ou como uma camada clínica.
+
+Em particular, a evolução arquitetural atual pode ser lida como:
+
+```txt
+ADR-003 → conversational explainability → ADR-004 → unified conversational debug surfaces
+```
+
+As superfícies internas de debug conversacional atualmente documentadas são:
+
+- `GET /ai/chat/debug`
+- `GET /ai/chat/debug/prompt`
+- `GET /ai/chat/debug/reply-path`
+- `GET /ai/chat/debug/history`
+
+Essas rotas são superfícies internas determinísticas de inspeção. Elas não expõem prompt bruto, `UserHealthContext` bruto, tokens, sessão ou payloads OpenAI internos completos.
 
 ---
 
