@@ -1,3 +1,9 @@
+## 🌍 Documentation
+
+- 🇵🇹 Portuguese → [README.md](./README.md)
+- 🇬🇧 English (default)
+- 🇫🇷 French → [README.fr.md](./README.fr.md)
+
 # Elev9 Coach
 
 Elev9 Coach is an MVP fitness coaching platform built as a spec-driven monorepo. The current scope focuses on a solid backend foundation, a functional mobile client, and clear architectural boundaries for future growth.
