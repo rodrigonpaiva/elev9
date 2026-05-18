@@ -53,6 +53,10 @@ La gouvernance documentaire du dépôt est disponible dans [docs/specs/GOVERNANC
 
 - [Gouvernance documentaire](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/GOVERNANCE.md)
 
+### Validation CI
+
+- [Flux de validation CI](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/ci.md)
+
 Cet ensemble de documentation couvre les systèmes adaptatifs, l’explainability du dashboard et la couche de coaching conversationnel du produit.
 
 ## Features Implemented
