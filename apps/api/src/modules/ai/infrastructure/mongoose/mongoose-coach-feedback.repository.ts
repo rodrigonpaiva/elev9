@@ -28,6 +28,16 @@ export class MongooseCoachFeedbackRepository implements CoachFeedbackRepository 
     return this.toEntity(document as CoachFeedbackDocument);
   }
 
+  async findById(feedbackId: string): Promise<CoachFeedback | null> {
+    const document = await this.coachFeedbackModel.findById(feedbackId).exec();
+
+    if (!document) {
+      return null;
+    }
+
+    return this.toEntity(document as CoachFeedbackDocument);
+  }
+
   async findByUserProfileId(input: {
     userProfileId: string;
     limit: number;
@@ -59,11 +69,21 @@ export class MongooseCoachFeedbackRepository implements CoachFeedbackRepository 
       generatorVersion: document.generatorVersion,
       contextSnapshot: document.contextSnapshot
         ? {
+            goal: document.contextSnapshot.goal,
+            activityLevel: document.contextSnapshot.activityLevel,
+            hasTrainingPlan: document.contextSnapshot.hasTrainingPlan,
             fatigueLevel: document.contextSnapshot.fatigueLevel,
             recoveryTrend: document.contextSnapshot.recoveryTrend,
             weeklyFrequency: document.contextSnapshot.weeklyFrequency,
             currentStreak: document.contextSnapshot.currentStreak,
             averageWorkoutDuration: document.contextSnapshot.averageWorkoutDuration,
+            recentWorkoutLogs: document.contextSnapshot.recentWorkoutLogs
+              ? document.contextSnapshot.recentWorkoutLogs.map((log) => ({
+                  date: log.date,
+                  durationMinutes: log.durationMinutes,
+                  createdAt: log.createdAt,
+                }))
+              : undefined,
             latestCheckIn: document.contextSnapshot.latestCheckIn
               ? {
                   energyLevel: document.contextSnapshot.latestCheckIn.energyLevel,

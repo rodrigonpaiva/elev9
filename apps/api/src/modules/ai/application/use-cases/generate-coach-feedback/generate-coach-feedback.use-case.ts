@@ -115,11 +115,19 @@ export class GenerateCoachFeedbackUseCase {
   private buildContextSnapshot(
     healthContext: Awaited<ReturnType<BuildUserHealthContextService["build"]>>,
   ): {
+    goal?: "lose_weight" | "gain_muscle" | "maintain";
+    activityLevel?: "low" | "medium" | "high";
+    hasTrainingPlan?: boolean;
     fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
     recoveryTrend?: "improving" | "stable" | "needs_recovery";
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
+    recentWorkoutLogs?: Array<{
+      date: string;
+      durationMinutes: number;
+      createdAt: string;
+    }>;
     latestCheckIn?: {
       energyLevel: number;
       sleepQuality: number;
@@ -132,11 +140,19 @@ export class GenerateCoachFeedbackUseCase {
     };
   } {
     return {
+      goal: healthContext.goal,
+      activityLevel: healthContext.activityLevel,
+      hasTrainingPlan: Boolean(healthContext.activeTrainingPlanId),
       fatigueLevel: healthContext.fatigueLevel,
       recoveryTrend: this.resolveRecoveryTrend(healthContext.fatigueLevel),
       weeklyFrequency: healthContext.weeklyFrequency,
       currentStreak: healthContext.currentStreak,
       averageWorkoutDuration: healthContext.averageWorkoutDuration,
+      recentWorkoutLogs: healthContext.recentWorkoutLogs.map((log) => ({
+        date: log.date,
+        durationMinutes: log.durationMinutes,
+        createdAt: log.createdAt.toISOString(),
+      })),
       latestCheckIn: healthContext.latestCheckIn
         ? {
             energyLevel: healthContext.latestCheckIn.energyLevel,

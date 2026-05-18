@@ -7,11 +7,19 @@ export type CoachFeedbackProps = {
   influences?: string[];
   generatorVersion?: string;
   contextSnapshot?: {
+    goal?: "lose_weight" | "gain_muscle" | "maintain";
+    activityLevel?: "low" | "medium" | "high";
+    hasTrainingPlan?: boolean;
     fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
     recoveryTrend?: "improving" | "stable" | "needs_recovery";
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
+    recentWorkoutLogs?: Array<{
+      date: string;
+      durationMinutes: number;
+      createdAt: string;
+    }>;
     latestCheckIn?: {
       energyLevel: number;
       sleepQuality: number;

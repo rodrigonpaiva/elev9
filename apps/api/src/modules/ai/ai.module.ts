@@ -52,6 +52,7 @@ import { CoachFeedbackGenerator } from "./application/services/coach-feedback/co
 import { GetCoachFeedbackDebugHistoryUseCase } from "./application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
 import { GetCoachFeedbackHistoryUseCase } from "./application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
 import { GenerateCoachFeedbackUseCase } from "./application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
+import { ReplayCoachFeedbackUseCase } from "./application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
 import { AiController } from "./presentation/http/ai.controller";
 
 @Module({
@@ -96,6 +97,7 @@ import { AiController } from "./presentation/http/ai.controller";
     GetCoachFeedbackDebugHistoryUseCase,
     GetCoachFeedbackHistoryUseCase,
     GenerateCoachFeedbackUseCase,
+    ReplayCoachFeedbackUseCase,
     {
       provide: CLOCK,
       useClass: SystemClockService,

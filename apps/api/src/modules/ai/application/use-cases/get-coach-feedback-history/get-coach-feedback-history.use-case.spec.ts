@@ -19,6 +19,7 @@ describe("GetCoachFeedbackHistoryUseCase", () => {
     };
     coachFeedbackRepository = {
       create: jest.fn(),
+      findById: jest.fn(),
       findByUserProfileId: jest.fn(),
     };
 

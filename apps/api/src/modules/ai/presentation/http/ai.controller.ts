@@ -7,6 +7,7 @@ import {
   HttpStatus,
   InternalServerErrorException,
   NotFoundException,
+  Param,
   Post,
   Query,
   Req,
@@ -20,6 +21,11 @@ import {
   GetCoachFeedbackDebugHistoryError,
 } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.errors";
 import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
+import {
+  REPLAY_COACH_FEEDBACK_ERROR_CODES,
+  ReplayCoachFeedbackError,
+} from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.errors";
+import { ReplayCoachFeedbackUseCase } from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
 import {
   GET_COACH_FEEDBACK_HISTORY_ERROR_CODES,
   GetCoachFeedbackHistoryError,
@@ -39,6 +45,7 @@ import { GetCoachFeedbackDebugHistoryResponseDto } from "./dto/get-coach-feedbac
 import { GetCoachFeedbackHistoryQueryDto } from "./dto/get-coach-feedback-history.query.dto";
 import { GetCoachFeedbackHistoryResponseDto } from "./dto/get-coach-feedback-history.response.dto";
 import { GenerateCoachFeedbackResponseDto } from "./dto/generate-coach-feedback.response.dto";
+import { ReplayCoachFeedbackResponseDto } from "./dto/replay-coach-feedback.response.dto";
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -52,6 +59,7 @@ export class AiController {
   constructor(
     private readonly generateCoachFeedbackUseCase: GenerateCoachFeedbackUseCase,
     private readonly getCoachFeedbackDebugHistoryUseCase: GetCoachFeedbackDebugHistoryUseCase,
+    private readonly replayCoachFeedbackUseCase: ReplayCoachFeedbackUseCase,
     private readonly getCoachFeedbackHistoryUseCase: GetCoachFeedbackHistoryUseCase,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
   ) {}
@@ -126,6 +134,31 @@ export class AiController {
       });
     } catch (error) {
       this.handleGetDebugHistoryError(error);
+    }
+  }
+
+  @Get("debug/coach-feedback/:id/replay")
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async replayCoachFeedback(
+    @Req() request: RequestWithAuthUser,
+    @Param("id") feedbackId: string,
+    @Body() body?: Record<string, unknown>,
+  ): Promise<ReplayCoachFeedbackResponseDto> {
+    if (body && Object.keys(body).length > 0) {
+      throw new BadRequestException({
+        code: REPLAY_COACH_FEEDBACK_ERROR_CODES.INVALID_INPUT,
+        message: "Invalid coach feedback replay input.",
+      });
+    }
+
+    try {
+      return await this.replayCoachFeedbackUseCase.execute({
+        authUserId: request.authUser?.id ?? "",
+        feedbackId,
+      });
+    } catch (error) {
+      this.handleReplayError(error);
     }
   }
 
@@ -330,6 +363,42 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.INTERNAL_ERROR,
+          message: "An unexpected error occurred.",
+        });
+    }
+  }
+
+  private handleReplayError(error: unknown): never {
+    if (!(error instanceof ReplayCoachFeedbackError)) {
+      throw new InternalServerErrorException("An unexpected error occurred.");
+    }
+
+    switch (error.code) {
+      case REPLAY_COACH_FEEDBACK_ERROR_CODES.INVALID_INPUT:
+      case REPLAY_COACH_FEEDBACK_ERROR_CODES.CONTEXT_MISSING:
+      case REPLAY_COACH_FEEDBACK_ERROR_CODES.GENERATOR_VERSION_UNSUPPORTED:
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case REPLAY_COACH_FEEDBACK_ERROR_CODES.COACH_FEEDBACK_NOT_FOUND:
+      case REPLAY_COACH_FEEDBACK_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case REPLAY_COACH_FEEDBACK_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case REPLAY_COACH_FEEDBACK_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: REPLAY_COACH_FEEDBACK_ERROR_CODES.INTERNAL_ERROR,
           message: "An unexpected error occurred.",
         });
     }

@@ -11,11 +11,19 @@ export class CoachFeedbackSchemaClass {
   influences?: string[];
   generatorVersion?: string;
   contextSnapshot?: {
+    goal?: "lose_weight" | "gain_muscle" | "maintain";
+    activityLevel?: "low" | "medium" | "high";
+    hasTrainingPlan?: boolean;
     fatigueLevel?: "LOW" | "MODERATE" | "HIGH";
     recoveryTrend?: "improving" | "stable" | "needs_recovery";
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
+    recentWorkoutLogs?: Array<{
+      date: string;
+      durationMinutes: number;
+      createdAt: string;
+    }>;
     latestCheckIn?: {
       energyLevel: number;
       sleepQuality: number;
@@ -60,11 +68,25 @@ export const CoachFeedbackSchema = new Schema<CoachFeedbackSchemaClass>(
     },
     contextSnapshot: {
       type: {
+        goal: { type: String, required: false },
+        activityLevel: { type: String, required: false },
+        hasTrainingPlan: { type: Boolean, required: false },
         fatigueLevel: { type: String, required: false },
         recoveryTrend: { type: String, required: false },
         weeklyFrequency: { type: Number, required: false },
         currentStreak: { type: Number, required: false },
         averageWorkoutDuration: { type: Number, required: false },
+        recentWorkoutLogs: {
+          type: [
+            {
+              date: { type: String, required: false },
+              durationMinutes: { type: Number, required: false },
+              createdAt: { type: String, required: false },
+            },
+          ],
+          required: false,
+          default: undefined,
+        },
         latestCheckIn: {
           energyLevel: { type: Number, required: false },
           sleepQuality: { type: Number, required: false },

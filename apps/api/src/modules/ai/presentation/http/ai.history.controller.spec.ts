@@ -11,6 +11,11 @@ import {
 } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.errors";
 import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
 import {
+  REPLAY_COACH_FEEDBACK_ERROR_CODES,
+  ReplayCoachFeedbackError,
+} from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.errors";
+import { ReplayCoachFeedbackUseCase } from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
+import {
   GET_COACH_FEEDBACK_HISTORY_ERROR_CODES,
   GetCoachFeedbackHistoryError,
 } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
@@ -22,6 +27,7 @@ import { AiController } from "./ai.controller";
 describe("AiController history", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
   let getCoachFeedbackDebugHistoryUseCase: jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
+  let replayCoachFeedbackUseCase: jest.Mocked<ReplayCoachFeedbackUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
   let buildUserHealthContextService: jest.Mocked<BuildUserHealthContextService>;
   let controller: AiController;
@@ -33,6 +39,9 @@ describe("AiController history", () => {
     getCoachFeedbackDebugHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
+    replayCoachFeedbackUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<ReplayCoachFeedbackUseCase>;
     getCoachFeedbackHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackHistoryUseCase>;
@@ -43,6 +52,7 @@ describe("AiController history", () => {
     controller = new AiController(
       generateCoachFeedbackUseCase,
       getCoachFeedbackDebugHistoryUseCase,
+      replayCoachFeedbackUseCase,
       getCoachFeedbackHistoryUseCase,
       buildUserHealthContextService,
     );
@@ -194,6 +204,111 @@ describe("AiController history", () => {
         mealsPerDay: 4,
       },
     });
+  });
+
+  it("replays a feedback from the debug endpoint", async () => {
+    replayCoachFeedbackUseCase.execute.mockResolvedValue({
+      feedbackId: "feedback_123",
+      generatorVersion: "heuristic-v1",
+      persisted: {
+        message: "persisted",
+        insights: ["i1"],
+        recommendations: ["r1"],
+        influences: ["training:low_consistency"],
+      },
+      replayed: {
+        message: "persisted",
+        insights: ["i1"],
+        recommendations: ["r2"],
+        influences: ["training:low_consistency"],
+      },
+      matches: {
+        message: true,
+        insights: true,
+        recommendations: false,
+        influences: true,
+      },
+    });
+
+    const result = await controller.replayCoachFeedback(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      "feedback_123",
+      {},
+    );
+
+    expect(replayCoachFeedbackUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+      feedbackId: "feedback_123",
+    });
+    expect(result.matches.recommendations).toBe(false);
+  });
+
+  it("maps replay context missing to HTTP 400", async () => {
+    replayCoachFeedbackUseCase.execute.mockRejectedValue(
+      new ReplayCoachFeedbackError(
+        REPLAY_COACH_FEEDBACK_ERROR_CODES.CONTEXT_MISSING,
+        "Coach feedback replay context is missing.",
+      ),
+    );
+
+    await expect(
+      controller.replayCoachFeedback(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        "feedback_123",
+        {},
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("rejects replay requests with unexpected body payload", async () => {
+    await expect(
+      controller.replayCoachFeedback(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        "feedback_123",
+        { unexpected: true },
+      ),
+    ).rejects.toMatchObject({
+      response: {
+        code: REPLAY_COACH_FEEDBACK_ERROR_CODES.INVALID_INPUT,
+      },
+    });
+  });
+
+  it("maps replay not found to HTTP 404", async () => {
+    replayCoachFeedbackUseCase.execute.mockRejectedValue(
+      new ReplayCoachFeedbackError(
+        REPLAY_COACH_FEEDBACK_ERROR_CODES.COACH_FEEDBACK_NOT_FOUND,
+        "Coach feedback not found.",
+      ),
+    );
+
+    await expect(
+      controller.replayCoachFeedback(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        "feedback_123",
+        {},
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it("returns empty debug history", async () => {

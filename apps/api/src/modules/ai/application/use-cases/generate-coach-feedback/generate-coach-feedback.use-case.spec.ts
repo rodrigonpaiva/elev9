@@ -26,6 +26,7 @@ describe("GenerateCoachFeedbackUseCase", () => {
   beforeEach(() => {
     coachFeedbackRepository = {
       create: jest.fn(),
+      findById: jest.fn(),
       findByUserProfileId: jest.fn(),
     };
     buildUserHealthContextService = {
@@ -350,7 +351,10 @@ describe("GenerateCoachFeedbackUseCase", () => {
           "nutrition:dietary_restrictions",
           "training:low_consistency",
         ]),
-        contextSnapshot: {
+        contextSnapshot: expect.objectContaining({
+          goal: "gain_muscle",
+          activityLevel: "medium",
+          hasTrainingPlan: true,
           fatigueLevel: "HIGH",
           recoveryTrend: "needs_recovery",
           weeklyFrequency: 4,
@@ -366,7 +370,19 @@ describe("GenerateCoachFeedbackUseCase", () => {
             goal: "fat_loss",
             mealsPerDay: 2,
           },
-        },
+          recentWorkoutLogs: [
+            {
+              date: "2026-05-02",
+              durationMinutes: 40,
+              createdAt: "2026-05-02T10:00:00.000Z",
+            },
+            {
+              date: "2026-05-04",
+              durationMinutes: 44,
+              createdAt: "2026-05-04T10:00:00.000Z",
+            },
+          ],
+        }),
         generatorVersion: COACH_FEEDBACK_GENERATOR_VERSION,
       }),
     );

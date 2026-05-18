@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 
 import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
+import { ReplayCoachFeedbackUseCase } from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
 import {
   GET_COACH_FEEDBACK_HISTORY_ERROR_CODES,
   GetCoachFeedbackHistoryError,
@@ -24,6 +25,7 @@ import { GUARDS_METADATA } from "@nestjs/common/constants";
 describe("AiController", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
   let getCoachFeedbackDebugHistoryUseCase: jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
+  let replayCoachFeedbackUseCase: jest.Mocked<ReplayCoachFeedbackUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
   let buildUserHealthContextService: jest.Mocked<BuildUserHealthContextService>;
   let controller: AiController;
@@ -35,6 +37,9 @@ describe("AiController", () => {
     getCoachFeedbackDebugHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
+    replayCoachFeedbackUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<ReplayCoachFeedbackUseCase>;
     getCoachFeedbackHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackHistoryUseCase>;
@@ -45,6 +50,7 @@ describe("AiController", () => {
     controller = new AiController(
       generateCoachFeedbackUseCase,
       getCoachFeedbackDebugHistoryUseCase,
+      replayCoachFeedbackUseCase,
       getCoachFeedbackHistoryUseCase,
       buildUserHealthContextService,
     );
