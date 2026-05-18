@@ -24,7 +24,7 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env.example
+      - .env
     environment:
       PORT: 3000
       MONGODB_URI: mongodb://mongo:27017/elev9

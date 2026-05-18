@@ -149,13 +149,14 @@ npm run test
 
 ## Docker Runtime
 
-A minimal local-first Docker foundation is available for the API and MongoDB:
+The Docker runtime remains local-first and development-oriented.
 
 ```bash
+cp .env.docker.example .env
 docker compose up --build
 ```
 
-The compose setup uses the existing `.env.example`, builds the API image deterministically, and starts MongoDB alongside the backend.
+The compose setup builds the API image deterministically and starts MongoDB alongside the backend.
 
 ## Project Status
 
