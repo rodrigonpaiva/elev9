@@ -48,10 +48,5 @@ export class GetHomeDashboardResponseDto {
       message: string;
       signals: string[];
     };
-    debug: {
-      generatedAt: string;
-      recoverySignals: string[];
-      nutritionSignals: string[];
-    };
   };
 }

@@ -10,6 +10,7 @@ import { TrainingPlanRepository } from "../../../../training/domain/repositories
 import { UserProfile } from "../../../../users/domain/entities/user-profile.entity";
 import { UserProfileRepository } from "../../../../users/domain/repositories/user-profile.repository";
 import { BuildUserHealthContextService } from "../../../../ai/application/services/context-builder/build-user-health-context.service";
+import { DashboardAdaptiveSignalsService } from "../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service";
 import {
   GET_HOME_DASHBOARD_ERROR_CODES,
 } from "./get-home-dashboard.errors";
@@ -25,6 +26,7 @@ describe("GetHomeDashboardUseCase", () => {
   let buildUserHealthContextService: {
     build: jest.MockedFunction<BuildUserHealthContextService["build"]>;
   };
+  let dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService;
   let useCase: GetHomeDashboardUseCase;
 
   beforeEach(() => {
@@ -76,6 +78,7 @@ describe("GetHomeDashboardUseCase", () => {
         generatedAt: new Date("2026-04-30T10:00:00.000Z"),
       }),
     };
+    dashboardAdaptiveSignalsService = new DashboardAdaptiveSignalsService();
 
     useCase = new GetHomeDashboardUseCase(
       userProfileRepository,
@@ -85,6 +88,7 @@ describe("GetHomeDashboardUseCase", () => {
       dailyCheckInRepository,
       clock,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
+      dashboardAdaptiveSignalsService,
     );
   });
 
@@ -209,11 +213,6 @@ describe("GetHomeDashboardUseCase", () => {
           message: "Keep your meals consistent today to support recovery and routine.",
           signals: ["low_consistency"],
         },
-        debug: {
-          generatedAt: "2026-04-30T10:00:00.000Z",
-          recoverySignals: [],
-          nutritionSignals: ["low_consistency"],
-        },
       },
     });
     expect(trainingPlanRepository.findActiveByFitnessProfileId).not.toHaveBeenCalled();
@@ -246,11 +245,6 @@ describe("GetHomeDashboardUseCase", () => {
       priority: "consistency",
       message: "Keep your meals consistent today to support recovery and routine.",
       signals: ["low_consistency"],
-    });
-    expect(result.dashboard.debug).toEqual({
-      generatedAt: "2026-04-30T10:00:00.000Z",
-      recoverySignals: [],
-      nutritionSignals: ["low_consistency"],
     });
     expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).not.toHaveBeenCalled();
   });
@@ -355,11 +349,6 @@ describe("GetHomeDashboardUseCase", () => {
       message: "Keep your meals consistent today to support recovery and routine.",
       signals: ["low_consistency"],
     });
-    expect(result.dashboard.debug).toEqual({
-      generatedAt: "2026-04-30T10:00:00.000Z",
-      recoverySignals: [],
-      nutritionSignals: ["low_consistency"],
-    });
   });
 
   it("isolates the summary by authenticated user's training plan id", async () => {
@@ -435,11 +424,6 @@ describe("GetHomeDashboardUseCase", () => {
       message: "Focus on recovery meals and hydration today.",
       signals: ["high_fatigue", "poor_sleep", "high_soreness"],
     });
-    expect(result.dashboard.debug).toEqual({
-      generatedAt: "2026-04-30T10:00:00.000Z",
-      recoverySignals: ["high_fatigue", "poor_sleep", "high_soreness"],
-      nutritionSignals: ["high_fatigue", "poor_sleep", "high_soreness"],
-    });
   });
 
   it("returns recovery with LOW fatigue mapped to normal intensity", async () => {
@@ -473,7 +457,6 @@ describe("GetHomeDashboardUseCase", () => {
       message: "Keep your meals consistent today to support recovery and routine.",
       signals: ["low_consistency"],
     });
-    expect(result.dashboard.debug.generatedAt).toBe("2026-04-30T10:00:00.000Z");
   });
 
   it("returns consistency guidance when meal frequency is low", async () => {
@@ -516,7 +499,6 @@ describe("GetHomeDashboardUseCase", () => {
       message: "Keep your meals consistent today to support recovery and routine.",
       signals: ["low_meal_frequency"],
     });
-    expect(result.dashboard.debug.nutritionSignals).toEqual(["low_meal_frequency"]);
   });
 
   it("returns performance guidance when recovery is low-fatigue and muscle gain is active", async () => {
@@ -559,7 +541,6 @@ describe("GetHomeDashboardUseCase", () => {
       message: "Support today's training with consistent meals around your session.",
       signals: ["muscle_gain_goal", "high_motivation", "low_fatigue"],
     });
-    expect(result.dashboard.debug.recoverySignals).toEqual([]);
   });
 
   it("returns a safe consistency fallback when no nutrition profile exists", async () => {
@@ -587,11 +568,6 @@ describe("GetHomeDashboardUseCase", () => {
       priority: "consistency",
       message: "Keep your nutrition routine consistent today.",
       signals: ["general_consistency"],
-    });
-    expect(result.dashboard.debug).toEqual({
-      generatedAt: "2026-04-30T10:00:00.000Z",
-      recoverySignals: [],
-      nutritionSignals: ["general_consistency"],
     });
   });
 
@@ -651,9 +627,6 @@ describe("GetHomeDashboardUseCase", () => {
     expect(result.dashboard.nutritionGuidance.signals).toContain(
       "needs_recovery_trend",
     );
-    expect(result.dashboard.debug.recoverySignals).toEqual([
-      "needs_recovery_trend",
-    ]);
   });
 
   it("includes improving recovery in performance guidance signals when available", async () => {
@@ -721,10 +694,6 @@ describe("GetHomeDashboardUseCase", () => {
       "muscle_gain_goal",
       "high_motivation",
       "low_fatigue",
-      "improving_recovery",
-    ]);
-    expect(result.dashboard.debug.recoverySignals).toEqual([
-      "improving_recovery",
     ]);
   });
 

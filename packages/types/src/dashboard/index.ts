@@ -54,11 +54,19 @@ export type DashboardHomeResponse = {
       message: string;
       signals: string[];
     };
-    debug: {
-      generatedAt: string;
-      recoverySignals: string[];
-      nutritionSignals: string[];
-    };
+  };
+};
+
+export type DashboardHomeDebugResponse = {
+  generatedAt: string;
+  recovery: {
+    fatigueLevel: string;
+    recoveryTrend: "improving" | "stable" | "needs_recovery";
+    recoverySignals: string[];
+  };
+  nutrition: {
+    priority: "recovery" | "consistency" | "performance";
+    signals: string[];
   };
 };
 

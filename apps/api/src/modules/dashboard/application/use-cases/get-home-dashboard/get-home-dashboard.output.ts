@@ -26,12 +26,6 @@ type DashboardNutritionGuidance = {
   signals: string[];
 };
 
-type DashboardDebugSnapshot = {
-  generatedAt: string;
-  recoverySignals: string[];
-  nutritionSignals: string[];
-};
-
 export type GetHomeDashboardOutput = {
   dashboard: {
     user: {
@@ -66,6 +60,5 @@ export type GetHomeDashboardOutput = {
       };
     };
     nutritionGuidance: DashboardNutritionGuidance;
-    debug: DashboardDebugSnapshot;
   };
 };

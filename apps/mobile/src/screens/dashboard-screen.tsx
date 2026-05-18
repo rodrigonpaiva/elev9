@@ -22,6 +22,7 @@ import {
 } from "@elev9/ui";
 import type {
   CreateDailyCheckInRequest,
+  DashboardHomeDebugResponse,
   DashboardHomeResponse,
   TodayWorkout,
 } from "@elev9/types";
@@ -51,6 +52,8 @@ export function DashboardScreen({
   const { signOut } = useAuth();
   const [dashboard, setDashboard] =
     useState<DashboardHomeResponse["dashboard"] | null>(null);
+  const [dashboardDebug, setDashboardDebug] =
+    useState<DashboardHomeDebugResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -67,14 +70,17 @@ export function DashboardScreen({
       setIsLoading(true);
     }
     setErrorMessage(null);
+    setDashboardDebug(null);
 
     try {
-      const [response, progressSummary] = await Promise.all([
+      const [response, progressSummary, debugResponse] = await Promise.all([
         apiClient.dashboard.getHome(),
         apiClient.progress.getSummary("week"),
+        mobileApiClient.dashboard.getHomeDebug().catch(() => null),
       ]);
 
       setDashboard(response.dashboard);
+      setDashboardDebug(debugResponse);
       setCurrentStreak(progressSummary.summary.currentStreak);
     } catch (error) {
       if (
@@ -379,27 +385,36 @@ export function DashboardScreen({
             title="Adaptive Signals"
             subtitle="Deterministic signals behind today's dashboard decisions."
           />
-          <View style={styles.metricCard}>
-            <View style={styles.nutritionSignalsGroup}>
-              <Text style={styles.metricLabel}>Recovery signals</Text>
-              {dashboard.debug.recoverySignals.map((signal) => (
-                <Text key={`recovery-${signal}`} style={styles.metricValue}>
-                  • {formatNutritionGuidanceSignal(signal)}
-                </Text>
-              ))}
+          {dashboardDebug ? (
+            <View style={styles.metricCard}>
+              <View style={styles.nutritionSignalsGroup}>
+                <Text style={styles.metricLabel}>Recovery signals</Text>
+                {dashboardDebug.recovery.recoverySignals.map((signal) => (
+                  <Text key={`recovery-${signal}`} style={styles.metricValue}>
+                    • {formatNutritionGuidanceSignal(signal)}
+                  </Text>
+                ))}
+              </View>
+              <View style={styles.nutritionSignalsGroup}>
+                <Text style={styles.metricLabel}>Nutrition signals</Text>
+                {dashboardDebug.nutrition.signals.map((signal) => (
+                  <Text key={`nutrition-${signal}`} style={styles.metricValue}>
+                    • {formatNutritionGuidanceSignal(signal)}
+                  </Text>
+                ))}
+              </View>
+              <Text style={styles.recoveryTimestamp}>
+                Generated {formatDateTime(dashboardDebug.generatedAt)}
+              </Text>
             </View>
-            <View style={styles.nutritionSignalsGroup}>
-              <Text style={styles.metricLabel}>Nutrition signals</Text>
-              {dashboard.debug.nutritionSignals.map((signal) => (
-                <Text key={`nutrition-${signal}`} style={styles.metricValue}>
-                  • {formatNutritionGuidanceSignal(signal)}
-                </Text>
-              ))}
+          ) : (
+            <View style={styles.fallbackBox}>
+              <Text style={styles.metricValue}>Adaptive signals unavailable</Text>
+              <Text style={styles.fallbackText}>
+                The internal debug snapshot could not be loaded.
+              </Text>
             </View>
-            <Text style={styles.recoveryTimestamp}>
-              Generated {formatDateTime(dashboard.debug.generatedAt)}
-            </Text>
-          </View>
+          )}
         </Card>
       </Animated.View>
 

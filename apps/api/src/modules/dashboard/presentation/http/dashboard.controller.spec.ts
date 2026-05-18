@@ -76,11 +76,6 @@ describe("DashboardController", () => {
           message: "Focus on recovery meals and hydration today.",
           signals: ["high_fatigue", "poor_sleep", "high_soreness"],
         },
-        debug: {
-          generatedAt: "2026-04-30T10:00:00.000Z",
-          recoverySignals: ["high_fatigue", "poor_sleep", "high_soreness"],
-          nutritionSignals: ["high_fatigue", "poor_sleep", "high_soreness"],
-        },
       },
     });
 
@@ -108,7 +103,6 @@ describe("DashboardController", () => {
       "poor_sleep",
       "high_soreness",
     ]);
-    expect(result.dashboard.debug.generatedAt).toBe("2026-04-30T10:00:00.000Z");
   });
 
   it("maps USER_PROFILE_NOT_FOUND to HTTP 404", async () => {
