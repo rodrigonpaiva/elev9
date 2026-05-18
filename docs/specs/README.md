@@ -46,9 +46,9 @@ Este índice funciona como ponto central de navegação da arquitetura documenta
 
 ## Exploratory Agent Specs
 
-- [ai-agent](./ai-agent/)
+- [ai-agent](./ai-agent/README.md)
 
-`ai-agent` existe hoje como trilha documental separada para agentes e capacidades futuras. Ele não representa o mesmo nível de implementação do módulo `ai` atual.
+`ai-agent` existe hoje como uma trilha documental exploratória separada para agentes e capacidades futuras. Ele não representa o mesmo nível de implementação do módulo `ai` atual.
 
 ---
 
