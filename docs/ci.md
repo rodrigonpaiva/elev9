@@ -13,7 +13,7 @@ It exists to validate the workspace in a stable order without introducing deploy
 The current validation flow is:
 
 ```txt
-npm ci
+npm ci --legacy-peer-deps
 → format:check
 → lint
 → API tests
@@ -56,6 +56,8 @@ These are intentionally out of scope for the current pipeline.
 The pipeline avoids speculative tooling and unstable workspace targets.
 
 It uses lockfile-first installation, the existing workspace commands, and explicit validation steps that are already supported by the repository.
+
+`npm ci --legacy-peer-deps` is used for now because the workspace still has a known React/@types peer-dependency mismatch that has not been normalized yet.
 
 ---
 
