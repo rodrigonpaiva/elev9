@@ -1,5 +1,12 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Logger, Inject, Injectable } from "@nestjs/common";
 
+import {
+  AiLlmService,
+} from "../../services/llm/ai-llm.service";
+import {
+  AiPromptBuilder,
+  type AiPromptBuilderConversationMessage,
+} from "../../services/llm/ai-prompt-builder.service";
 import { BuildUserHealthContextService } from "../../services/context-builder/build-user-health-context.service";
 import { CoachChatReplyGenerator } from "../../services/chat/coach-chat-reply-generator.service";
 import {
@@ -23,6 +30,8 @@ import { CreateCoachChatOutput } from "./create-coach-chat.output";
 
 @Injectable()
 export class CreateCoachChatUseCase {
+  private readonly logger = new Logger(CreateCoachChatUseCase.name);
+
   constructor(
     @Inject(USER_PROFILE_REPOSITORY)
     private readonly userProfileRepository: UserProfileRepository,
@@ -31,6 +40,8 @@ export class CreateCoachChatUseCase {
     @Inject(COACH_MESSAGE_REPOSITORY)
     private readonly coachMessageRepository: CoachMessageRepository,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
+    private readonly aiPromptBuilder: AiPromptBuilder,
+    private readonly aiLlmService: AiLlmService,
     private readonly coachChatReplyGenerator: CoachChatReplyGenerator,
   ) {}
 
@@ -79,16 +90,53 @@ export class CreateCoachChatUseCase {
           userProfileId: userProfile.id,
         }));
 
+      const conversationHistory = (
+        existingConversation
+          ? await this.coachMessageRepository.findByConversationId({
+              conversationId: conversation.id,
+              limit: 12,
+            })
+          : []
+      )
+        .slice()
+        .reverse()
+        .map((message) => ({
+          role: message.role,
+          content: message.content,
+          createdAt: message.createdAt.toISOString(),
+        })) as AiPromptBuilderConversationMessage[];
+
       await this.coachMessageRepository.create({
         conversationId: conversation.id,
         role: "user",
         content: message,
       });
 
-      const reply = this.coachChatReplyGenerator.generate({
+      const prompt = this.aiPromptBuilder.build({
         message,
         healthContext,
+        conversationHistory,
       });
+
+      let reply: string | null = null;
+      let fallbackTriggered = false;
+
+      try {
+        reply = await this.aiLlmService.generateReply(prompt);
+      } catch (_error) {
+        fallbackTriggered = true;
+        this.logger.warn("fallback activated");
+      }
+
+      if (!reply) {
+        if (!fallbackTriggered) {
+          this.logger.log("fallback activated");
+        }
+        reply = this.coachChatReplyGenerator.generate({
+          message,
+          healthContext,
+        });
+      }
 
       await this.coachMessageRepository.create({
         conversationId: conversation.id,

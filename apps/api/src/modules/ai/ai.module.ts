@@ -48,6 +48,10 @@ import {
 } from "../users/infrastructure/mongoose/user-profile.schema";
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
 import { BuildUserHealthContextService } from "./application/services/context-builder/build-user-health-context.service";
+import { AiLlmConfigService } from "./application/services/llm/ai-llm-config.service";
+import { AiLlmService } from "./application/services/llm/ai-llm.service";
+import { AiPromptBuilder } from "./application/services/llm/ai-prompt-builder.service";
+import { AI_LLM_PROVIDER } from "./application/services/llm/ai-llm.types";
 import { CoachFeedbackGenerator } from "./application/services/coach-feedback/coach-feedback-generator.service";
 import { CoachChatReplyGenerator } from "./application/services/chat/coach-chat-reply-generator.service";
 import { CreateCoachChatUseCase } from "./application/use-cases/create-coach-chat/create-coach-chat.use-case";
@@ -69,6 +73,7 @@ import {
   COACH_MESSAGE_MODEL_NAME,
   CoachMessageSchema,
 } from "./infrastructure/mongoose/coach-message.schema";
+import { OpenAiLlmProvider } from "./infrastructure/llm/openai-llm.provider";
 
 @Module({
   imports: [
@@ -116,6 +121,9 @@ import {
   providers: [
     AuthSessionGuard,
     BuildUserHealthContextService,
+    AiLlmConfigService,
+    AiPromptBuilder,
+    AiLlmService,
     CoachFeedbackGenerator,
     CoachChatReplyGenerator,
     CreateCoachChatUseCase,
@@ -163,6 +171,10 @@ import {
     {
       provide: COACH_MESSAGE_REPOSITORY,
       useClass: MongooseCoachMessageRepository,
+    },
+    {
+      provide: AI_LLM_PROVIDER,
+      useClass: OpenAiLlmProvider,
     },
   ],
 })
