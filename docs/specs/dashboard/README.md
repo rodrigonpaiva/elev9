@@ -14,6 +14,8 @@ Ele reúne leitura consolidada de:
 
 Este contexto funciona como a superfície adaptativa do sistema, combinando payload público e superfície interna de debug separada.
 
+A documentação deste bounded context segue [Documentation Governance](../GOVERNANCE.md), que define as regras de navegação, placeholders e limites para superfícies internas de debug.
+
 ---
 
 ## 2. Architecture Overview
