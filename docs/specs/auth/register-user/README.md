@@ -81,8 +81,8 @@ Após sucesso:
 
 ## 8. Related Specs
 
-- `auth/login-user`
-- `users/create-user-profile`
+- [auth/login-user](../login-user/README.md)
+- [users/create-user-profile](../../users/create-user-profile/README.md)
 - `auth/verify-email`
 
 ---

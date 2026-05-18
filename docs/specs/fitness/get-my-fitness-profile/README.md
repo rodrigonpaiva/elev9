@@ -82,9 +82,9 @@ Nenhum outro contexto é alterado.
 
 ## 8. Related Specs
 
-- `auth/validate-session`
-- `users/create-user-profile`
-- `fitness/create-fitness-profile`
+- [auth/validate-session](../../auth/validate-session/README.md)
+- [users/create-user-profile](../../users/create-user-profile/README.md)
+- [fitness/create-fitness-profile](../create-fitness-profile/README.md)
 
 ---
 

@@ -89,11 +89,11 @@ Nenhum outro contexto é modificado.
 
 ## 8. Related Specs
 
-- `auth/validate-session`
-- `users/create-user-profile`
-- `fitness/create-fitness-profile`
-- `training/create-training-plan`
-- `progress/log-workout`
+- [auth/validate-session](../../auth/validate-session/README.md)
+- [users/create-user-profile](../../users/create-user-profile/README.md)
+- [fitness/create-fitness-profile](../../fitness/create-fitness-profile/README.md)
+- [training/create-training-plan](../../training/create-training-plan/README.md)
+- [progress/log-workout](../log-workout/README.md)
 
 ---
 

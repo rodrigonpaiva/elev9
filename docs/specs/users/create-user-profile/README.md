@@ -85,9 +85,9 @@ Nenhum outro contexto é alterado.
 
 ## 8. Related Specs
 
-- `auth/register-user`
-- `auth/login-user`
-- `auth/validate-session`
+- [auth/register-user](../../auth/register-user/README.md)
+- [auth/login-user](../../auth/login-user/README.md)
+- [auth/validate-session](../../auth/validate-session/README.md)
 - `users/get-user-profile`
 
 ---

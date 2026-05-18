@@ -88,10 +88,10 @@ Nenhum outro contexto é alterado.
 
 ## 8. Related Specs
 
-- `auth/validate-session`
-- `users/create-user-profile`
-- `fitness/create-fitness-profile`
-- `training/create-training-plan`
+- [auth/validate-session](../../auth/validate-session/README.md)
+- [users/create-user-profile](../../users/create-user-profile/README.md)
+- [fitness/create-fitness-profile](../../fitness/create-fitness-profile/README.md)
+- [training/create-training-plan](../create-training-plan/README.md)
 
 ---
 

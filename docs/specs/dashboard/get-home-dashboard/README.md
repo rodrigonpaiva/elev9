@@ -90,11 +90,11 @@ Nenhum outro contexto é modificado.
 
 ## 8. Related Specs
 
-- `auth/validate-session`
-- `users/create-user-profile`
-- `fitness/get-my-fitness-profile`
-- `training/get-my-training-plan`
-- `progress/get-progress-summary`
+- [auth/validate-session](../../auth/validate-session/README.md)
+- [users/create-user-profile](../../users/create-user-profile/README.md)
+- [fitness/get-my-fitness-profile](../../fitness/get-my-fitness-profile/README.md)
+- [training/get-my-training-plan](../../training/get-my-training-plan/README.md)
+- [progress/get-progress-summary](../../progress/get-progress-summary/README.md)
 
 ---
 

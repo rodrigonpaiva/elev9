@@ -81,10 +81,10 @@ Após sucesso:
 
 ## 8. Related Specs
 
-- `dashboard/get-home-dashboard`
-- `ai/build-user-health-context`
-- `ai/get-coach-feedback-debug-history`
-- `ai/replay-coach-feedback`
+- [dashboard/get-home-dashboard](../get-home-dashboard/README.md)
+- [ai/build-user-health-context](../../ai/build-user-health-context/README.md)
+- [ai/get-coach-feedback-debug-history](../../ai/get-coach-feedback-debug-history/README.md)
+- [ai/replay-coach-feedback](../../ai/replay-coach-feedback/README.md)
 
 ---
 
