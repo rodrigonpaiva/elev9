@@ -275,6 +275,136 @@ describe("CoachFeedbackGenerator", () => {
     );
   });
 
+  it("adds nutrition-aware feedback for muscle_gain", () => {
+    const result = generator.generate({
+      goal: "gain_muscle",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+      nutritionProfile: {
+        goal: "muscle_gain",
+        mealsPerDay: 4,
+        dietaryRestrictions: [],
+        allergies: [],
+        dislikedFoods: [],
+        preferredFoods: ["rice", "eggs"],
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      "Support muscle gain with consistent meals around training and recovery",
+    );
+  });
+
+  it("adds nutrition-aware feedback for fat_loss", () => {
+    const result = generator.generate({
+      goal: "lose_weight",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+      nutritionProfile: {
+        goal: "fat_loss",
+        mealsPerDay: 3,
+        dietaryRestrictions: [],
+        allergies: [],
+        dislikedFoods: [],
+        preferredFoods: ["oats"],
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      "Keep meal timing consistent so your fat-loss routine stays easier to maintain",
+    );
+  });
+
+  it("adds contextual feedback when mealsPerDay is low", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+      nutritionProfile: {
+        goal: "maintenance",
+        mealsPerDay: 2,
+        dietaryRestrictions: [],
+        allergies: [],
+        dislikedFoods: [],
+        preferredFoods: [],
+      },
+    });
+
+    expect(result.insights).toContain(
+      "Your meal distribution may be too sparse to consistently support training and recovery",
+    );
+  });
+
+  it("adds contextual feedback for dietaryRestrictions", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+      nutritionProfile: {
+        goal: "maintenance",
+        mealsPerDay: 4,
+        dietaryRestrictions: ["vegetarian"],
+        allergies: [],
+        dislikedFoods: [],
+        preferredFoods: [],
+      },
+    });
+
+    expect(result.insights).toContain(
+      "Your nutrition approach should stay consistent within your dietary restrictions",
+    );
+  });
+
+  it("keeps fallback behavior when nutritionProfile is not provided", () => {
+    const result = generator.generate({
+      goal: "maintain",
+      activityLevel: "medium",
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog("2026-05-02", 40),
+        buildWorkoutLog("2026-05-04", 44),
+      ],
+      hasTrainingPlan: true,
+    });
+
+    expect(result.insights).not.toContain(
+      "Your meal distribution may be too sparse to consistently support training and recovery",
+    );
+    expect(result.insights).not.toContain(
+      "Your nutrition approach should stay consistent within your dietary restrictions",
+    );
+  });
+
   it("prioritizes high streak messaging over other classifications", () => {
     const result = generator.generate({
       goal: "maintain",

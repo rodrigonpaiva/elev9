@@ -5,7 +5,10 @@ import {
   FitnessGoal,
 } from "../../../../fitness/domain/entities/fitness-profile.entity";
 import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
-import { FatigueLevel } from "../context-builder/build-user-health-context.service";
+import {
+  FatigueLevel,
+  UserHealthContextNutritionProfile,
+} from "../context-builder/build-user-health-context.service";
 
 export type CoachFeedbackGeneratorInput = {
   goal: FitnessGoal;
@@ -22,6 +25,7 @@ export type CoachFeedbackGeneratorInput = {
     muscleSoreness: number;
     motivationLevel: number;
   };
+  nutritionProfile?: UserHealthContextNutritionProfile;
 };
 
 export type CoachFeedbackGeneratorOutput = {
@@ -129,6 +133,12 @@ export class CoachFeedbackGenerator {
       recommendations,
       isNoLogs,
       hasTrainingPlan: input.hasTrainingPlan,
+    });
+    this.applyNutritionSignals({
+      nutritionProfile: input.nutritionProfile,
+      insights,
+      recommendations,
+      isNoLogs,
     });
 
     recommendations.push(this.buildGoalAwareRecommendation(input.goal));
@@ -298,6 +308,68 @@ export class CoachFeedbackGenerator {
         input.recommendations,
         "Focus on consistency with a lighter, easier-to-start session today",
       );
+    }
+  }
+
+  private applyNutritionSignals(input: {
+    nutritionProfile?: UserHealthContextNutritionProfile;
+    insights: string[];
+    recommendations: string[];
+    isNoLogs: boolean;
+  }): void {
+    if (!input.nutritionProfile) {
+      return;
+    }
+
+    if (input.nutritionProfile.mealsPerDay <= 2) {
+      this.upsertInsight(
+        input.insights,
+        "Your meal distribution may be too sparse to consistently support training and recovery",
+      );
+      this.prependRecommendation(
+        input.recommendations,
+        "Try to spread your meals more evenly across the day to support recovery",
+      );
+    }
+
+    if (input.nutritionProfile.dietaryRestrictions.length > 0) {
+      this.upsertInsight(
+        input.insights,
+        "Your nutrition approach should stay consistent within your dietary restrictions",
+      );
+      this.prependRecommendation(
+        input.recommendations,
+        "Keep your food choices consistent within your dietary restrictions to support recovery",
+      );
+    }
+
+    switch (input.nutritionProfile.goal) {
+      case "muscle_gain":
+        this.prependRecommendation(
+          input.recommendations,
+          input.isNoLogs
+            ? "Build meal consistency so your training sessions are supported when you resume"
+            : "Support muscle gain with consistent meals around training and recovery",
+        );
+        return;
+      case "fat_loss":
+        this.prependRecommendation(
+          input.recommendations,
+          "Keep meal timing consistent so your fat-loss routine stays easier to maintain",
+        );
+        if (!input.isNoLogs) {
+          this.prependRecommendation(
+            input.recommendations,
+            "Avoid skipping recovery meals after training even while pushing fat loss",
+          );
+        }
+        return;
+      case "maintenance":
+      default:
+        this.prependRecommendation(
+          input.recommendations,
+          "Keep your meal routine steady so training and recovery stay predictable",
+        );
     }
   }
 

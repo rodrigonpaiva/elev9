@@ -67,6 +67,7 @@ describe("GenerateCoachFeedbackUseCase", () => {
       expect.objectContaining({
         fatigueLevel: "MODERATE",
         latestCheckIn: undefined,
+        nutritionProfile: undefined,
       }) as CoachFeedbackGeneratorInput,
     );
     expect(coachFeedbackRepository.create).toHaveBeenCalledWith({
@@ -258,6 +259,44 @@ describe("GenerateCoachFeedbackUseCase", () => {
         },
       }) as CoachFeedbackGeneratorInput,
     );
+  });
+
+  it("passes nutritionProfile from health context to the generator", async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        nutritionProfile: {
+          goal: "muscle_gain",
+          mealsPerDay: 4,
+          dietaryRestrictions: [],
+          allergies: [],
+          dislikedFoods: [],
+          preferredFoods: ["rice", "eggs"],
+        },
+      }),
+    );
+
+    await useCase.execute({
+      authUserId: "auth_user_123",
+    });
+
+    expect(generateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nutritionProfile: {
+          goal: "muscle_gain",
+          mealsPerDay: 4,
+          dietaryRestrictions: [],
+          allergies: [],
+          dislikedFoods: [],
+          preferredFoods: ["rice", "eggs"],
+        },
+      }) as CoachFeedbackGeneratorInput,
+    );
+    expect(coachFeedbackRepository.create).toHaveBeenCalledWith({
+      userProfileId: "profile_123",
+      message: expect.any(String),
+      insights: expect.any(Array),
+      recommendations: expect.any(Array),
+    });
   });
 });
 
