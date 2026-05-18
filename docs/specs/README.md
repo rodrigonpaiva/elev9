@@ -10,6 +10,7 @@ Nesta organização:
 - `docs/adr/` registra decisões arquiteturais mais estáveis
 - os módulos evoluem por entregas incrementais
 - o estado atual do sistema, especialmente no módulo `ai`, segue uma abordagem `deterministic-first`
+- o bounded context `dashboard` documenta a superfície adaptativa da home e seus debug surfaces internos
 
 Este índice funciona como ponto central de navegação da arquitetura documental do projeto.
 
@@ -27,8 +28,11 @@ Este índice funciona como ponto central de navegação da arquitetura documenta
 - [fitness](./fitness/)
 - [training](./training/)
 - [progress](./progress/)
-- [dashboard](./dashboard/)
 - [nutrition](./nutrition/)
+
+## Adaptive Experience
+
+- [dashboard](./dashboard/README.md)
 
 ## AI & Adaptive Coaching
 
@@ -63,10 +67,13 @@ Hoje, o módulo cobre principalmente:
 - debug history
 - replay
 
+O bounded context `dashboard` documentado em [docs/specs/dashboard/README.md](./dashboard/README.md) reutiliza o mesmo `UserHealthContext` e compartilha heurísticas determinísticas com essa camada contextual.
+
 Importante:
 
 - o loop principal atual continua determinístico
 - integração com LLM ainda não faz parte do fluxo implementado principal
+- a explicabilidade do dashboard alinha-se à arquitetura de explainability do módulo `ai`
 
 ---
 
