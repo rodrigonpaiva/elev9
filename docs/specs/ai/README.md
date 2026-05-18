@@ -61,6 +61,7 @@ Hoje, a arquitetura interna do módulo `ai` se apoia principalmente em:
 
 - [create-coach-chat](./create-coach-chat/README.md)
 - [get-coach-chat-history](./get-coach-chat-history/README.md)
+- [get-coach-chat-debug](./get-coach-chat-debug/README.md)
 
 ---
 
