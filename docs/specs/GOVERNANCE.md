@@ -145,6 +145,8 @@ A validação oficial de CI está documentada em [docs/ci.md](../ci.md) e deve s
 
 Documentação de runtime local também deve permanecer determinística e específica por ambiente. Para o Docker da API, use `.env.docker.example` como fluxo separado do ambiente padrão da aplicação.
 
+A disciplina de pull requests está documentada em [docs/pull-requests.md](../pull-requests.md) e deve acompanhar a mesma lógica de PRs pequenos, rastreáveis e alinhados ao spec-first workflow.
+
 ---
 
 ## 11. Summary

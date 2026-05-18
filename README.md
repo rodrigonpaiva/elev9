@@ -57,6 +57,10 @@ Repository-wide documentation governance is defined in [docs/specs/GOVERNANCE.md
 
 - [CI Validation Flow](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/ci.md)
 
+### Pull Requests
+
+- [Pull Request Guidelines](./docs/pull-requests.md)
+
 This documentation set covers the adaptive systems, dashboard explainability, and conversational coaching layers of the product.
 
 ## Features Implemented
