@@ -32,6 +32,21 @@ packages/
 
 Additional architectural notes live in [docs/architecture/overview.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/architecture/overview.md) and [docs/architecture/monorepo.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/architecture/monorepo.md).
 
+## Architecture & Documentation
+
+The project follows a spec-driven and deterministic-first architecture workflow.
+
+Specifications document workflows, contracts, rules, tasks, and tests. ADRs document the architectural decisions behind those flows. The AI module also has its own documentation index covering context aggregation, recovery heuristics, explainability, and replay.
+
+### Specifications
+
+- [System Specs](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/README.md)
+- [AI Module Specs](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/ai/README.md)
+
+### Architecture Decision Records
+
+- [ADR Index](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/adr/README.md)
+
 ## Features Implemented
 
 - Auth: register, login, session validation
