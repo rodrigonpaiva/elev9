@@ -47,6 +47,21 @@ This placeholder track follows [Documentation Governance](../GOVERNANCE.md), whi
 
 ---
 
-## 6. Summary
+## 6. Exploratory Subtracks
+
+- [analyze-user-check-in](./analyze-user-check-in/README.md)
+- [ask-coach-agent](./ask-coach-agent/README.md)
+- [ask-nutrition-agent](./ask-nutrition-agent/README.md)
+- [build-user-health-context](./build-user-health-context/README.md)
+- [generate-nutrition-recommendation](./generate-nutrition-recommendation/README.md)
+- [generate-plan-adjustment](./generate-plan-adjustment/README.md)
+- [generate-training-recommendation](./generate-training-recommendation/README.md)
+- [store-agent-memory](./store-agent-memory/README.md)
+- [summarize-conversation](./summarize-conversation/README.md)
+- [validate-ia-output-safety](./validate-ia-output-safety/README.md)
+
+---
+
+## 7. Summary
 
 `ai-agent` is reserved as a future-facing documentation track for agent-oriented evolution and should not be read as evidence of implemented agent orchestration in the current product.
