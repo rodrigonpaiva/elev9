@@ -49,6 +49,7 @@ import {
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
 import { BuildUserHealthContextService } from "./application/services/context-builder/build-user-health-context.service";
 import { CoachFeedbackGenerator } from "./application/services/coach-feedback/coach-feedback-generator.service";
+import { GetCoachFeedbackDebugHistoryUseCase } from "./application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
 import { GetCoachFeedbackHistoryUseCase } from "./application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
 import { GenerateCoachFeedbackUseCase } from "./application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
 import { AiController } from "./presentation/http/ai.controller";
@@ -92,6 +93,7 @@ import { AiController } from "./presentation/http/ai.controller";
     AuthSessionGuard,
     BuildUserHealthContextService,
     CoachFeedbackGenerator,
+    GetCoachFeedbackDebugHistoryUseCase,
     GetCoachFeedbackHistoryUseCase,
     GenerateCoachFeedbackUseCase,
     {

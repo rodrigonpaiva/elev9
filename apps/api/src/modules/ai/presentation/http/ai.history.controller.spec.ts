@@ -6,6 +6,11 @@ import {
 } from "@nestjs/common";
 
 import {
+  GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES,
+  GetCoachFeedbackDebugHistoryError,
+} from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.errors";
+import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
+import {
   GET_COACH_FEEDBACK_HISTORY_ERROR_CODES,
   GetCoachFeedbackHistoryError,
 } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
@@ -16,6 +21,7 @@ import { AiController } from "./ai.controller";
 
 describe("AiController history", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
+  let getCoachFeedbackDebugHistoryUseCase: jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
   let buildUserHealthContextService: jest.Mocked<BuildUserHealthContextService>;
   let controller: AiController;
@@ -24,6 +30,9 @@ describe("AiController history", () => {
     generateCoachFeedbackUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GenerateCoachFeedbackUseCase>;
+    getCoachFeedbackDebugHistoryUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
     getCoachFeedbackHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackHistoryUseCase>;
@@ -33,6 +42,7 @@ describe("AiController history", () => {
 
     controller = new AiController(
       generateCoachFeedbackUseCase,
+      getCoachFeedbackDebugHistoryUseCase,
       getCoachFeedbackHistoryUseCase,
       buildUserHealthContextService,
     );
@@ -113,6 +123,119 @@ describe("AiController history", () => {
     );
 
     expect(result.feedbacks[0]).not.toHaveProperty("influences");
+  });
+
+  it("returns debug history with influences", async () => {
+    getCoachFeedbackDebugHistoryUseCase.execute.mockResolvedValue({
+      feedbacks: [
+        {
+          id: "feedback_002",
+          message: "Great consistency this week.",
+          insights: ["You trained 4 times this week"],
+          recommendations: ["Keep your current rhythm"],
+          influences: ["fatigue:high", "nutrition:muscle_gain"],
+          createdAt: "2026-05-04T10:00:00.000Z",
+        },
+      ],
+    });
+
+    const result = await controller.getCoachFeedbackDebugHistory(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      { limit: 10 },
+      {},
+    );
+
+    expect(getCoachFeedbackDebugHistoryUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+      limit: 10,
+    });
+    expect(result.feedbacks[0].influences).toEqual([
+      "fatigue:high",
+      "nutrition:muscle_gain",
+    ]);
+  });
+
+  it("returns empty debug history", async () => {
+    getCoachFeedbackDebugHistoryUseCase.execute.mockResolvedValue({
+      feedbacks: [],
+    });
+
+    const result = await controller.getCoachFeedbackDebugHistory(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      {},
+      {},
+    );
+
+    expect(result).toEqual({ feedbacks: [] });
+  });
+
+  it("rejects unexpected GET body on debug history", async () => {
+    await expect(
+      controller.getCoachFeedbackDebugHistory(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        {},
+        { unexpected: true },
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("maps debug invalid limit to HTTP 400", async () => {
+    getCoachFeedbackDebugHistoryUseCase.execute.mockRejectedValue(
+      new GetCoachFeedbackDebugHistoryError(
+        GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.INVALID_INPUT,
+        "Invalid coach feedback debug history input.",
+      ),
+    );
+
+    await expect(
+      controller.getCoachFeedbackDebugHistory(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        { limit: 101 },
+        {},
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("maps debug user profile not found to HTTP 404", async () => {
+    getCoachFeedbackDebugHistoryUseCase.execute.mockRejectedValue(
+      new GetCoachFeedbackDebugHistoryError(
+        GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND,
+        "User profile not found.",
+      ),
+    );
+
+    await expect(
+      controller.getCoachFeedbackDebugHistory(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        {},
+        {},
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it("rejects unexpected GET body", async () => {

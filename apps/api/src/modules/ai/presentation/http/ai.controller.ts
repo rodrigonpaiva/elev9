@@ -16,6 +16,11 @@ import {
 
 import { AuthSessionGuard } from "../../../users/presentation/http/guards/auth-session.guard";
 import {
+  GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES,
+  GetCoachFeedbackDebugHistoryError,
+} from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.errors";
+import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
+import {
   GET_COACH_FEEDBACK_HISTORY_ERROR_CODES,
   GetCoachFeedbackHistoryError,
 } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
@@ -29,6 +34,8 @@ import {
   BuildUserHealthContextService,
   UserHealthContextNutritionProfile,
 } from "../../application/services/context-builder/build-user-health-context.service";
+import { GetCoachFeedbackDebugHistoryQueryDto } from "./dto/get-coach-feedback-debug-history.query.dto";
+import { GetCoachFeedbackDebugHistoryResponseDto } from "./dto/get-coach-feedback-debug-history.response.dto";
 import { GetCoachFeedbackHistoryQueryDto } from "./dto/get-coach-feedback-history.query.dto";
 import { GetCoachFeedbackHistoryResponseDto } from "./dto/get-coach-feedback-history.response.dto";
 import { GenerateCoachFeedbackResponseDto } from "./dto/generate-coach-feedback.response.dto";
@@ -44,6 +51,7 @@ type RequestWithAuthUser = {
 export class AiController {
   constructor(
     private readonly generateCoachFeedbackUseCase: GenerateCoachFeedbackUseCase,
+    private readonly getCoachFeedbackDebugHistoryUseCase: GetCoachFeedbackDebugHistoryUseCase,
     private readonly getCoachFeedbackHistoryUseCase: GetCoachFeedbackHistoryUseCase,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
   ) {}
@@ -93,6 +101,31 @@ export class AiController {
       });
     } catch (error) {
       this.handleGetHistoryError(error);
+    }
+  }
+
+  @Get("debug/coach-feedback")
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getCoachFeedbackDebugHistory(
+    @Req() request: RequestWithAuthUser,
+    @Query() query: GetCoachFeedbackDebugHistoryQueryDto,
+    @Body() body?: Record<string, unknown>,
+  ): Promise<GetCoachFeedbackDebugHistoryResponseDto> {
+    if (body && Object.keys(body).length > 0) {
+      throw new BadRequestException({
+        code: GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.INVALID_INPUT,
+        message: "Invalid coach feedback debug history input.",
+      });
+    }
+
+    try {
+      return await this.getCoachFeedbackDebugHistoryUseCase.execute({
+        authUserId: request.authUser?.id ?? "",
+        limit: query.limit,
+      });
+    } catch (error) {
+      this.handleGetDebugHistoryError(error);
     }
   }
 
@@ -264,6 +297,39 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_FEEDBACK_HISTORY_ERROR_CODES.INTERNAL_ERROR,
+          message: "An unexpected error occurred.",
+        });
+    }
+  }
+
+  private handleGetDebugHistoryError(error: unknown): never {
+    if (!(error instanceof GetCoachFeedbackDebugHistoryError)) {
+      throw new InternalServerErrorException("An unexpected error occurred.");
+    }
+
+    switch (error.code) {
+      case GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.INVALID_INPUT:
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: GET_COACH_FEEDBACK_DEBUG_HISTORY_ERROR_CODES.INTERNAL_ERROR,
           message: "An unexpected error occurred.",
         });
     }
