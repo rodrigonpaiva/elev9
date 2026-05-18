@@ -2,6 +2,8 @@ import { Injectable } from "@nestjs/common";
 
 import { GetCoachChatDebugHistoryUseCase } from "../get-coach-chat-debug-history/get-coach-chat-debug-history.use-case";
 import { GetCoachChatDebugHistoryError } from "../get-coach-chat-debug-history/get-coach-chat-debug-history.errors";
+import { GetCoachChatMemoryDebugUseCase } from "../get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case";
+import { GetCoachChatMemoryDebugError } from "../get-coach-chat-memory-debug/get-coach-chat-memory-debug.errors";
 import { GetCoachChatPromptDebugUseCase } from "../get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case";
 import { GetCoachChatPromptDebugError } from "../get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.errors";
 import { GetCoachChatReplyPathDebugUseCase } from "../get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case";
@@ -17,6 +19,7 @@ import { GetCoachChatDebugIndexOutput } from "./get-coach-chat-debug-index.outpu
 export class GetCoachChatDebugIndexUseCase {
   constructor(
     private readonly getCoachChatDebugHistoryUseCase: GetCoachChatDebugHistoryUseCase,
+    private readonly getCoachChatMemoryDebugUseCase: GetCoachChatMemoryDebugUseCase,
     private readonly getCoachChatPromptDebugUseCase: GetCoachChatPromptDebugUseCase,
     private readonly getCoachChatReplyPathDebugUseCase: GetCoachChatReplyPathDebugUseCase,
   ) {}
@@ -35,11 +38,12 @@ export class GetCoachChatDebugIndexUseCase {
     }
 
     try {
-      const [history, prompt, replyPath] = await Promise.all([
+      const [history, memory, prompt, replyPath] = await Promise.all([
         this.getCoachChatDebugHistoryUseCase.execute({
           authUserId,
           limit: 10,
         }),
+        this.getCoachChatMemoryDebugUseCase.execute({ authUserId }),
         this.getCoachChatPromptDebugUseCase.execute({ authUserId }),
         this.getCoachChatReplyPathDebugUseCase.execute({ authUserId }),
       ]);
@@ -55,10 +59,16 @@ export class GetCoachChatDebugIndexUseCase {
         promptPreview: {
           systemSections: prompt.promptPreview.systemSections,
         },
-        ...(prompt.conversationMemory ?? replyPath.conversationMemory
+        ...(memory.memory
           ? {
-              conversationMemory:
-                prompt.conversationMemory ?? replyPath.conversationMemory,
+              memoryPreview: {
+                version: memory.memory.version,
+                generatedFromMessageCount:
+                  memory.memory.generatedFromMessageCount,
+                summaryPreview: memory.memory.summaryPreview,
+                metadata: memory.memory.metadata,
+                updatedAt: memory.memory.updatedAt,
+              },
             }
           : {}),
         context: {
@@ -73,6 +83,7 @@ export class GetCoachChatDebugIndexUseCase {
       if (
         error instanceof GetCoachChatDebugIndexError ||
         error instanceof GetCoachChatDebugHistoryError ||
+        error instanceof GetCoachChatMemoryDebugError ||
         error instanceof GetCoachChatPromptDebugError ||
         error instanceof GetCoachChatReplyPathDebugError
       ) {

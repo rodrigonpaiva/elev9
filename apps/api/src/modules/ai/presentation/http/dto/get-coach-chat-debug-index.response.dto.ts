@@ -15,10 +15,16 @@ export type GetCoachChatDebugIndexResponseDto = {
   promptPreview: {
     systemSections: string[];
   };
-  conversationMemory?: {
+  memoryPreview?: {
     version: string;
     generatedFromMessageCount: number;
     summaryPreview: string;
+    metadata: {
+      hasRecoveryContext: boolean;
+      hasNutritionContext: boolean;
+      hasWorkoutContinuity: boolean;
+    };
+    updatedAt: string;
   };
   context: {
     fatigueLevel: "LOW" | "MODERATE" | "HIGH";
