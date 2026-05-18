@@ -88,7 +88,7 @@ Nenhum outro contexto é alterado.
 
 - [auth/validate-session](../../auth/validate-session/README.md)
 - [fitness/create-fitness-profile](../../fitness/create-fitness-profile/README.md)
-- `training/update-training-plan`
+- [training/update-training-plan](../update-training-plan/README.md)
 
 ---
 

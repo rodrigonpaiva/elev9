@@ -88,7 +88,7 @@ Nenhum outro contexto é alterado.
 - [auth/register-user](../../auth/register-user/README.md)
 - [auth/login-user](../../auth/login-user/README.md)
 - [auth/validate-session](../../auth/validate-session/README.md)
-- `users/get-user-profile`
+- [users/get-user-profile](../get-user-profile/README.md)
 
 ---
 

@@ -83,7 +83,7 @@ Após sucesso:
 
 - [auth/login-user](../login-user/README.md)
 - [users/create-user-profile](../../users/create-user-profile/README.md)
-- `auth/verify-email`
+- [auth/verify-email](../verify-email/README.md)
 
 ---
 

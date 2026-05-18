@@ -79,7 +79,7 @@ Nenhum outro contexto é alterado.
 ## 8. Related Specs
 
 - [auth/login-user](../login-user/README.md)
-- `auth/refresh-session`
+- [auth/refresh-session](../refresh-session/README.md)
 
 ---
 

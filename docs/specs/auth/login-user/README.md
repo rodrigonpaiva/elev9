@@ -82,7 +82,7 @@ Nenhum outro contexto é alterado.
 ## 8. Related Specs
 
 - [auth/register-user](../register-user/README.md)
-- `auth/refresh-session`
+- [auth/refresh-session](../refresh-session/README.md)
 - [auth/validate-session](../validate-session/README.md)
 
 ---

@@ -90,7 +90,7 @@ Nenhum outro contexto é alterado.
 
 - [auth/validate-session](../../auth/validate-session/README.md)
 - [users/create-user-profile](../../users/create-user-profile/README.md)
-- `fitness/update-fitness-profile`
+- [fitness/update-fitness-profile](../update-fitness-profile/README.md)
 
 ---
 
