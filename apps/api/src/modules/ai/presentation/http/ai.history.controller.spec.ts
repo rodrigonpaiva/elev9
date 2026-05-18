@@ -10,6 +10,7 @@ import {
   GetCoachFeedbackDebugHistoryError,
 } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.errors";
 import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
+import { CreateCoachChatUseCase } from "../../application/use-cases/create-coach-chat/create-coach-chat.use-case";
 import {
   REPLAY_COACH_FEEDBACK_ERROR_CODES,
   ReplayCoachFeedbackError,
@@ -20,12 +21,15 @@ import {
   GetCoachFeedbackHistoryError,
 } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
 import { GetCoachFeedbackHistoryUseCase } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
+import { GetCoachChatHistoryUseCase } from "../../application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case";
 import { GenerateCoachFeedbackUseCase } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
 import { BuildUserHealthContextService } from "../../application/services/context-builder/build-user-health-context.service";
 import { AiController } from "./ai.controller";
 
 describe("AiController history", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
+  let createCoachChatUseCase: jest.Mocked<CreateCoachChatUseCase>;
+  let getCoachChatHistoryUseCase: jest.Mocked<GetCoachChatHistoryUseCase>;
   let getCoachFeedbackDebugHistoryUseCase: jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
   let replayCoachFeedbackUseCase: jest.Mocked<ReplayCoachFeedbackUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
@@ -36,6 +40,12 @@ describe("AiController history", () => {
     generateCoachFeedbackUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GenerateCoachFeedbackUseCase>;
+    createCoachChatUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<CreateCoachChatUseCase>;
+    getCoachChatHistoryUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCoachChatHistoryUseCase>;
     getCoachFeedbackDebugHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
@@ -51,6 +61,8 @@ describe("AiController history", () => {
 
     controller = new AiController(
       generateCoachFeedbackUseCase,
+      createCoachChatUseCase,
+      getCoachChatHistoryUseCase,
       getCoachFeedbackDebugHistoryUseCase,
       replayCoachFeedbackUseCase,
       getCoachFeedbackHistoryUseCase,

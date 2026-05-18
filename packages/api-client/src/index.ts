@@ -1,3 +1,4 @@
+import { createAiApi } from "./ai-api";
 import { createAuthApi } from "./auth-api";
 import { createDashboardApi } from "./dashboard-api";
 import { createFitnessApi } from "./fitness-api";
@@ -17,6 +18,7 @@ export function createApiClient(options: CreateHttpClientOptions) {
 
   return {
     auth: createAuthApi(httpClient),
+    ai: createAiApi(httpClient),
     dashboard: createDashboardApi(httpClient),
     fitness: createFitnessApi(httpClient),
     training: createTrainingApi(httpClient),

@@ -4,3 +4,4 @@ export * from "./fitness";
 export * from "./training";
 export * from "./progress";
 export * from "./dashboard";
+export * from "./ai";

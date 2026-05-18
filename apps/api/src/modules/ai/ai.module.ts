@@ -49,11 +49,26 @@ import {
 import { AuthSessionGuard } from "../users/presentation/http/guards/auth-session.guard";
 import { BuildUserHealthContextService } from "./application/services/context-builder/build-user-health-context.service";
 import { CoachFeedbackGenerator } from "./application/services/coach-feedback/coach-feedback-generator.service";
+import { CoachChatReplyGenerator } from "./application/services/chat/coach-chat-reply-generator.service";
+import { CreateCoachChatUseCase } from "./application/use-cases/create-coach-chat/create-coach-chat.use-case";
 import { GetCoachFeedbackDebugHistoryUseCase } from "./application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
 import { GetCoachFeedbackHistoryUseCase } from "./application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
+import { GetCoachChatHistoryUseCase } from "./application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case";
 import { GenerateCoachFeedbackUseCase } from "./application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
 import { ReplayCoachFeedbackUseCase } from "./application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
 import { AiController } from "./presentation/http/ai.controller";
+import { COACH_CONVERSATION_REPOSITORY } from "./domain/repositories/coach-conversation.repository";
+import { MongooseCoachConversationRepository } from "./infrastructure/mongoose/mongoose-coach-conversation.repository";
+import {
+  COACH_CONVERSATION_MODEL_NAME,
+  CoachConversationSchema,
+} from "./infrastructure/mongoose/coach-conversation.schema";
+import { COACH_MESSAGE_REPOSITORY } from "./domain/repositories/coach-message.repository";
+import { MongooseCoachMessageRepository } from "./infrastructure/mongoose/mongoose-coach-message.repository";
+import {
+  COACH_MESSAGE_MODEL_NAME,
+  CoachMessageSchema,
+} from "./infrastructure/mongoose/coach-message.schema";
 
 @Module({
   imports: [
@@ -87,6 +102,14 @@ import { AiController } from "./presentation/http/ai.controller";
         name: COACH_FEEDBACK_MODEL_NAME,
         schema: CoachFeedbackSchema,
       },
+      {
+        name: COACH_CONVERSATION_MODEL_NAME,
+        schema: CoachConversationSchema,
+      },
+      {
+        name: COACH_MESSAGE_MODEL_NAME,
+        schema: CoachMessageSchema,
+      },
     ]),
   ],
   controllers: [AiController],
@@ -94,8 +117,11 @@ import { AiController } from "./presentation/http/ai.controller";
     AuthSessionGuard,
     BuildUserHealthContextService,
     CoachFeedbackGenerator,
+    CoachChatReplyGenerator,
+    CreateCoachChatUseCase,
     GetCoachFeedbackDebugHistoryUseCase,
     GetCoachFeedbackHistoryUseCase,
+    GetCoachChatHistoryUseCase,
     GenerateCoachFeedbackUseCase,
     ReplayCoachFeedbackUseCase,
     {
@@ -129,6 +155,14 @@ import { AiController } from "./presentation/http/ai.controller";
     {
       provide: COACH_FEEDBACK_REPOSITORY,
       useClass: MongooseCoachFeedbackRepository,
+    },
+    {
+      provide: COACH_CONVERSATION_REPOSITORY,
+      useClass: MongooseCoachConversationRepository,
+    },
+    {
+      provide: COACH_MESSAGE_REPOSITORY,
+      useClass: MongooseCoachMessageRepository,
     },
   ],
 })

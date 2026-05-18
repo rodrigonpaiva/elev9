@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 
+import { CreateCoachChatUseCase } from "../../application/use-cases/create-coach-chat/create-coach-chat.use-case";
 import { GetCoachFeedbackDebugHistoryUseCase } from "../../application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
 import { ReplayCoachFeedbackUseCase } from "../../application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case";
 import {
@@ -12,6 +13,11 @@ import {
   GetCoachFeedbackHistoryError,
 } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.errors";
 import { GetCoachFeedbackHistoryUseCase } from "../../application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
+import {
+  CREATE_COACH_CHAT_ERROR_CODES,
+  CreateCoachChatError,
+} from "../../application/use-cases/create-coach-chat/create-coach-chat.errors";
+import { GetCoachChatHistoryUseCase } from "../../application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case";
 import {
   GENERATE_COACH_FEEDBACK_ERROR_CODES,
   GenerateCoachFeedbackError,
@@ -24,6 +30,8 @@ import { GUARDS_METADATA } from "@nestjs/common/constants";
 
 describe("AiController", () => {
   let generateCoachFeedbackUseCase: jest.Mocked<GenerateCoachFeedbackUseCase>;
+  let createCoachChatUseCase: jest.Mocked<CreateCoachChatUseCase>;
+  let getCoachChatHistoryUseCase: jest.Mocked<GetCoachChatHistoryUseCase>;
   let getCoachFeedbackDebugHistoryUseCase: jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
   let replayCoachFeedbackUseCase: jest.Mocked<ReplayCoachFeedbackUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
@@ -34,6 +42,12 @@ describe("AiController", () => {
     generateCoachFeedbackUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GenerateCoachFeedbackUseCase>;
+    createCoachChatUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<CreateCoachChatUseCase>;
+    getCoachChatHistoryUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCoachChatHistoryUseCase>;
     getCoachFeedbackDebugHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
@@ -49,11 +63,106 @@ describe("AiController", () => {
 
     controller = new AiController(
       generateCoachFeedbackUseCase,
+      createCoachChatUseCase,
+      getCoachChatHistoryUseCase,
       getCoachFeedbackDebugHistoryUseCase,
       replayCoachFeedbackUseCase,
       getCoachFeedbackHistoryUseCase,
       buildUserHealthContextService,
     );
+  });
+
+  it("returns chat reply and conversation id", async () => {
+    createCoachChatUseCase.execute.mockResolvedValue({
+      conversationId: "conversation_123",
+      reply: "Your recovery signals suggest keeping today's session lighter.",
+    });
+
+    const result = await controller.createCoachChat(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      { message: "Should I train today?" },
+    );
+
+    expect(createCoachChatUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+      message: "Should I train today?",
+    });
+    expect(result).toEqual({
+      conversationId: "conversation_123",
+      reply: "Your recovery signals suggest keeping today's session lighter.",
+    });
+  });
+
+  it("rejects invalid chat payloads with HTTP 400", async () => {
+    await expect(
+      controller.createCoachChat(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        { message: "Hi", extra: true } as never,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("maps chat invalid session to HTTP 401", async () => {
+    createCoachChatUseCase.execute.mockRejectedValue(
+      new CreateCoachChatError(
+        CREATE_COACH_CHAT_ERROR_CODES.INVALID_SESSION,
+        "Invalid session.",
+      ),
+    );
+
+    await expect(
+      controller.createCoachChat(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        { message: "Should I train today?" },
+      ),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("returns chat history in the internal order", async () => {
+    getCoachChatHistoryUseCase.execute.mockResolvedValue([
+      {
+        role: "user",
+        content: "Should I train today?",
+        createdAt: "2026-05-18T09:00:00.000Z",
+      },
+      {
+        role: "assistant",
+        content: "Your recovery signals suggest keeping today's session lighter.",
+        createdAt: "2026-05-18T09:00:01.000Z",
+      },
+    ]);
+
+    const result = await controller.getCoachChatHistory(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      { limit: 50 },
+      {},
+    );
+
+    expect(getCoachChatHistoryUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+      limit: 50,
+    });
+    expect(result).toHaveLength(2);
   });
 
   it("returns the safe response on success", async () => {
