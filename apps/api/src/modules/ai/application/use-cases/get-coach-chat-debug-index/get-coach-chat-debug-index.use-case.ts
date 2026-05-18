@@ -55,6 +55,12 @@ export class GetCoachChatDebugIndexUseCase {
         promptPreview: {
           systemSections: prompt.promptPreview.systemSections,
         },
+        ...(prompt.conversationMemory ?? replyPath.conversationMemory
+          ? {
+              conversationMemory:
+                prompt.conversationMemory ?? replyPath.conversationMemory,
+            }
+          : {}),
         context: {
           fatigueLevel: prompt.context.fatigueLevel,
           recoveryTrend: prompt.context.recoveryTrend,

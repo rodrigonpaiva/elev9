@@ -4,6 +4,10 @@ import { BuildUserHealthContextService } from "../../services/context-builder/bu
 import { AiLlmConfigService } from "../../services/llm/ai-llm-config.service";
 import { AiPromptBuilder } from "../../services/llm/ai-prompt-builder.service";
 import {
+  COACH_CONVERSATION_MEMORY_REPOSITORY,
+  CoachConversationMemoryRepository,
+} from "../../../domain/repositories/coach-conversation-memory.repository";
+import {
   COACH_CONVERSATION_REPOSITORY,
   CoachConversationRepository,
 } from "../../../domain/repositories/coach-conversation.repository";
@@ -31,6 +35,8 @@ export class GetCoachChatReplyPathDebugUseCase {
     private readonly coachConversationRepository: CoachConversationRepository,
     @Inject(COACH_MESSAGE_REPOSITORY)
     private readonly coachMessageRepository: CoachMessageRepository,
+    @Inject(COACH_CONVERSATION_MEMORY_REPOSITORY)
+    private readonly coachConversationMemoryRepository: CoachConversationMemoryRepository,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
     private readonly aiPromptBuilder: AiPromptBuilder,
     private readonly aiLlmConfigService: AiLlmConfigService,
@@ -75,6 +81,11 @@ export class GetCoachChatReplyPathDebugUseCase {
             limit: 6,
           })
         : [];
+      const conversationMemory = conversation
+        ? await this.coachConversationMemoryRepository.findByConversationId(
+            conversation.id,
+          )
+        : null;
 
       const latestUserMessage =
         [...messages]
@@ -94,6 +105,12 @@ export class GetCoachChatReplyPathDebugUseCase {
             content: message.content,
             createdAt: message.createdAt.toISOString(),
           })),
+        conversationMemory: conversationMemory
+          ? {
+              summary: conversationMemory.summary,
+              metadata: conversationMemory.metadata,
+            }
+          : undefined,
       });
 
       const llmEnabled = this.aiLlmConfigService.isEnabled();
@@ -123,6 +140,9 @@ export class GetCoachChatReplyPathDebugUseCase {
         },
         context: promptSnapshot.context,
         promptPreview: promptSnapshot.promptPreview,
+        ...(promptSnapshot.conversationMemory
+          ? { conversationMemory: promptSnapshot.conversationMemory }
+          : {}),
       };
     } catch (error) {
       if (error instanceof GetCoachChatReplyPathDebugError) {

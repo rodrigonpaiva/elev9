@@ -16,10 +16,19 @@ export type AiPromptBuilderConversationMessage = {
   createdAt: string;
 };
 
+export type AiPromptBuilderConversationMemory = {
+  summary: string;
+  metadata: {
+    generatedFromMessageCount: number;
+    version: string;
+  };
+};
+
 export type AiPromptBuilderInput = {
   message: string;
   healthContext: UserHealthContext;
   conversationHistory: AiPromptBuilderConversationMessage[];
+  conversationMemory?: AiPromptBuilderConversationMemory;
 };
 
 export type AiPromptBuilderDebugSnapshot = {
@@ -27,6 +36,11 @@ export type AiPromptBuilderDebugSnapshot = {
   promptPreview: {
     systemSections: string[];
     userMessagePreview: string;
+  };
+  conversationMemory?: {
+    version: string;
+    generatedFromMessageCount: number;
+    summaryPreview: string;
   };
   context: {
     fatigueLevel: FatigueLevel;
@@ -52,6 +66,17 @@ export class AiPromptBuilder {
       },
     ];
 
+    const conversationMemoryBlock = this.buildConversationMemoryBlock(
+      input.conversationMemory,
+    );
+
+    if (conversationMemoryBlock) {
+      messages.push({
+        role: "system",
+        content: conversationMemoryBlock,
+      });
+    }
+
     messages.push(
       ...input.conversationHistory.slice(-8).map((message) => ({
         role: message.role,
@@ -73,16 +98,29 @@ export class AiPromptBuilder {
   buildDebugSnapshot(
     input: AiPromptBuilderInput,
   ): AiPromptBuilderDebugSnapshot {
+    const conversationMemoryPreview = input.conversationMemory
+      ? {
+          version: input.conversationMemory.metadata.version,
+          generatedFromMessageCount:
+            input.conversationMemory.metadata.generatedFromMessageCount,
+          summaryPreview: this.normalizeContent(
+            input.conversationMemory.summary,
+          ).slice(0, 160),
+        }
+      : undefined;
+
     return {
       promptVersion: AI_CHAT_PROMPT_VERSION,
       promptPreview: {
         systemSections: [
           "safety_rules",
           "adaptive_context",
+          ...(conversationMemoryPreview ? ["conversation_memory"] : []),
           "conversation_context",
         ],
         userMessagePreview: this.normalizeContent(input.message).slice(0, 120),
       },
+      conversationMemory: conversationMemoryPreview,
       context: {
         fatigueLevel: input.healthContext.fatigueLevel,
         recoveryTrend: this.resolveRecoveryTrend(input.healthContext.fatigueLevel),
@@ -135,6 +173,21 @@ export class AiPromptBuilder {
           ].join("\n")
         : "- nutrition profile: unavailable",
       this.buildWorkoutLogBlock(workoutLogs),
+    ].join("\n");
+  }
+
+  private buildConversationMemoryBlock(
+    conversationMemory?: AiPromptBuilderConversationMemory,
+  ): string | null {
+    if (!conversationMemory) {
+      return null;
+    }
+
+    return [
+      "Conversation memory summary:",
+      `- version: ${conversationMemory.metadata.version}`,
+      `- generated from message count: ${conversationMemory.metadata.generatedFromMessageCount}`,
+      `- summary: ${this.normalizeContent(conversationMemory.summary)}`,
     ].join("\n");
   }
 

@@ -17,4 +17,9 @@ export type GetCoachChatPromptDebugOutput = {
     systemSections: string[];
     userMessagePreview: string;
   };
+  conversationMemory?: {
+    version: string;
+    generatedFromMessageCount: number;
+    summaryPreview: string;
+  };
 };

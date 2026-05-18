@@ -1,4 +1,9 @@
 export type GetCoachChatDebugHistoryOutput = {
+  conversationMemory?: {
+    version: string;
+    generatedFromMessageCount: number;
+    summaryPreview: string;
+  };
   messages: Array<{
     role: "user" | "assistant";
     content: string;

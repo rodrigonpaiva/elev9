@@ -2,8 +2,11 @@ import { CoachChatReplyGenerator } from "../../services/chat/coach-chat-reply-ge
 import { BuildUserHealthContextService } from "../../services/context-builder/build-user-health-context.service";
 import { AiLlmService } from "../../services/llm/ai-llm.service";
 import { AiPromptBuilder } from "../../services/llm/ai-prompt-builder.service";
+import { CoachConversationMemorySummarizer } from "../../services/memory/coach-conversation-memory-summarizer.service";
 import { CoachConversation } from "../../../domain/entities/coach-conversation.entity";
+import { CoachConversationMemory } from "../../../domain/entities/coach-conversation-memory.entity";
 import { CoachConversationRepository } from "../../../domain/repositories/coach-conversation.repository";
+import { CoachConversationMemoryRepository } from "../../../domain/repositories/coach-conversation-memory.repository";
 import { CoachMessageRepository } from "../../../domain/repositories/coach-message.repository";
 import { UserProfile } from "../../../../users/domain/entities/user-profile.entity";
 import { UserProfileRepository } from "../../../../users/domain/repositories/user-profile.repository";
@@ -13,12 +16,14 @@ describe("CreateCoachChatUseCase", () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
   let coachConversationRepository: jest.Mocked<CoachConversationRepository>;
   let coachMessageRepository: jest.Mocked<CoachMessageRepository>;
+  let coachConversationMemoryRepository: jest.Mocked<CoachConversationMemoryRepository>;
   let buildUserHealthContextService: {
     build: jest.MockedFunction<BuildUserHealthContextService["build"]>;
   };
   let aiPromptBuilder: jest.Mocked<AiPromptBuilder>;
   let aiLlmService: jest.Mocked<AiLlmService>;
   let replyGenerator: jest.Mocked<CoachChatReplyGenerator>;
+  let coachConversationMemorySummarizer: jest.Mocked<CoachConversationMemorySummarizer>;
   let useCase: CreateCoachChatUseCase;
 
   beforeEach(() => {
@@ -34,6 +39,10 @@ describe("CreateCoachChatUseCase", () => {
       create: jest.fn(),
       findByConversationId: jest.fn(),
     } as unknown as jest.Mocked<CoachMessageRepository>;
+    coachConversationMemoryRepository = {
+      findByConversationId: jest.fn(),
+      upsertByConversationId: jest.fn(),
+    } as unknown as jest.Mocked<CoachConversationMemoryRepository>;
     buildUserHealthContextService = {
       build: jest.fn(),
     } as unknown as {
@@ -48,21 +57,32 @@ describe("CreateCoachChatUseCase", () => {
     replyGenerator = {
       generate: jest.fn(),
     } as unknown as jest.Mocked<CoachChatReplyGenerator>;
+    coachConversationMemorySummarizer = {
+      summarize: jest.fn(),
+    } as unknown as jest.Mocked<CoachConversationMemorySummarizer>;
+    coachConversationMemorySummarizer.summarize.mockReturnValue(
+      buildMemorySummary({
+        generatedFromMessageCount: 2,
+      }),
+    );
 
     useCase = new CreateCoachChatUseCase(
       userProfileRepository,
       coachConversationRepository,
       coachMessageRepository,
+      coachConversationMemoryRepository,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
       aiPromptBuilder,
       aiLlmService,
       replyGenerator,
+      coachConversationMemorySummarizer,
     );
   });
 
   it("uses the LLM reply when enabled and persists both messages", async () => {
     mockUserProfile(userProfileRepository);
     coachConversationRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    coachConversationMemoryRepository.findByConversationId.mockResolvedValue(null);
     buildUserHealthContextService.build.mockResolvedValue(buildHealthContext());
     aiPromptBuilder.build.mockReturnValue({
       promptVersion: "coach-chat-prompt-v1",
@@ -87,8 +107,16 @@ describe("CreateCoachChatUseCase", () => {
         conversationId: "conversation_123",
         role: "assistant",
         content: "OpenAI coach reply",
-        createdAt: new Date("2026-05-18T10:00:02.000Z"),
+      createdAt: new Date("2026-05-18T10:00:02.000Z"),
       });
+    coachConversationMemorySummarizer.summarize.mockReturnValue({
+      summary:
+        "goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; user_concern=general",
+      metadata: {
+        generatedFromMessageCount: 2,
+        version: "memory-v1",
+      },
+    });
     replyGenerator.generate.mockReturnValue("Fallback reply");
     coachConversationRepository.create.mockResolvedValue(
       new CoachConversation({
@@ -96,6 +124,20 @@ describe("CreateCoachChatUseCase", () => {
         userProfileId: "profile_123",
         createdAt: new Date("2026-05-18T10:00:00.000Z"),
         updatedAt: new Date("2026-05-18T10:00:00.000Z"),
+      }),
+    );
+    coachConversationMemoryRepository.upsertByConversationId.mockResolvedValue(
+      new CoachConversationMemory({
+        id: "memory_123",
+        conversationId: "conversation_123",
+        summary:
+          "goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; user_concern=general",
+        metadata: {
+          generatedFromMessageCount: 2,
+          version: "memory-v1",
+        },
+        createdAt: new Date("2026-05-18T10:00:03.000Z"),
+        updatedAt: new Date("2026-05-18T10:00:03.000Z"),
       }),
     );
 
@@ -116,6 +158,16 @@ describe("CreateCoachChatUseCase", () => {
       messages: [{ role: "system", content: "prompt" }],
     });
     expect(replyGenerator.generate).not.toHaveBeenCalled();
+    expect(coachConversationMemorySummarizer.summarize).toHaveBeenCalled();
+    expect(coachConversationMemoryRepository.upsertByConversationId).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: "conversation_123",
+        metadata: {
+          generatedFromMessageCount: 2,
+          version: "memory-v1",
+        },
+      }),
+    );
     expect(coachMessageRepository.create).toHaveBeenNthCalledWith(1, {
       conversationId: "conversation_123",
       role: "user",
@@ -164,6 +216,20 @@ describe("CreateCoachChatUseCase", () => {
         createdAt: new Date("2026-05-17T10:00:00.000Z"),
       },
     ]);
+    coachConversationMemoryRepository.findByConversationId.mockResolvedValue(
+      new CoachConversationMemory({
+        id: "memory_456",
+        conversationId: "conversation_456",
+        summary:
+          "goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:1; user_concern=recovery",
+        metadata: {
+          generatedFromMessageCount: 2,
+          version: "memory-v1",
+        },
+        createdAt: new Date("2026-05-17T10:00:02.000Z"),
+        updatedAt: new Date("2026-05-17T10:00:02.000Z"),
+      }),
+    );
     buildUserHealthContextService.build.mockResolvedValue(buildHealthContext({
       fatigueLevel: "HIGH",
       latestCheckIn: {
@@ -182,6 +248,14 @@ describe("CreateCoachChatUseCase", () => {
     replyGenerator.generate.mockReturnValue(
       "Your recovery signals suggest keeping today's session lighter.",
     );
+    coachConversationMemorySummarizer.summarize.mockReturnValue({
+      summary:
+        "goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:2; user_concern=recovery",
+      metadata: {
+        generatedFromMessageCount: 4,
+        version: "memory-v1",
+      },
+    });
     coachMessageRepository.create
       .mockResolvedValueOnce({
         id: "message_user_123",
@@ -224,6 +298,14 @@ describe("CreateCoachChatUseCase", () => {
           createdAt: "2026-05-17T10:00:01.000Z",
         },
       ],
+      conversationMemory: {
+        summary:
+          "goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:1; user_concern=recovery",
+        metadata: {
+          generatedFromMessageCount: 2,
+          version: "memory-v1",
+        },
+      },
     });
     expect(replyGenerator.generate).toHaveBeenCalledWith({
       message: "Should I train today?",
@@ -233,6 +315,17 @@ describe("CreateCoachChatUseCase", () => {
     });
     expect(result.reply).toBe(
       "Your recovery signals suggest keeping today's session lighter.",
+    );
+    expect(coachConversationMemoryRepository.upsertByConversationId).toHaveBeenCalledWith(
+      {
+        conversationId: "conversation_456",
+        summary:
+          "goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:2; user_concern=recovery",
+        metadata: {
+          generatedFromMessageCount: 4,
+          version: "memory-v1",
+        },
+      },
     );
     expect(coachMessageRepository.create).toHaveBeenNthCalledWith(2, {
       conversationId: "conversation_456",
@@ -413,5 +506,31 @@ function buildHealthContext(overrides: Partial<Awaited<
       preferredFoods: [],
     },
     ...overrides,
+  };
+}
+
+function buildMemorySummary(overrides: Partial<{
+  summary: string;
+  generatedFromMessageCount: number;
+  version: string;
+}> = {}): {
+  summary: string;
+  metadata: {
+    generatedFromMessageCount: number;
+    version: string;
+  };
+} {
+  const {
+    summary = "goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; user_concern=general",
+    generatedFromMessageCount = 2,
+    version = "memory-v1",
+  } = overrides;
+
+  return {
+    summary,
+    metadata: {
+      generatedFromMessageCount,
+      version,
+    },
   };
 }

@@ -1,4 +1,6 @@
 import { CoachConversation } from "../../../domain/entities/coach-conversation.entity";
+import { CoachConversationMemory } from "../../../domain/entities/coach-conversation-memory.entity";
+import { CoachConversationMemoryRepository } from "../../../domain/repositories/coach-conversation-memory.repository";
 import { CoachConversationRepository } from "../../../domain/repositories/coach-conversation.repository";
 import { CoachMessageRepository } from "../../../domain/repositories/coach-message.repository";
 import { UserProfile } from "../../../../users/domain/entities/user-profile.entity";
@@ -9,6 +11,7 @@ describe("GetCoachChatDebugHistoryUseCase", () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
   let coachConversationRepository: jest.Mocked<CoachConversationRepository>;
   let coachMessageRepository: jest.Mocked<CoachMessageRepository>;
+  let coachConversationMemoryRepository: jest.Mocked<CoachConversationMemoryRepository>;
   let useCase: GetCoachChatDebugHistoryUseCase;
 
   beforeEach(() => {
@@ -24,11 +27,16 @@ describe("GetCoachChatDebugHistoryUseCase", () => {
       create: jest.fn(),
       findByConversationId: jest.fn(),
     } as unknown as jest.Mocked<CoachMessageRepository>;
+    coachConversationMemoryRepository = {
+      findByConversationId: jest.fn(),
+      upsertByConversationId: jest.fn(),
+    } as unknown as jest.Mocked<CoachConversationMemoryRepository>;
 
     useCase = new GetCoachChatDebugHistoryUseCase(
       userProfileRepository,
       coachConversationRepository,
       coachMessageRepository,
+      coachConversationMemoryRepository,
     );
   });
 
@@ -64,6 +72,20 @@ describe("GetCoachChatDebugHistoryUseCase", () => {
         createdAt: new Date("2026-05-18T10:00:00.000Z"),
       },
     ]);
+    coachConversationMemoryRepository.findByConversationId.mockResolvedValue(
+      new CoachConversationMemory({
+        id: "memory_123",
+        conversationId: "conversation_123",
+        summary:
+          "goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery",
+        metadata: {
+          generatedFromMessageCount: 4,
+          version: "memory-v1",
+        },
+        createdAt: new Date("2026-05-18T10:05:00.000Z"),
+        updatedAt: new Date("2026-05-18T10:05:00.000Z"),
+      }),
+    );
 
     const result = await useCase.execute({
       authUserId: "auth_user_123",
@@ -92,6 +114,12 @@ describe("GetCoachChatDebugHistoryUseCase", () => {
         },
       },
     ]);
+    expect(result.conversationMemory).toEqual({
+      version: "memory-v1",
+      generatedFromMessageCount: 4,
+      summaryPreview:
+        "goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery",
+    });
   });
 
   it("returns an empty history when no conversation exists", async () => {

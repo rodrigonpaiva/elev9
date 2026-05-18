@@ -10,6 +10,10 @@ import {
 import { BuildUserHealthContextService } from "../../services/context-builder/build-user-health-context.service";
 import { CoachChatReplyGenerator } from "../../services/chat/coach-chat-reply-generator.service";
 import {
+  COACH_CONVERSATION_MEMORY_REPOSITORY,
+  CoachConversationMemoryRepository,
+} from "../../../domain/repositories/coach-conversation-memory.repository";
+import {
   COACH_CONVERSATION_REPOSITORY,
   CoachConversationRepository,
 } from "../../../domain/repositories/coach-conversation.repository";
@@ -17,6 +21,10 @@ import {
   COACH_MESSAGE_REPOSITORY,
   CoachMessageRepository,
 } from "../../../domain/repositories/coach-message.repository";
+import {
+  CoachConversationMemorySummarizer,
+  COACH_CONVERSATION_MEMORY_VERSION,
+} from "../../services/memory/coach-conversation-memory-summarizer.service";
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
@@ -39,10 +47,13 @@ export class CreateCoachChatUseCase {
     private readonly coachConversationRepository: CoachConversationRepository,
     @Inject(COACH_MESSAGE_REPOSITORY)
     private readonly coachMessageRepository: CoachMessageRepository,
+    @Inject(COACH_CONVERSATION_MEMORY_REPOSITORY)
+    private readonly coachConversationMemoryRepository: CoachConversationMemoryRepository,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
     private readonly aiPromptBuilder: AiPromptBuilder,
     private readonly aiLlmService: AiLlmService,
     private readonly coachChatReplyGenerator: CoachChatReplyGenerator,
+    private readonly coachConversationMemorySummarizer: CoachConversationMemorySummarizer,
   ) {}
 
   async execute(input: CreateCoachChatInput): Promise<CreateCoachChatOutput> {
@@ -90,6 +101,11 @@ export class CreateCoachChatUseCase {
           userProfileId: userProfile.id,
         }));
 
+      const conversationMemory =
+        await this.coachConversationMemoryRepository.findByConversationId(
+          conversation.id,
+        );
+
       const conversationHistory = (
         existingConversation
           ? await this.coachMessageRepository.findByConversationId({
@@ -116,6 +132,12 @@ export class CreateCoachChatUseCase {
         message,
         healthContext,
         conversationHistory,
+        conversationMemory: conversationMemory
+          ? {
+              summary: conversationMemory.summary,
+              metadata: conversationMemory.metadata,
+            }
+          : undefined,
       });
 
       let reply:
@@ -153,6 +175,14 @@ export class CreateCoachChatUseCase {
           },
         });
 
+        await this.updateConversationMemory({
+          conversationId: conversation.id,
+          healthContext,
+          conversationHistory,
+          userMessage: message,
+          assistantReply: fallbackReply,
+        });
+
         return {
           conversationId: conversation.id,
           reply: fallbackReply,
@@ -171,6 +201,14 @@ export class CreateCoachChatUseCase {
         },
       });
 
+      await this.updateConversationMemory({
+        conversationId: conversation.id,
+        healthContext,
+        conversationHistory,
+        userMessage: message,
+        assistantReply: reply.content,
+      });
+
       return {
         conversationId: conversation.id,
         reply: reply.content,
@@ -185,5 +223,42 @@ export class CreateCoachChatUseCase {
         "An unexpected error occurred.",
       );
     }
+  }
+
+  private async updateConversationMemory(input: {
+    conversationId: string;
+    healthContext: Awaited<
+      ReturnType<BuildUserHealthContextService["build"]>
+    >;
+    conversationHistory: AiPromptBuilderConversationMessage[];
+    userMessage: string;
+    assistantReply: string;
+  }): Promise<void> {
+    const memory = this.coachConversationMemorySummarizer.summarize({
+      healthContext: input.healthContext,
+      conversationMessages: [
+        ...input.conversationHistory,
+        {
+          role: "user",
+          content: input.userMessage,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          role: "assistant",
+          content: input.assistantReply,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    });
+
+    await this.coachConversationMemoryRepository.upsertByConversationId({
+      conversationId: input.conversationId,
+      summary: memory.summary,
+      metadata: {
+        generatedFromMessageCount: memory.metadata.generatedFromMessageCount,
+        version:
+          memory.metadata.version ?? COACH_CONVERSATION_MEMORY_VERSION,
+      },
+    });
   }
 }

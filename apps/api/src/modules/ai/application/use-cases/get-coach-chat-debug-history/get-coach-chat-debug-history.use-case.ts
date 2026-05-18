@@ -1,6 +1,10 @@
 import { Inject, Injectable } from "@nestjs/common";
 
 import {
+  COACH_CONVERSATION_MEMORY_REPOSITORY,
+  CoachConversationMemoryRepository,
+} from "../../../domain/repositories/coach-conversation-memory.repository";
+import {
   COACH_CONVERSATION_REPOSITORY,
   CoachConversationRepository,
 } from "../../../domain/repositories/coach-conversation.repository";
@@ -28,6 +32,8 @@ export class GetCoachChatDebugHistoryUseCase {
     private readonly coachConversationRepository: CoachConversationRepository,
     @Inject(COACH_MESSAGE_REPOSITORY)
     private readonly coachMessageRepository: CoachMessageRepository,
+    @Inject(COACH_CONVERSATION_MEMORY_REPOSITORY)
+    private readonly coachConversationMemoryRepository: CoachConversationMemoryRepository,
   ) {}
 
   async execute(
@@ -68,8 +74,22 @@ export class GetCoachChatDebugHistoryUseCase {
         conversationId: conversation.id,
         limit: normalizedLimit,
       });
+      const conversationMemory =
+        await this.coachConversationMemoryRepository.findByConversationId(
+          conversation.id,
+        );
 
       return {
+        ...(conversationMemory
+          ? {
+              conversationMemory: {
+                version: conversationMemory.metadata.version,
+                generatedFromMessageCount:
+                  conversationMemory.metadata.generatedFromMessageCount,
+                summaryPreview: conversationMemory.summary.slice(0, 160),
+              },
+            }
+          : {}),
         messages: [...messages]
           .reverse()
           .map((message) => ({

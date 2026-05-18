@@ -54,6 +54,7 @@ import { AiPromptBuilder } from "./application/services/llm/ai-prompt-builder.se
 import { AI_LLM_PROVIDER } from "./application/services/llm/ai-llm.types";
 import { CoachFeedbackGenerator } from "./application/services/coach-feedback/coach-feedback-generator.service";
 import { CoachChatReplyGenerator } from "./application/services/chat/coach-chat-reply-generator.service";
+import { CoachConversationMemorySummarizer } from "./application/services/memory/coach-conversation-memory-summarizer.service";
 import { CreateCoachChatUseCase } from "./application/use-cases/create-coach-chat/create-coach-chat.use-case";
 import { GetCoachChatDebugHistoryUseCase } from "./application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case";
 import { GetCoachChatPromptDebugUseCase } from "./application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case";
@@ -67,10 +68,16 @@ import { ReplayCoachFeedbackUseCase } from "./application/use-cases/replay-coach
 import { AiController } from "./presentation/http/ai.controller";
 import { COACH_CONVERSATION_REPOSITORY } from "./domain/repositories/coach-conversation.repository";
 import { MongooseCoachConversationRepository } from "./infrastructure/mongoose/mongoose-coach-conversation.repository";
+import { COACH_CONVERSATION_MEMORY_REPOSITORY } from "./domain/repositories/coach-conversation-memory.repository";
+import { MongooseCoachConversationMemoryRepository } from "./infrastructure/mongoose/mongoose-coach-conversation-memory.repository";
 import {
   COACH_CONVERSATION_MODEL_NAME,
   CoachConversationSchema,
 } from "./infrastructure/mongoose/coach-conversation.schema";
+import {
+  COACH_CONVERSATION_MEMORY_MODEL_NAME,
+  CoachConversationMemorySchema,
+} from "./infrastructure/mongoose/coach-conversation-memory.schema";
 import { COACH_MESSAGE_REPOSITORY } from "./domain/repositories/coach-message.repository";
 import { MongooseCoachMessageRepository } from "./infrastructure/mongoose/mongoose-coach-message.repository";
 import {
@@ -116,6 +123,10 @@ import { OpenAiLlmProvider } from "./infrastructure/llm/openai-llm.provider";
         schema: CoachConversationSchema,
       },
       {
+        name: COACH_CONVERSATION_MEMORY_MODEL_NAME,
+        schema: CoachConversationMemorySchema,
+      },
+      {
         name: COACH_MESSAGE_MODEL_NAME,
         schema: CoachMessageSchema,
       },
@@ -128,6 +139,7 @@ import { OpenAiLlmProvider } from "./infrastructure/llm/openai-llm.provider";
     AiLlmConfigService,
     AiPromptBuilder,
     AiLlmService,
+    CoachConversationMemorySummarizer,
     CoachFeedbackGenerator,
     CoachChatReplyGenerator,
     CreateCoachChatUseCase,
@@ -175,6 +187,10 @@ import { OpenAiLlmProvider } from "./infrastructure/llm/openai-llm.provider";
     {
       provide: COACH_CONVERSATION_REPOSITORY,
       useClass: MongooseCoachConversationRepository,
+    },
+    {
+      provide: COACH_CONVERSATION_MEMORY_REPOSITORY,
+      useClass: MongooseCoachConversationMemoryRepository,
     },
     {
       provide: COACH_MESSAGE_REPOSITORY,

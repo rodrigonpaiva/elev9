@@ -1,6 +1,7 @@
 import { AiLlmConfigService } from "../../services/llm/ai-llm-config.service";
 import { AiPromptBuilder } from "../../services/llm/ai-prompt-builder.service";
 import { BuildUserHealthContextService } from "../../services/context-builder/build-user-health-context.service";
+import { CoachConversationMemoryRepository } from "../../../domain/repositories/coach-conversation-memory.repository";
 import { CoachConversationRepository } from "../../../domain/repositories/coach-conversation.repository";
 import { CoachMessageRepository } from "../../../domain/repositories/coach-message.repository";
 import { UserProfileRepository } from "../../../../users/domain/repositories/user-profile.repository";
@@ -10,6 +11,7 @@ describe("GetCoachChatReplyPathDebugUseCase", () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
   let coachConversationRepository: jest.Mocked<CoachConversationRepository>;
   let coachMessageRepository: jest.Mocked<CoachMessageRepository>;
+  let coachConversationMemoryRepository: jest.Mocked<CoachConversationMemoryRepository>;
   let buildUserHealthContextService: jest.Mocked<BuildUserHealthContextService>;
   let aiPromptBuilder: AiPromptBuilder;
   let aiLlmConfigService: jest.Mocked<AiLlmConfigService>;
@@ -30,6 +32,10 @@ describe("GetCoachChatReplyPathDebugUseCase", () => {
       create: jest.fn(),
       findByConversationId: jest.fn(),
     } as unknown as jest.Mocked<CoachMessageRepository>;
+    coachConversationMemoryRepository = {
+      findByConversationId: jest.fn(),
+      upsertByConversationId: jest.fn(),
+    } as unknown as jest.Mocked<CoachConversationMemoryRepository>;
 
     buildUserHealthContextService = {
       build: jest.fn(),
@@ -47,6 +53,7 @@ describe("GetCoachChatReplyPathDebugUseCase", () => {
       userProfileRepository,
       coachConversationRepository,
       coachMessageRepository,
+      coachConversationMemoryRepository,
       buildUserHealthContextService,
       aiPromptBuilder,
       aiLlmConfigService,
@@ -156,6 +163,18 @@ describe("GetCoachChatReplyPathDebugUseCase", () => {
         createdAt: new Date("2026-05-18T09:46:00.000Z"),
       },
     ]);
+    coachConversationMemoryRepository.findByConversationId.mockResolvedValue({
+      id: "memory_123",
+      conversationId: "conversation_123",
+      summary:
+        "goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery",
+      metadata: {
+        generatedFromMessageCount: 4,
+        version: "memory-v1",
+      },
+      createdAt: new Date("2026-05-18T10:05:00.000Z"),
+      updatedAt: new Date("2026-05-18T10:05:00.000Z"),
+    } as never);
     aiLlmConfigService.isEnabled.mockReturnValue(true);
     aiLlmConfigService.getProvider.mockReturnValue("openai");
     aiLlmConfigService.getModel.mockReturnValue("gpt-4.1-mini");
@@ -187,9 +206,16 @@ describe("GetCoachChatReplyPathDebugUseCase", () => {
       systemSections: [
         "safety_rules",
         "adaptive_context",
+        "conversation_memory",
         "conversation_context",
       ],
       userMessagePreview: "I feel exhausted after training",
+    });
+    expect(result.conversationMemory).toEqual({
+      version: "memory-v1",
+      generatedFromMessageCount: 4,
+      summaryPreview:
+        "goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery",
     });
     expect(JSON.stringify(result)).not.toContain("auth_user_123");
     expect(JSON.stringify(result)).not.toContain("profile_123");

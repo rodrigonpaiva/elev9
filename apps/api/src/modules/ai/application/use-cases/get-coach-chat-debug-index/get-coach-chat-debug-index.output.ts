@@ -15,6 +15,11 @@ export type GetCoachChatDebugIndexOutput = {
   promptPreview: {
     systemSections: string[];
   };
+  conversationMemory?: {
+    version: string;
+    generatedFromMessageCount: number;
+    summaryPreview: string;
+  };
   context: {
     fatigueLevel: "LOW" | "MODERATE" | "HIGH";
     recoveryTrend: "improving" | "stable" | "needs_recovery";
