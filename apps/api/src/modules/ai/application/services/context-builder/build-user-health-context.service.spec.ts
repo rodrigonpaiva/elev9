@@ -3,6 +3,8 @@ import {
   FitnessProfileLimitation,
 } from "../../../../fitness/domain/entities/fitness-profile.entity";
 import { FitnessProfileRepository } from "../../../../fitness/domain/repositories/fitness-profile.repository";
+import { NutritionProfile } from "../../../../nutrition/domain/entities/nutrition-profile.entity";
+import { NutritionProfileRepository } from "../../../../nutrition/domain/repositories/nutrition-profile.repository";
 import { DailyCheckIn } from "../../../../progress/domain/entities/daily-check-in.entity";
 import { DailyCheckInRepository } from "../../../../progress/domain/repositories/daily-check-in.repository";
 import { WorkoutLog } from "../../../../progress/domain/entities/workout-log.entity";
@@ -17,6 +19,7 @@ import { BuildUserHealthContextService } from "./build-user-health-context.servi
 describe("BuildUserHealthContextService", () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
   let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
+  let nutritionProfileRepository: jest.Mocked<NutritionProfileRepository>;
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
@@ -32,6 +35,10 @@ describe("BuildUserHealthContextService", () => {
       findById: jest.fn(),
       findActiveByUserProfileId: jest.fn(),
       create: jest.fn(),
+    };
+    nutritionProfileRepository = {
+      findActiveByUserProfileId: jest.fn().mockResolvedValue(null),
+      upsertByUserProfileId: jest.fn(),
     };
     trainingPlanRepository = {
       findById: jest.fn(),
@@ -60,6 +67,7 @@ describe("BuildUserHealthContextService", () => {
       trainingPlanRepository,
       dailyCheckInRepository,
       workoutLogRepository,
+      nutritionProfileRepository,
       clock,
     );
   });
@@ -72,6 +80,9 @@ describe("BuildUserHealthContextService", () => {
     mockTrainingPlan(trainingPlanRepository);
     dailyCheckInRepository.findLatestByUserProfileId.mockResolvedValue(
       buildDailyCheckIn("2026-05-04T09:00:00.000Z"),
+    );
+    nutritionProfileRepository.findActiveByUserProfileId.mockResolvedValue(
+      buildNutritionProfile(),
     );
     workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
       buildWorkoutLog("2026-05-02", 35, "2026-05-02T08:00:00.000Z"),
@@ -115,6 +126,14 @@ describe("BuildUserHealthContextService", () => {
         motivationLevel: 5,
         createdAt: new Date("2026-05-04T09:00:00.000Z"),
       },
+      nutritionProfile: {
+        goal: "muscle_gain",
+        mealsPerDay: 4,
+        dietaryRestrictions: [],
+        allergies: [],
+        dislikedFoods: [],
+        preferredFoods: ["rice", "eggs"],
+      },
       todayWorkout: {
         dayIndex: 1,
         title: "Upper Body Strength",
@@ -149,6 +168,45 @@ describe("BuildUserHealthContextService", () => {
     expect(result.goal).toBeUndefined();
     expect(result.weeklyFrequency).toBeUndefined();
     expect(result.latestCheckIn).toBeUndefined();
+    expect(result.nutritionProfile).toBeUndefined();
+  });
+
+  it("includes nutritionProfile when one exists", async () => {
+    mockUserProfile(userProfileRepository);
+    nutritionProfileRepository.findActiveByUserProfileId.mockResolvedValue(
+      buildNutritionProfile({
+        goal: "fat_loss",
+        mealsPerDay: 3,
+        preferredFoods: ["oats"],
+      }),
+    );
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(nutritionProfileRepository.findActiveByUserProfileId).toHaveBeenCalledWith(
+      "profile_123",
+    );
+    expect(result.nutritionProfile).toEqual({
+      goal: "fat_loss",
+      mealsPerDay: 3,
+      dietaryRestrictions: [],
+      allergies: [],
+      dislikedFoods: [],
+      preferredFoods: ["oats"],
+    });
+  });
+
+  it("works safely without nutritionProfile", async () => {
+    mockUserProfile(userProfileRepository);
+    nutritionProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
+
+    const result = await service.build({
+      authUserId: "auth_user_123",
+    });
+
+    expect(result.nutritionProfile).toBeUndefined();
   });
 
   it("returns a safe context when there is no active training plan", async () => {
@@ -557,5 +615,30 @@ function buildDailyCheckIn(
     motivationLevel: overrides?.motivationLevel ?? 5,
     createdAt: new Date(createdAt),
     updatedAt: new Date(createdAt),
+  });
+}
+
+function buildNutritionProfile(
+  overrides: Partial<{
+    goal: "fat_loss" | "maintenance" | "muscle_gain";
+    mealsPerDay: number;
+    dietaryRestrictions: string[];
+    allergies: string[];
+    dislikedFoods: string[];
+    preferredFoods: string[];
+  }> = {},
+): NutritionProfile {
+  return new NutritionProfile({
+    id: "nutrition_123",
+    userProfileId: "profile_123",
+    goal: overrides.goal ?? "muscle_gain",
+    mealsPerDay: overrides.mealsPerDay ?? 4,
+    dietaryRestrictions: overrides.dietaryRestrictions ?? [],
+    allergies: overrides.allergies ?? [],
+    dislikedFoods: overrides.dislikedFoods ?? [],
+    preferredFoods: overrides.preferredFoods ?? ["rice", "eggs"],
+    status: "active",
+    createdAt: new Date("2026-05-04T09:30:00.000Z"),
+    updatedAt: new Date("2026-05-04T09:30:00.000Z"),
   });
 }

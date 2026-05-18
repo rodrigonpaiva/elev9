@@ -14,6 +14,12 @@ import {
   FITNESS_PROFILE_MODEL_NAME,
   FitnessProfileSchema,
 } from "../fitness/infrastructure/mongoose/fitness-profile.schema";
+import { NUTRITION_PROFILE_REPOSITORY } from "../nutrition/domain/repositories/nutrition-profile.repository";
+import { MongooseNutritionProfileRepository } from "../nutrition/infrastructure/mongoose/mongoose-nutrition-profile.repository";
+import {
+  NUTRITION_PROFILE_MODEL_NAME,
+  NutritionProfileSchema,
+} from "../nutrition/infrastructure/mongoose/nutrition-profile.schema";
 import { DAILY_CHECK_IN_REPOSITORY } from "../progress/domain/repositories/daily-check-in.repository";
 import { WORKOUT_LOG_REPOSITORY } from "../progress/domain/repositories/workout-log.repository";
 import { CLOCK } from "../progress/domain/services/clock.service";
@@ -60,6 +66,10 @@ import { AiController } from "./presentation/http/ai.controller";
         schema: FitnessProfileSchema,
       },
       {
+        name: NUTRITION_PROFILE_MODEL_NAME,
+        schema: NutritionProfileSchema,
+      },
+      {
         name: TRAINING_PLAN_MODEL_NAME,
         schema: TrainingPlanSchema,
       },
@@ -95,6 +105,10 @@ import { AiController } from "./presentation/http/ai.controller";
     {
       provide: FITNESS_PROFILE_REPOSITORY,
       useClass: MongooseFitnessProfileRepository,
+    },
+    {
+      provide: NUTRITION_PROFILE_REPOSITORY,
+      useClass: MongooseNutritionProfileRepository,
     },
     {
       provide: TRAINING_PLAN_REPOSITORY,

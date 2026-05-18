@@ -25,7 +25,10 @@ import {
   GenerateCoachFeedbackError,
 } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors";
 import { GenerateCoachFeedbackUseCase } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case";
-import { BuildUserHealthContextService } from "../../application/services/context-builder/build-user-health-context.service";
+import {
+  BuildUserHealthContextService,
+  UserHealthContextNutritionProfile,
+} from "../../application/services/context-builder/build-user-health-context.service";
 import { GetCoachFeedbackHistoryQueryDto } from "./dto/get-coach-feedback-history.query.dto";
 import { GetCoachFeedbackHistoryResponseDto } from "./dto/get-coach-feedback-history.response.dto";
 import { GenerateCoachFeedbackResponseDto } from "./dto/generate-coach-feedback.response.dto";
@@ -134,6 +137,7 @@ export class AiController {
       motivationLevel: number;
       createdAt: string;
     };
+    nutritionProfile?: UserHealthContextNutritionProfile;
     recentWorkoutLogs: Array<{
       id: string;
       trainingPlanId: string;
@@ -182,6 +186,7 @@ export class AiController {
             createdAt: context.latestCheckIn.createdAt.toISOString(),
           }
         : undefined,
+      nutritionProfile: context.nutritionProfile,
       recentWorkoutLogs: context.recentWorkoutLogs.map((workoutLog) => ({
         id: workoutLog.id,
         trainingPlanId: workoutLog.trainingPlanId,

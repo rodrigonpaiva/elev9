@@ -19,6 +19,10 @@ import {
   WorkoutLogRepository,
 } from "../../../../progress/domain/repositories/workout-log.repository";
 import { CLOCK, Clock } from "../../../../progress/domain/services/clock.service";
+import {
+  NUTRITION_PROFILE_REPOSITORY,
+  NutritionProfileRepository,
+} from "../../../../nutrition/domain/repositories/nutrition-profile.repository";
 import { calculateStreak } from "../../../../progress/application/use-cases/get-progress-summary/calculate-streak";
 import {
   TrainingPlanDay,
@@ -44,6 +48,15 @@ export type UserHealthContextTodayWorkout = {
 
 export type FatigueLevel = "LOW" | "MODERATE" | "HIGH";
 
+export type UserHealthContextNutritionProfile = {
+  goal: "fat_loss" | "maintenance" | "muscle_gain";
+  mealsPerDay: number;
+  dietaryRestrictions: string[];
+  allergies: string[];
+  dislikedFoods: string[];
+  preferredFoods: string[];
+};
+
 export type UserHealthContext = {
   authUserId: string;
   userProfileId?: string;
@@ -66,6 +79,7 @@ export type UserHealthContext = {
     motivationLevel: number;
     createdAt: Date;
   };
+  nutritionProfile?: UserHealthContextNutritionProfile;
   recentWorkoutLogs: WorkoutLog[];
   generatedAt: Date;
 };
@@ -83,6 +97,8 @@ export class BuildUserHealthContextService {
     private readonly dailyCheckInRepository: DailyCheckInRepository,
     @Inject(WORKOUT_LOG_REPOSITORY)
     private readonly workoutLogRepository: WorkoutLogRepository,
+    @Inject(NUTRITION_PROFILE_REPOSITORY)
+    private readonly nutritionProfileRepository: NutritionProfileRepository,
     @Inject(CLOCK)
     private readonly clock: Clock,
   ) {}
@@ -107,6 +123,10 @@ export class BuildUserHealthContextService {
       await this.dailyCheckInRepository.findLatestByUserProfileId(userProfile.id);
     const fitnessProfile =
       await this.fitnessProfileRepository.findActiveByUserProfileId(userProfile.id);
+    const nutritionProfile =
+      await this.nutritionProfileRepository.findActiveByUserProfileId(
+        userProfile.id,
+      );
 
     const contextWithoutTrainingPlan: UserHealthContext = {
       ...baseContext,
@@ -128,6 +148,16 @@ export class BuildUserHealthContextService {
             muscleSoreness: latestCheckIn.muscleSoreness,
             motivationLevel: latestCheckIn.motivationLevel,
             createdAt: latestCheckIn.createdAt,
+          }
+        : undefined,
+      nutritionProfile: nutritionProfile
+        ? {
+            goal: nutritionProfile.goal,
+            mealsPerDay: nutritionProfile.mealsPerDay,
+            dietaryRestrictions: nutritionProfile.dietaryRestrictions ?? [],
+            allergies: nutritionProfile.allergies ?? [],
+            dislikedFoods: nutritionProfile.dislikedFoods ?? [],
+            preferredFoods: nutritionProfile.preferredFoods ?? [],
           }
         : undefined,
     };
