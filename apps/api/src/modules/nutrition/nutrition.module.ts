@@ -47,5 +47,6 @@ import { NutritionController } from "./presentation/http/nutrition.controller";
       useClass: MongooseNutritionProfileRepository,
     },
   ],
+  exports: [NUTRITION_PROFILE_REPOSITORY],
 })
 export class NutritionModule {}

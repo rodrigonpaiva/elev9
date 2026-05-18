@@ -150,6 +150,7 @@ npm run test
 ## Docker Runtime
 
 The Docker runtime remains local-first and development-oriented.
+Use `.env.docker.example` as a separate runtime template from the standard application environment flow.
 
 ```bash
 cp .env.docker.example .env

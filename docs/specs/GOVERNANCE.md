@@ -143,6 +143,8 @@ Isso inclui:
 
 A validação oficial de CI está documentada em [docs/ci.md](../ci.md) e deve seguir a mesma filosofia leve, determinística e alinhada a esta governança.
 
+Documentação de runtime local também deve permanecer determinística e específica por ambiente. Para o Docker da API, use `.env.docker.example` como fluxo separado do ambiente padrão da aplicação.
+
 ---
 
 ## 11. Summary

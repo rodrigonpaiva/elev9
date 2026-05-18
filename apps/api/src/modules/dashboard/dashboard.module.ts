@@ -29,6 +29,7 @@ import {
   TRAINING_PLAN_MODEL_NAME,
   TrainingPlanSchema,
 } from "../training/infrastructure/mongoose/training-plan.schema";
+import { NutritionModule } from "../nutrition/nutrition.module";
 import { USER_PROFILE_REPOSITORY } from "../users/domain/repositories/user-profile.repository";
 import { MongooseUserProfileRepository } from "../users/infrastructure/mongoose/mongoose-user-profile.repository";
 import {
@@ -44,6 +45,7 @@ import { DashboardController } from "./presentation/http/dashboard.controller";
 @Module({
   imports: [
     AuthModule,
+    NutritionModule,
     MongooseModule.forFeature([
       {
         name: USER_PROFILE_MODEL_NAME,
