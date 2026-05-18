@@ -57,6 +57,11 @@ import {
 } from "../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.errors";
 import { GetCoachChatReplyPathDebugUseCase } from "../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case";
 import {
+  GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES,
+  GetCoachChatDebugIndexError,
+} from "../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.errors";
+import { GetCoachChatDebugIndexUseCase } from "../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.use-case";
+import {
   GENERATE_COACH_FEEDBACK_ERROR_CODES,
   GenerateCoachFeedbackError,
 } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors";
@@ -77,6 +82,7 @@ import { GetCoachChatDebugHistoryQueryDto } from "./dto/get-coach-chat-debug-his
 import { GetCoachChatDebugHistoryResponseDto } from "./dto/get-coach-chat-debug-history.response.dto";
 import { GetCoachChatPromptDebugResponseDto } from "./dto/get-coach-chat-prompt-debug.response.dto";
 import { GetCoachChatReplyPathDebugResponseDto } from "./dto/get-coach-chat-reply-path-debug.response.dto";
+import { GetCoachChatDebugIndexResponseDto } from "./dto/get-coach-chat-debug-index.response.dto";
 import { GenerateCoachFeedbackResponseDto } from "./dto/generate-coach-feedback.response.dto";
 import { ReplayCoachFeedbackResponseDto } from "./dto/replay-coach-feedback.response.dto";
 
@@ -96,6 +102,7 @@ export class AiController {
     private readonly getCoachChatDebugHistoryUseCase: GetCoachChatDebugHistoryUseCase,
     private readonly getCoachChatPromptDebugUseCase: GetCoachChatPromptDebugUseCase,
     private readonly getCoachChatReplyPathDebugUseCase: GetCoachChatReplyPathDebugUseCase,
+    private readonly getCoachChatDebugIndexUseCase: GetCoachChatDebugIndexUseCase,
     private readonly getCoachFeedbackDebugHistoryUseCase: GetCoachFeedbackDebugHistoryUseCase,
     private readonly replayCoachFeedbackUseCase: ReplayCoachFeedbackUseCase,
     private readonly getCoachFeedbackHistoryUseCase: GetCoachFeedbackHistoryUseCase,
@@ -228,6 +235,29 @@ export class AiController {
       });
     } catch (error) {
       this.handleChatReplyPathDebugError(error);
+    }
+  }
+
+  @Get("chat/debug")
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getCoachChatDebugIndex(
+    @Req() request: RequestWithAuthUser,
+    @Body() body?: Record<string, unknown>,
+  ): Promise<GetCoachChatDebugIndexResponseDto> {
+    if (body && Object.keys(body).length > 0) {
+      throw new BadRequestException({
+        code: GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INVALID_INPUT,
+        message: "Invalid chat debug input.",
+      });
+    }
+
+    try {
+      return await this.getCoachChatDebugIndexUseCase.execute({
+        authUserId: request.authUser?.id ?? "",
+      });
+    } catch (error) {
+      this.handleChatDebugIndexError(error);
     }
   }
 
@@ -662,6 +692,45 @@ export class AiController {
       default:
         throw new InternalServerErrorException({
           code: GET_COACH_CHAT_REPLY_PATH_DEBUG_ERROR_CODES.INTERNAL_ERROR,
+          message: "An unexpected error occurred.",
+        });
+    }
+  }
+
+  private handleChatDebugIndexError(error: unknown): never {
+    if (error instanceof GetCoachChatDebugHistoryError) {
+      return this.handleChatDebugHistoryError(error);
+    }
+
+    if (error instanceof GetCoachChatPromptDebugError) {
+      return this.handleChatPromptDebugError(error);
+    }
+
+    if (error instanceof GetCoachChatReplyPathDebugError) {
+      return this.handleChatReplyPathDebugError(error);
+    }
+
+    if (!(error instanceof GetCoachChatDebugIndexError)) {
+      throw new InternalServerErrorException("An unexpected error occurred.");
+    }
+
+    switch (error.code) {
+      case GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INVALID_INPUT:
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      case GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INTERNAL_ERROR,
           message: "An unexpected error occurred.",
         });
     }

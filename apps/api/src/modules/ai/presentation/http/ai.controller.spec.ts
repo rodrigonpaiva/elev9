@@ -34,6 +34,11 @@ import {
 } from "../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.errors";
 import { GetCoachChatReplyPathDebugUseCase } from "../../application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case";
 import {
+  GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES,
+  GetCoachChatDebugIndexError,
+} from "../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.errors";
+import { GetCoachChatDebugIndexUseCase } from "../../application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.use-case";
+import {
   GENERATE_COACH_FEEDBACK_ERROR_CODES,
   GenerateCoachFeedbackError,
 } from "../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors";
@@ -50,6 +55,7 @@ describe("AiController", () => {
   let getCoachChatDebugHistoryUseCase: jest.Mocked<GetCoachChatDebugHistoryUseCase>;
   let getCoachChatPromptDebugUseCase: jest.Mocked<GetCoachChatPromptDebugUseCase>;
   let getCoachChatReplyPathDebugUseCase: jest.Mocked<GetCoachChatReplyPathDebugUseCase>;
+  let getCoachChatDebugIndexUseCase: jest.Mocked<GetCoachChatDebugIndexUseCase>;
   let getCoachFeedbackDebugHistoryUseCase: jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
   let replayCoachFeedbackUseCase: jest.Mocked<ReplayCoachFeedbackUseCase>;
   let getCoachFeedbackHistoryUseCase: jest.Mocked<GetCoachFeedbackHistoryUseCase>;
@@ -75,6 +81,9 @@ describe("AiController", () => {
     getCoachChatReplyPathDebugUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachChatReplyPathDebugUseCase>;
+    getCoachChatDebugIndexUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCoachChatDebugIndexUseCase>;
     getCoachFeedbackDebugHistoryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachFeedbackDebugHistoryUseCase>;
@@ -95,6 +104,7 @@ describe("AiController", () => {
       getCoachChatDebugHistoryUseCase,
       getCoachChatPromptDebugUseCase,
       getCoachChatReplyPathDebugUseCase,
+      getCoachChatDebugIndexUseCase,
       getCoachFeedbackDebugHistoryUseCase,
       replayCoachFeedbackUseCase,
       getCoachFeedbackHistoryUseCase,
@@ -328,6 +338,85 @@ describe("AiController", () => {
 
     await expect(
       controller.getCoachChatReplyPathDebug(
+        {
+          authUser: {
+            id: "auth_user_123",
+            email: "user@email.com",
+          },
+        },
+        { extra: true } as never,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("returns the aggregated chat debug index", async () => {
+    getCoachChatDebugIndexUseCase.execute.mockResolvedValue({
+      generatedAt: "2026-05-18T10:00:00.000Z",
+      replyPath: {
+        source: "llm",
+        fallbackActivated: false,
+      },
+      llm: {
+        enabled: true,
+        provider: "openai",
+        model: "gpt-4.1-mini",
+        promptVersion: "coach-chat-prompt-v1",
+      },
+      promptVersion: "coach-chat-prompt-v1",
+      promptPreview: {
+        systemSections: [
+          "safety_rules",
+          "adaptive_context",
+          "conversation_context",
+        ],
+      },
+      context: {
+        fatigueLevel: "MODERATE",
+        recoveryTrend: "stable",
+        hasNutritionProfile: true,
+        recentWorkoutCount: 2,
+      },
+      recentMessages: [
+        {
+          role: "assistant",
+          content: "Your recovery signals suggest keeping today's session lighter.",
+          createdAt: "2026-05-18T09:00:00.000Z",
+          metadata: {
+            source: "llm",
+            promptVersion: "coach-chat-prompt-v1",
+          },
+        },
+      ],
+    });
+
+    const result = await controller.getCoachChatDebugIndex(
+      {
+        authUser: {
+          id: "auth_user_123",
+          email: "user@email.com",
+        },
+      },
+      {},
+    );
+
+    expect(getCoachChatDebugIndexUseCase.execute).toHaveBeenCalledWith({
+      authUserId: "auth_user_123",
+    });
+    expect(result.generatedAt).toBe("2026-05-18T10:00:00.000Z");
+    expect(result.replyPath.source).toBe("llm");
+    expect(result.recentMessages).toHaveLength(1);
+  });
+
+  it("maps chat debug index invalid input to HTTP 400", async () => {
+    getCoachChatDebugIndexUseCase.execute.mockRejectedValue(
+      new GetCoachChatDebugIndexError(
+        GET_COACH_CHAT_DEBUG_INDEX_ERROR_CODES.INVALID_INPUT,
+        "Invalid chat debug input.",
+      ),
+    );
+
+    await expect(
+      controller.getCoachChatDebugIndex(
         {
           authUser: {
             id: "auth_user_123",
@@ -707,6 +796,12 @@ describe("AiController", () => {
       Reflect.getMetadata(
         GUARDS_METADATA,
         AiController.prototype.getCoachChatReplyPathDebug,
+      ) as Array<new (...args: never[]) => unknown>,
+    ).toContain(AuthSessionGuard);
+    expect(
+      Reflect.getMetadata(
+        GUARDS_METADATA,
+        AiController.prototype.getCoachChatDebugIndex,
       ) as Array<new (...args: never[]) => unknown>,
     ).toContain(AuthSessionGuard);
     expect(contextGuards).toContain(AuthSessionGuard);

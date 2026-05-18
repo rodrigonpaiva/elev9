@@ -58,6 +58,7 @@ import { CreateCoachChatUseCase } from "./application/use-cases/create-coach-cha
 import { GetCoachChatDebugHistoryUseCase } from "./application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case";
 import { GetCoachChatPromptDebugUseCase } from "./application/use-cases/get-coach-chat-prompt-debug/get-coach-chat-prompt-debug.use-case";
 import { GetCoachChatReplyPathDebugUseCase } from "./application/use-cases/get-coach-chat-reply-path-debug/get-coach-chat-reply-path-debug.use-case";
+import { GetCoachChatDebugIndexUseCase } from "./application/use-cases/get-coach-chat-debug-index/get-coach-chat-debug-index.use-case";
 import { GetCoachFeedbackDebugHistoryUseCase } from "./application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case";
 import { GetCoachFeedbackHistoryUseCase } from "./application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case";
 import { GetCoachChatHistoryUseCase } from "./application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case";
@@ -133,6 +134,7 @@ import { OpenAiLlmProvider } from "./infrastructure/llm/openai-llm.provider";
     GetCoachChatDebugHistoryUseCase,
     GetCoachChatPromptDebugUseCase,
     GetCoachChatReplyPathDebugUseCase,
+    GetCoachChatDebugIndexUseCase,
     GetCoachFeedbackDebugHistoryUseCase,
     GetCoachFeedbackHistoryUseCase,
     GetCoachChatHistoryUseCase,
