@@ -79,11 +79,11 @@ Após sucesso:
 
 ## 8. Related Specs
 
-- `ai/generate-coach-feedback`
-- `ai/get-coach-feedback-debug-history`
-- `ai/replay-coach-feedback`
-- `progress/get-progress-summary`
-- `dashboard/get-home-dashboard`
+- [ai/generate-coach-feedback](../generate-coach-feedback/README.md)
+- [ai/get-coach-feedback-debug-history](../get-coach-feedback-debug-history/README.md)
+- [ai/replay-coach-feedback](../replay-coach-feedback/README.md)
+- [progress/get-progress-summary](../../progress/get-progress-summary/README.md)
+- [dashboard/get-home-dashboard](../../dashboard/get-home-dashboard/README.md)
 
 ---
 

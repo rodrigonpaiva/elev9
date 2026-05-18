@@ -93,9 +93,9 @@ Observação:
 
 ## 8. Related Specs
 
-- `auth/validate-session`
-- `users/create-user-profile`
-- `ai/generate-coach-feedback`
+- [auth/validate-session](../../auth/validate-session/README.md)
+- [users/create-user-profile](../../users/create-user-profile/README.md)
+- [ai/generate-coach-feedback](../generate-coach-feedback/README.md)
 
 ---
 

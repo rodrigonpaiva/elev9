@@ -107,15 +107,15 @@ Se a persistência falhar:
 
 ## 8. Related Specs
 
-- `auth/validate-session`
-- `users/create-user-profile`
-- `fitness/create-fitness-profile`
-- `training/create-training-plan`
-- `training/get-my-training-plan`
-- `progress/log-workout`
-- `progress/get-workout-history`
-- `progress/get-progress-summary`
-- `ai/get-coach-feedback-history`
+- [auth/validate-session](../../auth/validate-session/README.md)
+- [users/create-user-profile](../../users/create-user-profile/README.md)
+- [fitness/create-fitness-profile](../../fitness/create-fitness-profile/README.md)
+- [training/create-training-plan](../../training/create-training-plan/README.md)
+- [training/get-my-training-plan](../../training/get-my-training-plan/README.md)
+- [progress/log-workout](../../progress/log-workout/README.md)
+- [progress/get-workout-history](../../progress/get-workout-history/README.md)
+- [progress/get-progress-summary](../../progress/get-progress-summary/README.md)
+- [ai/get-coach-feedback-history](../get-coach-feedback-history/README.md)
 
 ---
 

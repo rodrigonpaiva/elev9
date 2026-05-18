@@ -81,9 +81,9 @@ Após sucesso:
 
 ## 8. Related Specs
 
-- `ai/generate-coach-feedback`
-- `ai/get-coach-feedback-debug-history`
-- `ai/get-coach-feedback-history`
+- [ai/generate-coach-feedback](../generate-coach-feedback/README.md)
+- [ai/get-coach-feedback-debug-history](../get-coach-feedback-debug-history/README.md)
+- [ai/get-coach-feedback-history](../get-coach-feedback-history/README.md)
 
 ---
 

@@ -89,11 +89,11 @@ Após sucesso:
 
 ## 8. Related Specs
 
-- `ai/get-ai-context`
-- `ai/generate-coach-feedback`
-- `ai/get-coach-feedback-debug-history`
-- `ai/replay-coach-feedback`
-- `progress/get-progress-summary`
+- [ai/get-ai-context](../get-ai-context/README.md)
+- [ai/generate-coach-feedback](../generate-coach-feedback/README.md)
+- [ai/get-coach-feedback-debug-history](../get-coach-feedback-debug-history/README.md)
+- [ai/replay-coach-feedback](../replay-coach-feedback/README.md)
+- [progress/get-progress-summary](../../progress/get-progress-summary/README.md)
 
 ---
 
