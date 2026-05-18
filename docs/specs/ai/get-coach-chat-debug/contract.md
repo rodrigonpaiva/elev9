@@ -29,6 +29,17 @@
   promptPreview: {
     systemSections: string[];
   };
+  memoryPreview?: {
+    version: string;
+    generatedFromMessageCount: number;
+    summaryPreview: string;
+    metadata: {
+      hasRecoveryContext: boolean;
+      hasNutritionContext: boolean;
+      hasWorkoutContinuity: boolean;
+    };
+    updatedAt: string;
+  };
   context: {
     fatigueLevel: "LOW" | "MODERATE" | "HIGH";
     recoveryTrend: "improving" | "stable" | "needs_recovery";
@@ -53,3 +64,4 @@
 
 - `recentMessages` is limited to recent items only.
 - The response is sanitized and does not expose raw prompts or raw context objects.
+- `memoryPreview` is a deterministic, summarized memory layer preview only. It does not expose the full memory summary and is not semantic memory.

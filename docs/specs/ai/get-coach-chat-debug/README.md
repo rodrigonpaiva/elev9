@@ -9,6 +9,7 @@ Ele agrega, em uma resposta autenticada e sanitizada:
 - o snapshot de prompt debug
 - o snapshot de reply-path debug
 - o histórico recente de chat debug
+- o preview resumido da memória conversacional determinística
 
 O objetivo é acelerar inspeção e triagem técnica da arquitetura conversacional sem expor prompt bruto, dados sensíveis ou payloads internos completos.
 
@@ -91,6 +92,7 @@ Após sucesso:
 - `UserHealthContext`
 - `CoachConversation`
 - `CoachMessage`
+- `CoachConversationMemory`
 
 ---
 
@@ -99,6 +101,7 @@ Após sucesso:
 - `ai/create-coach-chat`
 - `ai/get-coach-chat-history`
 - `ai/get-coach-chat-debug-history`
+- `ai/get-coach-chat-memory-debug`
 - `ai/get-coach-chat-prompt-debug`
 - `ai/get-coach-chat-reply-path-debug`
 
@@ -109,6 +112,8 @@ Após sucesso:
 Esta superfície unificada reduz o custo de suporte e debug da camada conversacional.
 
 Ela consolida a inspeção técnica em um único endpoint sem introduzir replay, memória longa ou dependência de provider generativo no caminho de debug.
+
+O preview de memória exposto aqui vem da camada determinística de memory summarization e não representa semantic memory.
 
 ---
 
