@@ -84,3 +84,7 @@ These are roadmap possibilities, not current CI behavior.
 `docs/ci.md` documents the current quality-gate flow for contributors and keeps the repository CI expectations aligned with the workspace’s deterministic-first architecture.
 
 For local Docker runtime, use `.env.docker.example` separately from the standard application environment flow. That setup stays local-first and development-oriented.
+
+For a lightweight runtime smoke check, run `./scripts/docker-smoke.sh` after `docker compose up -d` to validate API liveness and Mongo-backed readiness.
+
+For a lightweight runtime smoke check after `docker compose up -d`, run `./scripts/docker-smoke.sh` to validate API liveness and Mongo-backed readiness.

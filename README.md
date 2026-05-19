@@ -162,6 +162,8 @@ docker compose up --build
 ```
 
 The compose setup builds the API image deterministically and starts MongoDB alongside the backend.
+For a lightweight runtime smoke check, run `./scripts/docker-smoke.sh`.
+For a lightweight runtime smoke check, run `./scripts/docker-smoke.sh`.
 
 ## Project Status
 
