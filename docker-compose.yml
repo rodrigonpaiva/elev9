@@ -29,6 +29,18 @@ services:
     environment:
       PORT: 3000
       MONGODB_URI: mongodb://mongo:27017/elev9
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/health/ready').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
 volumes:
   mongo-data:
