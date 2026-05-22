@@ -85,6 +85,7 @@ describe('Progress Summary E2E', () => {
         totalDurationMinutes: expect.any(Number),
         averageDurationMinutes: expect.any(Number),
         lastWorkoutDate: expect.any(String),
+        currentStreak: 1,
       },
     });
   });
