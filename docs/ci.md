@@ -84,3 +84,4 @@ These are roadmap possibilities, not current CI behavior.
 `docs/ci.md` documents the current quality-gate flow for contributors and keeps the repository CI expectations aligned with the workspace’s deterministic-first architecture.
 
 For local Docker runtime, use `.env.docker.example` separately from the standard application environment flow. That setup stays local-first and development-oriented.
+The runtime surface also has explicit API e2e coverage for `/health`, `/health/ready`, and `x-request-id` propagation.
