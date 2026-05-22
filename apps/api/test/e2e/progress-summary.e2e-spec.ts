@@ -84,6 +84,7 @@ describe('Progress Summary E2E', () => {
         workoutsCompleted: expect.any(Number),
         totalDurationMinutes: expect.any(Number),
         averageDurationMinutes: expect.any(Number),
+        currentStreak: 1,
         lastWorkoutDate: expect.any(String),
       },
     });

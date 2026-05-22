@@ -7,7 +7,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc -p apps/api/tsconfig.build.json"
+        "command": "node scripts/run-node-cli.js node_modules/typescript/bin/tsc -p apps/api/tsconfig.build.json"
       }
     },
     "start": {
@@ -26,19 +26,19 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "jest --config apps/api/jest.config.js"
+        "command": "node scripts/run-node-cli.js node_modules/jest/bin/jest.js --config apps/api/jest.config.js"
       }
     },
     "test:watch": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "jest --config apps/api/jest.config.js --watch"
+        "command": "node scripts/run-node-cli.js node_modules/jest/bin/jest.js --config apps/api/jest.config.js --watch"
       }
     },
     "test:e2e": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "jest --config apps/api/jest.e2e.config.js --runInBand"
+        "command": "node scripts/run-node-cli.js node_modules/jest/bin/jest.js --config apps/api/jest.e2e.config.js --runInBand"
       }
     }
   }

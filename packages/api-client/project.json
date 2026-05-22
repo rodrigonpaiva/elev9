@@ -7,14 +7,14 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsc -p packages/api-client/tsconfig.json"
+        "command": "node scripts/run-node-cli.js node_modules/typescript/bin/tsc -p packages/api-client/tsconfig.json"
       }
     },
     "lint": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "packages/api-client",
-        "command": "eslint src --ext .ts,.d.ts --config ../../.eslintrc.cjs"
+        "command": "node ../../scripts/run-node-cli.js ../../node_modules/eslint/bin/eslint.js src --ext .ts,.d.ts --config ../../.eslintrc.cjs"
       }
     }
   }

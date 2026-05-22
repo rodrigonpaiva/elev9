@@ -3,6 +3,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "../../dist-test/apps/api",
+    "isolatedModules": true,
     "types": ["node", "jest"]
   },
   "include": [
