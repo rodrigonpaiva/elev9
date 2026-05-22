@@ -1,62 +1,33 @@
 import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Test, TestingModule } from '@nestjs/testing';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import { disconnect } from 'mongoose';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import { AuthModule } from '../../src/modules/auth/auth.module';
+import { closeTestApp } from './helpers/close-test-app';
+import { createAuthSession } from './helpers/create-auth-session';
+import { createTestApp, TestAppContext } from './helpers/create-test-app';
 
 describe('Auth Me E2E', () => {
   let app: INestApplication;
-  let mongoMemoryServer: MongoMemoryServer;
+  let testApp: TestAppContext;
 
   beforeAll(async () => {
-    mongoMemoryServer = await MongoMemoryServer.create();
-    const mongoUri = mongoMemoryServer.getUri();
-
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [MongooseModule.forRoot(mongoUri), AuthModule],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    await app.init();
+    testApp = await createTestApp({
+      imports: [AuthModule],
+    });
+    app = testApp.app;
   });
 
   afterAll(async () => {
-    await app.close();
-    await disconnect();
-    await mongoMemoryServer.stop();
+    await closeTestApp(testApp);
   });
 
   it('login -> use token -> GET /auth/me success', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email: 'auth-me@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'auth-me@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
-
-    const token = loginResponse.body.accessToken;
+    const { token } = await createAuthSession({
+      app,
+      email: 'auth-me@email.com',
+    });
 
     const response = await request(app.getHttpServer())
       .get('/auth/me')

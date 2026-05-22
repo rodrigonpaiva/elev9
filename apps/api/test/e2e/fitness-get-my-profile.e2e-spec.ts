@@ -1,73 +1,35 @@
 import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Test, TestingModule } from '@nestjs/testing';
-import { disconnect } from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import { FitnessModule } from '../../src/modules/fitness/fitness.module';
 import { UsersModule } from '../../src/modules/users/users.module';
+import { closeTestApp } from './helpers/close-test-app';
+import { createAuthSession } from './helpers/create-auth-session';
+import { createTestApp, TestAppContext } from './helpers/create-test-app';
 
 describe('Fitness Get My Profile E2E', () => {
   let app: INestApplication;
-  let mongoMemoryServer: MongoMemoryServer;
+  let testApp: TestAppContext;
 
   beforeAll(async () => {
-    mongoMemoryServer = await MongoMemoryServer.create();
-    const mongoUri = mongoMemoryServer.getUri();
-
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [
-        MongooseModule.forRoot(mongoUri),
-        AuthModule,
-        UsersModule,
-        FitnessModule,
-      ],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    await app.init();
+    testApp = await createTestApp({
+      imports: [AuthModule, UsersModule, FitnessModule],
+    });
+    app = testApp.app;
   });
 
   afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
-    await disconnect();
-    if (mongoMemoryServer) {
-      await mongoMemoryServer.stop();
-    }
+    await closeTestApp(testApp);
   });
 
   it('returns the active fitness profile successfully', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email: 'fitness-get-success@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'fitness-get-success@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
-
-    const token = loginResponse.body.accessToken;
+    const { token } = await createAuthSession({
+      app,
+      email: 'fitness-get-success@email.com',
+    });
 
     await request(app.getHttpServer())
       .post('/users/profile')
@@ -128,26 +90,14 @@ describe('Fitness Get My Profile E2E', () => {
   });
 
   it('without user profile returns USER_PROFILE_NOT_FOUND', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email: 'fitness-get-no-user-profile@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'fitness-get-no-user-profile@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
+    const { token } = await createAuthSession({
+      app,
+      email: 'fitness-get-no-user-profile@email.com',
+    });
 
     const response = await request(app.getHttpServer())
       .get('/fitness/profile')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(404);
 
     expect(response.body).toEqual({
@@ -157,24 +107,10 @@ describe('Fitness Get My Profile E2E', () => {
   });
 
   it('without fitness profile returns FITNESS_PROFILE_NOT_FOUND', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email: 'fitness-get-no-fitness-profile@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'fitness-get-no-fitness-profile@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
-
-    const token = loginResponse.body.accessToken;
+    const { token } = await createAuthSession({
+      app,
+      email: 'fitness-get-no-fitness-profile@email.com',
+    });
 
     await request(app.getHttpServer())
       .post('/users/profile')
@@ -196,29 +132,17 @@ describe('Fitness Get My Profile E2E', () => {
   });
 
   it('rejects query params with ids', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email: 'fitness-get-query-reject@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'fitness-get-query-reject@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
+    const { token } = await createAuthSession({
+      app,
+      email: 'fitness-get-query-reject@email.com',
+    });
 
     const response = await request(app.getHttpServer())
       .get('/fitness/profile')
       .query({
         fitnessProfileId: 'fitness_123',
       })
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(400);
 
     expect(response.body.message).toBeDefined();

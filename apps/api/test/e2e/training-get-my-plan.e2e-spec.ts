@@ -1,75 +1,36 @@
 import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Test, TestingModule } from '@nestjs/testing';
-import { disconnect } from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import { FitnessModule } from '../../src/modules/fitness/fitness.module';
 import { TrainingModule } from '../../src/modules/training/training.module';
 import { UsersModule } from '../../src/modules/users/users.module';
+import { closeTestApp } from './helpers/close-test-app';
+import { createAuthSession } from './helpers/create-auth-session';
+import { createTestApp, TestAppContext } from './helpers/create-test-app';
 
 describe('Training Get My Plan E2E', () => {
   let app: INestApplication;
-  let mongoMemoryServer: MongoMemoryServer;
+  let testApp: TestAppContext;
 
   beforeAll(async () => {
-    mongoMemoryServer = await MongoMemoryServer.create();
-    const mongoUri = mongoMemoryServer.getUri();
-
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [
-        MongooseModule.forRoot(mongoUri),
-        AuthModule,
-        UsersModule,
-        FitnessModule,
-        TrainingModule,
-      ],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    await app.init();
+    testApp = await createTestApp({
+      imports: [AuthModule, UsersModule, FitnessModule, TrainingModule],
+    });
+    app = testApp.app;
   });
 
   afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
-    await disconnect();
-    if (mongoMemoryServer) {
-      await mongoMemoryServer.stop();
-    }
+    await closeTestApp(testApp);
   });
 
   it('full flow success', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email: 'training-current-success@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'training-current-success@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
-
-    const token = loginResponse.body.accessToken;
+    const { token } = await createAuthSession({
+      app,
+      email: 'training-current-success@email.com',
+    });
 
     await request(app.getHttpServer())
       .post('/users/profile')
@@ -128,32 +89,21 @@ describe('Training Get My Plan E2E', () => {
   });
 
   it('without fitness profile returns 404', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'No Fitness User',
-        email: 'training-current-no-fitness@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'training-current-no-fitness@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
+    const { token } = await createAuthSession({
+      app,
+      email: 'training-current-no-fitness@email.com',
+      name: 'No Fitness User',
+    });
 
     await request(app.getHttpServer())
       .post('/users/profile')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({ name: 'No Fitness User' })
       .expect(201);
 
     const response = await request(app.getHttpServer())
       .get('/training/plans/current')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(404);
 
     expect(response.body).toEqual({
@@ -163,32 +113,21 @@ describe('Training Get My Plan E2E', () => {
   });
 
   it('without training plan returns 404', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'No Training User',
-        email: 'training-current-no-plan@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'training-current-no-plan@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
+    const { token } = await createAuthSession({
+      app,
+      email: 'training-current-no-plan@email.com',
+      name: 'No Training User',
+    });
 
     await request(app.getHttpServer())
       .post('/users/profile')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({ name: 'No Training User' })
       .expect(201);
 
     await request(app.getHttpServer())
       .post('/fitness/profile')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({
         heightCm: 180,
         weightKg: 82.5,
@@ -203,7 +142,7 @@ describe('Training Get My Plan E2E', () => {
 
     const response = await request(app.getHttpServer())
       .get('/training/plans/current')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(404);
 
     expect(response.body).toEqual({

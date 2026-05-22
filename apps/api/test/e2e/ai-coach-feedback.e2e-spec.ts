@@ -1,10 +1,6 @@
 import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Test, TestingModule } from '@nestjs/testing';
-import { disconnect } from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import { AiModule } from '../../src/modules/ai/ai.module';
@@ -17,15 +13,16 @@ import {
 import { ProgressModule } from '../../src/modules/progress/progress.module';
 import { TrainingModule } from '../../src/modules/training/training.module';
 import { UsersModule } from '../../src/modules/users/users.module';
+import { closeTestApp } from './helpers/close-test-app';
+import { createAuthSession } from './helpers/create-auth-session';
+import { createTestApp, TestAppContext } from './helpers/create-test-app';
 
 describe('AI Coach Feedback E2E', () => {
   let app: INestApplication;
-  let mongoMemoryServer: MongoMemoryServer;
+  let testApp: TestAppContext;
   let currentNow: Date;
 
   beforeAll(async () => {
-    mongoMemoryServer = await MongoMemoryServer.create();
-    const mongoUri = mongoMemoryServer.getUri();
     currentNow = new Date('2026-05-04T10:00:00.000Z');
 
     const testClock: Clock = {
@@ -33,9 +30,8 @@ describe('AI Coach Feedback E2E', () => {
       todayUtcDateString: () => currentNow.toISOString().slice(0, 10),
     };
 
-    const moduleBuilder = Test.createTestingModule({
+    testApp = await createTestApp({
       imports: [
-        MongooseModule.forRoot(mongoUri),
         AuthModule,
         UsersModule,
         FitnessModule,
@@ -43,31 +39,15 @@ describe('AI Coach Feedback E2E', () => {
         ProgressModule,
         AiModule,
       ],
+      configureTestingModule: (moduleBuilder) => {
+        moduleBuilder.overrideProvider(CLOCK).useValue(testClock);
+      },
     });
-
-    moduleBuilder.overrideProvider(CLOCK).useValue(testClock);
-
-    const moduleRef: TestingModule = await moduleBuilder.compile();
-
-    app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    await app.init();
+    app = testApp.app;
   });
 
   afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
-    await disconnect();
-    if (mongoMemoryServer) {
-      await mongoMemoryServer.stop();
-    }
+    await closeTestApp(testApp);
   });
 
   it('returns coach feedback for an authenticated user', async () => {
@@ -108,24 +88,7 @@ describe('AI Coach Feedback E2E', () => {
   async function createAuthenticatedTrainingFlow(email: string): Promise<{
     token: string;
   }> {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email,
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email,
-        password: 'StrongPassword123',
-      })
-      .expect(200);
-
-    const token = loginResponse.body.accessToken as string;
+    const { token } = await createAuthSession({ app, email });
 
     await request(app.getHttpServer())
       .post('/users/profile')

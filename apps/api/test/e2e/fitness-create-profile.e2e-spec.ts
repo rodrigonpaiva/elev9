@@ -1,75 +1,39 @@
 import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Test, TestingModule } from '@nestjs/testing';
-import { disconnect } from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import { FitnessModule } from '../../src/modules/fitness/fitness.module';
 import { UsersModule } from '../../src/modules/users/users.module';
+import { closeTestApp } from './helpers/close-test-app';
+import { createAuthSession } from './helpers/create-auth-session';
+import { createTestApp, TestAppContext } from './helpers/create-test-app';
 
 describe('Fitness Create Profile E2E', () => {
   let app: INestApplication;
-  let mongoMemoryServer: MongoMemoryServer;
+  let testApp: TestAppContext;
 
   beforeAll(async () => {
-    mongoMemoryServer = await MongoMemoryServer.create();
-    const mongoUri = mongoMemoryServer.getUri();
-
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [
-        MongooseModule.forRoot(mongoUri),
-        AuthModule,
-        UsersModule,
-        FitnessModule,
-      ],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    await app.init();
+    testApp = await createTestApp({
+      imports: [AuthModule, UsersModule, FitnessModule],
+    });
+    app = testApp.app;
   });
 
   afterAll(async () => {
-    if (app) {
-      await app.close();
-    }
-    await disconnect();
-    if (mongoMemoryServer) {
-      await mongoMemoryServer.stop();
-    }
+    await closeTestApp(testApp);
   });
 
   it('full flow success', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email: 'fitness-success@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'fitness-success@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
+    const { token } = await createAuthSession({
+      app,
+      email: 'fitness-success@email.com',
+    });
 
     await request(app.getHttpServer())
       .post('/users/profile')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({
         name: 'Rodrigo Paiva',
       })
@@ -77,7 +41,7 @@ describe('Fitness Create Profile E2E', () => {
 
     const response = await request(app.getHttpServer())
       .post('/fitness/profile')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({
         heightCm: 180,
         weightKg: 82.5,
@@ -110,24 +74,10 @@ describe('Fitness Create Profile E2E', () => {
   });
 
   it('creating twice returns 409', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email: 'fitness-duplicate@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'fitness-duplicate@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
-
-    const token = loginResponse.body.accessToken;
+    const { token } = await createAuthSession({
+      app,
+      email: 'fitness-duplicate@email.com',
+    });
 
     await request(app.getHttpServer())
       .post('/users/profile')
@@ -195,26 +145,14 @@ describe('Fitness Create Profile E2E', () => {
   });
 
   it('without user profile returns USER_PROFILE_NOT_FOUND', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        name: 'Rodrigo Paiva',
-        email: 'fitness-no-profile@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(201);
-
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'fitness-no-profile@email.com',
-        password: 'StrongPassword123',
-      })
-      .expect(200);
+    const { token } = await createAuthSession({
+      app,
+      email: 'fitness-no-profile@email.com',
+    });
 
     const response = await request(app.getHttpServer())
       .post('/fitness/profile')
-      .set('Authorization', `Bearer ${loginResponse.body.accessToken}`)
+      .set('Authorization', `Bearer ${token}`)
       .send({
         heightCm: 180,
         weightKg: 82.5,

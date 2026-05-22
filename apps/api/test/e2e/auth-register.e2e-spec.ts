@@ -1,41 +1,25 @@
 import 'reflect-metadata';
 
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Test, TestingModule } from '@nestjs/testing';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import { disconnect } from 'mongoose';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import { AuthModule } from '../../src/modules/auth/auth.module';
+import { closeTestApp } from './helpers/close-test-app';
+import { createTestApp, TestAppContext } from './helpers/create-test-app';
 
 describe('Auth Register E2E', () => {
   let app: INestApplication;
-  let mongoMemoryServer: MongoMemoryServer;
+  let testApp: TestAppContext;
 
   beforeAll(async () => {
-    mongoMemoryServer = await MongoMemoryServer.create();
-    const mongoUri = mongoMemoryServer.getUri();
-
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      imports: [MongooseModule.forRoot(mongoUri), AuthModule],
-    }).compile();
-
-    app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        transform: true,
-        whitelist: true,
-        forbidNonWhitelisted: true,
-      }),
-    );
-    await app.init();
+    testApp = await createTestApp({
+      imports: [AuthModule],
+    });
+    app = testApp.app;
   });
 
   afterAll(async () => {
-    await app.close();
-    await disconnect();
-    await mongoMemoryServer.stop();
+    await closeTestApp(testApp);
   });
 
   it('registers user successfully', async () => {
