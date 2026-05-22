@@ -6,6 +6,7 @@ import { AiModule } from './modules/ai/ai.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FitnessModule } from './modules/fitness/fitness.module';
+import { HealthModule } from './modules/health/health.module';
 import { NutritionModule } from './modules/nutrition/nutrition.module';
 import { ProgressModule } from './modules/progress/progress.module';
 import { TrainingModule } from './modules/training/training.module';
@@ -30,6 +31,7 @@ function getMongoDbUri(): string {
     AuthModule,
     DashboardModule,
     FitnessModule,
+    HealthModule,
     NutritionModule,
     ProgressModule,
     TrainingModule,
