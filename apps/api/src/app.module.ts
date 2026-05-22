@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { AiModule } from './modules/ai/ai.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { HealthModule } from './modules/health/health.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FitnessModule } from './modules/fitness/fitness.module';
 import { NutritionModule } from './modules/nutrition/nutrition.module';
@@ -28,6 +29,7 @@ function getMongoDbUri(): string {
     MongooseModule.forRoot(getMongoDbUri()),
     AiModule,
     AuthModule,
+    HealthModule,
     DashboardModule,
     FitnessModule,
     NutritionModule,

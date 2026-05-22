@@ -162,6 +162,7 @@ docker compose up --build
 ```
 
 The compose setup builds the API image deterministically and starts MongoDB alongside the backend.
+Runtime responses expose `x-request-id` for lightweight request correlation.
 
 ## Project Status
 
