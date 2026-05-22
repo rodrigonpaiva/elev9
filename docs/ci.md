@@ -84,3 +84,5 @@ These are roadmap possibilities, not current CI behavior.
 `docs/ci.md` documents the current quality-gate flow for contributors and keeps the repository CI expectations aligned with the workspace’s deterministic-first architecture.
 
 For local Docker runtime, use `.env.docker.example` separately from the standard application environment flow. That setup stays local-first and development-oriented.
+
+Runtime requests also emit lightweight logs with `x-request-id` correlation, which helps smoke validation and Docker log troubleshooting without adding a logging stack.
