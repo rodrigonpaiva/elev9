@@ -74,6 +74,8 @@ export class GenerateCoachFeedbackUseCase {
         fatigueScore: healthContext.fatigueScore,
         recoveryInfluences: healthContext.recoveryInfluences,
         recommendedIntensity: healthContext.recommendedIntensity,
+        adaptiveTrainingRecommendation:
+          healthContext.adaptiveTrainingRecommendation,
         nutritionProfile: healthContext.nutritionProfile,
       });
 
@@ -143,6 +145,74 @@ export class GenerateCoachFeedbackUseCase {
       value?: number;
     }>;
     recommendedIntensity?: 'recovery' | 'light' | 'moderate' | 'hard';
+    adaptiveTrainingRecommendation?: {
+      recommendationType:
+        | 'increase_intensity'
+        | 'decrease_intensity'
+        | 'increase_volume'
+        | 'decrease_volume'
+        | 'recovery_workout'
+        | 'rest_day'
+        | 'reschedule_workout'
+        | 'maintain';
+      recommendedIntensity: 'recovery' | 'light' | 'moderate' | 'hard';
+      volumeAction: 'increase' | 'maintain' | 'decrease';
+      reasoning: string;
+      influences: Array<{
+        code:
+          | 'HIGH_READINESS'
+          | 'LOW_READINESS'
+          | 'HIGH_FATIGUE'
+          | 'LOW_FATIGUE'
+          | 'RECOVERY_TREND_IMPROVING'
+          | 'RECOVERY_TREND_DECLINING'
+          | 'HIGH_ADHERENCE'
+          | 'LOW_ADHERENCE'
+          | 'LONG_STREAK'
+          | 'MISSED_WORKOUTS'
+          | 'GOOD_NUTRITION_SUPPORT'
+          | 'POOR_NUTRITION_SUPPORT'
+          | 'RECENT_WORKOUT_LOAD_HIGH'
+          | 'RECENT_WORKOUT_LOAD_LOW';
+        label: string;
+        impact: 'positive' | 'negative' | 'neutral';
+        weight?: number;
+        value?: number;
+      }>;
+    };
+    adaptiveRecommendationType?:
+      | 'increase_intensity'
+      | 'decrease_intensity'
+      | 'increase_volume'
+      | 'decrease_volume'
+      | 'recovery_workout'
+      | 'rest_day'
+      | 'reschedule_workout'
+      | 'maintain';
+    adaptiveRecommendedIntensity?: 'recovery' | 'light' | 'moderate' | 'hard';
+    adaptiveVolumeAction?: 'increase' | 'maintain' | 'decrease';
+    adaptiveTrainingInfluences?: Array<{
+      code:
+        | 'HIGH_READINESS'
+        | 'LOW_READINESS'
+        | 'HIGH_FATIGUE'
+        | 'LOW_FATIGUE'
+        | 'RECOVERY_TREND_IMPROVING'
+        | 'RECOVERY_TREND_DECLINING'
+        | 'HIGH_ADHERENCE'
+        | 'LOW_ADHERENCE'
+        | 'LONG_STREAK'
+        | 'MISSED_WORKOUTS'
+        | 'GOOD_NUTRITION_SUPPORT'
+        | 'POOR_NUTRITION_SUPPORT'
+        | 'RECENT_WORKOUT_LOAD_HIGH'
+        | 'RECENT_WORKOUT_LOAD_LOW';
+      label: string;
+      impact: 'positive' | 'negative' | 'neutral';
+      weight?: number;
+      value?: number;
+    }>;
+    adaptiveTrainingReasoning?: string;
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -162,6 +232,30 @@ export class GenerateCoachFeedbackUseCase {
       mealsPerDay: number;
     };
   } {
+    const adaptiveTrainingRecommendation =
+      healthContext.adaptiveTrainingRecommendation;
+    const adaptiveTrainingInfluences =
+      healthContext.adaptiveTrainingInfluences ??
+      adaptiveTrainingRecommendation?.influences.map((influence) => ({
+        code: influence.code,
+        label: influence.label,
+        impact: influence.impact,
+        weight: influence.weight,
+        value: influence.value,
+      }));
+    const adaptiveRecommendationType =
+      healthContext.adaptiveRecommendationType ??
+      adaptiveTrainingRecommendation?.recommendationType;
+    const adaptiveRecommendedIntensity =
+      healthContext.adaptiveRecommendedIntensity ??
+      adaptiveTrainingRecommendation?.recommendedIntensity;
+    const adaptiveVolumeAction =
+      healthContext.adaptiveVolumeAction ??
+      adaptiveTrainingRecommendation?.volumeAction;
+    const adaptiveTrainingReasoning =
+      healthContext.adaptiveTrainingReasoning ??
+      adaptiveTrainingRecommendation?.reasoning;
+
     return {
       goal: healthContext.goal,
       activityLevel: healthContext.activityLevel,
@@ -180,6 +274,35 @@ export class GenerateCoachFeedbackUseCase {
         value: influence.value,
       })),
       recommendedIntensity: healthContext.recommendedIntensity,
+      ...(adaptiveTrainingRecommendation
+        ? {
+            adaptiveTrainingRecommendation: {
+              recommendationType: adaptiveTrainingRecommendation.recommendationType,
+              recommendedIntensity:
+                adaptiveTrainingRecommendation.recommendedIntensity,
+              volumeAction: adaptiveTrainingRecommendation.volumeAction,
+              reasoning: adaptiveTrainingRecommendation.reasoning,
+              influences: adaptiveTrainingRecommendation.influences.map(
+                (influence) => ({
+                  code: influence.code,
+                  label: influence.label,
+                  impact: influence.impact,
+                  weight: influence.weight,
+                  value: influence.value,
+                }),
+              ),
+            },
+          }
+        : {}),
+      ...(adaptiveTrainingRecommendation || adaptiveRecommendationType
+        ? {
+            adaptiveRecommendationType,
+            adaptiveRecommendedIntensity,
+            adaptiveVolumeAction,
+            adaptiveTrainingInfluences,
+            adaptiveTrainingReasoning,
+          }
+        : {}),
       weeklyFrequency: healthContext.weeklyFrequency,
       currentStreak: healthContext.currentStreak,
       averageWorkoutDuration: healthContext.averageWorkoutDuration,

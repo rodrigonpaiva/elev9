@@ -1,5 +1,14 @@
-import { FitnessProfileActivityLevel, FitnessProfileGoal } from '../fitness';
-import { TrainingPlanIntensity } from '../training';
+import {
+  FitnessProfileActivityLevel,
+  FitnessProfileGoal,
+} from '../fitness';
+import {
+  AdaptiveRecommendedIntensity,
+  AdaptiveRecommendationType,
+  AdaptiveTrainingInfluence,
+  AdaptiveVolumeAction,
+  TrainingPlanIntensity,
+} from '../training';
 
 export type DashboardRecoveryInfluence = {
   code:
@@ -16,6 +25,14 @@ export type DashboardRecoveryInfluence = {
   impact: 'positive' | 'negative' | 'neutral';
   weight?: number;
   value?: number;
+};
+
+export type DashboardAdaptiveTrainingRecommendation = {
+  recommendationType: AdaptiveRecommendationType;
+  recommendedIntensity: AdaptiveRecommendedIntensity;
+  volumeAction: AdaptiveVolumeAction;
+  reasoning: string;
+  influences: AdaptiveTrainingInfluence[];
 };
 
 export type DashboardHomeResponse = {
@@ -66,6 +83,7 @@ export type DashboardHomeResponse = {
         createdAt: string;
       };
     };
+    adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
     nutritionGuidance: {
       priority: 'recovery' | 'consistency' | 'performance';
       message: string;
@@ -84,6 +102,7 @@ export type DashboardHomeDebugResponse = {
     fatigueScore?: number;
     recoveryInfluences?: DashboardRecoveryInfluence[];
   };
+  adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
   nutrition: {
     priority: 'recovery' | 'consistency' | 'performance';
     signals: string[];

@@ -273,6 +273,128 @@ describe('CoachFeedbackGenerator', () => {
     );
   });
 
+  it('uses rest_day from adaptive training to prioritize recovery', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
+      ],
+      hasTrainingPlan: true,
+      adaptiveTrainingRecommendation: {
+        recommendationType: 'rest_day',
+        recommendedIntensity: 'recovery',
+        volumeAction: 'decrease',
+        reasoning: 'Readiness is very low and fatigue is high.',
+        influences: [
+          {
+            code: 'LOW_READINESS',
+            label: 'Readiness is low.',
+            impact: 'negative',
+          },
+        ],
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      'Take a full rest day and prioritize recovery',
+    );
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'adaptive:rest_day',
+        'adaptive:intensity:recovery',
+        'adaptive:volume:decrease',
+        'adaptive:low_readiness',
+      ]),
+    );
+  });
+
+  it('uses increase_intensity from adaptive training to encourage progression', () => {
+    const result = generator.generate({
+      goal: 'gain_muscle',
+      activityLevel: 'high',
+      expectedWorkouts: 4,
+      currentStreak: 4,
+      averageDurationMinutes: 58,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-01', 50),
+        buildWorkoutLog('2026-05-02', 60),
+        buildWorkoutLog('2026-05-03', 65),
+        buildWorkoutLog('2026-05-04', 55),
+      ],
+      hasTrainingPlan: true,
+      adaptiveTrainingRecommendation: {
+        recommendationType: 'increase_intensity',
+        recommendedIntensity: 'hard',
+        volumeAction: 'increase',
+        reasoning: 'Recovery is stable and readiness is strong.',
+        influences: [
+          {
+            code: 'HIGH_READINESS',
+            label: 'Readiness is high.',
+            impact: 'positive',
+          },
+        ],
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      'You can progress intensity if your form stays solid',
+    );
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'adaptive:increase_intensity',
+        'adaptive:intensity:hard',
+        'adaptive:volume:increase',
+        'adaptive:high_readiness',
+      ]),
+    );
+  });
+
+  it('uses reschedule_workout from adaptive training to reinforce consistency', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 1,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
+      ],
+      hasTrainingPlan: true,
+      adaptiveTrainingRecommendation: {
+        recommendationType: 'reschedule_workout',
+        recommendedIntensity: 'light',
+        volumeAction: 'decrease',
+        reasoning: 'The session should be moved to keep consistency.',
+        influences: [
+          {
+            code: 'LOW_ADHERENCE',
+            label: 'Adherence is low.',
+            impact: 'negative',
+          },
+        ],
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      'Reschedule the workout to protect consistency',
+    );
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'adaptive:reschedule_workout',
+        'adaptive:intensity:light',
+        'adaptive:volume:decrease',
+        'adaptive:low_adherence',
+      ]),
+    );
+  });
+
   it('considers high motivation with low fatigue', () => {
     const result = generator.generate({
       goal: 'gain_muscle',

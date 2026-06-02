@@ -114,6 +114,43 @@ describe('GetHomeDashboardDebugUseCase', () => {
   it('returns the adaptive debug snapshot', async () => {
     mockUserProfile();
     mockDailyCheckInHistory();
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: 'auth_user_123',
+      userProfileId: 'profile_123',
+      userName: 'Rodrigo Paiva',
+      goal: 'gain_muscle',
+      activityLevel: 'high',
+      weeklyFrequency: 4,
+      adherenceScore: 0,
+      currentStreak: 0,
+      averageWorkoutDuration: 0,
+      fatigueLevel: 'HIGH',
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
+      latestCheckIn: {
+        energyLevel: 2,
+        sleepQuality: 2,
+        muscleSoreness: 4,
+        motivationLevel: 3,
+        createdAt: new Date('2026-04-30T09:00:00.000Z'),
+      },
+      adaptiveTrainingRecommendation: {
+        recommendationType: 'decrease_intensity',
+        recommendedIntensity: 'light',
+        volumeAction: 'decrease',
+        reasoning: 'Dial back intensity while recovery is low.',
+        influences: [
+          {
+            code: 'HIGH_FATIGUE',
+            label: 'Fatigue is elevated.',
+            impact: 'negative',
+          },
+        ],
+      },
+    } as never);
 
     await expect(
       useCase.execute({ authUserId: 'auth_user_123' }),
@@ -131,6 +168,19 @@ describe('GetHomeDashboardDebugUseCase', () => {
         readinessScore: undefined,
         fatigueScore: undefined,
         recoveryInfluences: undefined,
+      },
+      adaptiveTrainingRecommendation: {
+        recommendationType: 'decrease_intensity',
+        recommendedIntensity: 'light',
+        volumeAction: 'decrease',
+        reasoning: 'Dial back intensity while recovery is low.',
+        influences: [
+          {
+            code: 'HIGH_FATIGUE',
+            label: 'Fatigue is elevated.',
+            impact: 'negative',
+          },
+        ],
       },
       nutrition: {
         priority: 'recovery',

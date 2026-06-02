@@ -9,6 +9,7 @@ import {
 } from './infrastructure/mongoose/coach-feedback.schema';
 import { AuthModule } from '../auth/auth.module';
 import { RecoveryModule } from '../recovery/recovery.module';
+import { TrainingModule } from '../training/training.module';
 import { FITNESS_PROFILE_REPOSITORY } from '../fitness/domain/repositories/fitness-profile.repository';
 import { MongooseFitnessProfileRepository } from '../fitness/infrastructure/mongoose/mongoose-fitness-profile.repository';
 import {
@@ -92,6 +93,7 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
   imports: [
     AuthModule,
     RecoveryModule,
+    TrainingModule,
     MongooseModule.forFeature([
       {
         name: USER_PROFILE_MODEL_NAME,

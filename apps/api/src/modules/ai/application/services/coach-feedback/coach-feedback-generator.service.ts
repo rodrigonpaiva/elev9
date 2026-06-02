@@ -5,6 +5,14 @@ import {
   FitnessGoal,
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
+import type {
+  AdaptiveTrainingInfluenceProps,
+} from '../../../../training/domain/value-objects/adaptive-training-influence.value-object';
+import type {
+  AdaptiveRecommendedIntensity,
+  AdaptiveRecommendationType,
+  AdaptiveVolumeAction,
+} from '../../../../training/domain/value-objects/adaptive-recommendation-type.value-object';
 import {
   RecoveryInfluenceProps,
   RecommendedIntensity,
@@ -35,6 +43,13 @@ export type CoachFeedbackGeneratorInput = {
   fatigueScore?: number;
   recoveryInfluences?: RecoveryInfluenceProps[];
   recommendedIntensity?: RecommendedIntensity;
+  adaptiveTrainingRecommendation?: {
+    recommendationType: AdaptiveRecommendationType;
+    recommendedIntensity: AdaptiveRecommendedIntensity;
+    volumeAction: AdaptiveVolumeAction;
+    reasoning: string;
+    influences: AdaptiveTrainingInfluenceProps[];
+  };
   nutritionProfile?: UserHealthContextNutritionProfile;
 };
 
@@ -169,6 +184,12 @@ export class CoachFeedbackGenerator {
       fatigueScore: input.fatigueScore,
       recommendedIntensity: input.recommendedIntensity,
       recoveryInfluences: input.recoveryInfluences,
+      insights,
+      recommendations,
+      influences,
+    });
+    this.applyAdaptiveTrainingSignals({
+      adaptiveTrainingRecommendation: input.adaptiveTrainingRecommendation,
       insights,
       recommendations,
       influences,
@@ -486,6 +507,92 @@ export class CoachFeedbackGenerator {
     }
   }
 
+  private applyAdaptiveTrainingSignals(input: {
+    adaptiveTrainingRecommendation?: {
+      recommendationType: AdaptiveRecommendationType;
+      recommendedIntensity: AdaptiveRecommendedIntensity;
+      volumeAction: AdaptiveVolumeAction;
+      reasoning: string;
+      influences: AdaptiveTrainingInfluenceProps[];
+    };
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const recommendation = input.adaptiveTrainingRecommendation;
+
+    if (!recommendation) {
+      return;
+    }
+
+    input.influences.add(`adaptive:${recommendation.recommendationType}`);
+    input.influences.add(`adaptive:intensity:${recommendation.recommendedIntensity}`);
+    input.influences.add(`adaptive:volume:${recommendation.volumeAction}`);
+
+    for (const influence of recommendation.influences) {
+      input.influences.add(`adaptive:${influence.code.toLowerCase()}`);
+    }
+
+    const reasoning = recommendation.reasoning.trim();
+    if (reasoning.length > 0) {
+      this.upsertInsight(
+        input.insights,
+        `Adaptive training recommends ${this.summarizeText(reasoning, 120)}`,
+      );
+    }
+
+    switch (recommendation.recommendationType) {
+      case 'rest_day':
+        this.prependRecommendation(
+          input.recommendations,
+          'Take a full rest day and prioritize recovery',
+        );
+        return;
+      case 'recovery_workout':
+        this.prependRecommendation(
+          input.recommendations,
+          'Keep the next session light, with mobility or recovery work',
+        );
+        return;
+      case 'increase_intensity':
+        this.prependRecommendation(
+          input.recommendations,
+          'You can progress intensity if your form stays solid',
+        );
+        return;
+      case 'increase_volume':
+        this.prependRecommendation(
+          input.recommendations,
+          'You can add a bit more volume if recovery remains stable',
+        );
+        return;
+      case 'decrease_intensity':
+        this.prependRecommendation(
+          input.recommendations,
+          'Dial back intensity and keep the session controlled',
+        );
+        return;
+      case 'decrease_volume':
+        this.prependRecommendation(
+          input.recommendations,
+          'Reduce volume and keep the next workout efficient',
+        );
+        return;
+      case 'reschedule_workout':
+        this.prependRecommendation(
+          input.recommendations,
+          'Reschedule the workout to protect consistency',
+        );
+        return;
+      case 'maintain':
+      default:
+        this.prependRecommendation(
+          input.recommendations,
+          'Keep the current training plan steady and monitor recovery',
+        );
+    }
+  }
+
   private applyTrainingSignals(input: {
     logsCount: number;
     expectedWorkouts: number;
@@ -584,5 +691,15 @@ export class CoachFeedbackGenerator {
           item.length > 0 && array.indexOf(item) === index,
       )
       .slice(0, 3);
+  }
+
+  private summarizeText(text: string, maxLength: number): string {
+    const trimmed = text.trim();
+
+    if (trimmed.length <= maxLength) {
+      return trimmed;
+    }
+
+    return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`;
   }
 }

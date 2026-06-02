@@ -6,6 +6,30 @@ import { GetHomeDashboardDebugOutput } from '../../use-cases/get-home-dashboard-
 
 @Injectable()
 export class DashboardAdaptiveSignalsService {
+  buildAdaptiveTrainingRecommendation(
+    healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
+  ): GetHomeDashboardOutput['dashboard']['adaptiveTrainingRecommendation'] {
+    const recommendation = healthContext.adaptiveTrainingRecommendation;
+
+    if (!recommendation) {
+      return undefined;
+    }
+
+    return {
+      recommendationType: recommendation.recommendationType,
+      recommendedIntensity: recommendation.recommendedIntensity,
+      volumeAction: recommendation.volumeAction,
+      reasoning: recommendation.reasoning,
+      influences: recommendation.influences.map((influence) => ({
+        code: influence.code,
+        label: influence.label,
+        impact: influence.impact,
+        weight: influence.weight,
+        value: influence.value,
+      })),
+    };
+  }
+
   buildRecoverySummary(
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
     recentDailyCheckIns: Array<{
@@ -142,6 +166,9 @@ export class DashboardAdaptiveSignalsService {
     recovery: GetHomeDashboardOutput['dashboard']['recovery'],
     nutritionGuidance: GetHomeDashboardOutput['dashboard']['nutritionGuidance'],
   ): GetHomeDashboardDebugOutput {
+    const adaptiveTrainingRecommendation =
+      this.buildAdaptiveTrainingRecommendation(healthContext);
+
     return {
       generatedAt: healthContext.generatedAt.toISOString(),
       recovery: {
@@ -155,6 +182,11 @@ export class DashboardAdaptiveSignalsService {
         fatigueScore: recovery.fatigueScore,
         recoveryInfluences: recovery.recoveryInfluences,
       },
+      ...(adaptiveTrainingRecommendation
+        ? {
+            adaptiveTrainingRecommendation,
+          }
+        : {}),
       nutrition: {
         priority: nutritionGuidance.priority,
         signals: nutritionGuidance.signals,

@@ -82,6 +82,10 @@ export class GetHomeDashboardUseCase {
           userProfile.id,
         )
       ).slice(0, 3);
+      const adaptiveTrainingRecommendation =
+        this.dashboardAdaptiveSignalsService.buildAdaptiveTrainingRecommendation(
+          healthContext,
+        );
       const recovery = this.buildRecoverySummary(
         healthContext,
         recentDailyCheckIns,
@@ -106,6 +110,9 @@ export class GetHomeDashboardUseCase {
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
             recovery,
+            ...(adaptiveTrainingRecommendation
+              ? { adaptiveTrainingRecommendation }
+              : {}),
             nutritionGuidance,
           },
         };
@@ -130,6 +137,9 @@ export class GetHomeDashboardUseCase {
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
             recovery,
+            ...(adaptiveTrainingRecommendation
+              ? { adaptiveTrainingRecommendation }
+              : {}),
             nutritionGuidance,
           },
         };
@@ -161,6 +171,9 @@ export class GetHomeDashboardUseCase {
           },
           progressSummary: this.buildSummaryFromLogs(workoutLogs),
           recovery,
+          ...(adaptiveTrainingRecommendation
+            ? { adaptiveTrainingRecommendation }
+            : {}),
           nutritionGuidance,
         },
       };

@@ -30,6 +30,13 @@ import {
   RECOVERY_SNAPSHOT_REPOSITORY,
   RecoverySnapshotRepository,
 } from '../../../../recovery/domain/repositories/recovery-snapshot.repository';
+import { GetCurrentAdaptiveTrainingUseCase } from '../../../../training/application/use-cases/get-current-adaptive-training/get-current-adaptive-training.use-case';
+import type { AdaptiveTrainingInfluenceProps } from '../../../../training/domain/value-objects/adaptive-training-influence.value-object';
+import type {
+  AdaptiveRecommendedIntensity,
+  AdaptiveRecommendationType,
+  AdaptiveVolumeAction,
+} from '../../../../training/domain/value-objects/adaptive-recommendation-type.value-object';
 import { BuildRecoverySnapshotUseCase } from '../../../../recovery/application/use-cases/build-recovery-snapshot/build-recovery-snapshot.use-case';
 import { calculateStreak } from '../../../../progress/application/use-cases/get-progress-summary/calculate-streak';
 import {
@@ -80,6 +87,14 @@ export type UserHealthContextRecoverySnapshot = {
   createdAt: Date;
 };
 
+export type UserHealthContextAdaptiveTrainingRecommendation = {
+  recommendationType: AdaptiveRecommendationType;
+  recommendedIntensity: AdaptiveRecommendedIntensity;
+  volumeAction: AdaptiveVolumeAction;
+  reasoning: string;
+  influences: AdaptiveTrainingInfluenceProps[];
+};
+
 export type UserHealthContext = {
   authUserId: string;
   userProfileId?: string;
@@ -103,6 +118,12 @@ export type UserHealthContext = {
     createdAt: Date;
   };
   recoverySnapshot?: UserHealthContextRecoverySnapshot;
+  adaptiveTrainingRecommendation?: UserHealthContextAdaptiveTrainingRecommendation;
+  adaptiveRecommendationType?: AdaptiveRecommendationType;
+  adaptiveRecommendedIntensity?: AdaptiveRecommendedIntensity;
+  adaptiveVolumeAction?: AdaptiveVolumeAction;
+  adaptiveTrainingInfluences?: AdaptiveTrainingInfluenceProps[];
+  adaptiveTrainingReasoning?: string;
   readinessScore?: number;
   fatigueScore?: number;
   recoveryInfluences?: RecoveryInfluence[];
@@ -130,6 +151,7 @@ export class BuildUserHealthContextService {
     private readonly nutritionProfileRepository: NutritionProfileRepository,
     @Inject(RECOVERY_SNAPSHOT_REPOSITORY)
     private readonly recoverySnapshotRepository: RecoverySnapshotRepository,
+    private readonly getCurrentAdaptiveTrainingUseCase: GetCurrentAdaptiveTrainingUseCase,
     private readonly buildRecoverySnapshotUseCase: BuildRecoverySnapshotUseCase,
     @Inject(CLOCK)
     private readonly clock: Clock,
@@ -164,6 +186,10 @@ export class BuildUserHealthContextService {
       await this.nutritionProfileRepository.findActiveByUserProfileId(
         userProfile.id,
       );
+    const adaptiveTrainingRecommendation =
+      await this.resolveAdaptiveTrainingRecommendation({
+        authUserId,
+      });
     const recoverySnapshot =
       await this.resolveRecoverySnapshot({
         authUserId,
@@ -196,6 +222,20 @@ export class BuildUserHealthContextService {
       recoverySnapshot: recoverySnapshot
         ? this.mapRecoverySnapshot(recoverySnapshot)
         : undefined,
+      ...(adaptiveTrainingRecommendation
+        ? {
+            adaptiveTrainingRecommendation,
+            adaptiveRecommendationType:
+              adaptiveTrainingRecommendation.recommendationType,
+            adaptiveRecommendedIntensity:
+              adaptiveTrainingRecommendation.recommendedIntensity,
+            adaptiveVolumeAction: adaptiveTrainingRecommendation.volumeAction,
+            adaptiveTrainingInfluences:
+              adaptiveTrainingRecommendation.influences,
+            adaptiveTrainingReasoning:
+              adaptiveTrainingRecommendation.reasoning,
+          }
+        : {}),
       readinessScore: recoverySnapshot?.readinessScore,
       fatigueScore: recoverySnapshot?.fatigueScore,
       recoveryInfluences: recoverySnapshot?.influences ?? [],
@@ -455,6 +495,30 @@ export class BuildUserHealthContextService {
       });
 
       return result.recoverySnapshot;
+    } catch {
+      return null;
+    }
+  }
+
+  private async resolveAdaptiveTrainingRecommendation(input: {
+    authUserId: string;
+  }): Promise<UserHealthContextAdaptiveTrainingRecommendation | null> {
+    try {
+      const result = await this.getCurrentAdaptiveTrainingUseCase.execute({
+        authUserId: input.authUserId,
+      });
+
+      return {
+        recommendationType:
+          result.adaptiveTrainingRecommendation.recommendationType,
+        recommendedIntensity:
+          result.adaptiveTrainingRecommendation.recommendedIntensity,
+        volumeAction: result.adaptiveTrainingRecommendation.volumeAction,
+        reasoning: result.adaptiveTrainingRecommendation.reasoning,
+        influences: result.adaptiveTrainingRecommendation.influences.map(
+          (influence) => influence.toJSON(),
+        ),
+      };
     } catch {
       return null;
     }

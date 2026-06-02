@@ -496,6 +496,56 @@ describe('GetHomeDashboardUseCase', () => {
     });
   });
 
+  it('exposes adaptive training recommendation when available', async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: 'auth_user_123',
+      adherenceScore: 0,
+      currentStreak: 2,
+      averageWorkoutDuration: 42,
+      fatigueLevel: 'MODERATE',
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
+      adaptiveTrainingRecommendation: {
+        recommendationType: 'recovery_workout',
+        recommendedIntensity: 'light',
+        volumeAction: 'decrease',
+        reasoning: 'Recovery is the best trade-off today.',
+        influences: [
+          {
+            code: 'HIGH_FATIGUE',
+            label: 'Fatigue is elevated.',
+            impact: 'negative',
+          },
+        ],
+      },
+    } as never);
+
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
+
+    expect(result.dashboard.adaptiveTrainingRecommendation).toEqual({
+      recommendationType: 'recovery_workout',
+      recommendedIntensity: 'light',
+      volumeAction: 'decrease',
+      reasoning: 'Recovery is the best trade-off today.',
+      influences: [
+        {
+          code: 'HIGH_FATIGUE',
+          label: 'Fatigue is elevated.',
+          impact: 'negative',
+        },
+      ],
+    });
+  });
+
   it('uses the recovery snapshot as the primary recovery source when available', async () => {
     mockUserProfile();
     mockFitnessProfile();

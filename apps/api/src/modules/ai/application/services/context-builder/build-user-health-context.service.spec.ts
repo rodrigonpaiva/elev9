@@ -16,6 +16,9 @@ import {
   RecoverySnapshot,
 } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
 import { RecoverySnapshotRepository } from '../../../../recovery/domain/repositories/recovery-snapshot.repository';
+import { GetCurrentAdaptiveTrainingUseCase } from '../../../../training/application/use-cases/get-current-adaptive-training/get-current-adaptive-training.use-case';
+import { AdaptiveTrainingRecommendation } from '../../../../training/domain/entities/adaptive-training-recommendation.entity';
+import { AdaptiveTrainingInfluence } from '../../../../training/domain/value-objects/adaptive-training-influence.value-object';
 import { TrainingPlan } from '../../../../training/domain/entities/training-plan.entity';
 import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
 import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
@@ -30,6 +33,9 @@ describe('BuildUserHealthContextService', () => {
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
   let recoverySnapshotRepository: jest.Mocked<RecoverySnapshotRepository>;
+  let getCurrentAdaptiveTrainingUseCase: {
+    execute: jest.MockedFunction<GetCurrentAdaptiveTrainingUseCase['execute']>;
+  };
   let buildRecoverySnapshotUseCase: {
     execute: jest.MockedFunction<BuildRecoverySnapshotUseCase['execute']>;
   };
@@ -67,6 +73,9 @@ describe('BuildUserHealthContextService', () => {
       findRecentByUserProfileId: jest.fn(),
       upsertDailySnapshot: jest.fn(),
     } as unknown as jest.Mocked<RecoverySnapshotRepository>;
+    getCurrentAdaptiveTrainingUseCase = {
+      execute: jest.fn().mockRejectedValue(new Error('adaptive recommendation unavailable')),
+    };
     buildRecoverySnapshotUseCase = {
       execute: jest.fn().mockRejectedValue(new Error('snapshot not available')),
     };
@@ -89,6 +98,7 @@ describe('BuildUserHealthContextService', () => {
       workoutLogRepository,
       nutritionProfileRepository,
       recoverySnapshotRepository,
+      getCurrentAdaptiveTrainingUseCase as unknown as GetCurrentAdaptiveTrainingUseCase,
       buildRecoverySnapshotUseCase as unknown as BuildRecoverySnapshotUseCase,
       clock,
     );
@@ -123,7 +133,7 @@ describe('BuildUserHealthContextService', () => {
       startDate: '2026-04-28',
       endDate: '2026-05-04',
     });
-    expect(result).toMatchObject({
+      expect(result).toMatchObject({
       authUserId: 'auth_user_123',
       userProfileId: 'profile_123',
       userName: 'Rodrigo Paiva',
@@ -160,7 +170,8 @@ describe('BuildUserHealthContextService', () => {
         dayIndex: 1,
         title: 'Upper Body Strength',
       },
-    });
+      });
+      expect(result.adaptiveTrainingRecommendation).toBeUndefined();
     expect(result.recentWorkoutLogs).toHaveLength(3);
     expect(result.availableEquipment).toEqual([]);
   });
@@ -193,6 +204,7 @@ describe('BuildUserHealthContextService', () => {
     expect(result.weeklyFrequency).toBeUndefined();
     expect(result.latestCheckIn).toBeUndefined();
     expect(result.nutritionProfile).toBeUndefined();
+    expect(result.adaptiveTrainingRecommendation).toBeUndefined();
   });
 
   it('includes nutritionProfile when one exists', async () => {
@@ -233,6 +245,56 @@ describe('BuildUserHealthContextService', () => {
     });
 
     expect(result.nutritionProfile).toBeUndefined();
+  });
+
+  it('includes adaptive training recommendation when one exists', async () => {
+    mockUserProfile(userProfileRepository);
+    getCurrentAdaptiveTrainingUseCase.execute.mockResolvedValue({
+      adaptiveTrainingRecommendation: new AdaptiveTrainingRecommendation({
+        id: 'adaptive_123',
+        userProfileId: 'profile_123',
+        trainingPlanId: 'training_123',
+        date: '2026-05-04',
+        recommendationType: 'increase_intensity',
+        recommendedIntensity: 'hard',
+        volumeAction: 'increase',
+        reasoning: 'Readiness is high and fatigue is low.',
+        influences: [
+          new AdaptiveTrainingInfluence({
+            code: 'HIGH_READINESS',
+            label: 'Readiness is high.',
+            impact: 'positive',
+            weight: 0.2,
+            value: 88,
+          }),
+        ],
+        sourceContext: {},
+        formulaVersion: 'adaptive-training-deterministic-v1',
+        generatedBy: 'deterministic',
+        createdAt: new Date('2026-05-04T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-04T10:00:00.000Z'),
+      }),
+    } as never);
+
+    const result = await service.build({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(result.adaptiveTrainingRecommendation).toEqual({
+      recommendationType: 'increase_intensity',
+      recommendedIntensity: 'hard',
+      volumeAction: 'increase',
+      reasoning: 'Readiness is high and fatigue is low.',
+      influences: [
+        {
+          code: 'HIGH_READINESS',
+          label: 'Readiness is high.',
+          impact: 'positive',
+          weight: 0.2,
+          value: 88,
+        },
+      ],
+    });
   });
 
   it('uses the latest recovery snapshot when one exists', async () => {

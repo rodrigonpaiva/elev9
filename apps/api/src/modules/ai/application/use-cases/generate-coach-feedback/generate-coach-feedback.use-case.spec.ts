@@ -386,6 +386,47 @@ describe('GenerateCoachFeedbackUseCase', () => {
     );
   });
 
+  it('persists adaptive training recommendation fields in contextSnapshot', async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        adaptiveTrainingRecommendation: {
+          recommendationType: 'recovery_workout',
+          recommendedIntensity: 'light',
+          volumeAction: 'decrease',
+          reasoning: 'Recovery is the best option today.',
+          influences: [
+            {
+              code: 'HIGH_FATIGUE',
+              label: 'Fatigue is elevated.',
+              impact: 'negative',
+            },
+          ],
+        },
+      }),
+    );
+
+    await useCase.execute({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(coachFeedbackRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contextSnapshot: expect.objectContaining({
+          adaptiveTrainingRecommendation: expect.objectContaining({
+            recommendationType: 'recovery_workout',
+            recommendedIntensity: 'light',
+            volumeAction: 'decrease',
+            reasoning: 'Recovery is the best option today.',
+          }),
+          adaptiveRecommendationType: 'recovery_workout',
+          adaptiveRecommendedIntensity: 'light',
+          adaptiveVolumeAction: 'decrease',
+          adaptiveTrainingReasoning: 'Recovery is the best option today.',
+        }),
+      }),
+    );
+  });
+
   it('does not persist sensitive fields in contextSnapshot', async () => {
     buildUserHealthContextService.build.mockResolvedValue(
       buildHealthContext({
