@@ -55,9 +55,11 @@ export function createNutritionApi(httpClient: HttpClient) {
       mealId: string,
       input?: ReplaceMealRequest,
     ): Promise<ReplaceMealResponse> {
+      const encodedMealId = encodeURIComponent(mealId);
+
       return httpClient.request<ReplaceMealResponse>({
         method: 'POST',
-        path: `/nutrition/meals/${mealId}/replace`,
+        path: `/nutrition/meals/${encodedMealId}/replace`,
         body: input ?? {},
       });
     },
