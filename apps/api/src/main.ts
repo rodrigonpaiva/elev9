@@ -3,6 +3,8 @@ import 'reflect-metadata';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
+import { requestCorrelationMiddleware } from './common/middleware/request-correlation.middleware';
+import { requestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { AppModule } from './app.module';
 import { requestRuntimeLoggingMiddleware } from './common/middleware/request-runtime-logging.middleware';
 
@@ -40,6 +42,8 @@ async function bootstrap(): Promise<void> {
   console.info('[Bootstrap] Request correlation enabled');
   console.info('[Bootstrap] Request logging enabled');
 
+  app.use(requestCorrelationMiddleware);
+  app.use(requestLoggingMiddleware);
   app.enableCors({
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
