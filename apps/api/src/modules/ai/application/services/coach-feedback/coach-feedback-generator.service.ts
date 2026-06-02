@@ -6,6 +6,10 @@ import {
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import {
+  RecoveryInfluenceProps,
+  RecommendedIntensity,
+} from '../../../../recovery/domain/entities/recovery-snapshot.entity';
+import {
   FatigueLevel,
   UserHealthContextNutritionProfile,
 } from '../context-builder/build-user-health-context.service';
@@ -27,6 +31,10 @@ export type CoachFeedbackGeneratorInput = {
     muscleSoreness: number;
     motivationLevel: number;
   };
+  readinessScore?: number;
+  fatigueScore?: number;
+  recoveryInfluences?: RecoveryInfluenceProps[];
+  recommendedIntensity?: RecommendedIntensity;
   nutritionProfile?: UserHealthContextNutritionProfile;
 };
 
@@ -155,6 +163,15 @@ export class CoachFeedbackGenerator {
       recommendations,
       influences,
       isNoLogs,
+    });
+    this.applyRecoverySnapshotSignals({
+      readinessScore: input.readinessScore,
+      fatigueScore: input.fatigueScore,
+      recommendedIntensity: input.recommendedIntensity,
+      recoveryInfluences: input.recoveryInfluences,
+      insights,
+      recommendations,
+      influences,
     });
     this.applyTrainingSignals({
       logsCount,
@@ -404,10 +421,68 @@ export class CoachFeedbackGenerator {
         return;
       case 'maintenance':
       default:
+      this.prependRecommendation(
+        input.recommendations,
+        'Keep your meal routine steady so training and recovery stay predictable',
+      );
+    }
+  }
+
+  private applyRecoverySnapshotSignals(input: {
+    readinessScore?: number;
+    fatigueScore?: number;
+    recommendedIntensity?: RecommendedIntensity;
+    recoveryInfluences?: RecoveryInfluenceProps[];
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    if (typeof input.readinessScore === 'number') {
+      if (input.readinessScore <= 40) {
+        input.influences.add('recovery:low_readiness');
+        this.upsertInsight(
+          input.insights,
+          'Your readiness is low, so recovery should stay the priority',
+        );
         this.prependRecommendation(
           input.recommendations,
-          'Keep your meal routine steady so training and recovery stay predictable',
+          'Prioritize recovery before pushing intensity',
         );
+      } else if (input.readinessScore >= 80) {
+        input.influences.add('recovery:high_readiness');
+        this.upsertInsight(
+          input.insights,
+          'Your readiness looks strong for a more demanding session',
+        );
+        input.recommendations.push(
+          'A harder session can make sense if form stays solid',
+        );
+      }
+    }
+
+    if (typeof input.fatigueScore === 'number') {
+      if (input.fatigueScore >= 70) {
+        input.influences.add('recovery:high_fatigue_score');
+        this.prependRecommendation(
+          input.recommendations,
+          'Reduce intensity and focus on recovery today',
+        );
+      } else if (input.fatigueScore <= 35) {
+        input.influences.add('recovery:low_fatigue_score');
+        input.recommendations.push(
+          'You can keep intensity higher if recovery stays stable',
+        );
+      }
+    }
+
+    if (input.recommendedIntensity) {
+      input.influences.add(
+        `recovery:recommended_${input.recommendedIntensity}`,
+      );
+    }
+
+    for (const influence of input.recoveryInfluences ?? []) {
+      input.influences.add(`recovery:${influence.code.toLowerCase()}`);
     }
   }
 

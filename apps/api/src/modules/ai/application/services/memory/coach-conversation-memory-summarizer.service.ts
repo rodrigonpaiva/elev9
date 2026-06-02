@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
-import {
-  FatigueLevel,
-  UserHealthContext,
-} from '../context-builder/build-user-health-context.service';
+import { UserHealthContext } from '../context-builder/build-user-health-context.service';
 
 export const COACH_CONVERSATION_MEMORY_VERSION = 'memory-v1';
 
@@ -35,9 +32,7 @@ export class CoachConversationMemorySummarizer {
     const messages = input.conversationMessages.slice(-12);
     const latestUserMessage = this.findLatestUserMessage(messages);
     const concern = this.resolveConcern(latestUserMessage?.content ?? '');
-    const recoveryTrend = this.resolveRecoveryTrend(
-      input.healthContext.fatigueLevel,
-    );
+    const recoveryTrend = this.resolveRecoveryTrend(input.healthContext);
     const nutritionGoal = input.healthContext.nutritionProfile?.goal ?? 'none';
     const mealsPerDay = input.healthContext.nutritionProfile?.mealsPerDay ?? 0;
     const workoutCount = input.healthContext.recentWorkoutLogs.length;
@@ -93,9 +88,13 @@ export class CoachConversationMemorySummarizer {
   }
 
   private resolveRecoveryTrend(
-    fatigueLevel: FatigueLevel,
+    healthContext: Pick<UserHealthContext, 'fatigueLevel' | 'recoveryTrend'>,
   ): 'improving' | 'stable' | 'needs_recovery' {
-    switch (fatigueLevel) {
+    if (healthContext.recoveryTrend) {
+      return healthContext.recoveryTrend;
+    }
+
+    switch (healthContext.fatigueLevel) {
       case 'LOW':
         return 'improving';
       case 'HIGH':

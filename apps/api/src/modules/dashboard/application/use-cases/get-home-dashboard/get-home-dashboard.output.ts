@@ -26,6 +26,23 @@ type DashboardNutritionGuidance = {
   signals: string[];
 };
 
+type DashboardRecoveryInfluence = {
+  code:
+    | 'LOW_SLEEP'
+    | 'LOW_ENERGY'
+    | 'HIGH_MUSCLE_SORENESS'
+    | 'HIGH_ADHERENCE'
+    | 'LOW_ADHERENCE'
+    | 'HIGH_WORKOUT_LOAD'
+    | 'RECENT_WORKOUT_COMPLETION'
+    | 'LONG_STREAK'
+    | 'MISSED_WORKOUTS';
+  label: string;
+  impact: 'positive' | 'negative' | 'neutral';
+  weight?: number;
+  value?: number;
+};
+
 export type GetHomeDashboardOutput = {
   dashboard: {
     user: {
@@ -51,6 +68,9 @@ export type GetHomeDashboardOutput = {
       fatigueLevel: FatigueLevel;
       recommendedIntensity: 'low' | 'medium' | 'normal';
       recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
+      readinessScore?: number;
+      fatigueScore?: number;
+      recoveryInfluences?: DashboardRecoveryInfluence[];
       latestCheckIn?: {
         energyLevel: number;
         sleepQuality: number;

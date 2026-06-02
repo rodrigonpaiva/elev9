@@ -22,4 +22,5 @@ __exportStar(require("./progress"), exports);
 __exportStar(require("./dashboard"), exports);
 __exportStar(require("./ai"), exports);
 __exportStar(require("./nutrition"), exports);
+__exportStar(require("./recovery"), exports);
 //# sourceMappingURL=index.js.map

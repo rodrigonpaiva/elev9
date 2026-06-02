@@ -16,6 +16,25 @@ export class CoachFeedbackSchemaClass {
     hasTrainingPlan?: boolean;
     fatigueLevel?: 'LOW' | 'MODERATE' | 'HIGH';
     recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
+    readinessScore?: number;
+    fatigueScore?: number;
+    recommendedIntensity?: 'recovery' | 'light' | 'moderate' | 'hard';
+    recoveryInfluences?: Array<{
+      code:
+        | 'LOW_SLEEP'
+        | 'LOW_ENERGY'
+        | 'HIGH_MUSCLE_SORENESS'
+        | 'HIGH_ADHERENCE'
+        | 'LOW_ADHERENCE'
+        | 'HIGH_WORKOUT_LOAD'
+        | 'RECENT_WORKOUT_COMPLETION'
+        | 'LONG_STREAK'
+        | 'MISSED_WORKOUTS';
+      label: string;
+      impact: 'positive' | 'negative' | 'neutral';
+      weight?: number;
+      value?: number;
+    }>;
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -73,6 +92,22 @@ export const CoachFeedbackSchema = new Schema<CoachFeedbackSchemaClass>(
         hasTrainingPlan: { type: Boolean, required: false },
         fatigueLevel: { type: String, required: false },
         recoveryTrend: { type: String, required: false },
+        readinessScore: { type: Number, required: false },
+        fatigueScore: { type: Number, required: false },
+        recommendedIntensity: { type: String, required: false },
+        recoveryInfluences: {
+          type: [
+            {
+              code: { type: String, required: true },
+              label: { type: String, required: true },
+              impact: { type: String, required: true },
+              weight: { type: Number, required: false },
+              value: { type: Number, required: false },
+            },
+          ],
+          required: false,
+          default: undefined,
+        },
         weeklyFrequency: { type: Number, required: false },
         currentStreak: { type: Number, required: false },
         averageWorkoutDuration: { type: Number, required: false },

@@ -128,6 +128,9 @@ describe('GetHomeDashboardDebugUseCase', () => {
           'high_soreness',
           'improving_recovery',
         ],
+        readinessScore: undefined,
+        fatigueScore: undefined,
+        recoveryInfluences: undefined,
       },
       nutrition: {
         priority: 'recovery',

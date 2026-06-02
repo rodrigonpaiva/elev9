@@ -98,6 +98,7 @@ export class AiPromptBuilder {
   buildDebugSnapshot(
     input: AiPromptBuilderInput,
   ): AiPromptBuilderDebugSnapshot {
+    const recoveryTrend = this.resolveRecoveryTrend(input.healthContext);
     const conversationMemoryPreview = input.conversationMemory
       ? {
           version: input.conversationMemory.metadata.version,
@@ -123,9 +124,7 @@ export class AiPromptBuilder {
       conversationMemory: conversationMemoryPreview,
       context: {
         fatigueLevel: input.healthContext.fatigueLevel,
-        recoveryTrend: this.resolveRecoveryTrend(
-          input.healthContext.fatigueLevel,
-        ),
+        recoveryTrend,
         hasNutritionProfile: Boolean(input.healthContext.nutritionProfile),
         hasLatestCheckIn: Boolean(input.healthContext.latestCheckIn),
         recentWorkoutCount: input.healthContext.recentWorkoutLogs.length,
@@ -145,7 +144,7 @@ export class AiPromptBuilder {
   }
 
   private buildContextBlock(healthContext: UserHealthContext): string {
-    const recoveryTrend = this.resolveRecoveryTrend(healthContext.fatigueLevel);
+    const recoveryTrend = this.resolveRecoveryTrend(healthContext);
     const checkIn = healthContext.latestCheckIn;
     const nutrition = healthContext.nutritionProfile;
     const workoutLogs = healthContext.recentWorkoutLogs.slice(-5);
@@ -207,9 +206,13 @@ export class AiPromptBuilder {
   }
 
   private resolveRecoveryTrend(
-    fatigueLevel: FatigueLevel,
+    healthContext: Pick<UserHealthContext, 'fatigueLevel' | 'recoveryTrend'>,
   ): 'improving' | 'stable' | 'needs_recovery' {
-    switch (fatigueLevel) {
+    if (healthContext.recoveryTrend) {
+      return healthContext.recoveryTrend;
+    }
+
+    switch (healthContext.fatigueLevel) {
       case 'LOW':
         return 'improving';
       case 'HIGH':

@@ -10,6 +10,12 @@ import { DailyCheckInRepository } from '../../../../progress/domain/repositories
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import { WorkoutLogRepository } from '../../../../progress/domain/repositories/workout-log.repository';
 import { Clock } from '../../../../progress/domain/services/clock.service';
+import { BuildRecoverySnapshotUseCase } from '../../../../recovery/application/use-cases/build-recovery-snapshot/build-recovery-snapshot.use-case';
+import {
+  RecoveryInfluence,
+  RecoverySnapshot,
+} from '../../../../recovery/domain/entities/recovery-snapshot.entity';
+import { RecoverySnapshotRepository } from '../../../../recovery/domain/repositories/recovery-snapshot.repository';
 import { TrainingPlan } from '../../../../training/domain/entities/training-plan.entity';
 import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
 import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
@@ -23,6 +29,10 @@ describe('BuildUserHealthContextService', () => {
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
+  let recoverySnapshotRepository: jest.Mocked<RecoverySnapshotRepository>;
+  let buildRecoverySnapshotUseCase: {
+    execute: jest.MockedFunction<BuildRecoverySnapshotUseCase['execute']>;
+  };
   let clock: jest.Mocked<Clock>;
   let service: BuildUserHealthContextService;
 
@@ -50,6 +60,16 @@ describe('BuildUserHealthContextService', () => {
       findLatestByUserProfileId: jest.fn().mockResolvedValue(null),
       findManyByUserProfileId: jest.fn(),
     };
+    recoverySnapshotRepository = {
+      findByUserProfileIdAndDate: jest.fn(),
+      findLatestByUserProfileId: jest.fn().mockResolvedValue(null),
+      findManyByUserProfileId: jest.fn(),
+      findRecentByUserProfileId: jest.fn(),
+      upsertDailySnapshot: jest.fn(),
+    } as unknown as jest.Mocked<RecoverySnapshotRepository>;
+    buildRecoverySnapshotUseCase = {
+      execute: jest.fn().mockRejectedValue(new Error('snapshot not available')),
+    };
     workoutLogRepository = {
       findByTrainingPlanDayAndDate: jest.fn(),
       findByTrainingPlanIdsOrdered: jest.fn(),
@@ -68,6 +88,8 @@ describe('BuildUserHealthContextService', () => {
       dailyCheckInRepository,
       workoutLogRepository,
       nutritionProfileRepository,
+      recoverySnapshotRepository,
+      buildRecoverySnapshotUseCase as unknown as BuildRecoverySnapshotUseCase,
       clock,
     );
   });
@@ -211,6 +233,66 @@ describe('BuildUserHealthContextService', () => {
     });
 
     expect(result.nutritionProfile).toBeUndefined();
+  });
+
+  it('uses the latest recovery snapshot when one exists', async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      buildRecoverySnapshot({
+        readinessScore: 83,
+        fatigueScore: 22,
+        recoveryTrend: 'improving',
+        recommendedIntensity: 'hard',
+      }),
+    );
+
+    const result = await service.build({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(
+      recoverySnapshotRepository.findLatestByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123');
+    expect(buildRecoverySnapshotUseCase.execute).not.toHaveBeenCalled();
+    expect(result.recoverySnapshot).toMatchObject({
+      readinessScore: 83,
+      fatigueScore: 22,
+      recoveryTrend: 'improving',
+      recommendedIntensity: 'hard',
+    });
+    expect(result.readinessScore).toBe(83);
+    expect(result.fatigueScore).toBe(22);
+  });
+
+  it('builds a recovery snapshot when none exists yet', async () => {
+    mockUserProfile(userProfileRepository);
+    mockFitnessProfile(fitnessProfileRepository);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
+    buildRecoverySnapshotUseCase.execute.mockResolvedValue({
+      recoverySnapshot: buildRecoverySnapshot({
+        readinessScore: 65,
+        fatigueScore: 55,
+        recoveryTrend: 'stable',
+        recommendedIntensity: 'moderate',
+      }),
+    });
+
+    const result = await service.build({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(buildRecoverySnapshotUseCase.execute).toHaveBeenCalledWith({
+      authUserId: 'auth_user_123',
+    });
+    expect(result.recoverySnapshot).toMatchObject({
+      readinessScore: 65,
+      fatigueScore: 55,
+      recoveryTrend: 'stable',
+      recommendedIntensity: 'moderate',
+    });
   });
 
   it('returns a safe context when there is no active training plan', async () => {
@@ -648,5 +730,31 @@ function buildNutritionProfile(
     status: 'active',
     createdAt: new Date('2026-05-04T09:30:00.000Z'),
     updatedAt: new Date('2026-05-04T09:30:00.000Z'),
+  });
+}
+
+function buildRecoverySnapshot(
+  overrides: Partial<RecoverySnapshot> = {},
+): RecoverySnapshot {
+  return new RecoverySnapshot({
+    userProfileId: 'profile_123',
+    date: '2026-05-04',
+    readinessScore: 72,
+    fatigueScore: 48,
+    recoveryTrend: 'stable',
+    recommendedIntensity: 'moderate',
+    influences: [
+      new RecoveryInfluence({
+        code: 'HIGH_ADHERENCE',
+        label: 'Recent adherence is strong.',
+        impact: 'positive',
+        weight: 0.15,
+        value: 100,
+      }),
+    ],
+    formulaVersion: 'recovery-deterministic-v1',
+    sourceContext: {},
+    createdAt: new Date('2026-05-04T10:00:00.000Z'),
+    ...overrides,
   });
 }

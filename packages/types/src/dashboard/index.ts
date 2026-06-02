@@ -1,6 +1,23 @@
 import { FitnessProfileActivityLevel, FitnessProfileGoal } from '../fitness';
 import { TrainingPlanIntensity } from '../training';
 
+export type DashboardRecoveryInfluence = {
+  code:
+    | 'LOW_SLEEP'
+    | 'LOW_ENERGY'
+    | 'HIGH_MUSCLE_SORENESS'
+    | 'HIGH_ADHERENCE'
+    | 'LOW_ADHERENCE'
+    | 'HIGH_WORKOUT_LOAD'
+    | 'RECENT_WORKOUT_COMPLETION'
+    | 'LONG_STREAK'
+    | 'MISSED_WORKOUTS';
+  label: string;
+  impact: 'positive' | 'negative' | 'neutral';
+  weight?: number;
+  value?: number;
+};
+
 export type DashboardHomeResponse = {
   dashboard: {
     user: {
@@ -38,6 +55,9 @@ export type DashboardHomeResponse = {
       fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH';
       recommendedIntensity: 'low' | 'medium' | 'normal';
       recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
+      readinessScore?: number;
+      fatigueScore?: number;
+      recoveryInfluences?: DashboardRecoveryInfluence[];
       latestCheckIn?: {
         energyLevel: number;
         sleepQuality: number;
@@ -60,6 +80,9 @@ export type DashboardHomeDebugResponse = {
     fatigueLevel: string;
     recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
     recoverySignals: string[];
+    readinessScore?: number;
+    fatigueScore?: number;
+    recoveryInfluences?: DashboardRecoveryInfluence[];
   };
   nutrition: {
     priority: 'recovery' | 'consistency' | 'performance';

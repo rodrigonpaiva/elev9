@@ -5,6 +5,7 @@ import { createFitnessApi } from './fitness-api';
 import { createHttpClient, type CreateHttpClientOptions } from './http-client';
 import { createNutritionApi } from './nutrition-api';
 import { createProgressApi } from './progress-api';
+import { createRecoveryApi } from './recovery-api';
 import { createTrainingApi } from './training-api';
 
 export { ApiClientError } from './http-client';
@@ -19,6 +20,7 @@ export function createApiClient(options: CreateHttpClientOptions) {
     dashboard: createDashboardApi(httpClient),
     fitness: createFitnessApi(httpClient),
     nutrition: createNutritionApi(httpClient),
+    recovery: createRecoveryApi(httpClient),
     training: createTrainingApi(httpClient),
     progress: createProgressApi(httpClient),
   };

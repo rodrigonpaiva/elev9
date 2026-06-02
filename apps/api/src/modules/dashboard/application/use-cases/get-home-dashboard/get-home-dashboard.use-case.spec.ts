@@ -207,6 +207,9 @@ describe('GetHomeDashboardUseCase', () => {
           fatigueLevel: 'MODERATE',
           recommendedIntensity: 'medium',
           recoveryTrend: 'stable',
+          readinessScore: undefined,
+          fatigueScore: undefined,
+          recoveryInfluences: undefined,
         },
         nutritionGuidance: {
           priority: 'consistency',
@@ -245,6 +248,9 @@ describe('GetHomeDashboardUseCase', () => {
       fatigueLevel: 'MODERATE',
       recommendedIntensity: 'medium',
       recoveryTrend: 'stable',
+      readinessScore: undefined,
+      fatigueScore: undefined,
+      recoveryInfluences: undefined,
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
@@ -355,6 +361,9 @@ describe('GetHomeDashboardUseCase', () => {
       fatigueLevel: 'MODERATE',
       recommendedIntensity: 'medium',
       recoveryTrend: 'stable',
+      readinessScore: undefined,
+      fatigueScore: undefined,
+      recoveryInfluences: undefined,
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
@@ -430,6 +439,9 @@ describe('GetHomeDashboardUseCase', () => {
       fatigueLevel: 'HIGH',
       recommendedIntensity: 'low',
       recoveryTrend: 'stable',
+      readinessScore: undefined,
+      fatigueScore: undefined,
+      recoveryInfluences: undefined,
       latestCheckIn: {
         energyLevel: 2,
         sleepQuality: 2,
@@ -472,6 +484,9 @@ describe('GetHomeDashboardUseCase', () => {
       fatigueLevel: 'LOW',
       recommendedIntensity: 'normal',
       recoveryTrend: 'stable',
+      readinessScore: undefined,
+      fatigueScore: undefined,
+      recoveryInfluences: undefined,
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
@@ -479,6 +494,81 @@ describe('GetHomeDashboardUseCase', () => {
         'Keep your meals consistent today to support recovery and routine.',
       signals: ['low_consistency'],
     });
+  });
+
+  it('uses the recovery snapshot as the primary recovery source when available', async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    mockTrainingPlan();
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
+    buildUserHealthContextService.build.mockResolvedValue({
+      authUserId: 'auth_user_123',
+      adherenceScore: 0,
+      currentStreak: 2,
+      averageWorkoutDuration: 42,
+      fatigueLevel: 'MODERATE',
+      availableEquipment: [],
+      limitations: [],
+      todayWorkout: null,
+      recentWorkoutLogs: [],
+      generatedAt: new Date('2026-04-30T10:00:00.000Z'),
+      recoverySnapshot: {
+        date: '2026-04-30',
+        readinessScore: 84,
+        fatigueScore: 18,
+        recoveryTrend: 'declining',
+        recommendedIntensity: 'hard',
+        influences: [
+          {
+            code: 'HIGH_ADHERENCE',
+            label: 'Strong adherence supports recovery.',
+            impact: 'positive',
+            weight: 0.15,
+            value: 100,
+          },
+        ],
+        formulaVersion: 'recovery-deterministic-v1',
+        createdAt: new Date('2026-04-30T09:30:00.000Z'),
+      },
+      readinessScore: 84,
+      fatigueScore: 18,
+      recoveryInfluences: [
+        {
+          code: 'HIGH_ADHERENCE',
+          label: 'Strong adherence supports recovery.',
+          impact: 'positive',
+          weight: 0.15,
+          value: 100,
+        },
+      ],
+      recoveryTrend: 'needs_recovery',
+      recommendedIntensity: 'hard',
+      latestCheckIn: undefined,
+      nutritionProfile: undefined,
+    });
+
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
+
+    expect(result.dashboard.recovery).toEqual({
+      fatigueLevel: 'LOW',
+      recommendedIntensity: 'normal',
+      recoveryTrend: 'needs_recovery',
+      readinessScore: 84,
+      fatigueScore: 18,
+      recoveryInfluences: [
+        {
+          code: 'HIGH_ADHERENCE',
+          label: 'Strong adherence supports recovery.',
+          impact: 'positive',
+          weight: 0.15,
+          value: 100,
+        },
+      ],
+      latestCheckIn: undefined,
+    });
+    expect(result.dashboard.nutritionGuidance.priority).toBe('recovery');
   });
 
   it('returns consistency guidance when meal frequency is low', async () => {

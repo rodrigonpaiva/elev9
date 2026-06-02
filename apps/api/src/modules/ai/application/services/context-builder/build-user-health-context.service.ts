@@ -26,6 +26,11 @@ import {
   NUTRITION_PROFILE_REPOSITORY,
   NutritionProfileRepository,
 } from '../../../../nutrition/domain/repositories/nutrition-profile.repository';
+import {
+  RECOVERY_SNAPSHOT_REPOSITORY,
+  RecoverySnapshotRepository,
+} from '../../../../recovery/domain/repositories/recovery-snapshot.repository';
+import { BuildRecoverySnapshotUseCase } from '../../../../recovery/application/use-cases/build-recovery-snapshot/build-recovery-snapshot.use-case';
 import { calculateStreak } from '../../../../progress/application/use-cases/get-progress-summary/calculate-streak';
 import {
   TrainingPlanDay,
@@ -39,6 +44,10 @@ import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
 } from '../../../../users/domain/repositories/user-profile.repository';
+import {
+  RecoveryInfluence,
+  RecoverySnapshot,
+} from '../../../../recovery/domain/entities/recovery-snapshot.entity';
 
 export type UserHealthContextTodayWorkout = {
   dayIndex: number;
@@ -58,6 +67,17 @@ export type UserHealthContextNutritionProfile = {
   allergies: string[];
   dislikedFoods: string[];
   preferredFoods: string[];
+};
+
+export type UserHealthContextRecoverySnapshot = {
+  date: string;
+  readinessScore: number;
+  fatigueScore: number;
+  recoveryTrend: RecoverySnapshot['recoveryTrend'];
+  recommendedIntensity: RecoverySnapshot['recommendedIntensity'];
+  influences: RecoveryInfluence[];
+  formulaVersion: string;
+  createdAt: Date;
 };
 
 export type UserHealthContext = {
@@ -82,6 +102,12 @@ export type UserHealthContext = {
     motivationLevel: number;
     createdAt: Date;
   };
+  recoverySnapshot?: UserHealthContextRecoverySnapshot;
+  readinessScore?: number;
+  fatigueScore?: number;
+  recoveryInfluences?: RecoveryInfluence[];
+  recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
+  recommendedIntensity?: RecoverySnapshot['recommendedIntensity'];
   nutritionProfile?: UserHealthContextNutritionProfile;
   recentWorkoutLogs: WorkoutLog[];
   generatedAt: Date;
@@ -102,6 +128,9 @@ export class BuildUserHealthContextService {
     private readonly workoutLogRepository: WorkoutLogRepository,
     @Inject(NUTRITION_PROFILE_REPOSITORY)
     private readonly nutritionProfileRepository: NutritionProfileRepository,
+    @Inject(RECOVERY_SNAPSHOT_REPOSITORY)
+    private readonly recoverySnapshotRepository: RecoverySnapshotRepository,
+    private readonly buildRecoverySnapshotUseCase: BuildRecoverySnapshotUseCase,
     @Inject(CLOCK)
     private readonly clock: Clock,
   ) {}
@@ -135,6 +164,12 @@ export class BuildUserHealthContextService {
       await this.nutritionProfileRepository.findActiveByUserProfileId(
         userProfile.id,
       );
+    const recoverySnapshot =
+      await this.resolveRecoverySnapshot({
+        authUserId,
+        userProfileId: userProfile.id,
+        fitnessProfileId: fitnessProfile?.id,
+      });
 
     const contextWithoutTrainingPlan: UserHealthContext = {
       ...baseContext,
@@ -156,8 +191,18 @@ export class BuildUserHealthContextService {
             muscleSoreness: latestCheckIn.muscleSoreness,
             motivationLevel: latestCheckIn.motivationLevel,
             createdAt: latestCheckIn.createdAt,
-          }
+        }
         : undefined,
+      recoverySnapshot: recoverySnapshot
+        ? this.mapRecoverySnapshot(recoverySnapshot)
+        : undefined,
+      readinessScore: recoverySnapshot?.readinessScore,
+      fatigueScore: recoverySnapshot?.fatigueScore,
+      recoveryInfluences: recoverySnapshot?.influences ?? [],
+      recoveryTrend: recoverySnapshot
+        ? this.mapRecoveryTrend(recoverySnapshot.recoveryTrend)
+        : undefined,
+      recommendedIntensity: recoverySnapshot?.recommendedIntensity,
       nutritionProfile: nutritionProfile
         ? {
             goal: nutritionProfile.goal,
@@ -215,14 +260,16 @@ export class BuildUserHealthContextService {
         workoutsCompleted,
         weeklyFrequency,
       }),
-      fatigueLevel: this.calculateFatigueLevel({
-        currentStreak:
-          workoutsCompleted === 0 ? 0 : calculateStreak(recentWorkoutLogs),
-        weeklyFrequency,
-        averageWorkoutDuration,
-        recentLogsCount: recentWorkoutLogs.length,
-        latestCheckIn: contextWithoutTrainingPlan.latestCheckIn,
-      }),
+      fatigueLevel: recoverySnapshot
+        ? this.mapFatigueLevel(recoverySnapshot.fatigueScore)
+        : this.calculateFatigueLevel({
+            currentStreak:
+              workoutsCompleted === 0 ? 0 : calculateStreak(recentWorkoutLogs),
+            weeklyFrequency,
+            averageWorkoutDuration,
+            recentLogsCount: recentWorkoutLogs.length,
+            latestCheckIn: contextWithoutTrainingPlan.latestCheckIn,
+          }),
     };
   }
 
@@ -342,6 +389,75 @@ export class BuildUserHealthContextService {
     }
 
     return 'MODERATE';
+  }
+
+  private mapFatigueLevel(fatigueScore: number): FatigueLevel {
+    if (fatigueScore >= 70) {
+      return 'HIGH';
+    }
+
+    if (fatigueScore >= 40) {
+      return 'MODERATE';
+    }
+
+    return 'LOW';
+  }
+
+  private mapRecoveryTrend(
+    recoveryTrend: RecoverySnapshot['recoveryTrend'],
+  ): 'improving' | 'stable' | 'needs_recovery' {
+    switch (recoveryTrend) {
+      case 'declining':
+        return 'needs_recovery';
+      case 'improving':
+      case 'stable':
+      default:
+        return recoveryTrend;
+    }
+  }
+
+  private mapRecoverySnapshot(
+    snapshot: RecoverySnapshot,
+  ): UserHealthContextRecoverySnapshot {
+    return {
+      date: snapshot.date,
+      readinessScore: snapshot.readinessScore,
+      fatigueScore: snapshot.fatigueScore,
+      recoveryTrend: snapshot.recoveryTrend,
+      recommendedIntensity: snapshot.recommendedIntensity,
+      influences: snapshot.influences,
+      formulaVersion: snapshot.formulaVersion,
+      createdAt: snapshot.createdAt,
+    };
+  }
+
+  private async resolveRecoverySnapshot(input: {
+    authUserId: string;
+    userProfileId: string;
+    fitnessProfileId?: string;
+  }): Promise<RecoverySnapshot | null> {
+    const existingSnapshot =
+      await this.recoverySnapshotRepository.findLatestByUserProfileId(
+        input.userProfileId,
+      );
+
+    if (existingSnapshot) {
+      return existingSnapshot;
+    }
+
+    if (!input.fitnessProfileId) {
+      return null;
+    }
+
+    try {
+      const result = await this.buildRecoverySnapshotUseCase.execute({
+        authUserId: input.authUserId,
+      });
+
+      return result.recoverySnapshot;
+    } catch {
+      return null;
+    }
   }
 
   private getTodayWorkout(

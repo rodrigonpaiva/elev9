@@ -70,6 +70,10 @@ export class GenerateCoachFeedbackUseCase {
         hasTrainingPlan: Boolean(healthContext.activeTrainingPlanId),
         fatigueLevel: healthContext.fatigueLevel,
         latestCheckIn: healthContext.latestCheckIn,
+        readinessScore: healthContext.readinessScore,
+        fatigueScore: healthContext.fatigueScore,
+        recoveryInfluences: healthContext.recoveryInfluences,
+        recommendedIntensity: healthContext.recommendedIntensity,
         nutritionProfile: healthContext.nutritionProfile,
       });
 
@@ -120,6 +124,25 @@ export class GenerateCoachFeedbackUseCase {
     hasTrainingPlan?: boolean;
     fatigueLevel?: 'LOW' | 'MODERATE' | 'HIGH';
     recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
+    readinessScore?: number;
+    fatigueScore?: number;
+    recoveryInfluences?: Array<{
+      code:
+        | 'LOW_SLEEP'
+        | 'LOW_ENERGY'
+        | 'HIGH_MUSCLE_SORENESS'
+        | 'HIGH_ADHERENCE'
+        | 'LOW_ADHERENCE'
+        | 'HIGH_WORKOUT_LOAD'
+        | 'RECENT_WORKOUT_COMPLETION'
+        | 'LONG_STREAK'
+        | 'MISSED_WORKOUTS';
+      label: string;
+      impact: 'positive' | 'negative' | 'neutral';
+      weight?: number;
+      value?: number;
+    }>;
+    recommendedIntensity?: 'recovery' | 'light' | 'moderate' | 'hard';
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -144,7 +167,19 @@ export class GenerateCoachFeedbackUseCase {
       activityLevel: healthContext.activityLevel,
       hasTrainingPlan: Boolean(healthContext.activeTrainingPlanId),
       fatigueLevel: healthContext.fatigueLevel,
-      recoveryTrend: this.resolveRecoveryTrend(healthContext.fatigueLevel),
+      recoveryTrend:
+        healthContext.recoveryTrend ??
+        this.resolveRecoveryTrendFromFatigueLevel(healthContext.fatigueLevel),
+      readinessScore: healthContext.readinessScore,
+      fatigueScore: healthContext.fatigueScore,
+      recoveryInfluences: healthContext.recoveryInfluences?.map((influence) => ({
+        code: influence.code,
+        label: influence.label,
+        impact: influence.impact,
+        weight: influence.weight,
+        value: influence.value,
+      })),
+      recommendedIntensity: healthContext.recommendedIntensity,
       weeklyFrequency: healthContext.weeklyFrequency,
       currentStreak: healthContext.currentStreak,
       averageWorkoutDuration: healthContext.averageWorkoutDuration,
@@ -170,7 +205,7 @@ export class GenerateCoachFeedbackUseCase {
     };
   }
 
-  private resolveRecoveryTrend(
+  private resolveRecoveryTrendFromFatigueLevel(
     fatigueLevel: 'LOW' | 'MODERATE' | 'HIGH',
   ): 'improving' | 'stable' | 'needs_recovery' {
     switch (fatigueLevel) {

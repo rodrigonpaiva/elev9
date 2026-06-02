@@ -18,9 +18,7 @@ export class CoachChatReplyGenerator {
       normalizedMessage.includes('workout') ||
       normalizedMessage.includes('session');
     const latestCheckIn = input.healthContext.latestCheckIn;
-    const recoveryTrend = this.resolveRecoveryTrend(
-      input.healthContext.fatigueLevel,
-    );
+    const recoveryTrend = this.resolveRecoveryTrend(input.healthContext);
     const hasLowSleep = latestCheckIn ? latestCheckIn.sleepQuality <= 2 : false;
     const hasHighSoreness = latestCheckIn
       ? latestCheckIn.muscleSoreness >= 4
@@ -65,9 +63,13 @@ export class CoachChatReplyGenerator {
   }
 
   private resolveRecoveryTrend(
-    fatigueLevel: UserHealthContext['fatigueLevel'],
+    healthContext: Pick<UserHealthContext, 'fatigueLevel' | 'recoveryTrend'>,
   ): 'improving' | 'stable' | 'needs_recovery' {
-    switch (fatigueLevel) {
+    if (healthContext.recoveryTrend) {
+      return healthContext.recoveryTrend;
+    }
+
+    switch (healthContext.fatigueLevel) {
       case 'LOW':
         return 'improving';
       case 'HIGH':

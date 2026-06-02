@@ -81,6 +81,80 @@ describe('CoachFeedbackGenerator', () => {
     );
   });
 
+  it('reduces intensity when readiness is low even if fatigue is not HIGH', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 40,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-03', 38),
+        buildWorkoutLog('2026-05-04', 42),
+      ],
+      hasTrainingPlan: true,
+      readinessScore: 32,
+      fatigueScore: 58,
+      recommendedIntensity: 'recovery',
+      recoveryInfluences: [
+        {
+          code: 'LOW_SLEEP',
+          label: 'Sleep is limiting recovery.',
+          impact: 'negative',
+        },
+      ],
+    });
+
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'recovery:low_readiness',
+        'recovery:recommended_recovery',
+        'recovery:low_sleep',
+      ]),
+    );
+    expect(result.recommendations).toContain(
+      'Prioritize recovery before pushing intensity',
+    );
+  });
+
+  it('supports stronger training guidance when readiness is high', () => {
+    const result = generator.generate({
+      goal: 'gain_muscle',
+      activityLevel: 'high',
+      expectedWorkouts: 4,
+      currentStreak: 4,
+      averageDurationMinutes: 58,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-01', 50),
+        buildWorkoutLog('2026-05-02', 60),
+        buildWorkoutLog('2026-05-03', 65),
+        buildWorkoutLog('2026-05-04', 55),
+      ],
+      hasTrainingPlan: true,
+      readinessScore: 88,
+      fatigueScore: 24,
+      recommendedIntensity: 'hard',
+      recoveryInfluences: [
+        {
+          code: 'HIGH_ADHERENCE',
+          label: 'Adherence is strong.',
+          impact: 'positive',
+        },
+      ],
+    });
+
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'recovery:high_readiness',
+        'recovery:recommended_hard',
+        'recovery:high_adherence',
+      ]),
+    );
+    expect(result.insights).toContain(
+      'Your readiness looks strong for a more demanding session',
+    );
+  });
+
   it('keeps balanced recovery messaging when fatigueLevel is MODERATE', () => {
     const result = generator.generate({
       goal: 'maintain',

@@ -14,12 +14,28 @@ export class DashboardAdaptiveSignalsService {
       muscleSoreness: number;
     }>,
   ): GetHomeDashboardOutput['dashboard']['recovery'] {
+    const recoverySnapshot = healthContext.recoverySnapshot;
+    const recoveryTrend = recoverySnapshot
+      ? this.mapRecoveryTrendFromSnapshot(recoverySnapshot.recoveryTrend)
+      : this.calculateRecoveryTrend(recentDailyCheckIns);
+    const fatigueLevel = recoverySnapshot
+      ? this.mapFatigueLevelFromScore(recoverySnapshot.fatigueScore)
+      : healthContext.fatigueLevel;
+    const recommendedIntensity = recoverySnapshot
+      ? this.mapRecommendedIntensityFromSnapshot(
+          recoverySnapshot.recommendedIntensity,
+        )
+      : this.mapRecommendedIntensity(fatigueLevel);
+
     return {
-      fatigueLevel: healthContext.fatigueLevel,
-      recommendedIntensity: this.mapRecommendedIntensity(
-        healthContext.fatigueLevel,
+      fatigueLevel,
+      recommendedIntensity,
+      recoveryTrend,
+      readinessScore: recoverySnapshot?.readinessScore,
+      fatigueScore: recoverySnapshot?.fatigueScore,
+      recoveryInfluences: recoverySnapshot?.influences.map((influence) =>
+        typeof influence.toJSON === 'function' ? influence.toJSON() : influence,
       ),
-      recoveryTrend: this.calculateRecoveryTrend(recentDailyCheckIns),
       latestCheckIn: healthContext.latestCheckIn
         ? {
             energyLevel: healthContext.latestCheckIn.energyLevel,
@@ -135,6 +151,9 @@ export class DashboardAdaptiveSignalsService {
           healthContext,
           recovery.recoveryTrend,
         ),
+        readinessScore: recovery.readinessScore,
+        fatigueScore: recovery.fatigueScore,
+        recoveryInfluences: recovery.recoveryInfluences,
       },
       nutrition: {
         priority: nutritionGuidance.priority,
@@ -152,6 +171,7 @@ export class DashboardAdaptiveSignalsService {
     const hasHighSoreness = latestCheckIn
       ? latestCheckIn.muscleSoreness >= 4
       : false;
+    const recoverySnapshotSignals = healthContext.recoveryInfluences ?? [];
 
     return this.collectSignals([
       healthContext.fatigueLevel === 'HIGH' ? 'high_fatigue' : null,
@@ -159,6 +179,7 @@ export class DashboardAdaptiveSignalsService {
       hasHighSoreness ? 'high_soreness' : null,
       recoveryTrend === 'needs_recovery' ? 'needs_recovery_trend' : null,
       recoveryTrend === 'improving' ? 'improving_recovery' : null,
+      ...recoverySnapshotSignals.map((influence) => influence.code),
     ]);
   }
 
@@ -178,6 +199,46 @@ export class DashboardAdaptiveSignalsService {
       default:
         return 'medium';
     }
+  }
+
+  private mapRecommendedIntensityFromSnapshot(
+    recommendedIntensity: Exclude<
+      GetHomeDashboardOutput['dashboard']['recovery']['recommendedIntensity'],
+      undefined
+    > | 'recovery' | 'light' | 'moderate' | 'hard',
+  ): GetHomeDashboardOutput['dashboard']['recovery']['recommendedIntensity'] {
+    switch (recommendedIntensity) {
+      case 'recovery':
+      case 'light':
+        return 'low';
+      case 'moderate':
+        return 'medium';
+      case 'hard':
+      default:
+        return 'normal';
+    }
+  }
+
+  private mapFatigueLevelFromScore(
+    fatigueScore: number,
+  ): GetHomeDashboardOutput['dashboard']['recovery']['fatigueLevel'] {
+    if (fatigueScore >= 70) {
+      return 'HIGH';
+    }
+
+    if (fatigueScore >= 40) {
+      return 'MODERATE';
+    }
+
+    return 'LOW';
+  }
+
+  private mapRecoveryTrendFromSnapshot(
+    recoveryTrend: 'improving' | 'stable' | 'declining',
+  ): GetHomeDashboardOutput['dashboard']['recovery']['recoveryTrend'] {
+    return recoveryTrend === 'declining'
+      ? 'needs_recovery'
+      : recoveryTrend;
   }
 
   private calculateRecoveryTrend(

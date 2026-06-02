@@ -37,6 +37,7 @@ import {
   UserProfileSchema,
 } from '../users/infrastructure/mongoose/user-profile.schema';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
+import { RecoveryModule } from '../recovery/recovery.module';
 import { DashboardAdaptiveSignalsService } from './application/services/dashboard-adaptive-signals/dashboard-adaptive-signals.service';
 import { GetHomeDashboardDebugUseCase } from './application/use-cases/get-home-dashboard-debug/get-home-dashboard-debug.use-case';
 import { GetHomeDashboardUseCase } from './application/use-cases/get-home-dashboard/get-home-dashboard.use-case';
@@ -45,6 +46,7 @@ import { DashboardController } from './presentation/http/dashboard.controller';
 @Module({
   imports: [
     AuthModule,
+    RecoveryModule,
     NutritionModule,
     MongooseModule.forFeature([
       {

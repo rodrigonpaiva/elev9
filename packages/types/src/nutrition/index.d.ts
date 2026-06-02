@@ -63,20 +63,16 @@ export type NutritionPlan = {
     updatedAt?: string;
     replacedAt?: string;
 };
-export type MacroProgress = {
-    target: number;
-    actual: number;
-    remaining: number;
-    percent: number;
-};
 export type NutritionProgress = {
-    calories: MacroProgress;
-    protein: MacroProgress;
-    carbs: MacroProgress;
-    fats: MacroProgress;
-    mealsLogged: number;
-    totalMeals: number;
-    adherenceScore: number;
+    consumedCalories: number;
+    consumedProteinGrams: number;
+    consumedCarbsGrams: number;
+    consumedFatGrams: number;
+    targetCalories: number;
+    targetProteinGrams: number;
+    targetCarbsGrams: number;
+    targetFatGrams: number;
+    adherencePercentage: number;
 };
 export type NutritionLog = {
     id: string;
@@ -84,9 +80,9 @@ export type NutritionLog = {
     nutritionPlanId: string;
     mealId: string;
     date: string;
+    mealType: MealType;
     status: MealLogStatus;
-    plannedMacros: MacroTargets;
-    actualMacros: MacroTargets;
+    actualMacros?: MacroTargets;
     createdAt: string;
     updatedAt: string;
 };
@@ -94,16 +90,11 @@ export type TodayNutrition = {
     date: string;
     macroTargets: MacroTargets;
     meals: Meal[];
-    logs: NutritionLog[];
     progress: NutritionProgress;
     nextMeal: Meal | null;
-    nutritionFocus: {
-        priority: 'recovery' | 'consistency' | 'performance';
-        message: string;
-        signals: string[];
-    };
+    nutritionFocus: string;
 };
-export type NutritionInfluence = 'goal:fat_loss' | 'goal:maintenance' | 'goal:muscle_gain' | 'adherence:low' | 'adherence:good' | 'training:today' | 'training:intensity_high' | 'recovery:high_fatigue' | 'nutrition:protein_low' | 'nutrition:meals_skipped';
+export type NutritionInfluence = 'LOW_CALORIE_ADHERENCE' | 'PROTEIN_TARGET_MISSED' | 'SKIPPED_MEALS' | 'PARTIAL_MEALS' | 'MUSCLE_GAIN_SURPLUS_FOCUS' | 'FAT_LOSS_DEFICIT_FOCUS' | 'MAINTENANCE_CONSISTENCY_FOCUS' | 'NO_LOGS_YET';
 export type NutritionContextSnapshot = {
     goal?: NutritionGoal;
     adherenceScore?: number;
@@ -128,11 +119,14 @@ export type NutritionContextSnapshot = {
     };
 };
 export type NutritionRecommendation = {
+    id?: string;
+    userProfileId?: string;
     message: string;
     recommendations: string[];
     influences: NutritionInfluence[];
     generatorVersion: string;
     contextSnapshot: NutritionContextSnapshot;
+    createdAt?: string;
 };
 export type CalculateMacroTargetsResponse = {
     macroTargets: MacroTargets & {
@@ -164,10 +158,16 @@ export type ReplaceMealResponse = {
 };
 export type LogMealRequest = {
     mealId: string;
+    date?: string;
     status: MealLogStatus;
     actualMacros?: MacroTargets;
 };
 export type LogMealResponse = {
     nutritionLog: NutritionLog;
 };
-export type GenerateNutritionRecommendationResponse = NutritionRecommendation;
+export type GenerateNutritionRecommendationResponse = {
+    nutritionRecommendation: NutritionRecommendation;
+};
+export type GetNutritionRecommendationsResponse = {
+    recommendations: NutritionRecommendation[];
+};
