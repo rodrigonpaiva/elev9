@@ -4,6 +4,7 @@ import { CoachDecisionCalculatorService } from '../../services/coach-decision-ca
 import { CoachDecisionDateService } from '../../services/coach-decision-date.service';
 import { BuildCoachDecisionUseCase } from './build-coach-decision.use-case';
 import { GetCurrentRecoveryUseCase } from '../../../../recovery/application/use-cases/get-current-recovery/get-current-recovery.use-case';
+import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
 import { GetCurrentAdaptiveTrainingUseCase } from '../../../../training/application/use-cases/get-current-adaptive-training/get-current-adaptive-training.use-case';
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
 import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
@@ -19,6 +20,7 @@ describe('BuildCoachDecisionUseCase', () => {
   let nutritionRecommendationRepository: jest.Mocked<NutritionRecommendationRepository>;
   let coachDecisionRepository: jest.Mocked<CoachDecisionRepository>;
   let getCurrentRecoveryUseCase: jest.Mocked<GetCurrentRecoveryUseCase>;
+  let getCurrentGoalUseCase: jest.Mocked<GetCurrentGoalUseCase>;
   let getCurrentAdaptiveTrainingUseCase: jest.Mocked<GetCurrentAdaptiveTrainingUseCase>;
   let useCase: BuildCoachDecisionUseCase;
 
@@ -45,6 +47,9 @@ describe('BuildCoachDecisionUseCase', () => {
     getCurrentRecoveryUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCurrentRecoveryUseCase>;
+    getCurrentGoalUseCase = {
+      execute: jest.fn(),
+    } as unknown as jest.Mocked<GetCurrentGoalUseCase>;
     getCurrentAdaptiveTrainingUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCurrentAdaptiveTrainingUseCase>;
@@ -60,6 +65,7 @@ describe('BuildCoachDecisionUseCase', () => {
       nutritionRecommendationRepository,
       coachDecisionRepository,
       getCurrentRecoveryUseCase,
+      getCurrentGoalUseCase,
       getCurrentAdaptiveTrainingUseCase,
       calculator,
       dateService,
@@ -227,6 +233,65 @@ describe('BuildCoachDecisionUseCase', () => {
     expect(coachDecisionRepository.upsertDailyDecision).toHaveBeenCalledWith(
       expect.objectContaining({
         priority: 'recovery',
+      }),
+    );
+  });
+
+  it('uses goal signals to influence priority and source context when no crisis exists', async () => {
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
+    fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(
+      buildFitnessProfile(),
+    );
+    trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
+      buildTrainingPlan(),
+    );
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
+    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
+      [],
+    );
+    getCurrentRecoveryUseCase.execute.mockResolvedValue({
+      recoverySnapshot: buildRecoverySnapshot({ readinessScore: 72 }),
+    } as never);
+    getCurrentGoalUseCase.execute.mockResolvedValue({
+      goal: {
+        id: 'goal_123',
+        type: 'gain_muscle',
+        status: { value: 'active' },
+      },
+      progressSnapshot: {
+        progressPercentage: 48,
+        trend: { value: 'declining' },
+      },
+      forecast: {
+        confidence: { value: 'medium' },
+      },
+    } as never);
+    getCurrentAdaptiveTrainingUseCase.execute.mockResolvedValue({
+      adaptiveTrainingRecommendation: undefined,
+    } as never);
+    coachDecisionRepository.upsertDailyDecision.mockResolvedValue(
+      buildDecision(),
+    );
+
+    await useCase.execute({
+      authUserId: 'auth_123',
+    });
+
+    expect(coachDecisionRepository.upsertDailyDecision).toHaveBeenCalledWith(
+      expect.objectContaining({
+        priority: 'consistency',
+        sourceContext: expect.objectContaining({
+          goalId: 'goal_123',
+          goalType: 'gain_muscle',
+          goalProgressPercentage: 48,
+          goalTrend: 'declining',
+          goalForecastConfidence: 'medium',
+          goalMilestoneClose: false,
+          goalAchievementReached: false,
+        }),
       }),
     );
   });

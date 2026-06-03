@@ -79,7 +79,9 @@ export class GenerateCoachFeedbackUseCase {
         recommendedIntensity: healthContext.recommendedIntensity,
         adaptiveTrainingRecommendation:
           healthContext.adaptiveTrainingRecommendation,
-        coachDecision,
+        coachDecision: coachDecision as Parameters<
+          CoachFeedbackGenerator['generate']
+        >[0]['coachDecision'],
         nutritionProfile: healthContext.nutritionProfile,
       });
 
@@ -136,19 +138,7 @@ export class GenerateCoachFeedbackUseCase {
       summary: string;
       actionItems: string[];
       influences: Array<{
-        code:
-          | 'LOW_READINESS'
-          | 'HIGH_FATIGUE'
-          | 'LOW_NUTRITION_ADHERENCE'
-          | 'HIGH_NUTRITION_ADHERENCE'
-          | 'REST_DAY_RECOMMENDED'
-          | 'RECOVERY_WORKOUT_RECOMMENDED'
-          | 'INCREASE_INTENSITY_RECOMMENDED'
-          | 'DECREASE_INTENSITY_RECOMMENDED'
-          | 'LOW_TRAINING_ADHERENCE'
-          | 'LONG_STREAK'
-          | 'NO_RECENT_ACTIVITY'
-          | 'GOOD_CONSISTENCY';
+        code: string;
         label: string;
         impact: 'positive' | 'negative' | 'neutral';
         source:
@@ -260,19 +250,7 @@ export class GenerateCoachFeedbackUseCase {
     coachDecisionSummary?: string;
     coachDecisionActionItems?: string[];
     coachDecisionInfluences?: Array<{
-      code:
-        | 'LOW_READINESS'
-        | 'HIGH_FATIGUE'
-        | 'LOW_NUTRITION_ADHERENCE'
-        | 'HIGH_NUTRITION_ADHERENCE'
-        | 'REST_DAY_RECOMMENDED'
-        | 'RECOVERY_WORKOUT_RECOMMENDED'
-        | 'INCREASE_INTENSITY_RECOMMENDED'
-        | 'DECREASE_INTENSITY_RECOMMENDED'
-        | 'LOW_TRAINING_ADHERENCE'
-        | 'LONG_STREAK'
-        | 'NO_RECENT_ACTIVITY'
-        | 'GOOD_CONSISTENCY';
+      code: string;
       label: string;
       impact: 'positive' | 'negative' | 'neutral';
       source:

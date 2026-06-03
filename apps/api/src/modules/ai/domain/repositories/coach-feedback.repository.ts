@@ -56,19 +56,7 @@ export interface CreateCoachFeedbackRepositoryInput {
     coachDecisionSummary?: string;
     coachDecisionActionItems?: string[];
     coachDecisionInfluences?: Array<{
-      code:
-        | 'LOW_READINESS'
-        | 'HIGH_FATIGUE'
-        | 'LOW_NUTRITION_ADHERENCE'
-        | 'HIGH_NUTRITION_ADHERENCE'
-        | 'REST_DAY_RECOMMENDED'
-        | 'RECOVERY_WORKOUT_RECOMMENDED'
-        | 'INCREASE_INTENSITY_RECOMMENDED'
-        | 'DECREASE_INTENSITY_RECOMMENDED'
-        | 'LOW_TRAINING_ADHERENCE'
-        | 'LONG_STREAK'
-        | 'NO_RECENT_ACTIVITY'
-        | 'GOOD_CONSISTENCY';
+      code: string;
       label: string;
       impact: 'positive' | 'negative' | 'neutral';
       source:

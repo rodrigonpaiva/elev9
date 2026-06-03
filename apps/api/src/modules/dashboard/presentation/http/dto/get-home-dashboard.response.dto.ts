@@ -2,6 +2,12 @@ import {
   TrainingPlanExercise,
   TrainingPlanIntensity,
 } from '../../../../training/domain/entities/training-plan.entity';
+import {
+  GoalContract,
+  GoalForecastContract,
+  GoalMilestoneContract,
+  GoalProgressSnapshotContract,
+} from '../../../../goals/domain/goals.contract';
 
 export class GetHomeDashboardResponseDto {
   dashboard!: {
@@ -24,6 +30,12 @@ export class GetHomeDashboardResponseDto {
         exercises: TrainingPlanExercise[];
       } | null;
     } | null;
+    goal?: {
+      current: GoalContract;
+      progressSnapshot?: GoalProgressSnapshotContract;
+      forecast?: GoalForecastContract;
+      milestones?: GoalMilestoneContract[];
+    };
     progressSummary: {
       period: 'week';
       workoutsCompleted: number;

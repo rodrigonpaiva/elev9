@@ -33,6 +33,7 @@ import {
   REPLAY_COACH_DECISION_ERROR_CODES,
   ReplayCoachDecisionError,
 } from '../../application/use-cases/replay-coach-decision/replay-coach-decision.errors';
+import { CoachDecisionRecalculatedResult } from '../../application/use-cases/replay-coach-decision/replay-coach-decision.output';
 import { ReplayCoachDecisionUseCase } from '../../application/use-cases/replay-coach-decision/replay-coach-decision.use-case';
 import { GetCoachDecisionHistoryQueryDto } from './dto/get-coach-decision-history.query.dto';
 import { GetCoachDecisionHistoryResponseDto } from './dto/get-coach-decision-history.response.dto';
@@ -273,23 +274,26 @@ export class CoachDecisionController {
 }
 
 function mapRecalculatedCoachDecision(
-  coachDecision: CoachDecisionRecalculatedResultResponse,
+  coachDecision: CoachDecisionRecalculatedResult,
 ): CoachDecisionRecalculatedResultResponse {
-  return {
-    priority: coachDecision.priority,
-    headline: coachDecision.headline,
-    summary: coachDecision.summary,
-    actionItems: [...coachDecision.actionItems],
-    influences: coachDecision.influences.map((influence) => ({
-      code: influence.code,
+  const influences =
+    coachDecision.influences.map((influence) => ({
+      code: influence.code as CoachDecisionRecalculatedResultResponse['influences'][number]['code'],
       label: influence.label,
       impact: influence.impact,
       source: influence.source,
       weight: influence.weight,
       value: influence.value,
-    })),
+    })) as CoachDecisionRecalculatedResultResponse['influences'];
+
+  return {
+    priority: coachDecision.priority,
+    headline: coachDecision.headline,
+    summary: coachDecision.summary,
+    actionItems: [...coachDecision.actionItems],
+    influences,
     formulaVersion: coachDecision.formulaVersion,
-  };
+  } as CoachDecisionRecalculatedResultResponse;
 }
 
 function mapCoachDecision(coachDecision: {
@@ -304,19 +308,7 @@ function mapCoachDecision(coachDecision: {
   summary: string;
   actionItems: string[];
   influences: Array<{
-    code:
-      | 'LOW_READINESS'
-      | 'HIGH_FATIGUE'
-      | 'LOW_NUTRITION_ADHERENCE'
-      | 'HIGH_NUTRITION_ADHERENCE'
-      | 'REST_DAY_RECOMMENDED'
-      | 'RECOVERY_WORKOUT_RECOMMENDED'
-      | 'INCREASE_INTENSITY_RECOMMENDED'
-      | 'DECREASE_INTENSITY_RECOMMENDED'
-      | 'LOW_TRAINING_ADHERENCE'
-      | 'LONG_STREAK'
-      | 'NO_RECENT_ACTIVITY'
-      | 'GOOD_CONSISTENCY';
+    code: string;
     label: string;
     impact: 'positive' | 'negative' | 'neutral';
     source: 'recovery' | 'nutrition' | 'training' | 'progress' | 'memory';
@@ -348,7 +340,7 @@ function mapCoachDecision(coachDecision: {
     summary: coachDecision.summary,
     actionItems: [...coachDecision.actionItems],
     influences: coachDecision.influences.map((influence) => ({
-      code: influence.code,
+      code: influence.code as CoachDecisionResponse['influences'][number]['code'],
       label: influence.label,
       impact: influence.impact,
       source: influence.source,

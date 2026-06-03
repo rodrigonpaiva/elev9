@@ -54,7 +54,7 @@ export class DashboardController {
       });
 
       return {
-        dashboard: result.dashboard,
+        dashboard: result.dashboard as GetHomeDashboardResponseDto['dashboard'],
       };
     } catch (error) {
       this.handleError(error);
@@ -70,9 +70,9 @@ export class DashboardController {
     @Body() _body: GetHomeDashboardBodyDto,
   ): Promise<GetHomeDashboardDebugResponseDto> {
     try {
-      return await this.getHomeDashboardDebugUseCase.execute({
+      return (await this.getHomeDashboardDebugUseCase.execute({
         authUserId: request.authUser?.id ?? '',
-      });
+      })) as GetHomeDashboardDebugResponseDto;
     } catch (error) {
       this.handleError(error);
     }

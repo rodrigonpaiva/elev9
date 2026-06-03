@@ -1,16 +1,4 @@
-export type CoachDecisionInfluenceCode =
-  | 'LOW_READINESS'
-  | 'HIGH_FATIGUE'
-  | 'LOW_NUTRITION_ADHERENCE'
-  | 'HIGH_NUTRITION_ADHERENCE'
-  | 'REST_DAY_RECOMMENDED'
-  | 'RECOVERY_WORKOUT_RECOMMENDED'
-  | 'INCREASE_INTENSITY_RECOMMENDED'
-  | 'DECREASE_INTENSITY_RECOMMENDED'
-  | 'LOW_TRAINING_ADHERENCE'
-  | 'LONG_STREAK'
-  | 'NO_RECENT_ACTIVITY'
-  | 'GOOD_CONSISTENCY';
+export type CoachDecisionInfluenceCode = string;
 
 export type CoachDecisionInfluenceImpact = 'positive' | 'negative' | 'neutral';
 

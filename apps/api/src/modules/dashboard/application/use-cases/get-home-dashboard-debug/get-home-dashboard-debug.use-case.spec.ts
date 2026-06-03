@@ -1,4 +1,6 @@
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
+import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
+import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
 import { DailyCheckIn } from '../../../../progress/domain/entities/daily-check-in.entity';
 import { DailyCheckInRepository } from '../../../../progress/domain/repositories/daily-check-in.repository';
 import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
@@ -11,6 +13,12 @@ describe('GetHomeDashboardDebugUseCase', () => {
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let buildUserHealthContextService: {
     build: jest.MockedFunction<BuildUserHealthContextService['build']>;
+  };
+  let getCurrentGoalUseCase: {
+    execute: jest.MockedFunction<GetCurrentGoalUseCase['execute']>;
+  };
+  let getGoalMilestonesUseCase: {
+    execute: jest.MockedFunction<GetGoalMilestonesUseCase['execute']>;
   };
   let dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService;
   let useCase: GetHomeDashboardDebugUseCase;
@@ -51,12 +59,20 @@ describe('GetHomeDashboardDebugUseCase', () => {
         },
       }),
     };
+    getCurrentGoalUseCase = {
+      execute: jest.fn(),
+    };
+    getGoalMilestonesUseCase = {
+      execute: jest.fn(),
+    };
     dashboardAdaptiveSignalsService = new DashboardAdaptiveSignalsService();
 
     useCase = new GetHomeDashboardDebugUseCase(
       userProfileRepository,
       dailyCheckInRepository,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
+      getCurrentGoalUseCase as unknown as GetCurrentGoalUseCase,
+      getGoalMilestonesUseCase as unknown as GetGoalMilestonesUseCase,
       dashboardAdaptiveSignalsService,
     );
   });

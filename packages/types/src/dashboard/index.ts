@@ -2,6 +2,12 @@ import {
   FitnessProfileActivityLevel,
   FitnessProfileGoal,
 } from '../fitness';
+import {
+  Goal,
+  GoalForecast,
+  GoalMilestone,
+  GoalProgressSnapshot,
+} from '../goals';
 import { CoachDecisionInfluence, CoachDecisionPriority } from '../ai';
 import {
   AdaptiveRecommendedIntensity,
@@ -70,6 +76,12 @@ export type DashboardHomeResponse = {
         }>;
       } | null;
     } | null;
+    goal?: {
+      current: Goal;
+      progressSnapshot?: GoalProgressSnapshot;
+      forecast?: GoalForecast;
+      milestones?: GoalMilestone[];
+    };
     progressSummary: {
       period: 'week';
       workoutsCompleted: number;

@@ -21,6 +21,11 @@ export type CoachDecisionCalculatorInput = {
   adaptiveIntensity?: string;
   currentStreak?: number;
   missedWorkouts?: number;
+  goalProgressPercentage?: number;
+  goalTrend?: 'improving' | 'stable' | 'declining';
+  goalForecastConfidence?: 'low' | 'medium' | 'high';
+  goalMilestoneClose?: boolean;
+  goalAchievementReached?: boolean;
 };
 
 export type CoachDecisionCalculatorOutput = {
@@ -40,6 +45,11 @@ type ResolvedInput = {
   adaptiveIntensity?: string;
   currentStreak: number;
   missedWorkouts: number;
+  goalProgressPercentage: number;
+  goalTrend?: 'improving' | 'stable' | 'declining';
+  goalForecastConfidence?: 'low' | 'medium' | 'high';
+  goalMilestoneClose: boolean;
+  goalAchievementReached: boolean;
   hasReadinessScore: boolean;
   hasFatigueScore: boolean;
   hasNutritionAdherence: boolean;
@@ -47,6 +57,11 @@ type ResolvedInput = {
   hasMissedWorkouts: boolean;
   hasAdaptiveRecommendationType: boolean;
   hasAdaptiveIntensity: boolean;
+  hasGoalProgressPercentage: boolean;
+  hasGoalTrend: boolean;
+  hasGoalForecastConfidence: boolean;
+  hasGoalMilestoneClose: boolean;
+  hasGoalAchievementReached: boolean;
 };
 
 @Injectable()
@@ -82,6 +97,11 @@ export class CoachDecisionCalculatorService {
       adaptiveIntensity: input.adaptiveIntensity?.trim() || undefined,
       currentStreak: this.resolveNonNegativeInteger(input.currentStreak),
       missedWorkouts: this.resolveNonNegativeInteger(input.missedWorkouts),
+      goalProgressPercentage: this.resolveScore(input.goalProgressPercentage, 0),
+      goalTrend: input.goalTrend,
+      goalForecastConfidence: input.goalForecastConfidence,
+      goalMilestoneClose: Boolean(input.goalMilestoneClose),
+      goalAchievementReached: Boolean(input.goalAchievementReached),
       hasReadinessScore: typeof input.readinessScore === 'number',
       hasFatigueScore: typeof input.fatigueScore === 'number',
       hasNutritionAdherence: typeof input.nutritionAdherence === 'number',
@@ -93,6 +113,19 @@ export class CoachDecisionCalculatorService {
       hasAdaptiveIntensity:
         typeof input.adaptiveIntensity === 'string' &&
         input.adaptiveIntensity.trim().length > 0,
+      hasGoalProgressPercentage:
+        typeof input.goalProgressPercentage === 'number',
+      hasGoalTrend:
+        input.goalTrend === 'improving' ||
+        input.goalTrend === 'stable' ||
+        input.goalTrend === 'declining',
+      hasGoalForecastConfidence:
+        input.goalForecastConfidence === 'low' ||
+        input.goalForecastConfidence === 'medium' ||
+        input.goalForecastConfidence === 'high',
+      hasGoalMilestoneClose: typeof input.goalMilestoneClose === 'boolean',
+      hasGoalAchievementReached:
+        typeof input.goalAchievementReached === 'boolean',
     };
   }
 
@@ -112,6 +145,22 @@ export class CoachDecisionCalculatorService {
 
     if (this.isTrainingSignal(input.adaptiveRecommendationType)) {
       return 'training';
+    }
+
+    if (input.goalAchievementReached || input.goalMilestoneClose) {
+      return 'motivation';
+    }
+
+    if (input.goalTrend === 'declining') {
+      return 'consistency';
+    }
+
+    if (input.goalForecastConfidence === 'low') {
+      if (input.currentStreak >= 3 && input.missedWorkouts === 0) {
+        return 'motivation';
+      }
+
+      return 'consistency';
     }
 
     if (
@@ -177,9 +226,25 @@ export class CoachDecisionCalculatorService {
       case 'training':
         return 'Training can be adapted today using the current recommendation.';
       case 'consistency':
+        if (input.goalTrend === 'declining') {
+          return 'Goal progress is slowing, so consistency should be reinforced today.';
+        }
+
+        if (input.goalForecastConfidence === 'low') {
+          return 'Goal forecasting is uncertain, so keep your routine steady today.';
+        }
+
         return 'Recent activity shows a consistency gap that should be closed today.';
       case 'motivation':
       default:
+        if (input.goalAchievementReached) {
+          return 'Your goal has been reached, so the focus is to keep momentum and protect the result.';
+        }
+
+        if (input.goalMilestoneClose) {
+          return 'You are close to a goal milestone, so this is a good day to build momentum.';
+        }
+
         return 'Signals are stable, so the focus is to keep building momentum.';
     }
   }
@@ -402,6 +467,70 @@ export class CoachDecisionCalculatorService {
           'progress',
           0.18,
           input.currentStreak,
+        ),
+      );
+    }
+
+    if (input.hasGoalTrend && input.goalTrend === 'declining') {
+      influences.push(
+        this.createInfluence(
+          'GOAL_PROGRESS_DECLINING',
+          'Goal progress is declining.',
+          'negative',
+          'progress',
+          0.22,
+          input.goalProgressPercentage,
+        ),
+      );
+    }
+
+    if (input.hasGoalTrend && input.goalTrend === 'improving') {
+      influences.push(
+        this.createInfluence(
+          'GOAL_PROGRESS_IMPROVING',
+          'Goal progress is improving.',
+          'positive',
+          'progress',
+          0.18,
+          input.goalProgressPercentage,
+        ),
+      );
+    }
+
+    if (input.hasGoalForecastConfidence && input.goalForecastConfidence === 'low') {
+      influences.push(
+        this.createInfluence(
+          'GOAL_FORECAST_LOW_CONFIDENCE',
+          'Goal forecast confidence is low.',
+          'neutral',
+          'progress',
+          0.1,
+        ),
+      );
+    }
+
+    if (input.hasGoalMilestoneClose && input.goalMilestoneClose) {
+      influences.push(
+        this.createInfluence(
+          'GOAL_MILESTONE_CLOSE',
+          'A goal milestone is close.',
+          'positive',
+          'progress',
+          0.24,
+          input.goalProgressPercentage,
+        ),
+      );
+    }
+
+    if (input.hasGoalAchievementReached && input.goalAchievementReached) {
+      influences.push(
+        this.createInfluence(
+          'GOAL_ACHIEVEMENT_REACHED',
+          'A goal has been achieved.',
+          'positive',
+          'progress',
+          0.3,
+          input.goalProgressPercentage,
         ),
       );
     }

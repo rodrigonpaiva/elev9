@@ -38,7 +38,12 @@ export type CoachDecisionInfluenceCode =
   | 'LOW_TRAINING_ADHERENCE'
   | 'LONG_STREAK'
   | 'NO_RECENT_ACTIVITY'
-  | 'GOOD_CONSISTENCY';
+  | 'GOOD_CONSISTENCY'
+  | 'GOAL_PROGRESS_DECLINING'
+  | 'GOAL_PROGRESS_IMPROVING'
+  | 'GOAL_FORECAST_LOW_CONFIDENCE'
+  | 'GOAL_MILESTONE_CLOSE'
+  | 'GOAL_ACHIEVEMENT_REACHED';
 
 export interface CoachDecisionInfluence {
   code: CoachDecisionInfluenceCode;
@@ -75,6 +80,8 @@ export interface CoachDecision {
 }
 
 export interface CoachDecisionSourceContext {
+  goalId?: string;
+  goalType?: 'lose_weight' | 'gain_muscle' | 'maintain_weight' | 'improve_consistency' | 'improve_recovery';
   readinessScore?: number;
   fatigueScore?: number;
   nutritionAdherence?: number;
@@ -82,6 +89,11 @@ export interface CoachDecisionSourceContext {
   adaptiveIntensity?: string;
   currentStreak?: number;
   missedWorkouts?: number;
+  goalProgressPercentage?: number;
+  goalTrend?: 'improving' | 'stable' | 'declining';
+  goalForecastConfidence?: 'low' | 'medium' | 'high';
+  goalMilestoneClose?: boolean;
+  goalAchievementReached?: boolean;
   generatedAt: string;
 }
 

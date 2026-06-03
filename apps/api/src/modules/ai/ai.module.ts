@@ -14,6 +14,7 @@ import {
   CoachDecisionSchema,
 } from './infrastructure/mongoose/coach-decision.schema';
 import { AuthModule } from '../auth/auth.module';
+import { GoalsModule } from '../goals/goals.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
 import { FITNESS_PROFILE_REPOSITORY } from '../fitness/domain/repositories/fitness-profile.repository';
@@ -106,6 +107,7 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
 @Module({
   imports: [
     AuthModule,
+    GoalsModule,
     RecoveryModule,
     TrainingModule,
     MongooseModule.forFeature([

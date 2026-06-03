@@ -32,6 +32,7 @@ import {
 } from '../training/infrastructure/mongoose/training-plan.schema';
 import { TrainingModule } from '../training/training.module';
 import { NutritionModule } from '../nutrition/nutrition.module';
+import { GoalsModule } from '../goals/goals.module';
 import { USER_PROFILE_REPOSITORY } from '../users/domain/repositories/user-profile.repository';
 import { MongooseUserProfileRepository } from '../users/infrastructure/mongoose/mongoose-user-profile.repository';
 import {
@@ -52,6 +53,7 @@ import { DashboardController } from './presentation/http/dashboard.controller';
     RecoveryModule,
     TrainingModule,
     NutritionModule,
+    GoalsModule,
     MongooseModule.forFeature([
       {
         name: USER_PROFILE_MODEL_NAME,

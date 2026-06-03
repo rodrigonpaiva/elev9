@@ -2,6 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
 import { GetCurrentCoachDecisionUseCase } from '../../../../ai/application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case';
+import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
+import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
+import { Goal } from '../../../../goals/domain/entities/goal.entity';
+import { GoalForecast } from '../../../../goals/domain/entities/goal-forecast.entity';
+import { GoalMilestone } from '../../../../goals/domain/entities/goal-milestone.entity';
+import { GoalProgressSnapshot } from '../../../../goals/domain/entities/goal-progress-snapshot.entity';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
@@ -34,6 +40,13 @@ import {
 import { GetHomeDashboardInput } from './get-home-dashboard.input';
 import { GetHomeDashboardOutput } from './get-home-dashboard.output';
 
+type GoalReadModel = {
+  goal: Goal;
+  progressSnapshot?: GoalProgressSnapshot;
+  forecast?: GoalForecast;
+  milestones?: GoalMilestone[];
+};
+
 @Injectable()
 export class GetHomeDashboardUseCase {
   constructor(
@@ -51,6 +64,8 @@ export class GetHomeDashboardUseCase {
     private readonly clock: Clock,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
     private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
+    private readonly getCurrentGoalUseCase: GetCurrentGoalUseCase,
+    private readonly getGoalMilestonesUseCase: GetGoalMilestonesUseCase,
     private readonly dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService,
   ) {}
 
@@ -85,12 +100,14 @@ export class GetHomeDashboardUseCase {
           userProfile.id,
         )
       ).slice(0, 3);
+      const goal = await this.resolveGoal(authUserId);
       const adaptiveTrainingRecommendation =
         this.dashboardAdaptiveSignalsService.buildAdaptiveTrainingRecommendation(
           healthContext,
         );
       const dashboardCoachDecision =
         this.dashboardAdaptiveSignalsService.buildCoachDecision(coachDecision);
+      const dashboardGoal = this.dashboardAdaptiveSignalsService.buildGoal(goal);
       const recovery = this.buildRecoverySummary(
         healthContext,
         recentDailyCheckIns,
@@ -115,6 +132,7 @@ export class GetHomeDashboardUseCase {
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
             recovery,
+            ...(dashboardGoal ? { goal: dashboardGoal } : {}),
             ...(dashboardCoachDecision
               ? { coachDecision: dashboardCoachDecision }
               : {}),
@@ -145,6 +163,7 @@ export class GetHomeDashboardUseCase {
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
             recovery,
+            ...(dashboardGoal ? { goal: dashboardGoal } : {}),
             ...(dashboardCoachDecision
               ? { coachDecision: dashboardCoachDecision }
               : {}),
@@ -182,6 +201,7 @@ export class GetHomeDashboardUseCase {
           },
           progressSummary: this.buildSummaryFromLogs(workoutLogs),
           recovery,
+          ...(dashboardGoal ? { goal: dashboardGoal } : {}),
           ...(dashboardCoachDecision
             ? { coachDecision: dashboardCoachDecision }
             : {}),
@@ -340,6 +360,28 @@ export class GetHomeDashboardUseCase {
       healthContext,
       recoveryTrend,
     );
+  }
+
+  private async resolveGoal(
+    authUserId: string,
+  ): Promise<GoalReadModel | undefined> {
+    try {
+      const currentGoal = await this.getCurrentGoalUseCase.execute({
+        authUserId,
+      });
+
+      const milestones =
+        await this.getGoalMilestonesUseCase.execute({ authUserId });
+
+      return {
+        goal: currentGoal.goal,
+        progressSnapshot: currentGoal.progressSnapshot,
+        forecast: currentGoal.forecast,
+        milestones: milestones.goalMilestones,
+      };
+    } catch {
+      return undefined;
+    }
   }
 
   private roundToTwoDecimals(value: number): number {

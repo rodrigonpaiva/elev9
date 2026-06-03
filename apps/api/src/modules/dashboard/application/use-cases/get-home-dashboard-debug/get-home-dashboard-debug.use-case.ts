@@ -1,6 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
+import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
+import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
 import {
   DAILY_CHECK_IN_REPOSITORY,
   DailyCheckInRepository,
@@ -24,6 +26,8 @@ export class GetHomeDashboardDebugUseCase {
     @Inject(DAILY_CHECK_IN_REPOSITORY)
     private readonly dailyCheckInRepository: DailyCheckInRepository,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
+    private readonly getCurrentGoalUseCase: GetCurrentGoalUseCase,
+    private readonly getGoalMilestonesUseCase: GetGoalMilestonesUseCase,
     private readonly dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService,
   ) {}
 
@@ -59,6 +63,7 @@ export class GetHomeDashboardDebugUseCase {
           userProfile.id,
         )
       ).slice(0, 3);
+      const goal = await this.resolveGoal(authUserId);
       const recovery =
         this.dashboardAdaptiveSignalsService.buildRecoverySummary(
           healthContext,
@@ -74,6 +79,7 @@ export class GetHomeDashboardDebugUseCase {
         healthContext,
         recovery,
         nutritionGuidance,
+        goal,
       );
     } catch (error) {
       if (error instanceof GetHomeDashboardError) {
@@ -84,6 +90,25 @@ export class GetHomeDashboardDebugUseCase {
         GET_HOME_DASHBOARD_ERROR_CODES.INTERNAL_ERROR,
         'An unexpected error occurred.',
       );
+    }
+  }
+
+  private async resolveGoal(authUserId: string) {
+    try {
+      const currentGoal = await this.getCurrentGoalUseCase.execute({
+        authUserId,
+      });
+      const milestones =
+        await this.getGoalMilestonesUseCase.execute({ authUserId });
+
+      return {
+        goal: currentGoal.goal,
+        progressSnapshot: currentGoal.progressSnapshot,
+        forecast: currentGoal.forecast,
+        milestones: milestones.goalMilestones,
+      };
+    } catch {
+      return undefined;
     }
   }
 }

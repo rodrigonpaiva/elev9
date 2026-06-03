@@ -1,3 +1,10 @@
+import {
+  GoalContract,
+  GoalForecastContract,
+  GoalMilestoneContract,
+  GoalProgressSnapshotContract,
+} from '../../../../goals/domain/goals.contract';
+
 export class GetHomeDashboardDebugResponseDto {
   generatedAt!: string;
   recovery!: {
@@ -22,6 +29,12 @@ export class GetHomeDashboardDebugResponseDto {
       weight?: number;
       value?: number;
     }>;
+  };
+  goal?: {
+    current: GoalContract;
+    progressSnapshot?: GoalProgressSnapshotContract;
+    forecast?: GoalForecastContract;
+    milestones?: GoalMilestoneContract[];
   };
   adaptiveTrainingRecommendation?: {
     recommendationType:

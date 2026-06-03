@@ -119,6 +119,116 @@ describe('CoachDecisionCalculatorService', () => {
     );
   });
 
+  it('adds goal decline signals and selects consistency when no crisis exists', () => {
+    const result = service.calculate({
+      readinessScore: 68,
+      fatigueScore: 30,
+      nutritionAdherence: 72,
+      goalProgressPercentage: 48,
+      goalTrend: 'declining',
+      currentStreak: 4,
+      missedWorkouts: 0,
+    });
+
+    expect(result.priority).toBe('consistency');
+    expect(result.influences.map((influence) => influence.code)).toContain(
+      'GOAL_PROGRESS_DECLINING',
+    );
+  });
+
+  it('adds goal improvement signals without overriding the default motivation path', () => {
+    const result = service.calculate({
+      readinessScore: 72,
+      fatigueScore: 28,
+      nutritionAdherence: 74,
+      goalProgressPercentage: 62,
+      goalTrend: 'improving',
+      currentStreak: 4,
+      missedWorkouts: 0,
+    });
+
+    expect(result.priority).toBe('motivation');
+    expect(result.influences.map((influence) => influence.code)).toContain(
+      'GOAL_PROGRESS_IMPROVING',
+    );
+  });
+
+  it('adds low confidence goal signals and keeps consistency when context is not strong enough for motivation', () => {
+    const result = service.calculate({
+      readinessScore: 70,
+      fatigueScore: 26,
+      nutritionAdherence: 72,
+      goalProgressPercentage: 44,
+      goalForecastConfidence: 'low',
+      currentStreak: 0,
+      missedWorkouts: 0,
+    });
+
+    expect(result.priority).toBe('consistency');
+    expect(result.influences.map((influence) => influence.code)).toContain(
+      'GOAL_FORECAST_LOW_CONFIDENCE',
+    );
+  });
+
+  it('adds milestone and achievement signals and uses motivation when no crisis exists', () => {
+    const milestoneResult = service.calculate({
+      readinessScore: 74,
+      fatigueScore: 24,
+      nutritionAdherence: 76,
+      goalProgressPercentage: 78,
+      goalMilestoneClose: true,
+      currentStreak: 4,
+      missedWorkouts: 0,
+    });
+
+    expect(milestoneResult.priority).toBe('motivation');
+    expect(
+      milestoneResult.influences.map((influence) => influence.code),
+    ).toContain('GOAL_MILESTONE_CLOSE');
+
+    const achievementResult = service.calculate({
+      readinessScore: 76,
+      fatigueScore: 22,
+      nutritionAdherence: 78,
+      goalProgressPercentage: 100,
+      goalAchievementReached: true,
+      currentStreak: 4,
+      missedWorkouts: 0,
+    });
+
+    expect(achievementResult.priority).toBe('motivation');
+    expect(
+      achievementResult.influences.map((influence) => influence.code),
+    ).toContain('GOAL_ACHIEVEMENT_REACHED');
+  });
+
+  it('does not let goal signals override a recovery crisis', () => {
+    const result = service.calculate({
+      readinessScore: 24,
+      fatigueScore: 88,
+      nutritionAdherence: 82,
+      goalProgressPercentage: 84,
+      goalTrend: 'declining',
+      goalForecastConfidence: 'low',
+      goalMilestoneClose: true,
+      goalAchievementReached: true,
+      currentStreak: 6,
+      missedWorkouts: 0,
+    });
+
+    expect(result.priority).toBe('recovery');
+    expect(result.influences.map((influence) => influence.code)).toEqual(
+      expect.arrayContaining([
+        'LOW_READINESS',
+        'HIGH_FATIGUE',
+        'GOAL_PROGRESS_DECLINING',
+        'GOAL_FORECAST_LOW_CONFIDENCE',
+        'GOAL_MILESTONE_CLOSE',
+        'GOAL_ACHIEVEMENT_REACHED',
+      ]),
+    );
+  });
+
   it('falls back to motivation', () => {
     const result = service.calculate({});
 

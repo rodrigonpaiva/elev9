@@ -2,8 +2,19 @@ import { Injectable } from '@nestjs/common';
 
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
 import { CoachDecision } from '../../../../ai/domain/entities/coach-decision.entity';
+import { Goal } from '../../../../goals/domain/entities/goal.entity';
+import { GoalForecast } from '../../../../goals/domain/entities/goal-forecast.entity';
+import { GoalMilestone } from '../../../../goals/domain/entities/goal-milestone.entity';
+import { GoalProgressSnapshot } from '../../../../goals/domain/entities/goal-progress-snapshot.entity';
 import { GetHomeDashboardOutput } from '../../use-cases/get-home-dashboard/get-home-dashboard.output';
 import { GetHomeDashboardDebugOutput } from '../../use-cases/get-home-dashboard-debug/get-home-dashboard-debug.output';
+
+type GoalReadModel = {
+  goal: Goal;
+  progressSnapshot?: GoalProgressSnapshot;
+  forecast?: GoalForecast;
+  milestones?: GoalMilestone[];
+};
 
 @Injectable()
 export class DashboardAdaptiveSignalsService {
@@ -22,6 +33,29 @@ export class DashboardAdaptiveSignalsService {
       influences: coachDecision.influences.map((influence) =>
         influence.toJSON(),
       ),
+    };
+  }
+
+  buildGoal(
+    goalReadModel: GoalReadModel | null | undefined,
+  ): GetHomeDashboardOutput['dashboard']['goal'] | undefined {
+    if (!goalReadModel) {
+      return undefined;
+    }
+
+    return {
+      current: goalReadModel.goal.toJSON(),
+      ...(goalReadModel.progressSnapshot
+        ? { progressSnapshot: goalReadModel.progressSnapshot.toJSON() }
+        : {}),
+      ...(goalReadModel.forecast ? { forecast: goalReadModel.forecast.toJSON() } : {}),
+      ...(goalReadModel.milestones
+        ? {
+            milestones: goalReadModel.milestones.map((milestone) =>
+              milestone.toJSON(),
+            ),
+          }
+        : {}),
     };
   }
 
@@ -184,6 +218,7 @@ export class DashboardAdaptiveSignalsService {
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
     recovery: GetHomeDashboardOutput['dashboard']['recovery'],
     nutritionGuidance: GetHomeDashboardOutput['dashboard']['nutritionGuidance'],
+    goal?: GoalReadModel | null,
   ): GetHomeDashboardDebugOutput {
     const adaptiveTrainingRecommendation =
       this.buildAdaptiveTrainingRecommendation(healthContext);
@@ -204,6 +239,11 @@ export class DashboardAdaptiveSignalsService {
       ...(adaptiveTrainingRecommendation
         ? {
             adaptiveTrainingRecommendation,
+          }
+        : {}),
+      ...(goal
+        ? {
+            goal: this.buildGoal(goal),
           }
         : {}),
       nutrition: {

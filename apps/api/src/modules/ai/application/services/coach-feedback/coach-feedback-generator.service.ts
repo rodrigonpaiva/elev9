@@ -57,7 +57,11 @@ export type CoachFeedbackGeneratorInput = {
     headline: string;
     summary: string;
     actionItems: string[];
-    influences: CoachDecisionInfluenceProps[];
+    influences: Array<
+      CoachDecisionInfluenceProps & {
+        code: string;
+      }
+    >;
   };
   nutritionProfile?: UserHealthContextNutritionProfile;
 };
@@ -279,7 +283,11 @@ export class CoachFeedbackGenerator {
       headline: string;
       summary: string;
       actionItems: string[];
-      influences: CoachDecisionInfluenceProps[];
+      influences: Array<
+        CoachDecisionInfluenceProps & {
+          code: string;
+        }
+      >;
     };
     insights: string[];
     recommendations: string[];

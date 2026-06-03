@@ -3,6 +3,12 @@ import {
   FitnessGoal,
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import {
+  GoalContract,
+  GoalForecastContract,
+  GoalMilestoneContract,
+  GoalProgressSnapshotContract,
+} from '../../../../goals/domain/goals.contract';
+import {
   CoachDecisionInfluenceProps,
 } from '../../../../ai/domain/value-objects/coach-decision-influence.value-object';
 import {
@@ -107,6 +113,12 @@ export type GetHomeDashboardOutput = {
       id: string;
       todayWorkout: DashboardTodayWorkout | null;
     } | null;
+    goal?: {
+      current: GoalContract;
+      progressSnapshot?: GoalProgressSnapshotContract;
+      forecast?: GoalForecastContract;
+      milestones?: GoalMilestoneContract[];
+    };
     progressSummary: {
       period: 'week';
       workoutsCompleted: number;

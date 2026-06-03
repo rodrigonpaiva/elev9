@@ -63,6 +63,67 @@ describe('ReplayCoachDecisionUseCase', () => {
       adaptiveIntensity: undefined,
       currentStreak: undefined,
       missedWorkouts: undefined,
+      goalProgressPercentage: undefined,
+      goalTrend: undefined,
+      goalForecastConfidence: undefined,
+      goalMilestoneClose: undefined,
+      goalAchievementReached: undefined,
+    });
+  });
+
+  it('replays a decision with goal context', async () => {
+    mockUserProfile(userProfileRepository);
+    coachDecisionRepository.findById.mockResolvedValue(
+      buildCoachDecision({
+        sourceContext: {
+          readinessScore: 50,
+          fatigueScore: 50,
+          goalProgressPercentage: 48,
+          goalTrend: 'declining',
+          goalForecastConfidence: 'low',
+          goalMilestoneClose: false,
+          goalAchievementReached: false,
+          generatedAt: '2026-06-02T06:00:00.000Z',
+        },
+      }),
+    );
+    coachDecisionCalculatorService.calculate.mockReturnValue({
+      priority: 'consistency',
+      headline: 'Focus on consistency',
+      summary: 'Goal progress is slowing.',
+      actionItems: ['Complete today\'s session', 'Avoid skipping workouts'],
+      influences: [
+        {
+          code: 'GOAL_PROGRESS_DECLINING',
+          label: 'Goal progress is declining.',
+          impact: 'negative',
+          source: 'progress',
+          weight: 0.22,
+          value: 48,
+        },
+      ],
+      formulaVersion: 'coach-decision-v1',
+    });
+
+    const result = await useCase.execute({
+      authUserId: 'auth_user_123',
+      coachDecisionId: 'decision_123',
+    });
+
+    expect(result.comparison.matches).toBe(false);
+    expect(coachDecisionCalculatorService.calculate).toHaveBeenCalledWith({
+      readinessScore: 50,
+      fatigueScore: 50,
+      nutritionAdherence: undefined,
+      adaptiveRecommendationType: undefined,
+      adaptiveIntensity: undefined,
+      currentStreak: undefined,
+      missedWorkouts: undefined,
+      goalProgressPercentage: 48,
+      goalTrend: 'declining',
+      goalForecastConfidence: 'low',
+      goalMilestoneClose: false,
+      goalAchievementReached: false,
     });
   });
 

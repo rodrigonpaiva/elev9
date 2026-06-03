@@ -127,6 +127,17 @@ export class ReplayCoachDecisionUseCase {
       adaptiveIntensity: this.resolveString(sourceContext.adaptiveIntensity),
       currentStreak: this.resolveNonNegativeInteger(sourceContext.currentStreak),
       missedWorkouts: this.resolveNonNegativeInteger(sourceContext.missedWorkouts),
+      goalProgressPercentage: this.resolveNumber(
+        sourceContext.goalProgressPercentage,
+      ),
+      goalTrend: this.resolveGoalTrend(sourceContext.goalTrend),
+      goalForecastConfidence: this.resolveGoalForecastConfidence(
+        sourceContext.goalForecastConfidence,
+      ),
+      goalMilestoneClose: this.resolveBoolean(sourceContext.goalMilestoneClose),
+      goalAchievementReached: this.resolveBoolean(
+        sourceContext.goalAchievementReached,
+      ),
     };
   }
 
@@ -234,6 +245,34 @@ export class ReplayCoachDecisionUseCase {
     }
 
     return Math.max(0, Math.round(value));
+  }
+
+  private resolveGoalTrend(
+    value: unknown,
+  ): 'improving' | 'stable' | 'declining' | undefined {
+    if (value === 'improving' || value === 'stable' || value === 'declining') {
+      return value;
+    }
+
+    return undefined;
+  }
+
+  private resolveGoalForecastConfidence(
+    value: unknown,
+  ): 'low' | 'medium' | 'high' | undefined {
+    if (value === 'low' || value === 'medium' || value === 'high') {
+      return value;
+    }
+
+    return undefined;
+  }
+
+  private resolveBoolean(value: unknown): boolean | undefined {
+    if (typeof value !== 'boolean') {
+      return undefined;
+    }
+
+    return value;
   }
 
   private serializeInfluence(

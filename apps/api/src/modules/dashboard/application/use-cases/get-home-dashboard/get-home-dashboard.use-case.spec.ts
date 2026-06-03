@@ -11,6 +11,16 @@ import { UserProfile } from '../../../../users/domain/entities/user-profile.enti
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
 import { GetCurrentCoachDecisionUseCase } from '../../../../ai/application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case';
+import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
+import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
+import { Goal } from '../../../../goals/domain/entities/goal.entity';
+import { GoalForecast } from '../../../../goals/domain/entities/goal-forecast.entity';
+import { GoalMilestone } from '../../../../goals/domain/entities/goal-milestone.entity';
+import { GoalProgressSnapshot } from '../../../../goals/domain/entities/goal-progress-snapshot.entity';
+import { GoalForecastConfidenceValueObject } from '../../../../goals/domain/value-objects/goal-forecast-confidence.value-object';
+import { GoalMilestoneTypeValueObject } from '../../../../goals/domain/value-objects/goal-milestone-type.value-object';
+import { GoalStatusValueObject } from '../../../../goals/domain/value-objects/goal-status.value-object';
+import { GoalTrendValueObject } from '../../../../goals/domain/value-objects/goal-trend.value-object';
 import { CoachDecision } from '../../../../ai/domain/entities/coach-decision.entity';
 import { DashboardAdaptiveSignalsService } from '../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service';
 import { GET_HOME_DASHBOARD_ERROR_CODES } from './get-home-dashboard.errors';
@@ -25,6 +35,12 @@ describe('GetHomeDashboardUseCase', () => {
   let clock: jest.Mocked<Clock>;
   let getCurrentCoachDecisionUseCase: {
     execute: jest.MockedFunction<GetCurrentCoachDecisionUseCase['execute']>;
+  };
+  let getCurrentGoalUseCase: {
+    execute: jest.MockedFunction<GetCurrentGoalUseCase['execute']>;
+  };
+  let getGoalMilestonesUseCase: {
+    execute: jest.MockedFunction<GetGoalMilestonesUseCase['execute']>;
   };
   let buildUserHealthContextService: {
     build: jest.MockedFunction<BuildUserHealthContextService['build']>;
@@ -65,6 +81,12 @@ describe('GetHomeDashboardUseCase', () => {
     getCurrentCoachDecisionUseCase = {
       execute: jest.fn(),
     };
+    getCurrentGoalUseCase = {
+      execute: jest.fn(),
+    };
+    getGoalMilestonesUseCase = {
+      execute: jest.fn(),
+    };
     buildUserHealthContextService = {
       build: jest.fn().mockResolvedValue({
         authUserId: 'auth_user_123',
@@ -95,6 +117,8 @@ describe('GetHomeDashboardUseCase', () => {
       clock,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
       getCurrentCoachDecisionUseCase as unknown as GetCurrentCoachDecisionUseCase,
+      getCurrentGoalUseCase as unknown as GetCurrentGoalUseCase,
+      getGoalMilestonesUseCase as unknown as GetGoalMilestonesUseCase,
       dashboardAdaptiveSignalsService,
     );
   });
@@ -215,6 +239,60 @@ function mockDailyCheckInHistory(
     });
   }
 
+  function buildGoalReadModel() {
+    return {
+      goal: new Goal({
+        id: 'goal_123',
+        userProfileId: 'profile_123',
+        type: 'gain_muscle',
+        status: new GoalStatusValueObject('active'),
+        startDate: new Date('2026-04-01T00:00:00.000Z'),
+        targetValue: 90,
+        createdAt: new Date('2026-04-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-04-30T00:00:00.000Z'),
+      }),
+      progressSnapshot: new GoalProgressSnapshot({
+        goalId: 'goal_123',
+        userProfileId: 'profile_123',
+        date: '2026-04-30',
+        progressPercentage: 78,
+        currentValue: 85,
+        targetValue: 90,
+        trend: new GoalTrendValueObject('improving'),
+        sourceContext: {
+          generatedAt: '2026-04-30T10:00:00.000Z',
+        },
+        formulaVersion: 'goal-progress-v1',
+      }),
+      forecast: new GoalForecast({
+        goalId: 'goal_123',
+        userProfileId: 'profile_123',
+        predictedCompletionDate: new Date('2026-05-14T00:00:00.000Z'),
+        confidence: new GoalForecastConfidenceValueObject('medium'),
+        estimatedDaysRemaining: 14,
+        generatedAt: new Date('2026-04-30T10:00:00.000Z'),
+        formulaVersion: 'goal-forecast-v1',
+      }),
+      milestones: [
+        new GoalMilestone({
+          goalId: 'goal_123',
+          type: new GoalMilestoneTypeValueObject('weight_target'),
+          title: 'Reach 75%',
+          targetValue: 75,
+          achieved: true,
+          achievedAt: new Date('2026-04-29T00:00:00.000Z'),
+        }),
+        new GoalMilestone({
+          goalId: 'goal_123',
+          type: new GoalMilestoneTypeValueObject('weight_target'),
+          title: 'Reach 100%',
+          targetValue: 100,
+          achieved: false,
+        }),
+      ],
+    };
+  }
+
   it('returns fitnessProfile and trainingPlan as null when no active fitness profile exists', async () => {
     mockUserProfile();
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
@@ -308,6 +386,60 @@ function mockDailyCheckInHistory(
     expect(
       workoutLogRepository.findByTrainingPlanIdsAndDateRange,
     ).not.toHaveBeenCalled();
+  });
+
+  it('includes the goal read model when available', async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: buildCoachDecision(),
+    } as never);
+    getCurrentGoalUseCase.execute.mockResolvedValue({
+      goal: buildGoalReadModel().goal,
+      progressSnapshot: buildGoalReadModel().progressSnapshot,
+      forecast: buildGoalReadModel().forecast,
+    } as never);
+    getGoalMilestonesUseCase.execute.mockResolvedValue({
+      goalId: 'goal_123',
+      userProfileId: 'profile_123',
+      goalMilestones: buildGoalReadModel().milestones,
+    } as never);
+
+    const result = await useCase.execute({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(result.dashboard.goal).toEqual({
+      current: buildGoalReadModel().goal.toJSON(),
+      progressSnapshot: buildGoalReadModel().progressSnapshot.toJSON(),
+      forecast: buildGoalReadModel().forecast.toJSON(),
+      milestones: buildGoalReadModel().milestones.map((milestone) =>
+        milestone.toJSON(),
+      ),
+    });
+  });
+
+  it('falls back safely when goal read fails', async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: buildCoachDecision(),
+    } as never);
+    getCurrentGoalUseCase.execute.mockRejectedValue(new Error('goal unavailable'));
+    getGoalMilestonesUseCase.execute.mockRejectedValue(new Error('goal unavailable'));
+
+    const result = await useCase.execute({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(result.dashboard.goal).toBeUndefined();
+    expect(result.dashboard.fitnessProfile).toEqual({
+      id: 'fitness_123',
+      goal: 'gain_muscle',
+      activityLevel: 'high',
+    });
   });
 
   it('returns todayWorkout when the UTC weekday matches weeklySchedule.dayIndex', async () => {
