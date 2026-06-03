@@ -4,6 +4,8 @@ import {
   ActivityLevel,
   FitnessGoal,
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
+import type { CoachDecisionInfluenceProps } from '../../../domain/value-objects/coach-decision-influence.value-object';
+import type { CoachDecisionPriority } from '../../../domain/value-objects/coach-decision-priority.value-object';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import type {
   AdaptiveTrainingInfluenceProps,
@@ -50,6 +52,13 @@ export type CoachFeedbackGeneratorInput = {
     reasoning: string;
     influences: AdaptiveTrainingInfluenceProps[];
   };
+  coachDecision?: {
+    priority: CoachDecisionPriority;
+    headline: string;
+    summary: string;
+    actionItems: string[];
+    influences: CoachDecisionInfluenceProps[];
+  };
   nutritionProfile?: UserHealthContextNutritionProfile;
 };
 
@@ -72,6 +81,7 @@ export class CoachFeedbackGenerator {
     const hasDurationTrendIncrease = this.hasIncreasingDurationTrend(
       input.workoutLogs,
     );
+    const coachDecision = input.coachDecision;
 
     const message = this.limitMessage(
       this.buildMessage({
@@ -83,6 +93,7 @@ export class CoachFeedbackGenerator {
         isConsistent,
         isBeginner,
         isInconsistent,
+        coachDecision,
       }),
     );
 
@@ -194,6 +205,12 @@ export class CoachFeedbackGenerator {
       recommendations,
       influences,
     });
+    this.applyCoachDecisionSignals({
+      coachDecision,
+      insights,
+      recommendations,
+      influences,
+    });
     this.applyTrainingSignals({
       logsCount,
       expectedWorkouts: input.expectedWorkouts,
@@ -224,7 +241,15 @@ export class CoachFeedbackGenerator {
     isConsistent: boolean;
     isBeginner: boolean;
     isInconsistent: boolean;
+    coachDecision?: {
+      priority: CoachDecisionPriority;
+      headline: string;
+    };
   }): string {
+    if (input.coachDecision) {
+      return input.coachDecision.headline;
+    }
+
     if (input.isNoLogs) {
       return 'You are ready to start your first training streak today.';
     }
@@ -246,6 +271,69 @@ export class CoachFeedbackGenerator {
     }
 
     return `You're making progress. Aim for ${input.expectedWorkouts} workouts this week to keep momentum.`;
+  }
+
+  private applyCoachDecisionSignals(input: {
+    coachDecision?: {
+      priority: CoachDecisionPriority;
+      headline: string;
+      summary: string;
+      actionItems: string[];
+      influences: CoachDecisionInfluenceProps[];
+    };
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const coachDecision = input.coachDecision;
+
+    if (!coachDecision) {
+      return;
+    }
+
+    input.influences.add(`coach:decision:${coachDecision.priority}`);
+
+    this.upsertInsight(
+      input.insights,
+      this.summarizeText(coachDecision.summary, 120),
+    );
+
+    for (const actionItem of [...coachDecision.actionItems].slice(0, 3).reverse()) {
+      this.prependRecommendation(input.recommendations, actionItem);
+    }
+
+    switch (coachDecision.priority) {
+      case 'recovery':
+        this.prependRecommendation(
+          input.recommendations,
+          'Prioritize recovery before pushing intensity',
+        );
+        return;
+      case 'nutrition':
+        this.prependRecommendation(
+          input.recommendations,
+          'Focus on nutrition consistency today',
+        );
+        return;
+      case 'training':
+        this.prependRecommendation(
+          input.recommendations,
+          'Follow the current training adaptation',
+        );
+        return;
+      case 'consistency':
+        this.prependRecommendation(
+          input.recommendations,
+          'Protect consistency and complete the planned session',
+        );
+        return;
+      case 'motivation':
+      default:
+        this.prependRecommendation(
+          input.recommendations,
+          'Keep momentum and stay on track',
+        );
+    }
   }
 
   private buildGoalAwareRecommendation(goal: FitnessGoal): string {

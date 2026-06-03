@@ -5,6 +5,7 @@ import {
   COACH_FEEDBACK_GENERATOR_VERSION,
 } from '../../services/coach-feedback/coach-feedback-generator.service';
 import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
+import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
 import {
   COACH_FEEDBACK_REPOSITORY,
   CoachFeedbackRepository,
@@ -24,6 +25,7 @@ export class GenerateCoachFeedbackUseCase {
     private readonly coachFeedbackRepository: CoachFeedbackRepository,
     private readonly coachFeedbackGenerator: CoachFeedbackGenerator,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
+    private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
   ) {}
 
   async execute(
@@ -43,6 +45,7 @@ export class GenerateCoachFeedbackUseCase {
       const healthContext = await this.buildUserHealthContextService.build({
         authUserId,
       });
+      const coachDecision = await this.resolveCoachDecision(authUserId);
 
       if (!healthContext.userProfileId) {
         throw new GenerateCoachFeedbackError(
@@ -76,6 +79,7 @@ export class GenerateCoachFeedbackUseCase {
         recommendedIntensity: healthContext.recommendedIntensity,
         adaptiveTrainingRecommendation:
           healthContext.adaptiveTrainingRecommendation,
+        coachDecision,
         nutritionProfile: healthContext.nutritionProfile,
       });
 
@@ -86,7 +90,7 @@ export class GenerateCoachFeedbackUseCase {
         recommendations: feedback.recommendations,
         influences: feedback.influences,
         generatorVersion: COACH_FEEDBACK_GENERATOR_VERSION,
-        contextSnapshot: this.buildContextSnapshot(healthContext),
+        contextSnapshot: this.buildContextSnapshot(healthContext, coachDecision),
       });
 
       return {
@@ -120,6 +124,43 @@ export class GenerateCoachFeedbackUseCase {
 
   private buildContextSnapshot(
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
+    coachDecision?: {
+      id: string;
+      priority:
+        | 'recovery'
+        | 'nutrition'
+        | 'training'
+        | 'consistency'
+        | 'motivation';
+      headline: string;
+      summary: string;
+      actionItems: string[];
+      influences: Array<{
+        code:
+          | 'LOW_READINESS'
+          | 'HIGH_FATIGUE'
+          | 'LOW_NUTRITION_ADHERENCE'
+          | 'HIGH_NUTRITION_ADHERENCE'
+          | 'REST_DAY_RECOMMENDED'
+          | 'RECOVERY_WORKOUT_RECOMMENDED'
+          | 'INCREASE_INTENSITY_RECOMMENDED'
+          | 'DECREASE_INTENSITY_RECOMMENDED'
+          | 'LOW_TRAINING_ADHERENCE'
+          | 'LONG_STREAK'
+          | 'NO_RECENT_ACTIVITY'
+          | 'GOOD_CONSISTENCY';
+        label: string;
+        impact: 'positive' | 'negative' | 'neutral';
+        source:
+          | 'recovery'
+          | 'nutrition'
+          | 'training'
+          | 'progress'
+          | 'memory';
+        weight?: number;
+        value?: number;
+      }>;
+    },
   ): {
     goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
     activityLevel?: 'low' | 'medium' | 'high';
@@ -213,6 +254,36 @@ export class GenerateCoachFeedbackUseCase {
       value?: number;
     }>;
     adaptiveTrainingReasoning?: string;
+    coachDecisionId?: string;
+    coachDecisionPriority?: 'recovery' | 'nutrition' | 'training' | 'consistency' | 'motivation';
+    coachDecisionHeadline?: string;
+    coachDecisionSummary?: string;
+    coachDecisionActionItems?: string[];
+    coachDecisionInfluences?: Array<{
+      code:
+        | 'LOW_READINESS'
+        | 'HIGH_FATIGUE'
+        | 'LOW_NUTRITION_ADHERENCE'
+        | 'HIGH_NUTRITION_ADHERENCE'
+        | 'REST_DAY_RECOMMENDED'
+        | 'RECOVERY_WORKOUT_RECOMMENDED'
+        | 'INCREASE_INTENSITY_RECOMMENDED'
+        | 'DECREASE_INTENSITY_RECOMMENDED'
+        | 'LOW_TRAINING_ADHERENCE'
+        | 'LONG_STREAK'
+        | 'NO_RECENT_ACTIVITY'
+        | 'GOOD_CONSISTENCY';
+      label: string;
+      impact: 'positive' | 'negative' | 'neutral';
+      source:
+        | 'recovery'
+        | 'nutrition'
+        | 'training'
+        | 'progress'
+        | 'memory';
+      weight?: number;
+      value?: number;
+    }>;
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -255,6 +326,15 @@ export class GenerateCoachFeedbackUseCase {
     const adaptiveTrainingReasoning =
       healthContext.adaptiveTrainingReasoning ??
       adaptiveTrainingRecommendation?.reasoning;
+    const coachDecisionInfluences =
+      coachDecision?.influences.map((influence) => ({
+        code: influence.code,
+        label: influence.label,
+        impact: influence.impact,
+        source: influence.source,
+        weight: influence.weight,
+        value: influence.value,
+      }));
 
     return {
       goal: healthContext.goal,
@@ -303,6 +383,16 @@ export class GenerateCoachFeedbackUseCase {
             adaptiveTrainingReasoning,
           }
         : {}),
+      ...(coachDecision
+        ? {
+            coachDecisionId: coachDecision.id,
+            coachDecisionPriority: coachDecision.priority,
+            coachDecisionHeadline: coachDecision.headline,
+            coachDecisionSummary: coachDecision.summary,
+            coachDecisionActionItems: [...coachDecision.actionItems],
+            coachDecisionInfluences,
+          }
+        : {}),
       weeklyFrequency: healthContext.weeklyFrequency,
       currentStreak: healthContext.currentStreak,
       averageWorkoutDuration: healthContext.averageWorkoutDuration,
@@ -321,11 +411,23 @@ export class GenerateCoachFeedbackUseCase {
         : undefined,
       nutritionProfile: healthContext.nutritionProfile
         ? {
-            goal: healthContext.nutritionProfile.goal,
-            mealsPerDay: healthContext.nutritionProfile.mealsPerDay,
-          }
+          goal: healthContext.nutritionProfile.goal,
+          mealsPerDay: healthContext.nutritionProfile.mealsPerDay,
+        }
         : undefined,
     };
+  }
+
+  private async resolveCoachDecision(authUserId: string) {
+    try {
+      const result = await this.getCurrentCoachDecisionUseCase.execute({
+        authUserId,
+      });
+
+      return result?.coachDecision;
+    } catch {
+      return undefined;
+    }
   }
 
   private resolveRecoveryTrendFromFatigueLevel(

@@ -7,6 +7,12 @@ import {
   COACH_FEEDBACK_MODEL_NAME,
   CoachFeedbackSchema,
 } from './infrastructure/mongoose/coach-feedback.schema';
+import { COACH_DECISION_REPOSITORY } from './domain/repositories/coach-decision.repository';
+import { MongooseCoachDecisionRepository } from './infrastructure/mongoose/mongoose-coach-decision.repository';
+import {
+  COACH_DECISION_MODEL_NAME,
+  CoachDecisionSchema,
+} from './infrastructure/mongoose/coach-decision.schema';
 import { AuthModule } from '../auth/auth.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
@@ -50,6 +56,8 @@ import {
 } from '../users/infrastructure/mongoose/user-profile.schema';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { BuildUserHealthContextService } from './application/services/context-builder/build-user-health-context.service';
+import { CoachDecisionCalculatorService } from './application/services/coach-decision-calculator.service';
+import { CoachDecisionDateService } from './application/services/coach-decision-date.service';
 import { AiLlmConfigService } from './application/services/llm/ai-llm-config.service';
 import { AiLlmService } from './application/services/llm/ai-llm.service';
 import { AiPromptBuilder } from './application/services/llm/ai-prompt-builder.service';
@@ -66,9 +74,15 @@ import { GetCoachChatDebugIndexUseCase } from './application/use-cases/get-coach
 import { GetCoachFeedbackDebugHistoryUseCase } from './application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case';
 import { GetCoachFeedbackHistoryUseCase } from './application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case';
 import { GetCoachChatHistoryUseCase } from './application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case';
+import { BuildCoachDecisionUseCase } from './application/use-cases/build-coach-decision/build-coach-decision.use-case';
+import { GetCurrentCoachDecisionUseCase } from './application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case';
+import { GetCoachDecisionHistoryUseCase } from './application/use-cases/get-coach-decision-history/get-coach-decision-history.use-case';
+import { GetTodayCoachDecisionUseCase } from './application/use-cases/get-today-coach-decision/get-today-coach-decision.use-case';
+import { ReplayCoachDecisionUseCase } from './application/use-cases/replay-coach-decision/replay-coach-decision.use-case';
 import { GenerateCoachFeedbackUseCase } from './application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case';
 import { ReplayCoachFeedbackUseCase } from './application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case';
 import { AiController } from './presentation/http/ai.controller';
+import { CoachDecisionController } from './presentation/http/coach-decision.controller';
 import { COACH_CONVERSATION_REPOSITORY } from './domain/repositories/coach-conversation.repository';
 import { MongooseCoachConversationRepository } from './infrastructure/mongoose/mongoose-coach-conversation.repository';
 import { COACH_CONVERSATION_MEMORY_REPOSITORY } from './domain/repositories/coach-conversation-memory.repository';
@@ -124,6 +138,10 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
         schema: CoachFeedbackSchema,
       },
       {
+        name: COACH_DECISION_MODEL_NAME,
+        schema: CoachDecisionSchema,
+      },
+      {
         name: COACH_CONVERSATION_MODEL_NAME,
         schema: CoachConversationSchema,
       },
@@ -137,10 +155,17 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
       },
     ]),
   ],
-  controllers: [AiController],
+  controllers: [AiController, CoachDecisionController],
   providers: [
     AuthSessionGuard,
     BuildUserHealthContextService,
+    BuildCoachDecisionUseCase,
+    GetTodayCoachDecisionUseCase,
+    GetCurrentCoachDecisionUseCase,
+    GetCoachDecisionHistoryUseCase,
+    ReplayCoachDecisionUseCase,
+    CoachDecisionCalculatorService,
+    CoachDecisionDateService,
     AiLlmConfigService,
     AiPromptBuilder,
     AiLlmService,
@@ -191,6 +216,10 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
       useClass: MongooseCoachFeedbackRepository,
     },
     {
+      provide: COACH_DECISION_REPOSITORY,
+      useClass: MongooseCoachDecisionRepository,
+    },
+    {
       provide: COACH_CONVERSATION_REPOSITORY,
       useClass: MongooseCoachConversationRepository,
     },
@@ -206,6 +235,9 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
       provide: AI_LLM_PROVIDER,
       useClass: OpenAiLlmProvider,
     },
+  ],
+  exports: [
+    GetCurrentCoachDecisionUseCase,
   ],
 })
 export class AiModule {}

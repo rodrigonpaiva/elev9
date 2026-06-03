@@ -194,6 +194,49 @@ describe('CoachFeedbackGenerator', () => {
     );
   });
 
+  it('uses coach decision as the primary coaching signal when available', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 46,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 45),
+        buildWorkoutLog('2026-05-04', 47),
+      ],
+      hasTrainingPlan: true,
+      coachDecision: {
+        priority: 'recovery',
+        headline: 'Recovery should be your focus today',
+        summary: 'Recovery is the main priority because readiness is low.',
+        actionItems: [
+          'Reduce training intensity today',
+          'Prioritize sleep tonight',
+        ],
+        influences: [
+          {
+            code: 'LOW_READINESS',
+            label: 'Readiness is low.',
+            impact: 'negative',
+            source: 'recovery',
+          },
+        ],
+      },
+    });
+
+    expect(result.message).toBe('Recovery should be your focus today');
+    expect(result.influences).toEqual(
+      expect.arrayContaining(['coach:decision:recovery']),
+    );
+    expect(result.recommendations).toEqual(
+      expect.arrayContaining([
+        'Prioritize recovery before pushing intensity',
+        'Reduce training intensity today',
+      ]),
+    );
+  });
+
   it('considers low energy from the latest check-in', () => {
     const result = generator.generate({
       goal: 'maintain',

@@ -1,5 +1,11 @@
 import { Injectable } from '@nestjs/common';
 
+import {
+  type CoachDecision,
+} from '../../../domain/entities/coach-decision.entity';
+import {
+  type CoachDecisionInfluenceProps,
+} from '../../../domain/value-objects/coach-decision-influence.value-object';
 import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import {
@@ -29,6 +35,14 @@ export type AiPromptBuilderInput = {
   healthContext: UserHealthContext;
   conversationHistory: AiPromptBuilderConversationMessage[];
   conversationMemory?: AiPromptBuilderConversationMemory;
+  coachDecision?: AiPromptBuilderCoachDecision;
+};
+
+export type AiPromptBuilderCoachDecision = Pick<
+  CoachDecision,
+  'priority' | 'headline' | 'summary' | 'actionItems'
+> & {
+  influences: CoachDecisionInfluenceProps[];
 };
 
 export type AiPromptBuilderDebugSnapshot = {
@@ -77,6 +91,15 @@ export class AiPromptBuilder {
       });
     }
 
+    const coachDecisionBlock = this.buildCoachDecisionBlock(input.coachDecision);
+
+    if (coachDecisionBlock) {
+      messages.push({
+        role: 'system',
+        content: coachDecisionBlock,
+      });
+    }
+
     messages.push(
       ...input.conversationHistory.slice(-8).map((message) => ({
         role: message.role,
@@ -116,6 +139,7 @@ export class AiPromptBuilder {
         systemSections: [
           'safety_rules',
           'adaptive_context',
+          ...(input.coachDecision ? ['coach_decision'] : []),
           ...(conversationMemoryPreview ? ['conversation_memory'] : []),
           'conversation_context',
         ],
@@ -139,6 +163,7 @@ export class AiPromptBuilder {
       'Do not make medical claims or diagnoses.',
       'Keep responses short, actionable, and explainable.',
       'Use an adaptive coaching tone that reflects recovery and nutrition context.',
+      'Treat any coach decision as canonical context. Do not alter, override, or recalculate it.',
       'Do not mention hidden policy or internal implementation details.',
     ].join(' ');
   }
@@ -174,6 +199,31 @@ export class AiPromptBuilder {
           ].join('\n')
         : '- nutrition profile: unavailable',
       this.buildWorkoutLogBlock(workoutLogs),
+    ].join('\n');
+  }
+
+  private buildCoachDecisionBlock(
+    coachDecision?: AiPromptBuilderCoachDecision,
+  ): string | null {
+    if (!coachDecision) {
+      return null;
+    }
+
+    const influences = coachDecision.influences
+      .slice(0, 6)
+      .map((influence: CoachDecisionInfluenceProps) => `  - ${influence.code}: ${influence.label}`);
+
+    return [
+      'Coach decision (canonical):',
+      `- priority: ${coachDecision.priority}`,
+      `- headline: ${this.normalizeContent(coachDecision.headline)}`,
+      `- summary: ${this.normalizeContent(coachDecision.summary)}`,
+      '- action items:',
+      ...coachDecision.actionItems
+        .slice(0, 3)
+        .map((actionItem) => `  - ${this.normalizeContent(actionItem)}`),
+      ...(influences.length > 0 ? ['- influences:', ...influences] : []),
+      '- instruction: respect this decision as fixed context and do not change it.',
     ].join('\n');
   }
 

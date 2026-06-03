@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
+import { GetCurrentCoachDecisionUseCase } from '../../../../ai/application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
@@ -49,6 +50,7 @@ export class GetHomeDashboardUseCase {
     @Inject(CLOCK)
     private readonly clock: Clock,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
+    private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
     private readonly dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService,
   ) {}
 
@@ -69,6 +71,7 @@ export class GetHomeDashboardUseCase {
       const healthContext = await this.buildUserHealthContextService.build({
         authUserId,
       });
+      const coachDecision = await this.resolveCoachDecision(authUserId);
 
       if (!userProfile) {
         throw new GetHomeDashboardError(
@@ -86,6 +89,8 @@ export class GetHomeDashboardUseCase {
         this.dashboardAdaptiveSignalsService.buildAdaptiveTrainingRecommendation(
           healthContext,
         );
+      const dashboardCoachDecision =
+        this.dashboardAdaptiveSignalsService.buildCoachDecision(coachDecision);
       const recovery = this.buildRecoverySummary(
         healthContext,
         recentDailyCheckIns,
@@ -110,6 +115,9 @@ export class GetHomeDashboardUseCase {
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
             recovery,
+            ...(dashboardCoachDecision
+              ? { coachDecision: dashboardCoachDecision }
+              : {}),
             ...(adaptiveTrainingRecommendation
               ? { adaptiveTrainingRecommendation }
               : {}),
@@ -137,6 +145,9 @@ export class GetHomeDashboardUseCase {
             trainingPlan: null,
             progressSummary: this.buildEmptySummary(),
             recovery,
+            ...(dashboardCoachDecision
+              ? { coachDecision: dashboardCoachDecision }
+              : {}),
             ...(adaptiveTrainingRecommendation
               ? { adaptiveTrainingRecommendation }
               : {}),
@@ -171,6 +182,9 @@ export class GetHomeDashboardUseCase {
           },
           progressSummary: this.buildSummaryFromLogs(workoutLogs),
           recovery,
+          ...(dashboardCoachDecision
+            ? { coachDecision: dashboardCoachDecision }
+            : {}),
           ...(adaptiveTrainingRecommendation
             ? { adaptiveTrainingRecommendation }
             : {}),
@@ -247,6 +261,18 @@ export class GetHomeDashboardUseCase {
 
   private toUtcDateString(date: Date): string {
     return date.toISOString().slice(0, 10);
+  }
+
+  private async resolveCoachDecision(authUserId: string) {
+    try {
+      const result = await this.getCurrentCoachDecisionUseCase.execute({
+        authUserId,
+      });
+
+      return result?.coachDecision;
+    } catch {
+      return undefined;
+    }
   }
 
   private buildEmptySummary(): GetHomeDashboardOutput['dashboard']['progressSummary'] {

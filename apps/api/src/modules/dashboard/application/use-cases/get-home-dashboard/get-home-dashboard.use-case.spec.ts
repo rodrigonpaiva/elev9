@@ -10,6 +10,8 @@ import { TrainingPlanRepository } from '../../../../training/domain/repositories
 import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
+import { GetCurrentCoachDecisionUseCase } from '../../../../ai/application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case';
+import { CoachDecision } from '../../../../ai/domain/entities/coach-decision.entity';
 import { DashboardAdaptiveSignalsService } from '../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service';
 import { GET_HOME_DASHBOARD_ERROR_CODES } from './get-home-dashboard.errors';
 import { GetHomeDashboardUseCase } from './get-home-dashboard.use-case';
@@ -21,6 +23,9 @@ describe('GetHomeDashboardUseCase', () => {
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let clock: jest.Mocked<Clock>;
+  let getCurrentCoachDecisionUseCase: {
+    execute: jest.MockedFunction<GetCurrentCoachDecisionUseCase['execute']>;
+  };
   let buildUserHealthContextService: {
     build: jest.MockedFunction<BuildUserHealthContextService['build']>;
   };
@@ -57,6 +62,9 @@ describe('GetHomeDashboardUseCase', () => {
       now: jest.fn().mockReturnValue(new Date('2026-04-30T10:00:00.000Z')),
       todayUtcDateString: jest.fn().mockReturnValue('2026-04-30'),
     };
+    getCurrentCoachDecisionUseCase = {
+      execute: jest.fn(),
+    };
     buildUserHealthContextService = {
       build: jest.fn().mockResolvedValue({
         authUserId: 'auth_user_123',
@@ -86,6 +94,7 @@ describe('GetHomeDashboardUseCase', () => {
       dailyCheckInRepository,
       clock,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
+      getCurrentCoachDecisionUseCase as unknown as GetCurrentCoachDecisionUseCase,
       dashboardAdaptiveSignalsService,
     );
   });
@@ -154,7 +163,7 @@ describe('GetHomeDashboardUseCase', () => {
     );
   }
 
-  function mockDailyCheckInHistory(
+function mockDailyCheckInHistory(
     entries: Array<{
       id: string;
       energyLevel: number;
@@ -181,9 +190,37 @@ describe('GetHomeDashboardUseCase', () => {
     );
   }
 
+  function buildCoachDecision(
+    overrides: Partial<CoachDecision> = {},
+  ): CoachDecision {
+    return new CoachDecision({
+      id: overrides.id ?? 'decision_123',
+      userProfileId: overrides.userProfileId ?? 'profile_123',
+      date: overrides.date ?? '2026-04-30',
+      priority: overrides.priority ?? 'motivation',
+      headline: overrides.headline ?? 'Keep building momentum',
+      summary: overrides.summary ?? 'Signals are stable.',
+      actionItems:
+        overrides.actionItems ?? ['Continue the current plan', 'Stay consistent'],
+      influences: overrides.influences ?? [],
+      sourceContext:
+        overrides.sourceContext ?? {
+          generatedAt: '2026-04-30T10:00:00.000Z',
+        },
+      formulaVersion: overrides.formulaVersion ?? 'coach-decision-v1',
+      generatedBy: overrides.generatedBy ?? 'deterministic',
+      llmMetadata: overrides.llmMetadata ?? { used: false },
+      createdAt: overrides.createdAt ?? new Date('2026-04-30T10:00:00.000Z'),
+      updatedAt: overrides.updatedAt ?? new Date('2026-04-30T10:00:00.000Z'),
+    });
+  }
+
   it('returns fitnessProfile and trainingPlan as null when no active fitness profile exists', async () => {
     mockUserProfile();
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: buildCoachDecision(),
+    } as never);
 
     const result = await useCase.execute({
       authUserId: 'auth_user_123',
@@ -211,6 +248,13 @@ describe('GetHomeDashboardUseCase', () => {
           fatigueScore: undefined,
           recoveryInfluences: undefined,
         },
+        coachDecision: {
+          priority: 'motivation',
+          headline: 'Keep building momentum',
+          summary: 'Signals are stable.',
+          actionItems: ['Continue the current plan', 'Stay consistent'],
+          influences: [],
+        },
         nutritionGuidance: {
           priority: 'consistency',
           message:
@@ -231,6 +275,9 @@ describe('GetHomeDashboardUseCase', () => {
     mockUserProfile();
     mockFitnessProfile();
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: buildCoachDecision(),
+    } as never);
 
     const result = await useCase.execute({
       authUserId: 'auth_user_123',
@@ -323,6 +370,16 @@ describe('GetHomeDashboardUseCase', () => {
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue(
+      {
+        coachDecision: buildCoachDecision({
+          priority: 'motivation',
+          headline: 'Keep building momentum',
+          summary: 'Signals are stable.',
+          actionItems: ['Continue the current plan', 'Stay consistent'],
+        }),
+      } as Awaited<ReturnType<GetCurrentCoachDecisionUseCase['execute']>>,
+    );
     workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
       new WorkoutLog({
         id: 'log_1',
@@ -371,6 +428,28 @@ describe('GetHomeDashboardUseCase', () => {
         'Keep your meals consistent today to support recovery and routine.',
       signals: ['low_consistency'],
     });
+    expect(result.dashboard.coachDecision).toEqual({
+      priority: 'motivation',
+      headline: 'Keep building momentum',
+      summary: 'Signals are stable.',
+      actionItems: ['Continue the current plan', 'Stay consistent'],
+      influences: [],
+    });
+  });
+
+  it('falls back safely when coach decision resolution fails', async () => {
+    mockUserProfile();
+    mockFitnessProfile();
+    trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
+    getCurrentCoachDecisionUseCase.execute.mockRejectedValue(
+      new Error('decision unavailable'),
+    );
+
+    const result = await useCase.execute({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(result.dashboard.coachDecision).toBeUndefined();
   });
 
   it("isolates the summary by authenticated user's training plan id", async () => {

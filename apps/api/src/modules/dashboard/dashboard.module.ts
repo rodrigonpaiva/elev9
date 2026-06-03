@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { BuildUserHealthContextService } from '../ai/application/services/context-builder/build-user-health-context.service';
+import { AiModule } from '../ai/ai.module';
 import { AuthModule } from '../auth/auth.module';
 import { FITNESS_PROFILE_REPOSITORY } from '../fitness/domain/repositories/fitness-profile.repository';
 import { MongooseFitnessProfileRepository } from '../fitness/infrastructure/mongoose/mongoose-fitness-profile.repository';
@@ -47,6 +48,7 @@ import { DashboardController } from './presentation/http/dashboard.controller';
 @Module({
   imports: [
     AuthModule,
+    AiModule,
     RecoveryModule,
     TrainingModule,
     NutritionModule,

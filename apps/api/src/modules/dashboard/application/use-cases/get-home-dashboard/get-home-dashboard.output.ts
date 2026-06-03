@@ -3,6 +3,12 @@ import {
   FitnessGoal,
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import {
+  CoachDecisionInfluenceProps,
+} from '../../../../ai/domain/value-objects/coach-decision-influence.value-object';
+import {
+  CoachDecisionPriority,
+} from '../../../../ai/domain/value-objects/coach-decision-priority.value-object';
+import {
   TrainingPlanDay,
   TrainingPlanExercise,
   TrainingPlanIntensity,
@@ -62,6 +68,14 @@ type DashboardAdaptiveTrainingRecommendation = {
   }>;
 };
 
+type DashboardCoachDecision = {
+  priority: CoachDecisionPriority;
+  headline: string;
+  summary: string;
+  actionItems: string[];
+  influences: CoachDecisionInfluenceProps[];
+};
+
 type DashboardRecoveryInfluence = {
   code:
     | 'LOW_SLEEP'
@@ -115,6 +129,7 @@ export type GetHomeDashboardOutput = {
         createdAt: string;
       };
     };
+    coachDecision?: DashboardCoachDecision;
     adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
     nutritionGuidance: DashboardNutritionGuidance;
   };

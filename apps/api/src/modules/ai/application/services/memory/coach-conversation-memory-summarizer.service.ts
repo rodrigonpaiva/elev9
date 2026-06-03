@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
 import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
 import { UserHealthContext } from '../context-builder/build-user-health-context.service';
 
@@ -14,6 +15,7 @@ export type CoachConversationMemorySummarizerMessage = {
 export type CoachConversationMemorySummarizerInput = {
   healthContext: UserHealthContext;
   conversationMessages: CoachConversationMemorySummarizerMessage[];
+  coachDecision?: CoachDecisionLike;
 };
 
 export type CoachConversationMemorySummaryResult = {
@@ -36,6 +38,9 @@ export class CoachConversationMemorySummarizer {
     const nutritionGoal = input.healthContext.nutritionProfile?.goal ?? 'none';
     const mealsPerDay = input.healthContext.nutritionProfile?.mealsPerDay ?? 0;
     const workoutCount = input.healthContext.recentWorkoutLogs.length;
+    const coachDecisionSummary = input.coachDecision
+      ? this.buildCoachDecisionSummary(input.coachDecision)
+      : null;
 
     const summary = [
       `goal=${this.normalizeValue(input.healthContext.goal ?? 'unknown')}`,
@@ -43,6 +48,7 @@ export class CoachConversationMemorySummarizer {
       `recovery=${recoveryTrend}`,
       `nutrition=${nutritionGoal}${nutritionGoal !== 'none' ? `/${mealsPerDay} meals` : ''}`,
       `workout_continuity=streak:${input.healthContext.currentStreak}, recent_workouts:${workoutCount}`,
+      ...(coachDecisionSummary ? [coachDecisionSummary] : []),
       `user_concern=${concern}`,
     ].join('; ');
 
@@ -105,7 +111,25 @@ export class CoachConversationMemorySummarizer {
     }
   }
 
+  private buildCoachDecisionSummary(coachDecision: CoachDecisionLike): string {
+    const actionItems = coachDecision.actionItems
+      .slice(0, 3)
+      .map((item) => this.normalizeValue(item))
+      .join('|');
+
+    return [
+      `last_coach_decision=priority:${coachDecision.priority}`,
+      `headline:${this.normalizeValue(coachDecision.headline)}`,
+      `action_items:${actionItems || 'none'}`,
+    ].join(', ');
+  }
+
   private normalizeValue(value: string): string {
     return value.trim().replace(/\s+/g, '_');
   }
 }
+
+type CoachDecisionLike = Pick<
+  CoachDecision,
+  'priority' | 'headline' | 'actionItems'
+>;

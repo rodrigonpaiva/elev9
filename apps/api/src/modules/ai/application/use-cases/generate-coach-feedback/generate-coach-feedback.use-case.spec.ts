@@ -9,6 +9,7 @@ import {
   BuildUserHealthContextService,
   UserHealthContext,
 } from '../../services/context-builder/build-user-health-context.service';
+import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
 import { GENERATE_COACH_FEEDBACK_ERROR_CODES } from './generate-coach-feedback.errors';
 import { GenerateCoachFeedbackUseCase } from './generate-coach-feedback.use-case';
 
@@ -16,6 +17,9 @@ describe('GenerateCoachFeedbackUseCase', () => {
   let coachFeedbackRepository: jest.Mocked<CoachFeedbackRepository>;
   let buildUserHealthContextService: {
     build: jest.MockedFunction<BuildUserHealthContextService['build']>;
+  };
+  let getCurrentCoachDecisionUseCase: {
+    execute: jest.MockedFunction<GetCurrentCoachDecisionUseCase['execute']>;
   };
   let coachFeedbackGenerator: CoachFeedbackGenerator;
   let generateSpy: jest.SpiedFunction<CoachFeedbackGenerator['generate']>;
@@ -30,6 +34,9 @@ describe('GenerateCoachFeedbackUseCase', () => {
     buildUserHealthContextService = {
       build: jest.fn(),
     };
+    getCurrentCoachDecisionUseCase = {
+      execute: jest.fn(),
+    };
     coachFeedbackGenerator = new CoachFeedbackGenerator();
     generateSpy = jest.spyOn(coachFeedbackGenerator, 'generate');
 
@@ -37,6 +44,7 @@ describe('GenerateCoachFeedbackUseCase', () => {
       coachFeedbackRepository,
       coachFeedbackGenerator,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
+      getCurrentCoachDecisionUseCase as unknown as GetCurrentCoachDecisionUseCase,
     );
   });
 
@@ -427,6 +435,72 @@ describe('GenerateCoachFeedbackUseCase', () => {
     );
   });
 
+  it('persists coach decision fields in contextSnapshot and passes them to the generator', async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        currentStreak: 3,
+      }),
+    );
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: {
+        id: 'decision_123',
+        priority: 'recovery',
+        headline: 'Recovery should be your focus today',
+        summary: 'Recovery is the main priority because readiness is low.',
+        actionItems: ['Reduce training intensity today', 'Prioritize sleep tonight'],
+        influences: [
+          {
+            code: 'LOW_READINESS',
+            label: 'Readiness is low.',
+            impact: 'negative',
+            source: 'recovery',
+          },
+        ],
+        date: '2026-05-04',
+        userProfileId: 'profile_123',
+        formulaVersion: 'coach-decision-v1',
+        generatedBy: 'deterministic',
+        sourceContext: {
+          readinessScore: 32,
+          generatedAt: '2026-05-04T10:00:00.000Z',
+        },
+        createdAt: new Date('2026-05-04T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-04T10:00:00.000Z'),
+      } as never,
+    } as never);
+
+    await useCase.execute({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(generateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        coachDecision: expect.objectContaining({
+          priority: 'recovery',
+          headline: 'Recovery should be your focus today',
+        }),
+      }) as CoachFeedbackGeneratorInput,
+    );
+    expect(coachFeedbackRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contextSnapshot: expect.objectContaining({
+          coachDecisionId: 'decision_123',
+          coachDecisionPriority: 'recovery',
+          coachDecisionHeadline: 'Recovery should be your focus today',
+          coachDecisionActionItems: [
+            'Reduce training intensity today',
+            'Prioritize sleep tonight',
+          ],
+          coachDecisionInfluences: expect.arrayContaining([
+            expect.objectContaining({
+              code: 'LOW_READINESS',
+            }),
+          ]),
+        }),
+      }),
+    );
+  });
+
   it('does not persist sensitive fields in contextSnapshot', async () => {
     buildUserHealthContextService.build.mockResolvedValue(
       buildHealthContext({
@@ -454,6 +528,33 @@ describe('GenerateCoachFeedbackUseCase', () => {
           latestCheckIn: expect.not.objectContaining({
             createdAt: expect.anything(),
           }),
+        }),
+      }),
+    );
+  });
+
+  it('falls back when coach decision resolution fails', async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        currentStreak: 2,
+      }),
+    );
+    getCurrentCoachDecisionUseCase.execute.mockRejectedValue(
+      new Error('decision unavailable'),
+    );
+
+    const result = await useCase.execute({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(result.message).toBe(
+      'You are ready to start your first training streak today.',
+    );
+    expect(coachFeedbackRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contextSnapshot: expect.not.objectContaining({
+          coachDecisionId: expect.anything(),
+          coachDecisionPriority: expect.anything(),
         }),
       }),
     );

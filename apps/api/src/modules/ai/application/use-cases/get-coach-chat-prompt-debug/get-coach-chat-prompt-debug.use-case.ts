@@ -69,7 +69,6 @@ export class GetCoachChatPromptDebugUseCase {
       const healthContext = await this.buildUserHealthContextService.build({
         authUserId,
       });
-
       const conversation =
         await this.coachConversationRepository.findLatestByUserProfileId(
           userProfile.id,
@@ -136,4 +135,5 @@ export class GetCoachChatPromptDebugUseCase {
       );
     }
   }
+
 }

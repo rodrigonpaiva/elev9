@@ -2,6 +2,7 @@ import {
   FitnessProfileActivityLevel,
   FitnessProfileGoal,
 } from '../fitness';
+import { CoachDecisionInfluence, CoachDecisionPriority } from '../ai';
 import {
   AdaptiveRecommendedIntensity,
   AdaptiveRecommendationType,
@@ -33,6 +34,14 @@ export type DashboardAdaptiveTrainingRecommendation = {
   volumeAction: AdaptiveVolumeAction;
   reasoning: string;
   influences: AdaptiveTrainingInfluence[];
+};
+
+export type DashboardCoachDecision = {
+  priority: CoachDecisionPriority;
+  headline: string;
+  summary: string;
+  actionItems: string[];
+  influences: CoachDecisionInfluence[];
 };
 
 export type DashboardHomeResponse = {
@@ -83,6 +92,7 @@ export type DashboardHomeResponse = {
         createdAt: string;
       };
     };
+    coachDecision?: DashboardCoachDecision;
     adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
     nutritionGuidance: {
       priority: 'recovery' | 'consistency' | 'performance';
@@ -102,6 +112,7 @@ export type DashboardHomeDebugResponse = {
     fatigueScore?: number;
     recoveryInfluences?: DashboardRecoveryInfluence[];
   };
+  coachDecision?: DashboardCoachDecision;
   adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
   nutrition: {
     priority: 'recovery' | 'consistency' | 'performance';

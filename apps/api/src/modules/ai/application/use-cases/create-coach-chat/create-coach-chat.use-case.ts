@@ -19,6 +19,7 @@ import {
   COACH_MESSAGE_REPOSITORY,
   CoachMessageRepository,
 } from '../../../domain/repositories/coach-message.repository';
+import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
 import {
   CoachConversationMemorySummarizer,
   COACH_CONVERSATION_MEMORY_VERSION,
@@ -48,6 +49,7 @@ export class CreateCoachChatUseCase {
     @Inject(COACH_CONVERSATION_MEMORY_REPOSITORY)
     private readonly coachConversationMemoryRepository: CoachConversationMemoryRepository,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
+    private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
     private readonly aiPromptBuilder: AiPromptBuilder,
     private readonly aiLlmService: AiLlmService,
     private readonly coachChatReplyGenerator: CoachChatReplyGenerator,
@@ -88,6 +90,7 @@ export class CreateCoachChatUseCase {
       const healthContext = await this.buildUserHealthContextService.build({
         authUserId,
       });
+      const coachDecision = await this.resolveCoachDecision(authUserId);
 
       const existingConversation =
         await this.coachConversationRepository.findLatestByUserProfileId(
@@ -103,6 +106,28 @@ export class CreateCoachChatUseCase {
         await this.coachConversationMemoryRepository.findByConversationId(
           conversation.id,
         );
+      const coachDecisionPayload = coachDecision
+        ? {
+            priority: coachDecision.priority,
+            headline: coachDecision.headline,
+            summary: coachDecision.summary,
+            actionItems: [...coachDecision.actionItems],
+            influences: coachDecision.influences.map((influence) => ({
+              code: influence.code,
+              label: influence.label,
+              impact: influence.impact,
+              source: influence.source,
+              weight: influence.weight,
+              value: influence.value,
+            })),
+          }
+        : undefined;
+      const conversationMemoryPayload = conversationMemory
+        ? {
+            summary: conversationMemory.summary,
+            metadata: conversationMemory.metadata,
+          }
+        : undefined;
 
       const conversationHistory = (
         existingConversation
@@ -130,12 +155,10 @@ export class CreateCoachChatUseCase {
         message,
         healthContext,
         conversationHistory,
-        conversationMemory: conversationMemory
-          ? {
-              summary: conversationMemory.summary,
-              metadata: conversationMemory.metadata,
-            }
-          : undefined,
+        ...(conversationMemoryPayload
+          ? { conversationMemory: conversationMemoryPayload }
+          : {}),
+        ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
       });
 
       let reply: {
@@ -160,6 +183,7 @@ export class CreateCoachChatUseCase {
         const fallbackReply = this.coachChatReplyGenerator.generate({
           message,
           healthContext,
+          ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
         });
 
         await this.coachMessageRepository.create({
@@ -177,6 +201,7 @@ export class CreateCoachChatUseCase {
           conversationHistory,
           userMessage: message,
           assistantReply: fallbackReply,
+          ...(coachDecision ? { coachDecision } : {}),
         });
 
         return {
@@ -203,6 +228,7 @@ export class CreateCoachChatUseCase {
         conversationHistory,
         userMessage: message,
         assistantReply: reply.content,
+        ...(coachDecision ? { coachDecision } : {}),
       });
 
       return {
@@ -227,6 +253,9 @@ export class CreateCoachChatUseCase {
     conversationHistory: AiPromptBuilderConversationMessage[];
     userMessage: string;
     assistantReply: string;
+    coachDecision?: Awaited<
+      ReturnType<GetCurrentCoachDecisionUseCase['execute']>
+    >['coachDecision'];
   }): Promise<void> {
     const memory = this.coachConversationMemorySummarizer.summarize({
       healthContext: input.healthContext,
@@ -243,6 +272,7 @@ export class CreateCoachChatUseCase {
           createdAt: new Date().toISOString(),
         },
       ],
+      coachDecision: input.coachDecision,
     });
 
     await this.coachConversationMemoryRepository.upsertByConversationId({
@@ -253,5 +283,17 @@ export class CreateCoachChatUseCase {
         version: memory.metadata.version ?? COACH_CONVERSATION_MEMORY_VERSION,
       },
     });
+  }
+
+  private async resolveCoachDecision(authUserId: string) {
+    try {
+      const result = await this.getCurrentCoachDecisionUseCase.execute({
+        authUserId,
+      });
+
+      return result?.coachDecision;
+    } catch {
+      return undefined;
+    }
   }
 }

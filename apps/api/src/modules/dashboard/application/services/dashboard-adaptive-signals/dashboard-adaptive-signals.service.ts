@@ -1,11 +1,30 @@
 import { Injectable } from '@nestjs/common';
 
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
+import { CoachDecision } from '../../../../ai/domain/entities/coach-decision.entity';
 import { GetHomeDashboardOutput } from '../../use-cases/get-home-dashboard/get-home-dashboard.output';
 import { GetHomeDashboardDebugOutput } from '../../use-cases/get-home-dashboard-debug/get-home-dashboard-debug.output';
 
 @Injectable()
 export class DashboardAdaptiveSignalsService {
+  buildCoachDecision(
+    coachDecision: CoachDecision | null | undefined,
+  ): GetHomeDashboardOutput['dashboard']['coachDecision'] | undefined {
+    if (!coachDecision) {
+      return undefined;
+    }
+
+    return {
+      priority: coachDecision.priority,
+      headline: coachDecision.headline,
+      summary: coachDecision.summary,
+      actionItems: [...coachDecision.actionItems],
+      influences: coachDecision.influences.map((influence) =>
+        influence.toJSON(),
+      ),
+    };
+  }
+
   buildAdaptiveTrainingRecommendation(
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
   ): GetHomeDashboardOutput['dashboard']['adaptiveTrainingRecommendation'] {
