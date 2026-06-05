@@ -18,6 +18,8 @@ import {
   AdaptiveTrainingRecommendationDocument,
   AdaptiveTrainingRecommendationSchemaClass,
 } from './adaptive-training-recommendation.schema';
+import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
+import type { AdaptiveTrainingSourceContext } from '../../../../shared/source-context';
 
 @Injectable()
 export class MongooseAdaptiveTrainingRecommendationRepository
@@ -53,7 +55,7 @@ export class MongooseAdaptiveTrainingRecommendationRepository
       .findOne({
         userProfileId,
       })
-      .sort({ createdAt: -1, _id: -1 })
+      .sort({ date: -1, createdAt: -1, _id: -1 })
       .exec();
 
     if (!document) {
@@ -136,22 +138,23 @@ export class MongooseAdaptiveTrainingRecommendationRepository
         document as AdaptiveTrainingRecommendationDocument,
       );
     } catch (error) {
-      if (isDuplicateKeyError(error)) {
-        const existingDocument = await this.adaptiveTrainingRecommendationModel
-          .findOne({
-            userProfileId: input.userProfileId,
-            date: input.date,
-          })
-          .exec();
+      return IdempotentUpsertHelper.handleDuplicateKeyFallback({
+        error,
+        reload: async () => {
+          const existingDocument = await this.adaptiveTrainingRecommendationModel
+            .findOne({
+              userProfileId: input.userProfileId,
+              date: input.date,
+            })
+            .exec();
 
-        if (existingDocument) {
-          return this.toEntity(
-            existingDocument as AdaptiveTrainingRecommendationDocument,
-          );
-        }
-      }
-
-      throw error;
+          return existingDocument
+            ? this.toEntity(
+                existingDocument as AdaptiveTrainingRecommendationDocument,
+              )
+            : null;
+        },
+      });
     }
   }
 
@@ -177,20 +180,11 @@ export class MongooseAdaptiveTrainingRecommendationRepository
             value: influence.value,
           }),
       ),
-      sourceContext: document.sourceContext ?? {},
+      sourceContext: (document.sourceContext ?? {}) as AdaptiveTrainingSourceContext,
       formulaVersion: document.formulaVersion,
       generatedBy: document.generatedBy,
       createdAt: document.createdAt,
       updatedAt: document.updatedAt,
     });
   }
-}
-
-function isDuplicateKeyError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: number }).code === 11000
-  );
 }

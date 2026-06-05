@@ -64,7 +64,8 @@ export interface CreateCoachFeedbackRepositoryInput {
         | 'nutrition'
         | 'training'
         | 'progress'
-        | 'memory';
+        | 'memory'
+        | 'notification';
       weight?: number;
       value?: number;
     }>;

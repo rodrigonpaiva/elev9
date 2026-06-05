@@ -26,6 +26,7 @@ import {
   RECOVERY_SNAPSHOT_REPOSITORY,
   RecoverySnapshotRepository,
 } from '../../../domain/repositories/recovery-snapshot.repository';
+import type { RecoverySourceContext } from '../../../../../shared/source-context';
 import {
   RECOVERY_SCORE_CALCULATOR_VERSION,
   RecoveryScoreCalculatorInput,
@@ -96,7 +97,7 @@ export class BuildRecoverySnapshotUseCase {
         );
       const recentCheckIns = dailyCheckIns.filter((checkIn) =>
         this.isDateInRange(
-          this.toDateString(checkIn.createdAt),
+          this.recoveryDateService.getDateString(checkIn.createdAt),
           recentWindow.startDate,
           recentWindow.endDate,
         ),
@@ -182,7 +183,7 @@ export class BuildRecoverySnapshotUseCase {
       const scoreResult =
         this.recoveryScoreCalculatorService.calculate(calculatorInput);
 
-      const sourceContext = {
+      const sourceContext: RecoverySourceContext = {
         sleepQuality: resolvedSleepQuality,
         energyLevel: resolvedEnergyLevel,
         muscleSoreness: resolvedMuscleSoreness,
@@ -305,7 +306,9 @@ export class BuildRecoverySnapshotUseCase {
     dateString: string,
   ) {
     const todayCheckIns = checkIns.filter(
-      (checkIn) => this.toDateString(checkIn.createdAt) === dateString,
+      (checkIn) =>
+        this.recoveryDateService.getDateString(checkIn.createdAt) ===
+        dateString,
     );
 
     if (todayCheckIns.length > 0) {
@@ -340,13 +343,9 @@ export class BuildRecoverySnapshotUseCase {
     end.setUTCDate(end.getUTCDate() - (RECENT_WINDOW_DAYS - 1));
 
     return {
-      startDate: this.toDateString(end),
+      startDate: this.recoveryDateService.getDateString(end),
       endDate,
     };
-  }
-
-  private toDateString(date: Date): string {
-    return date.toISOString().slice(0, 10);
   }
 
   private isDateInRange(

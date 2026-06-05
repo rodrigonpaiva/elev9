@@ -43,13 +43,17 @@ export type CoachDecisionInfluenceCode =
   | 'GOAL_PROGRESS_IMPROVING'
   | 'GOAL_FORECAST_LOW_CONFIDENCE'
   | 'GOAL_MILESTONE_CLOSE'
-  | 'GOAL_ACHIEVEMENT_REACHED';
+  | 'GOAL_ACHIEVEMENT_REACHED'
+  | 'NOTIFICATION_SUPPRESSED'
+  | 'NOTIFICATION_FATIGUE_HIGH'
+  | 'NOTIFICATION_DISMISSED_FREQUENTLY'
+  | 'NOTIFICATION_HIGH_ENGAGEMENT';
 
 export interface CoachDecisionInfluence {
   code: CoachDecisionInfluenceCode;
   label: string;
   impact: 'positive' | 'negative' | 'neutral';
-  source: 'recovery' | 'nutrition' | 'training' | 'progress' | 'memory';
+  source: 'recovery' | 'nutrition' | 'training' | 'progress' | 'memory' | 'notification';
   weight?: number;
   value?: number;
 }

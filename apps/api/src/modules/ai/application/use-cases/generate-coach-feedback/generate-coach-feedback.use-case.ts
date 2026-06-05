@@ -5,7 +5,14 @@ import {
   COACH_FEEDBACK_GENERATOR_VERSION,
 } from '../../services/coach-feedback/coach-feedback-generator.service';
 import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
+import {
+  CoachDecisionReadModelMapper,
+} from '../../../../../shared/mappers';
+import { NotificationReadModelMapper } from '../../../../../shared/mappers';
+import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
 import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import {
   COACH_FEEDBACK_REPOSITORY,
   CoachFeedbackRepository,
@@ -26,6 +33,8 @@ export class GenerateCoachFeedbackUseCase {
     private readonly coachFeedbackGenerator: CoachFeedbackGenerator,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
     private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
+    private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
+    private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
   ) {}
 
   async execute(
@@ -46,6 +55,7 @@ export class GenerateCoachFeedbackUseCase {
         authUserId,
       });
       const coachDecision = await this.resolveCoachDecision(authUserId);
+      const notification = await this.resolveNotification(authUserId);
 
       if (!healthContext.userProfileId) {
         throw new GenerateCoachFeedbackError(
@@ -79,9 +89,13 @@ export class GenerateCoachFeedbackUseCase {
         recommendedIntensity: healthContext.recommendedIntensity,
         adaptiveTrainingRecommendation:
           healthContext.adaptiveTrainingRecommendation,
-        coachDecision: coachDecision as Parameters<
-          CoachFeedbackGenerator['generate']
-        >[0]['coachDecision'],
+        coachDecision: CoachDecisionReadModelMapper.toFeedbackPayload(
+          coachDecision,
+        ),
+        notification: NotificationReadModelMapper.toPromptPayload(
+          notification?.current,
+          notification?.engagementSummary,
+        ),
         nutritionProfile: healthContext.nutritionProfile,
       });
 
@@ -126,31 +140,7 @@ export class GenerateCoachFeedbackUseCase {
 
   private buildContextSnapshot(
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
-    coachDecision?: {
-      id: string;
-      priority:
-        | 'recovery'
-        | 'nutrition'
-        | 'training'
-        | 'consistency'
-        | 'motivation';
-      headline: string;
-      summary: string;
-      actionItems: string[];
-      influences: Array<{
-        code: string;
-        label: string;
-        impact: 'positive' | 'negative' | 'neutral';
-        source:
-          | 'recovery'
-          | 'nutrition'
-          | 'training'
-          | 'progress'
-          | 'memory';
-        weight?: number;
-        value?: number;
-      }>;
-    },
+    coachDecision?: CoachDecision,
   ): {
     goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
     activityLevel?: 'low' | 'medium' | 'high';
@@ -249,19 +239,20 @@ export class GenerateCoachFeedbackUseCase {
     coachDecisionHeadline?: string;
     coachDecisionSummary?: string;
     coachDecisionActionItems?: string[];
-    coachDecisionInfluences?: Array<{
-      code: string;
-      label: string;
-      impact: 'positive' | 'negative' | 'neutral';
-      source:
-        | 'recovery'
-        | 'nutrition'
-        | 'training'
-        | 'progress'
-        | 'memory';
-      weight?: number;
-      value?: number;
-    }>;
+      coachDecisionInfluences?: Array<{
+        code: string;
+        label: string;
+        impact: 'positive' | 'negative' | 'neutral';
+        source:
+          | 'recovery'
+          | 'nutrition'
+          | 'training'
+          | 'progress'
+          | 'memory'
+          | 'notification';
+        weight?: number;
+        value?: number;
+      }>;
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -304,16 +295,6 @@ export class GenerateCoachFeedbackUseCase {
     const adaptiveTrainingReasoning =
       healthContext.adaptiveTrainingReasoning ??
       adaptiveTrainingRecommendation?.reasoning;
-    const coachDecisionInfluences =
-      coachDecision?.influences.map((influence) => ({
-        code: influence.code,
-        label: influence.label,
-        impact: influence.impact,
-        source: influence.source,
-        weight: influence.weight,
-        value: influence.value,
-      }));
-
     return {
       goal: healthContext.goal,
       activityLevel: healthContext.activityLevel,
@@ -363,12 +344,7 @@ export class GenerateCoachFeedbackUseCase {
         : {}),
       ...(coachDecision
         ? {
-            coachDecisionId: coachDecision.id,
-            coachDecisionPriority: coachDecision.priority,
-            coachDecisionHeadline: coachDecision.headline,
-            coachDecisionSummary: coachDecision.summary,
-            coachDecisionActionItems: [...coachDecision.actionItems],
-            coachDecisionInfluences,
+            ...CoachDecisionReadModelMapper.toFeedbackContextSnapshot(coachDecision),
           }
         : {}),
       weeklyFrequency: healthContext.weeklyFrequency,
@@ -419,6 +395,37 @@ export class GenerateCoachFeedbackUseCase {
       case 'MODERATE':
       default:
         return 'stable';
+    }
+  }
+
+  private async resolveNotification(authUserId: string): Promise<{
+    current?: Parameters<typeof NotificationReadModelMapper.toPromptPayload>[0];
+    engagementSummary?: Parameters<
+      typeof NotificationReadModelMapper.toPromptPayload
+    >[1];
+  } | null> {
+    try {
+      const [currentResult, engagementSummaryResult] = await Promise.allSettled([
+        this.getCurrentNotificationUseCase.execute({
+          authUserId,
+        }),
+        this.getEngagementSummaryUseCase.execute({
+          authUserId,
+        }),
+      ]);
+
+      return {
+        current:
+          currentResult.status === 'fulfilled'
+            ? currentResult.value.notificationDecision
+            : undefined,
+        engagementSummary:
+          engagementSummaryResult.status === 'fulfilled'
+            ? engagementSummaryResult.value.engagementSummary
+            : undefined,
+      };
+    } catch {
+      return null;
     }
   }
 }

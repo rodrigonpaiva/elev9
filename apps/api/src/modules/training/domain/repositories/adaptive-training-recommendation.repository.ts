@@ -1,6 +1,5 @@
 import {
   AdaptiveTrainingRecommendation,
-  AdaptiveTrainingSourceContext,
 } from '../entities/adaptive-training-recommendation.entity';
 import {
   AdaptiveRecommendedIntensity,
@@ -10,6 +9,7 @@ import {
 import {
   AdaptiveTrainingInfluenceProps,
 } from '../value-objects/adaptive-training-influence.value-object';
+import type { AdaptiveTrainingSourceContext } from '../../../../shared/source-context';
 
 export interface AdaptiveTrainingRecommendationQueryOptions {
   limit?: number;

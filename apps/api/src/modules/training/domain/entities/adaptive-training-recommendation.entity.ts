@@ -7,24 +7,7 @@ import {
   AdaptiveTrainingInfluence,
   type AdaptiveTrainingInfluenceProps,
 } from '../value-objects/adaptive-training-influence.value-object';
-
-export type AdaptiveTrainingSourceContext = {
-  readinessScore?: number;
-  fatigueScore?: number;
-  recoveryTrend?: 'improving' | 'stable' | 'declining';
-  recoveryRecommendedIntensity?: AdaptiveRecommendedIntensity;
-  adherenceScore?: number;
-  currentStreak?: number;
-  missedWorkouts?: number;
-  recentWorkoutLoad?: number;
-  nutritionAdherence?: number;
-  recentWorkoutLogsCount?: number;
-  trainingPlanId?: string;
-  recoverySnapshotId?: string;
-  nutritionRecommendationId?: string;
-  formulaVersion?: string;
-  generatedAt?: string;
-};
+import type { AdaptiveTrainingSourceContext } from '../../../../shared/source-context';
 
 export type AdaptiveTrainingRecommendationProps = {
   id: string;

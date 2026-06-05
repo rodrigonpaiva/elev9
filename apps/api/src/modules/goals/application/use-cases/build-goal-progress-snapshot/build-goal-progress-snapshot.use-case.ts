@@ -52,6 +52,7 @@ import {
   GOAL_PROGRESS_SNAPSHOT_REPOSITORY,
   GoalProgressSnapshotRepository,
 } from '../../../domain/repositories/goal-progress-snapshot.repository';
+import type { GoalSourceContext } from '../../../../../shared/source-context';
 import {
   BUILD_GOAL_PROGRESS_SNAPSHOT_ERROR_CODES,
   BuildGoalProgressSnapshotError,
@@ -214,7 +215,7 @@ export class BuildGoalProgressSnapshotUseCase {
         previousSnapshots: goalSignals.previousSnapshots,
       });
 
-      const sourceContext = {
+      const sourceContext: GoalSourceContext = {
         goalType: activeGoal.type,
         startValue: goalSignals.startValue,
         currentValue: goalSignals.currentValue,

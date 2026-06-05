@@ -1,4 +1,5 @@
 import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
+import { NotificationDecision } from '../../../../notifications/domain/entities/notification-decision.entity';
 import { CoachDecisionRepository } from '../../../domain/repositories/coach-decision.repository';
 import { CoachDecisionCalculatorService } from '../../services/coach-decision-calculator.service';
 import { CoachDecisionDateService } from '../../services/coach-decision-date.service';
@@ -6,11 +7,14 @@ import { BuildCoachDecisionUseCase } from './build-coach-decision.use-case';
 import { GetCurrentRecoveryUseCase } from '../../../../recovery/application/use-cases/get-current-recovery/get-current-recovery.use-case';
 import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
 import { GetCurrentAdaptiveTrainingUseCase } from '../../../../training/application/use-cases/get-current-adaptive-training/get-current-adaptive-training.use-case';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
 import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
 import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
 import { WorkoutLogRepository } from '../../../../progress/domain/repositories/workout-log.repository';
 import { NutritionRecommendationRepository } from '../../../../nutrition/domain/repositories/nutrition-recommendation.repository';
+import { NotificationInfluence } from '../../../../notifications/domain/value-objects/notification-influence.value-object';
 
 describe('BuildCoachDecisionUseCase', () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
@@ -22,6 +26,8 @@ describe('BuildCoachDecisionUseCase', () => {
   let getCurrentRecoveryUseCase: jest.Mocked<GetCurrentRecoveryUseCase>;
   let getCurrentGoalUseCase: jest.Mocked<GetCurrentGoalUseCase>;
   let getCurrentAdaptiveTrainingUseCase: jest.Mocked<GetCurrentAdaptiveTrainingUseCase>;
+  let getCurrentNotificationUseCase: jest.Mocked<GetCurrentNotificationUseCase>;
+  let getEngagementSummaryUseCase: jest.Mocked<GetEngagementSummaryUseCase>;
   let useCase: BuildCoachDecisionUseCase;
 
   beforeEach(() => {
@@ -53,6 +59,16 @@ describe('BuildCoachDecisionUseCase', () => {
     getCurrentAdaptiveTrainingUseCase = {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCurrentAdaptiveTrainingUseCase>;
+    getCurrentNotificationUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        notificationDecision: undefined,
+      }),
+    } as unknown as jest.Mocked<GetCurrentNotificationUseCase>;
+    getEngagementSummaryUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        engagementSummary: undefined,
+      }),
+    } as unknown as jest.Mocked<GetEngagementSummaryUseCase>;
 
     const calculator = new CoachDecisionCalculatorService();
     const dateService = new CoachDecisionDateService();
@@ -67,12 +83,16 @@ describe('BuildCoachDecisionUseCase', () => {
       getCurrentRecoveryUseCase,
       getCurrentGoalUseCase,
       getCurrentAdaptiveTrainingUseCase,
+      getCurrentNotificationUseCase,
+      getEngagementSummaryUseCase,
       calculator,
       dateService,
     );
   });
 
   it('builds and persists a coach decision with all signals', async () => {
+    const expectedDate = new CoachDecisionDateService().todayUtcDateString();
+
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       buildUserProfile(),
     );
@@ -97,6 +117,20 @@ describe('BuildCoachDecisionUseCase', () => {
     } as never);
     getCurrentAdaptiveTrainingUseCase.execute.mockResolvedValue({
       adaptiveTrainingRecommendation: buildAdaptiveTrainingRecommendation(),
+    } as never);
+    getCurrentNotificationUseCase.execute.mockResolvedValue({
+      notificationDecision: buildNotificationDecision(),
+    } as never);
+    getEngagementSummaryUseCase.execute.mockResolvedValue({
+      engagementSummary: {
+        engagementScore: 84,
+        fatigueLevel: 'high',
+        openedCount: 2,
+        clickedCount: 1,
+        dismissedCount: 2,
+        completedCount: 1,
+        recentEventsCount: 6,
+      },
     } as never);
     coachDecisionRepository.upsertDailyDecision.mockImplementation(async (input) =>
       new CoachDecision({
@@ -132,16 +166,27 @@ describe('BuildCoachDecisionUseCase', () => {
     expect(getCurrentAdaptiveTrainingUseCase.execute).toHaveBeenCalledWith({
       authUserId: 'auth_123',
     });
+    expect(getCurrentNotificationUseCase.execute).toHaveBeenCalledWith({
+      authUserId: 'auth_123',
+    });
+    expect(getEngagementSummaryUseCase.execute).toHaveBeenCalledWith({
+      authUserId: 'auth_123',
+    });
     expect(coachDecisionRepository.upsertDailyDecision).toHaveBeenCalledWith(
       expect.objectContaining({
         userProfileId: 'profile_123',
-        date: '2026-06-03',
+        date: expectedDate,
         nutritionRecommendationId: 'nutrition_123',
         adaptiveTrainingRecommendationId: 'adaptive_123',
         generatedBy: 'deterministic',
         llmMetadata: { used: false },
       }),
     );
+    const persistedInput = coachDecisionRepository.upsertDailyDecision.mock
+      .calls[0][0];
+    expect(persistedInput.sourceContext).not.toHaveProperty('authUserId');
+    expect(persistedInput.sourceContext).not.toHaveProperty('rawHealthContext');
+    expect(persistedInput.sourceContext).not.toHaveProperty('prompt');
     expect(result.coachDecision.id).toBe('decision_123');
     expect(result.coachDecision.generatedBy).toBe('deterministic');
   });
@@ -161,6 +206,12 @@ describe('BuildCoachDecisionUseCase', () => {
     } as never);
     getCurrentAdaptiveTrainingUseCase.execute.mockResolvedValue({
       adaptiveTrainingRecommendation: undefined,
+    } as never);
+    getCurrentNotificationUseCase.execute.mockResolvedValue({
+      notificationDecision: undefined,
+    } as never);
+    getEngagementSummaryUseCase.execute.mockResolvedValue({
+      engagementSummary: undefined,
     } as never);
     coachDecisionRepository.upsertDailyDecision.mockImplementation(async (input) =>
       new CoachDecision({
@@ -199,6 +250,11 @@ describe('BuildCoachDecisionUseCase', () => {
       formulaVersion: 'coach-decision-v1',
       generatedAt: expect.any(String),
     });
+    const persistedInput = coachDecisionRepository.upsertDailyDecision.mock
+      .calls[0][0];
+    expect(persistedInput.sourceContext).not.toHaveProperty('authUserId');
+    expect(persistedInput.sourceContext).not.toHaveProperty('rawHealthContext');
+    expect(persistedInput.sourceContext).not.toHaveProperty('prompt');
   });
 
   it('falls back to recovery priority when readiness is low', async () => {
@@ -309,6 +365,8 @@ describe('BuildCoachDecisionUseCase', () => {
   });
 
   it('uses the same date helper for idempotent builds', async () => {
+    const expectedDate = new CoachDecisionDateService().todayUtcDateString();
+
     userProfileRepository.findByAuthUserId.mockResolvedValue(
       buildUserProfile(),
     );
@@ -342,8 +400,8 @@ describe('BuildCoachDecisionUseCase', () => {
 
     const calls = coachDecisionRepository.upsertDailyDecision.mock.calls;
     expect(calls).toHaveLength(2);
-    expect(calls[0]?.[0].date).toBe('2026-06-03');
-    expect(calls[1]?.[0].date).toBe('2026-06-03');
+    expect(calls[0]?.[0].date).toBe(expectedDate);
+    expect(calls[1]?.[0].date).toBe(expectedDate);
   });
 });
 
@@ -408,6 +466,53 @@ function buildAdaptiveTrainingRecommendation() {
     recommendationType: 'increase_intensity',
     recommendedIntensity: 'hard',
   } as never;
+}
+
+function buildNotificationDecision() {
+  return new NotificationDecision({
+    id: 'notification_123',
+    userProfileId: 'profile_123',
+    date: '2026-06-03',
+    type: 'coach_nudge',
+    priority: 'medium',
+    channel: 'in_app',
+    status: 'planned',
+    title: 'Small action, big progress',
+    message: 'Keep the next step simple and consistent.',
+    influences: [
+      {
+        code: 'COACH_CONSISTENCY_NUDGE',
+        label: 'Coach consistency nudge',
+        impact: 'neutral',
+        source: 'coach',
+      } as NotificationInfluence,
+    ],
+    sourceContext: {
+      coachDecisionId: 'decision_123',
+      coachDecisionPriority: 'consistency',
+      coachDecisionHeadline: 'Focus on consistency',
+      readinessScore: 64,
+      fatigueScore: 38,
+      fatigueLevel: 'low',
+      adaptiveRecommendationType: 'maintain',
+      goalProgressTrend: 'stable',
+      goalMilestoneClose: false,
+      goalAchievementReached: false,
+      nutritionAdherence: 72,
+      missedWorkouts: 0,
+      noRecentActivity: false,
+      recentEngagementEventsCount: 2,
+      formulaVersion: 'notification-engine-v1',
+      generatedAt: '2026-06-03T06:00:00.000Z',
+    },
+    suppressed: false,
+    suppressionReasons: [],
+    fatigueLevel: 'low',
+    formulaVersion: 'notification-engine-v1',
+    generatedBy: 'deterministic',
+    createdAt: new Date('2026-06-03T06:00:00.000Z'),
+    updatedAt: new Date('2026-06-03T06:00:00.000Z'),
+  });
 }
 
 function buildDecision() {

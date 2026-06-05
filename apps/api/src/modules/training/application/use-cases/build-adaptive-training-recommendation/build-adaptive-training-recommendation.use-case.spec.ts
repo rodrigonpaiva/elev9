@@ -122,6 +122,7 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
 
     adaptiveTrainingDateService = {
       todayUtcDateString: jest.fn().mockReturnValue('2026-06-02'),
+      getDateString: jest.fn((date: Date) => date.toISOString().slice(0, 10)),
     } as never;
 
     useCase = new BuildAdaptiveTrainingRecommendationUseCase(
@@ -201,6 +202,12 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
         }),
       }),
     );
+    const persistedInput =
+      adaptiveTrainingRecommendationRepository.upsertDailyRecommendation.mock
+        .calls[0][0];
+    expect(persistedInput.sourceContext).not.toHaveProperty('authUserId');
+    expect(persistedInput.sourceContext).not.toHaveProperty('rawHealthContext');
+    expect(persistedInput.sourceContext).not.toHaveProperty('prompt');
     expect(result.adaptiveTrainingRecommendation).toEqual(
       buildAdaptiveRecommendation(),
     );

@@ -1,9 +1,7 @@
 import {
-  GoalContract,
-  GoalForecastContract,
-  GoalMilestoneContract,
-  GoalProgressSnapshotContract,
-} from '../../../../goals/domain/goals.contract';
+  GoalDashboardPayload,
+  NotificationReadModelPayload,
+} from '../../../../../shared/mappers';
 
 export type GetHomeDashboardDebugOutput = {
   generatedAt: string;
@@ -30,12 +28,8 @@ export type GetHomeDashboardDebugOutput = {
       value?: number;
     }>;
   };
-  goal?: {
-    current: GoalContract;
-    progressSnapshot?: GoalProgressSnapshotContract;
-    forecast?: GoalForecastContract;
-    milestones?: GoalMilestoneContract[];
-  };
+  goal?: GoalDashboardPayload;
+  notification?: NotificationReadModelPayload;
   adaptiveTrainingRecommendation?: {
     recommendationType:
       | 'increase_intensity'

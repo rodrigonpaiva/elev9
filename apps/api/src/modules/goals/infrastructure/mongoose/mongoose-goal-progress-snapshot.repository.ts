@@ -16,6 +16,8 @@ import {
   GoalProgressSnapshotDocument,
   GoalProgressSnapshotSchemaClass,
 } from './goal-progress-snapshot.schema';
+import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
+import type { GoalSourceContext } from '../../../../shared/source-context';
 
 @Injectable()
 export class MongooseGoalProgressSnapshotRepository
@@ -102,17 +104,18 @@ export class MongooseGoalProgressSnapshotRepository
 
       return this.toEntity(document as GoalProgressSnapshotDocument);
     } catch (error) {
-      if (isDuplicateKeyError(error)) {
-        const existingDocument = await this.goalProgressSnapshotModel
-          .findOne({ goalId: input.goalId, date: input.date })
-          .exec();
+      return IdempotentUpsertHelper.handleDuplicateKeyFallback({
+        error,
+        reload: async () => {
+          const existingDocument = await this.goalProgressSnapshotModel
+            .findOne({ goalId: input.goalId, date: input.date })
+            .exec();
 
-        if (existingDocument) {
-          return this.toEntity(existingDocument as GoalProgressSnapshotDocument);
-        }
-      }
-
-      throw error;
+          return existingDocument
+            ? this.toEntity(existingDocument as GoalProgressSnapshotDocument)
+            : null;
+        },
+      });
     }
   }
 
@@ -127,17 +130,8 @@ export class MongooseGoalProgressSnapshotRepository
       currentValue: document.currentValue,
       targetValue: document.targetValue,
       trend: new GoalTrendValueObject(document.trend),
-      sourceContext: document.sourceContext ?? {},
+      sourceContext: (document.sourceContext ?? {}) as GoalSourceContext,
       formulaVersion: document.formulaVersion,
     });
   }
-}
-
-function isDuplicateKeyError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: number }).code === 11000
-  );
 }

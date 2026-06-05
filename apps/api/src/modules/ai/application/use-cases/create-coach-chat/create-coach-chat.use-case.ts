@@ -8,6 +8,14 @@ import {
 import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
 import { CoachChatReplyGenerator } from '../../services/chat/coach-chat-reply-generator.service';
 import {
+  CoachDecisionReadModelMapper,
+  type CoachDecisionReadModelPayload,
+} from '../../../../../shared/mappers';
+import {
+  NotificationReadModelMapper,
+  type NotificationMemoryPayload,
+} from '../../../../../shared/mappers';
+import {
   COACH_CONVERSATION_MEMORY_REPOSITORY,
   CoachConversationMemoryRepository,
 } from '../../../domain/repositories/coach-conversation-memory.repository';
@@ -20,6 +28,8 @@ import {
   CoachMessageRepository,
 } from '../../../domain/repositories/coach-message.repository';
 import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import {
   CoachConversationMemorySummarizer,
   COACH_CONVERSATION_MEMORY_VERSION,
@@ -50,6 +60,8 @@ export class CreateCoachChatUseCase {
     private readonly coachConversationMemoryRepository: CoachConversationMemoryRepository,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
     private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
+    private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
+    private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
     private readonly aiPromptBuilder: AiPromptBuilder,
     private readonly aiLlmService: AiLlmService,
     private readonly coachChatReplyGenerator: CoachChatReplyGenerator,
@@ -91,6 +103,16 @@ export class CreateCoachChatUseCase {
         authUserId,
       });
       const coachDecision = await this.resolveCoachDecision(authUserId);
+      const notification = await this.resolveNotification(authUserId);
+      const notificationMemory = notification
+        ? {
+            notificationType: notification.current?.type,
+            suppressed: notification.current?.suppressed ?? false,
+            fatigueLevel: notification.current?.fatigueLevel ?? 'low',
+            engagementScore:
+              notification.engagementSummary?.engagementScore ?? 50,
+          }
+        : undefined;
 
       const existingConversation =
         await this.coachConversationRepository.findLatestByUserProfileId(
@@ -106,22 +128,8 @@ export class CreateCoachChatUseCase {
         await this.coachConversationMemoryRepository.findByConversationId(
           conversation.id,
         );
-      const coachDecisionPayload = coachDecision
-        ? {
-            priority: coachDecision.priority,
-            headline: coachDecision.headline,
-            summary: coachDecision.summary,
-            actionItems: [...coachDecision.actionItems],
-            influences: coachDecision.influences.map((influence) => ({
-              code: influence.code,
-              label: influence.label,
-              impact: influence.impact,
-              source: influence.source,
-              weight: influence.weight,
-              value: influence.value,
-            })),
-          }
-        : undefined;
+      const coachDecisionPayload =
+        CoachDecisionReadModelMapper.toChatPayload(coachDecision);
       const conversationMemoryPayload = conversationMemory
         ? {
             summary: conversationMemory.summary,
@@ -159,6 +167,7 @@ export class CreateCoachChatUseCase {
           ? { conversationMemory: conversationMemoryPayload }
           : {}),
         ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
+        ...(notification ? { notification } : {}),
       });
 
       let reply: {
@@ -184,6 +193,7 @@ export class CreateCoachChatUseCase {
           message,
           healthContext,
           ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
+          ...(notification ? { notification } : {}),
         });
 
         await this.coachMessageRepository.create({
@@ -201,7 +211,8 @@ export class CreateCoachChatUseCase {
           conversationHistory,
           userMessage: message,
           assistantReply: fallbackReply,
-          ...(coachDecision ? { coachDecision } : {}),
+          ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
+          ...(notificationMemory ? { notification: notificationMemory } : {}),
         });
 
         return {
@@ -228,7 +239,8 @@ export class CreateCoachChatUseCase {
         conversationHistory,
         userMessage: message,
         assistantReply: reply.content,
-        ...(coachDecision ? { coachDecision } : {}),
+        ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
+        ...(notificationMemory ? { notification: notificationMemory } : {}),
       });
 
       return {
@@ -253,9 +265,8 @@ export class CreateCoachChatUseCase {
     conversationHistory: AiPromptBuilderConversationMessage[];
     userMessage: string;
     assistantReply: string;
-    coachDecision?: Awaited<
-      ReturnType<GetCurrentCoachDecisionUseCase['execute']>
-    >['coachDecision'];
+    coachDecision?: CoachDecisionReadModelPayload;
+    notification?: NotificationMemoryPayload;
   }): Promise<void> {
     const memory = this.coachConversationMemorySummarizer.summarize({
       healthContext: input.healthContext,
@@ -273,6 +284,7 @@ export class CreateCoachChatUseCase {
         },
       ],
       coachDecision: input.coachDecision,
+      ...(input.notification ? { notification: input.notification } : {}),
     });
 
     await this.coachConversationMemoryRepository.upsertByConversationId({
@@ -292,6 +304,33 @@ export class CreateCoachChatUseCase {
       });
 
       return result?.coachDecision;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async resolveNotification(authUserId: string): Promise<
+    | ReturnType<typeof NotificationReadModelMapper.toPromptPayload>
+    | undefined
+  > {
+    try {
+      const [currentResult, engagementSummaryResult] = await Promise.allSettled([
+        this.getCurrentNotificationUseCase.execute({
+          authUserId,
+        }),
+        this.getEngagementSummaryUseCase.execute({
+          authUserId,
+        }),
+      ]);
+
+      return NotificationReadModelMapper.toPromptPayload(
+        currentResult.status === 'fulfilled'
+          ? currentResult.value.notificationDecision
+          : undefined,
+        engagementSummaryResult.status === 'fulfilled'
+          ? engagementSummaryResult.value.engagementSummary
+          : undefined,
+      );
     } catch {
       return undefined;
     }

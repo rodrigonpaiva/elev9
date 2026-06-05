@@ -26,6 +26,10 @@ export type CoachDecisionCalculatorInput = {
   goalForecastConfidence?: 'low' | 'medium' | 'high';
   goalMilestoneClose?: boolean;
   goalAchievementReached?: boolean;
+  notificationSuppressed?: boolean;
+  notificationFatigueHigh?: boolean;
+  notificationDismissedFrequently?: boolean;
+  notificationHighEngagement?: boolean;
 };
 
 export type CoachDecisionCalculatorOutput = {
@@ -50,6 +54,10 @@ type ResolvedInput = {
   goalForecastConfidence?: 'low' | 'medium' | 'high';
   goalMilestoneClose: boolean;
   goalAchievementReached: boolean;
+  notificationSuppressed: boolean;
+  notificationFatigueHigh: boolean;
+  notificationDismissedFrequently: boolean;
+  notificationHighEngagement: boolean;
   hasReadinessScore: boolean;
   hasFatigueScore: boolean;
   hasNutritionAdherence: boolean;
@@ -102,6 +110,10 @@ export class CoachDecisionCalculatorService {
       goalForecastConfidence: input.goalForecastConfidence,
       goalMilestoneClose: Boolean(input.goalMilestoneClose),
       goalAchievementReached: Boolean(input.goalAchievementReached),
+      notificationSuppressed: Boolean(input.notificationSuppressed),
+      notificationFatigueHigh: Boolean(input.notificationFatigueHigh),
+      notificationDismissedFrequently: Boolean(input.notificationDismissedFrequently),
+      notificationHighEngagement: Boolean(input.notificationHighEngagement),
       hasReadinessScore: typeof input.readinessScore === 'number',
       hasFatigueScore: typeof input.fatigueScore === 'number',
       hasNutritionAdherence: typeof input.nutritionAdherence === 'number',
@@ -170,6 +182,18 @@ export class CoachDecisionCalculatorService {
       return 'consistency';
     }
 
+    if (
+      input.notificationSuppressed ||
+      input.notificationFatigueHigh ||
+      input.notificationDismissedFrequently
+    ) {
+      return 'consistency';
+    }
+
+    if (input.notificationHighEngagement) {
+      return 'motivation';
+    }
+
     return 'motivation';
   }
 
@@ -230,6 +254,14 @@ export class CoachDecisionCalculatorService {
           return 'Goal progress is slowing, so consistency should be reinforced today.';
         }
 
+        if (
+          input.notificationSuppressed ||
+          input.notificationFatigueHigh ||
+          input.notificationDismissedFrequently
+        ) {
+          return 'Notification fatigue suggests keeping coaching light and focused on consistency.';
+        }
+
         if (input.goalForecastConfidence === 'low') {
           return 'Goal forecasting is uncertain, so keep your routine steady today.';
         }
@@ -237,6 +269,10 @@ export class CoachDecisionCalculatorService {
         return 'Recent activity shows a consistency gap that should be closed today.';
       case 'motivation':
       default:
+        if (input.notificationHighEngagement) {
+          return 'Notification engagement is strong, so this is a good moment to reinforce progress.';
+        }
+
         if (input.goalAchievementReached) {
           return 'Your goal has been reached, so the focus is to keep momentum and protect the result.';
         }
@@ -535,6 +571,58 @@ export class CoachDecisionCalculatorService {
       );
     }
 
+    if (input.notificationSuppressed) {
+      influences.push(
+        this.createInfluence(
+          'NOTIFICATION_SUPPRESSED',
+          'Notification fatigue suggests a lighter coaching touch.',
+          'negative',
+          'notification',
+          0.18,
+          1,
+        ),
+      );
+    }
+
+    if (input.notificationFatigueHigh) {
+      influences.push(
+        this.createInfluence(
+          'NOTIFICATION_FATIGUE_HIGH',
+          'Notification fatigue is high.',
+          'negative',
+          'notification',
+          0.2,
+          1,
+        ),
+      );
+    }
+
+    if (input.notificationDismissedFrequently) {
+      influences.push(
+        this.createInfluence(
+          'NOTIFICATION_DISMISSED_FREQUENTLY',
+          'Notifications have been dismissed frequently.',
+          'negative',
+          'notification',
+          0.16,
+          1,
+        ),
+      );
+    }
+
+    if (input.notificationHighEngagement) {
+      influences.push(
+        this.createInfluence(
+          'NOTIFICATION_HIGH_ENGAGEMENT',
+          'Notifications are being engaged with positively.',
+          'positive',
+          'notification',
+          0.16,
+          1,
+        ),
+      );
+    }
+
     return this.deduplicateInfluences(influences);
   }
 
@@ -542,7 +630,13 @@ export class CoachDecisionCalculatorService {
     code: CoachDecisionInfluenceCode,
     label: string,
     impact: CoachDecisionInfluenceImpact,
-    source: 'recovery' | 'nutrition' | 'training' | 'progress' | 'memory',
+    source:
+      | 'recovery'
+      | 'nutrition'
+      | 'training'
+      | 'progress'
+      | 'memory'
+      | 'notification',
     weight?: number,
     value?: number,
   ): CoachDecisionInfluence {

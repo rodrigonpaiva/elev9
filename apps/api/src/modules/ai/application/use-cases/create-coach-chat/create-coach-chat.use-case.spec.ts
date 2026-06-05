@@ -6,11 +6,15 @@ import { CoachConversationMemorySummarizer } from '../../services/memory/coach-c
 import { CoachConversation } from '../../../domain/entities/coach-conversation.entity';
 import { CoachConversationMemory } from '../../../domain/entities/coach-conversation-memory.entity';
 import { CoachDecisionInfluence } from '../../../domain/value-objects/coach-decision-influence.value-object';
+import { NotificationDecision } from '../../../../notifications/domain/entities/notification-decision.entity';
+import { NotificationInfluence } from '../../../../notifications/domain/value-objects/notification-influence.value-object';
 import { CoachConversationRepository } from '../../../domain/repositories/coach-conversation.repository';
 import { CoachConversationMemoryRepository } from '../../../domain/repositories/coach-conversation-memory.repository';
 import { CoachMessageRepository } from '../../../domain/repositories/coach-message.repository';
 import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
 import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
 import { CreateCoachChatUseCase } from './create-coach-chat.use-case';
@@ -29,6 +33,12 @@ describe('CreateCoachChatUseCase', () => {
   let coachConversationMemorySummarizer: jest.Mocked<CoachConversationMemorySummarizer>;
   let getCurrentCoachDecisionUseCase: {
     execute: jest.MockedFunction<GetCurrentCoachDecisionUseCase['execute']>;
+  };
+  let getCurrentNotificationUseCase: {
+    execute: jest.MockedFunction<GetCurrentNotificationUseCase['execute']>;
+  };
+  let getEngagementSummaryUseCase: {
+    execute: jest.MockedFunction<GetEngagementSummaryUseCase['execute']>;
   };
   let useCase: CreateCoachChatUseCase;
 
@@ -67,10 +77,22 @@ describe('CreateCoachChatUseCase', () => {
       summarize: jest.fn(),
     } as unknown as jest.Mocked<CoachConversationMemorySummarizer>;
     getCurrentCoachDecisionUseCase = {
-      execute: jest.fn(),
+      execute: jest.fn().mockResolvedValue({ coachDecision: undefined }),
+    };
+    getCurrentNotificationUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        notificationDecision: undefined,
+      }),
+    };
+    getEngagementSummaryUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        engagementSummary: undefined,
+      }),
     };
     coachConversationMemorySummarizer.summarize.mockReturnValue(
       buildMemorySummary({
+        summary:
+          'goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; notification=type:coach_nudge,suppressed:true,fatigue:high,engagement:84; user_concern=general',
         generatedFromMessageCount: 2,
       }),
     );
@@ -82,6 +104,8 @@ describe('CreateCoachChatUseCase', () => {
       coachConversationMemoryRepository,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
       getCurrentCoachDecisionUseCase as unknown as GetCurrentCoachDecisionUseCase,
+      getCurrentNotificationUseCase as unknown as GetCurrentNotificationUseCase,
+      getEngagementSummaryUseCase as unknown as GetEngagementSummaryUseCase,
       aiPromptBuilder,
       aiLlmService,
       replyGenerator,
@@ -224,6 +248,124 @@ describe('CreateCoachChatUseCase', () => {
       conversationId: 'conversation_123',
       reply: 'OpenAI coach reply',
     });
+  });
+
+  it('includes reduced notification context in the prompt and memory flow', async () => {
+    mockUserProfile(userProfileRepository);
+    coachConversationRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
+    coachConversationMemoryRepository.findByConversationId.mockResolvedValue(
+      null,
+    );
+    buildUserHealthContextService.build.mockResolvedValue(buildHealthContext());
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue(
+      {
+        coachDecision: buildCoachDecision({
+          priority: 'consistency',
+          headline: 'Focus on consistency',
+          summary: 'Signals are stable.',
+        }),
+      } as never,
+    );
+    getCurrentNotificationUseCase.execute.mockResolvedValue({
+      notificationDecision: buildNotificationDecision(),
+    } as never);
+    getEngagementSummaryUseCase.execute.mockResolvedValue({
+      engagementSummary: {
+        engagementScore: 84,
+        fatigueLevel: 'high',
+        openedCount: 2,
+        clickedCount: 1,
+        dismissedCount: 2,
+        completedCount: 1,
+        recentEventsCount: 6,
+      },
+    } as never);
+    aiPromptBuilder.build.mockReturnValue({
+      promptVersion: 'coach-chat-prompt-v1',
+      messages: [{ role: 'system', content: 'prompt' }],
+    });
+    aiLlmService.generateReply.mockResolvedValue({
+      content: 'OpenAI coach reply',
+      provider: 'openai',
+      model: 'gpt-4.1-mini',
+      promptVersion: 'coach-chat-prompt-v1',
+    });
+    coachMessageRepository.create
+      .mockResolvedValueOnce({
+        id: 'message_user_123',
+        conversationId: 'conversation_123',
+        role: 'user',
+        content: 'Should I train today?',
+        createdAt: new Date('2026-05-18T10:00:01.000Z'),
+      })
+      .mockResolvedValueOnce({
+        id: 'message_assistant_123',
+        conversationId: 'conversation_123',
+        role: 'assistant',
+        content: 'OpenAI coach reply',
+        createdAt: new Date('2026-05-18T10:00:02.000Z'),
+      });
+    coachConversationMemorySummarizer.summarize.mockReturnValue(
+      buildMemorySummary({
+        summary:
+          'goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; notification=type:coach_nudge,suppressed:true,fatigue:high,engagement:84; user_concern=general',
+        generatedFromMessageCount: 2,
+      }),
+    );
+    coachConversationRepository.create.mockResolvedValue(
+      new CoachConversation({
+        id: 'conversation_123',
+        userProfileId: 'profile_123',
+        createdAt: new Date('2026-05-18T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-18T10:00:00.000Z'),
+      }),
+    );
+    coachConversationMemoryRepository.upsertByConversationId.mockResolvedValue(
+      new CoachConversationMemory({
+        id: 'memory_123',
+        conversationId: 'conversation_123',
+        summary:
+          'goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; notification=type:coach_nudge,suppressed:true,fatigue:high,engagement:84; user_concern=general',
+        metadata: {
+          generatedFromMessageCount: 2,
+          version: 'memory-v1',
+        },
+        createdAt: new Date('2026-05-18T10:00:03.000Z'),
+        updatedAt: new Date('2026-05-18T10:00:03.000Z'),
+      }),
+    );
+
+    await useCase.execute({
+      authUserId: 'auth_user_123',
+      message: 'Should I train today?',
+    });
+
+    expect(aiPromptBuilder.build).toHaveBeenCalledWith(
+      expect.objectContaining({
+        notification: expect.objectContaining({
+          current: expect.objectContaining({
+            type: 'coach_nudge',
+            suppressed: true,
+            fatigueLevel: 'high',
+          }),
+          engagementSummary: expect.objectContaining({
+            engagementScore: 84,
+          }),
+        }),
+      }),
+    );
+    expect(replyGenerator.generate).not.toHaveBeenCalled();
+    expect(
+      coachConversationMemoryRepository.upsertByConversationId,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        summary: expect.stringContaining(
+          'notification=type:coach_nudge,suppressed:true,fatigue:high,engagement:84',
+        ),
+      }),
+    );
   });
 
   it('falls back to the heuristic reply when LLM is disabled', async () => {
@@ -701,5 +843,52 @@ function buildCoachDecision(
     createdAt: new Date('2026-05-18T10:00:00.000Z'),
     updatedAt: new Date('2026-05-18T10:00:00.000Z'),
     ...overrides,
+  });
+}
+
+function buildNotificationDecision(): NotificationDecision {
+  return new NotificationDecision({
+    id: 'notification_123',
+    userProfileId: 'profile_123',
+    date: '2026-05-18',
+    type: 'coach_nudge',
+    priority: 'low',
+    channel: 'in_app',
+    status: 'planned',
+    title: 'Small action, big progress',
+    message: 'Keep the next step simple and consistent.',
+    influences: [
+      {
+        code: 'COACH_CONSISTENCY_NUDGE',
+        label: 'Coach consistency nudge',
+        impact: 'neutral',
+        source: 'coach',
+      } as NotificationInfluence,
+    ] as never,
+    sourceContext: {
+      coachDecisionId: 'decision_123',
+      coachDecisionPriority: 'consistency',
+      coachDecisionHeadline: 'Focus on consistency',
+      readinessScore: 64,
+      fatigueScore: 38,
+      fatigueLevel: 'low',
+      adaptiveRecommendationType: 'maintain',
+      goalProgressTrend: 'stable',
+      goalMilestoneClose: false,
+      goalAchievementReached: false,
+      nutritionAdherence: 72,
+      missedWorkouts: 0,
+      noRecentActivity: false,
+      recentEngagementEventsCount: 2,
+      formulaVersion: 'notification-engine-v1',
+      generatedAt: '2026-05-18T10:00:00.000Z',
+    },
+    suppressed: true,
+    suppressionReasons: ['same_type_cooldown'],
+    fatigueLevel: 'high',
+    formulaVersion: 'notification-engine-v1',
+    generatedBy: 'deterministic',
+    createdAt: new Date('2026-05-18T10:00:00.000Z'),
+    updatedAt: new Date('2026-05-18T10:00:00.000Z'),
   });
 }

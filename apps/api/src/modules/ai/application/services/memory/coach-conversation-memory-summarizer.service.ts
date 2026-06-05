@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
 import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
+import { NotificationMemoryPayload } from '../../../../../shared/mappers';
 import { UserHealthContext } from '../context-builder/build-user-health-context.service';
 
 export const COACH_CONVERSATION_MEMORY_VERSION = 'memory-v1';
@@ -16,6 +17,7 @@ export type CoachConversationMemorySummarizerInput = {
   healthContext: UserHealthContext;
   conversationMessages: CoachConversationMemorySummarizerMessage[];
   coachDecision?: CoachDecisionLike;
+  notification?: NotificationMemoryPayload;
 };
 
 export type CoachConversationMemorySummaryResult = {
@@ -41,6 +43,9 @@ export class CoachConversationMemorySummarizer {
     const coachDecisionSummary = input.coachDecision
       ? this.buildCoachDecisionSummary(input.coachDecision)
       : null;
+    const notificationSummary = input.notification
+      ? this.buildNotificationSummary(input.notification)
+      : null;
 
     const summary = [
       `goal=${this.normalizeValue(input.healthContext.goal ?? 'unknown')}`,
@@ -49,6 +54,7 @@ export class CoachConversationMemorySummarizer {
       `nutrition=${nutritionGoal}${nutritionGoal !== 'none' ? `/${mealsPerDay} meals` : ''}`,
       `workout_continuity=streak:${input.healthContext.currentStreak}, recent_workouts:${workoutCount}`,
       ...(coachDecisionSummary ? [coachDecisionSummary] : []),
+      ...(notificationSummary ? [notificationSummary] : []),
       `user_concern=${concern}`,
     ].join('; ');
 
@@ -122,6 +128,17 @@ export class CoachConversationMemorySummarizer {
       `headline:${this.normalizeValue(coachDecision.headline)}`,
       `action_items:${actionItems || 'none'}`,
     ].join(', ');
+  }
+
+  private buildNotificationSummary(
+    notification: NotificationMemoryPayload,
+  ): string {
+    return [
+      `notification=type:${notification.notificationType ?? 'none'}`,
+      `suppressed:${notification.suppressed ? 'true' : 'false'}`,
+      `fatigue:${notification.fatigueLevel}`,
+      `engagement:${notification.engagementScore}`,
+    ].join(',');
   }
 
   private normalizeValue(value: string): string {

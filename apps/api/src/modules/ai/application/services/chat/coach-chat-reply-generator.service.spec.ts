@@ -120,4 +120,31 @@ describe('CoachChatReplyGenerator', () => {
 
     expect(reply).toContain("Your recovery signals suggest keeping today's session lighter.");
   });
+
+  it('uses notification context when coach decision is absent', () => {
+    const reply = generator.generate({
+      message: 'Should I train today?',
+      healthContext,
+      notification: {
+        current: {
+          type: 'coach_nudge',
+          priority: 'low',
+          status: 'planned',
+          suppressed: true,
+          fatigueLevel: 'high',
+        },
+        engagementSummary: {
+          engagementScore: 84,
+          fatigueLevel: 'high',
+          openedCount: 2,
+          clickedCount: 1,
+          dismissedCount: 2,
+          completedCount: 1,
+          recentEventsCount: 6,
+        },
+      },
+    });
+
+    expect(reply).toContain('Notification fatigue is high right now');
+  });
 });

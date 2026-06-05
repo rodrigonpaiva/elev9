@@ -98,10 +98,11 @@ describe('MongooseRecoverySnapshotRepository', () => {
   });
 
   it('finds the latest snapshot for a user', async () => {
+    const sort = jest.fn().mockReturnValue({
+      exec: jest.fn().mockResolvedValue(buildDocument()),
+    });
     const findOne = jest.fn().mockReturnValue({
-      sort: jest.fn().mockReturnValue({
-        exec: jest.fn().mockResolvedValue(buildDocument()),
-      }),
+      sort,
     });
     const repository = new MongooseRecoverySnapshotRepository({
       findOne,
@@ -111,6 +112,11 @@ describe('MongooseRecoverySnapshotRepository', () => {
 
     expect(findOne).toHaveBeenCalledWith({
       userProfileId: 'profile_123',
+    });
+    expect(sort).toHaveBeenCalledWith({
+      date: -1,
+      createdAt: -1,
+      _id: -1,
     });
     expect(result?.date).toBe('2026-06-02');
   });

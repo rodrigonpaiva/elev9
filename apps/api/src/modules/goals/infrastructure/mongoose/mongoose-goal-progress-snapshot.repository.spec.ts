@@ -58,10 +58,11 @@ describe('MongooseGoalProgressSnapshotRepository', () => {
   });
 
   it('finds the latest snapshot', async () => {
+    const sort = jest.fn().mockReturnValue({
+      exec: jest.fn().mockResolvedValue(buildDocument()),
+    });
     const findOne = jest.fn().mockReturnValue({
-      sort: jest.fn().mockReturnValue({
-        exec: jest.fn().mockResolvedValue(buildDocument()),
-      }),
+      sort,
     });
     const repository = new MongooseGoalProgressSnapshotRepository({
       findOne,
@@ -70,6 +71,11 @@ describe('MongooseGoalProgressSnapshotRepository', () => {
     const result = await repository.findLatestByGoalId('goal_123');
 
     expect(findOne).toHaveBeenCalledWith({ goalId: 'goal_123' });
+    expect(sort).toHaveBeenCalledWith({
+      date: -1,
+      createdAt: -1,
+      _id: -1,
+    });
     expect(result?.goalId).toBe('goal_123');
   });
 

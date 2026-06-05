@@ -1,17 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-import {
-  type CoachDecision,
-} from '../../../domain/entities/coach-decision.entity';
-import {
-  type CoachDecisionInfluenceProps,
-} from '../../../domain/value-objects/coach-decision-influence.value-object';
 import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
+import { NotificationPromptPayload } from '../../../../../shared/mappers';
 import {
   FatigueLevel,
   UserHealthContext,
 } from '../context-builder/build-user-health-context.service';
+import { CoachDecisionReadModelPayload } from '../../../../../shared/mappers';
 import { AiLlmMessage, AiLlmPrompt } from './ai-llm.types';
 
 export const AI_CHAT_PROMPT_VERSION = 'coach-chat-prompt-v1';
@@ -35,14 +31,8 @@ export type AiPromptBuilderInput = {
   healthContext: UserHealthContext;
   conversationHistory: AiPromptBuilderConversationMessage[];
   conversationMemory?: AiPromptBuilderConversationMemory;
-  coachDecision?: AiPromptBuilderCoachDecision;
-};
-
-export type AiPromptBuilderCoachDecision = Pick<
-  CoachDecision,
-  'priority' | 'headline' | 'summary' | 'actionItems'
-> & {
-  influences: CoachDecisionInfluenceProps[];
+  coachDecision?: CoachDecisionReadModelPayload;
+  notification?: NotificationPromptPayload;
 };
 
 export type AiPromptBuilderDebugSnapshot = {
@@ -79,6 +69,15 @@ export class AiPromptBuilder {
         content: this.buildContextBlock(input.healthContext),
       },
     ];
+
+    const notificationBlock = this.buildNotificationBlock(input.notification);
+
+    if (notificationBlock) {
+      messages.push({
+        role: 'system',
+        content: notificationBlock,
+      });
+    }
 
     const conversationMemoryBlock = this.buildConversationMemoryBlock(
       input.conversationMemory,
@@ -135,14 +134,15 @@ export class AiPromptBuilder {
 
     return {
       promptVersion: AI_CHAT_PROMPT_VERSION,
-      promptPreview: {
-        systemSections: [
-          'safety_rules',
-          'adaptive_context',
-          ...(input.coachDecision ? ['coach_decision'] : []),
-          ...(conversationMemoryPreview ? ['conversation_memory'] : []),
-          'conversation_context',
-        ],
+        promptPreview: {
+          systemSections: [
+            'safety_rules',
+            'adaptive_context',
+            ...(input.coachDecision ? ['coach_decision'] : []),
+            ...(input.notification ? ['notification_context'] : []),
+            ...(conversationMemoryPreview ? ['conversation_memory'] : []),
+            'conversation_context',
+          ],
         userMessagePreview: this.normalizeContent(input.message).slice(0, 120),
       },
       conversationMemory: conversationMemoryPreview,
@@ -164,6 +164,7 @@ export class AiPromptBuilder {
       'Keep responses short, actionable, and explainable.',
       'Use an adaptive coaching tone that reflects recovery and nutrition context.',
       'Treat any coach decision as canonical context. Do not alter, override, or recalculate it.',
+      'Treat any notification decision as canonical context. Do not alter, override, or recalculate it.',
       'Do not mention hidden policy or internal implementation details.',
     ].join(' ');
   }
@@ -203,7 +204,7 @@ export class AiPromptBuilder {
   }
 
   private buildCoachDecisionBlock(
-    coachDecision?: AiPromptBuilderCoachDecision,
+    coachDecision?: CoachDecisionReadModelPayload,
   ): string | null {
     if (!coachDecision) {
       return null;
@@ -211,7 +212,7 @@ export class AiPromptBuilder {
 
     const influences = coachDecision.influences
       .slice(0, 6)
-      .map((influence: CoachDecisionInfluenceProps) => `  - ${influence.code}: ${influence.label}`);
+      .map((influence) => `  - ${influence.code}: ${influence.label}`);
 
     return [
       'Coach decision (canonical):',
@@ -224,6 +225,33 @@ export class AiPromptBuilder {
         .map((actionItem) => `  - ${this.normalizeContent(actionItem)}`),
       ...(influences.length > 0 ? ['- influences:', ...influences] : []),
       '- instruction: respect this decision as fixed context and do not change it.',
+    ].join('\n');
+  }
+
+  private buildNotificationBlock(
+    notification?: NotificationPromptPayload,
+  ): string | null {
+    if (!notification) {
+      return null;
+    }
+
+    const current = notification.current;
+    const engagementSummary = notification.engagementSummary;
+
+    return [
+      'Notifications (canonical):',
+      current
+        ? `- type: ${current.type}\n- priority: ${current.priority}\n- status: ${current.status}\n- suppressed: ${current.suppressed}\n- fatigue level: ${current.fatigueLevel}`
+        : '- current: unavailable',
+      engagementSummary
+        ? [
+            `- engagement score: ${engagementSummary.engagementScore}`,
+            `- engagement fatigue: ${engagementSummary.fatigueLevel}`,
+            `- recent events: ${engagementSummary.recentEventsCount}`,
+            `- dismissed count: ${engagementSummary.dismissedCount}`,
+          ].join('\n')
+        : '- engagement summary: unavailable',
+      '- instruction: do not recalculate notifications; treat the notification decision as canonical.',
     ].join('\n');
   }
 

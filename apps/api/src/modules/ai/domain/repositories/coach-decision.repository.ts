@@ -5,6 +5,7 @@ import {
 import {
   CoachDecisionPriority,
 } from '../value-objects/coach-decision-priority.value-object';
+import type { CoachDecisionSourceContext } from '../../../../shared/source-context';
 
 export interface CoachDecisionQueryOptions {
   limit?: number;
@@ -21,7 +22,7 @@ export interface UpsertCoachDecisionRepositoryInput {
   summary: string;
   actionItems: string[];
   influences: CoachDecisionInfluenceProps[];
-  sourceContext: Record<string, unknown>;
+  sourceContext: CoachDecisionSourceContext;
   formulaVersion: string;
   generatedBy: 'deterministic' | 'llm_assisted';
   llmMetadata?: {

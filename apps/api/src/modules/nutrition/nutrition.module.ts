@@ -2,18 +2,8 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { AuthModule } from '../auth/auth.module';
-import { FITNESS_PROFILE_REPOSITORY } from '../fitness/domain/repositories/fitness-profile.repository';
-import {
-  FITNESS_PROFILE_MODEL_NAME,
-  FitnessProfileSchema,
-} from '../fitness/infrastructure/mongoose/fitness-profile.schema';
-import { MongooseFitnessProfileRepository } from '../fitness/infrastructure/mongoose/mongoose-fitness-profile.repository';
-import { USER_PROFILE_REPOSITORY } from '../users/domain/repositories/user-profile.repository';
-import { MongooseUserProfileRepository } from '../users/infrastructure/mongoose/mongoose-user-profile.repository';
-import {
-  USER_PROFILE_MODEL_NAME,
-  UserProfileSchema,
-} from '../users/infrastructure/mongoose/user-profile.schema';
+import { FitnessModule } from '../fitness/fitness.module';
+import { UsersModule } from '../users/users.module';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { CalculateMacroTargetsUseCase } from './application/use-cases/calculate-macro-targets/calculate-macro-targets.use-case';
 import { CreateNutritionPlanUseCase } from './application/use-cases/create-nutrition-plan/create-nutrition-plan.use-case';
@@ -54,18 +44,12 @@ import { NutritionController } from './presentation/http/nutrition.controller';
 @Module({
   imports: [
     AuthModule,
+    UsersModule,
+    FitnessModule,
     MongooseModule.forFeature([
-      {
-        name: USER_PROFILE_MODEL_NAME,
-        schema: UserProfileSchema,
-      },
       {
         name: NUTRITION_PROFILE_MODEL_NAME,
         schema: NutritionProfileSchema,
-      },
-      {
-        name: FITNESS_PROFILE_MODEL_NAME,
-        schema: FitnessProfileSchema,
       },
       {
         name: NUTRITION_PLAN_MODEL_NAME,
@@ -95,16 +79,8 @@ import { NutritionController } from './presentation/http/nutrition.controller';
     LogMealUseCase,
     ReplaceMealUseCase,
     {
-      provide: USER_PROFILE_REPOSITORY,
-      useClass: MongooseUserProfileRepository,
-    },
-    {
       provide: NUTRITION_PROFILE_REPOSITORY,
       useClass: MongooseNutritionProfileRepository,
-    },
-    {
-      provide: FITNESS_PROFILE_REPOSITORY,
-      useClass: MongooseFitnessProfileRepository,
     },
     {
       provide: NUTRITION_PLAN_REPOSITORY,

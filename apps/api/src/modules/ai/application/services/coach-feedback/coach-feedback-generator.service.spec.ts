@@ -237,6 +237,55 @@ describe('CoachFeedbackGenerator', () => {
     );
   });
 
+  it('uses notification context as supporting guidance', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 46,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 45),
+        buildWorkoutLog('2026-05-04', 47),
+      ],
+      hasTrainingPlan: true,
+      notification: {
+        current: {
+          type: 'coach_nudge',
+          priority: 'low',
+          status: 'planned',
+          suppressed: true,
+          fatigueLevel: 'high',
+        },
+        engagementSummary: {
+          engagementScore: 84,
+          fatigueLevel: 'high',
+          openedCount: 2,
+          clickedCount: 1,
+          dismissedCount: 2,
+          completedCount: 1,
+          recentEventsCount: 6,
+        },
+      },
+    });
+
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'notification:suppressed',
+        'notification:fatigue_high',
+        'notification:dismissed_frequently',
+        'notification:high_engagement',
+      ]),
+    );
+    expect(result.recommendations).toEqual(
+      expect.arrayContaining([
+        'Avoid excessive reminders and keep the next step simple',
+        'Recommend fewer interruptions and keep the next message shorter',
+        'Reinforce the positive behavior the user is already showing',
+      ]),
+    );
+  });
+
   it('considers low energy from the latest check-in', () => {
     const result = generator.generate({
       goal: 'maintain',

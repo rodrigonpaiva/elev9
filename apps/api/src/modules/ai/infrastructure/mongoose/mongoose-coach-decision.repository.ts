@@ -16,6 +16,8 @@ import {
   CoachDecisionDocument,
   CoachDecisionSchemaClass,
 } from './coach-decision.schema';
+import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
+import type { CoachDecisionSourceContext } from '../../../../shared/source-context';
 
 @Injectable()
 export class MongooseCoachDecisionRepository
@@ -51,7 +53,7 @@ export class MongooseCoachDecisionRepository
       .findOne({
         userProfileId,
       })
-      .sort({ createdAt: -1, _id: -1 })
+      .sort({ date: -1, createdAt: -1, _id: -1 })
       .exec();
 
     if (!document) {
@@ -146,20 +148,21 @@ export class MongooseCoachDecisionRepository
 
       return this.toEntity(document as CoachDecisionDocument);
     } catch (error) {
-      if (isDuplicateKeyError(error)) {
-        const existingDocument = await this.coachDecisionModel
-          .findOne({
-            userProfileId: input.userProfileId,
-            date: input.date,
-          })
-          .exec();
+      return IdempotentUpsertHelper.handleDuplicateKeyFallback({
+        error,
+        reload: async () => {
+          const existingDocument = await this.coachDecisionModel
+            .findOne({
+              userProfileId: input.userProfileId,
+              date: input.date,
+            })
+            .exec();
 
-        if (existingDocument) {
-          return this.toEntity(existingDocument as CoachDecisionDocument);
-        }
-      }
-
-      throw error;
+          return existingDocument
+            ? this.toEntity(existingDocument as CoachDecisionDocument)
+            : null;
+        },
+      });
     }
   }
 
@@ -187,7 +190,7 @@ export class MongooseCoachDecisionRepository
             value: influence.value,
           }),
       ),
-      sourceContext: (document.sourceContext ?? {}) as Record<string, unknown>,
+      sourceContext: (document.sourceContext ?? {}) as CoachDecisionSourceContext,
       formulaVersion: document.formulaVersion,
       generatedBy: document.generatedBy,
       llmMetadata: document.llmMetadata
@@ -202,13 +205,4 @@ export class MongooseCoachDecisionRepository
       updatedAt: document.updatedAt,
     });
   }
-}
-
-function isDuplicateKeyError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: number }).code === 11000
-  );
 }

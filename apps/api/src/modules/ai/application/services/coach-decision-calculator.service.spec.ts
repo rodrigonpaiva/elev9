@@ -202,6 +202,44 @@ describe('CoachDecisionCalculatorService', () => {
     ).toContain('GOAL_ACHIEVEMENT_REACHED');
   });
 
+  it('uses notification fatigue signals to favor consistency when no stronger signal exists', () => {
+    const result = service.calculate({
+      readinessScore: 68,
+      fatigueScore: 30,
+      nutritionAdherence: 72,
+      notificationSuppressed: true,
+      notificationFatigueHigh: true,
+      notificationDismissedFrequently: true,
+      currentStreak: 4,
+      missedWorkouts: 0,
+    });
+
+    expect(result.priority).toBe('consistency');
+    expect(result.influences.map((influence) => influence.code)).toEqual(
+      expect.arrayContaining([
+        'NOTIFICATION_SUPPRESSED',
+        'NOTIFICATION_FATIGUE_HIGH',
+        'NOTIFICATION_DISMISSED_FREQUENTLY',
+      ]),
+    );
+  });
+
+  it('uses notification engagement signals to reinforce motivation when no stronger signal exists', () => {
+    const result = service.calculate({
+      readinessScore: 72,
+      fatigueScore: 28,
+      nutritionAdherence: 74,
+      notificationHighEngagement: true,
+      currentStreak: 4,
+      missedWorkouts: 0,
+    });
+
+    expect(result.priority).toBe('motivation');
+    expect(result.influences.map((influence) => influence.code)).toContain(
+      'NOTIFICATION_HIGH_ENGAGEMENT',
+    );
+  });
+
   it('does not let goal signals override a recovery crisis', () => {
     const result = service.calculate({
       readinessScore: 24,

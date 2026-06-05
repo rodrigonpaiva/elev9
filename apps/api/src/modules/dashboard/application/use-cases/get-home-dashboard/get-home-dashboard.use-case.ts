@@ -4,10 +4,8 @@ import { BuildUserHealthContextService } from '../../../../ai/application/servic
 import { GetCurrentCoachDecisionUseCase } from '../../../../ai/application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case';
 import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
 import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
-import { Goal } from '../../../../goals/domain/entities/goal.entity';
-import { GoalForecast } from '../../../../goals/domain/entities/goal-forecast.entity';
-import { GoalMilestone } from '../../../../goals/domain/entities/goal-milestone.entity';
-import { GoalProgressSnapshot } from '../../../../goals/domain/entities/goal-progress-snapshot.entity';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
@@ -34,18 +32,16 @@ import {
   UserProfileRepository,
 } from '../../../../users/domain/repositories/user-profile.repository';
 import {
+  GoalReadModel,
+  NotificationReadModelMapper,
+  NotificationReadModelPayload,
+} from '../../../../../shared/mappers';
+import {
   GET_HOME_DASHBOARD_ERROR_CODES,
   GetHomeDashboardError,
 } from './get-home-dashboard.errors';
 import { GetHomeDashboardInput } from './get-home-dashboard.input';
 import { GetHomeDashboardOutput } from './get-home-dashboard.output';
-
-type GoalReadModel = {
-  goal: Goal;
-  progressSnapshot?: GoalProgressSnapshot;
-  forecast?: GoalForecast;
-  milestones?: GoalMilestone[];
-};
 
 @Injectable()
 export class GetHomeDashboardUseCase {
@@ -66,6 +62,8 @@ export class GetHomeDashboardUseCase {
     private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
     private readonly getCurrentGoalUseCase: GetCurrentGoalUseCase,
     private readonly getGoalMilestonesUseCase: GetGoalMilestonesUseCase,
+    private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
+    private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
     private readonly dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService,
   ) {}
 
@@ -87,6 +85,7 @@ export class GetHomeDashboardUseCase {
         authUserId,
       });
       const coachDecision = await this.resolveCoachDecision(authUserId);
+      const notification = await this.resolveNotification(authUserId);
 
       if (!userProfile) {
         throw new GetHomeDashboardError(
@@ -108,6 +107,8 @@ export class GetHomeDashboardUseCase {
       const dashboardCoachDecision =
         this.dashboardAdaptiveSignalsService.buildCoachDecision(coachDecision);
       const dashboardGoal = this.dashboardAdaptiveSignalsService.buildGoal(goal);
+      const dashboardNotification =
+        this.dashboardAdaptiveSignalsService.buildNotification(notification);
       const recovery = this.buildRecoverySummary(
         healthContext,
         recentDailyCheckIns,
@@ -133,6 +134,9 @@ export class GetHomeDashboardUseCase {
             progressSummary: this.buildEmptySummary(),
             recovery,
             ...(dashboardGoal ? { goal: dashboardGoal } : {}),
+            ...(dashboardNotification
+              ? { notification: dashboardNotification }
+              : {}),
             ...(dashboardCoachDecision
               ? { coachDecision: dashboardCoachDecision }
               : {}),
@@ -164,6 +168,9 @@ export class GetHomeDashboardUseCase {
             progressSummary: this.buildEmptySummary(),
             recovery,
             ...(dashboardGoal ? { goal: dashboardGoal } : {}),
+            ...(dashboardNotification
+              ? { notification: dashboardNotification }
+              : {}),
             ...(dashboardCoachDecision
               ? { coachDecision: dashboardCoachDecision }
               : {}),
@@ -202,6 +209,7 @@ export class GetHomeDashboardUseCase {
           progressSummary: this.buildSummaryFromLogs(workoutLogs),
           recovery,
           ...(dashboardGoal ? { goal: dashboardGoal } : {}),
+          ...(dashboardNotification ? { notification: dashboardNotification } : {}),
           ...(dashboardCoachDecision
             ? { coachDecision: dashboardCoachDecision }
             : {}),
@@ -293,6 +301,30 @@ export class GetHomeDashboardUseCase {
     } catch {
       return undefined;
     }
+  }
+
+  private async resolveNotification(authUserId: string): Promise<{
+    current?: NotificationReadModelPayload['current'];
+    engagementSummary?: NotificationReadModelPayload['engagementSummary'];
+  } | undefined> {
+    const [currentResult, engagementSummaryResult] = await Promise.allSettled([
+      this.getCurrentNotificationUseCase.execute({ authUserId }),
+      this.getEngagementSummaryUseCase.execute({ authUserId }),
+    ]);
+
+    const current =
+      currentResult.status === 'fulfilled'
+        ? currentResult.value.notificationDecision
+        : undefined;
+    const engagementSummary =
+      engagementSummaryResult.status === 'fulfilled'
+        ? engagementSummaryResult.value.engagementSummary
+        : undefined;
+
+    return NotificationReadModelMapper.toDashboardPayload(
+      current,
+      engagementSummary,
+    );
   }
 
   private buildEmptySummary(): GetHomeDashboardOutput['dashboard']['progressSummary'] {

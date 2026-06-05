@@ -1,86 +1,44 @@
 import { Injectable } from '@nestjs/common';
 
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
-import { CoachDecision } from '../../../../ai/domain/entities/coach-decision.entity';
-import { Goal } from '../../../../goals/domain/entities/goal.entity';
-import { GoalForecast } from '../../../../goals/domain/entities/goal-forecast.entity';
-import { GoalMilestone } from '../../../../goals/domain/entities/goal-milestone.entity';
-import { GoalProgressSnapshot } from '../../../../goals/domain/entities/goal-progress-snapshot.entity';
+import {
+  AdaptiveTrainingReadModelMapper,
+  CoachDecisionReadModelMapper,
+  type CoachDecisionReadModelPayload,
+  GoalReadModel,
+  GoalReadModelMapper,
+  type NotificationReadModelPayload,
+  RecoveryReadModelMapper,
+} from '../../../../../shared/mappers';
 import { GetHomeDashboardOutput } from '../../use-cases/get-home-dashboard/get-home-dashboard.output';
 import { GetHomeDashboardDebugOutput } from '../../use-cases/get-home-dashboard-debug/get-home-dashboard-debug.output';
-
-type GoalReadModel = {
-  goal: Goal;
-  progressSnapshot?: GoalProgressSnapshot;
-  forecast?: GoalForecast;
-  milestones?: GoalMilestone[];
-};
 
 @Injectable()
 export class DashboardAdaptiveSignalsService {
   buildCoachDecision(
-    coachDecision: CoachDecision | null | undefined,
+    coachDecision: CoachDecisionReadModelPayload | null | undefined,
   ): GetHomeDashboardOutput['dashboard']['coachDecision'] | undefined {
-    if (!coachDecision) {
-      return undefined;
-    }
-
-    return {
-      priority: coachDecision.priority,
-      headline: coachDecision.headline,
-      summary: coachDecision.summary,
-      actionItems: [...coachDecision.actionItems],
-      influences: coachDecision.influences.map((influence) =>
-        influence.toJSON(),
-      ),
-    };
+    return CoachDecisionReadModelMapper.toDashboardPayload(coachDecision);
   }
 
   buildGoal(
     goalReadModel: GoalReadModel | null | undefined,
   ): GetHomeDashboardOutput['dashboard']['goal'] | undefined {
-    if (!goalReadModel) {
-      return undefined;
-    }
+    return GoalReadModelMapper.toDashboardPayload(goalReadModel);
+  }
 
-    return {
-      current: goalReadModel.goal.toJSON(),
-      ...(goalReadModel.progressSnapshot
-        ? { progressSnapshot: goalReadModel.progressSnapshot.toJSON() }
-        : {}),
-      ...(goalReadModel.forecast ? { forecast: goalReadModel.forecast.toJSON() } : {}),
-      ...(goalReadModel.milestones
-        ? {
-            milestones: goalReadModel.milestones.map((milestone) =>
-              milestone.toJSON(),
-            ),
-          }
-        : {}),
-    };
+  buildNotification(
+    notification: NotificationReadModelPayload | null | undefined,
+  ): GetHomeDashboardOutput['dashboard']['notification'] | undefined {
+    return notification ?? undefined;
   }
 
   buildAdaptiveTrainingRecommendation(
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
   ): GetHomeDashboardOutput['dashboard']['adaptiveTrainingRecommendation'] {
-    const recommendation = healthContext.adaptiveTrainingRecommendation;
-
-    if (!recommendation) {
-      return undefined;
-    }
-
-    return {
-      recommendationType: recommendation.recommendationType,
-      recommendedIntensity: recommendation.recommendedIntensity,
-      volumeAction: recommendation.volumeAction,
-      reasoning: recommendation.reasoning,
-      influences: recommendation.influences.map((influence) => ({
-        code: influence.code,
-        label: influence.label,
-        impact: influence.impact,
-        weight: influence.weight,
-        value: influence.value,
-      })),
-    };
+    return AdaptiveTrainingReadModelMapper.toDashboardPayload(
+      healthContext.adaptiveTrainingRecommendation,
+    );
   }
 
   buildRecoverySummary(
@@ -92,27 +50,25 @@ export class DashboardAdaptiveSignalsService {
     }>,
   ): GetHomeDashboardOutput['dashboard']['recovery'] {
     const recoverySnapshot = healthContext.recoverySnapshot;
-    const recoveryTrend = recoverySnapshot
-      ? this.mapRecoveryTrendFromSnapshot(recoverySnapshot.recoveryTrend)
+    const recoverySnapshotSummary =
+      RecoveryReadModelMapper.toDashboardPayload(recoverySnapshot);
+    const recoveryTrend = recoverySnapshotSummary
+      ? recoverySnapshotSummary.recoveryTrend
       : this.calculateRecoveryTrend(recentDailyCheckIns);
-    const fatigueLevel = recoverySnapshot
-      ? this.mapFatigueLevelFromScore(recoverySnapshot.fatigueScore)
+    const fatigueLevel = recoverySnapshotSummary
+      ? this.mapFatigueLevelFromScore(recoverySnapshotSummary.fatigueScore)
       : healthContext.fatigueLevel;
-    const recommendedIntensity = recoverySnapshot
-      ? this.mapRecommendedIntensityFromSnapshot(
-          recoverySnapshot.recommendedIntensity,
-        )
+    const recommendedIntensity = recoverySnapshotSummary
+      ? recoverySnapshotSummary.recommendedIntensity
       : this.mapRecommendedIntensity(fatigueLevel);
 
     return {
       fatigueLevel,
       recommendedIntensity,
       recoveryTrend,
-      readinessScore: recoverySnapshot?.readinessScore,
-      fatigueScore: recoverySnapshot?.fatigueScore,
-      recoveryInfluences: recoverySnapshot?.influences.map((influence) =>
-        typeof influence.toJSON === 'function' ? influence.toJSON() : influence,
-      ),
+      readinessScore: recoverySnapshotSummary?.readinessScore,
+      fatigueScore: recoverySnapshotSummary?.fatigueScore,
+      recoveryInfluences: recoverySnapshotSummary?.recoveryInfluences,
       latestCheckIn: healthContext.latestCheckIn
         ? {
             energyLevel: healthContext.latestCheckIn.energyLevel,
@@ -219,6 +175,7 @@ export class DashboardAdaptiveSignalsService {
     recovery: GetHomeDashboardOutput['dashboard']['recovery'],
     nutritionGuidance: GetHomeDashboardOutput['dashboard']['nutritionGuidance'],
     goal?: GoalReadModel | null,
+    notification?: GetHomeDashboardOutput['dashboard']['notification'],
   ): GetHomeDashboardDebugOutput {
     const adaptiveTrainingRecommendation =
       this.buildAdaptiveTrainingRecommendation(healthContext);
@@ -244,6 +201,11 @@ export class DashboardAdaptiveSignalsService {
       ...(goal
         ? {
             goal: this.buildGoal(goal),
+          }
+        : {}),
+      ...(notification
+        ? {
+            notification,
           }
         : {}),
       nutrition: {
@@ -292,24 +254,6 @@ export class DashboardAdaptiveSignalsService {
     }
   }
 
-  private mapRecommendedIntensityFromSnapshot(
-    recommendedIntensity: Exclude<
-      GetHomeDashboardOutput['dashboard']['recovery']['recommendedIntensity'],
-      undefined
-    > | 'recovery' | 'light' | 'moderate' | 'hard',
-  ): GetHomeDashboardOutput['dashboard']['recovery']['recommendedIntensity'] {
-    switch (recommendedIntensity) {
-      case 'recovery':
-      case 'light':
-        return 'low';
-      case 'moderate':
-        return 'medium';
-      case 'hard':
-      default:
-        return 'normal';
-    }
-  }
-
   private mapFatigueLevelFromScore(
     fatigueScore: number,
   ): GetHomeDashboardOutput['dashboard']['recovery']['fatigueLevel'] {
@@ -322,14 +266,6 @@ export class DashboardAdaptiveSignalsService {
     }
 
     return 'LOW';
-  }
-
-  private mapRecoveryTrendFromSnapshot(
-    recoveryTrend: 'improving' | 'stable' | 'declining',
-  ): GetHomeDashboardOutput['dashboard']['recovery']['recoveryTrend'] {
-    return recoveryTrend === 'declining'
-      ? 'needs_recovery'
-      : recoveryTrend;
   }
 
   private calculateRecoveryTrend(

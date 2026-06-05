@@ -16,6 +16,7 @@ import {
   GOAL_FORECAST_REPOSITORY,
   GoalForecastRepository,
 } from '../../../domain/repositories/goal-forecast.repository';
+import type { GoalSourceContext } from '../../../../../shared/source-context';
 import {
   GOAL_PROGRESS_CALCULATOR_VERSION,
   GoalProgressCalculatorService,
@@ -165,7 +166,7 @@ export class BuildGoalForecastUseCase {
   }
 
   private resolveFromSnapshotContext(
-    sourceContext: Record<string, unknown>,
+    sourceContext: GoalSourceContext,
     key: 'adherenceScore' | 'recoveryScore' | 'consistencyScore',
   ): number | undefined {
     const value = sourceContext[key];

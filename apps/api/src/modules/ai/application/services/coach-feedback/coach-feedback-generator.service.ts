@@ -4,8 +4,6 @@ import {
   ActivityLevel,
   FitnessGoal,
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
-import type { CoachDecisionInfluenceProps } from '../../../domain/value-objects/coach-decision-influence.value-object';
-import type { CoachDecisionPriority } from '../../../domain/value-objects/coach-decision-priority.value-object';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import type {
   AdaptiveTrainingInfluenceProps,
@@ -23,6 +21,10 @@ import {
   FatigueLevel,
   UserHealthContextNutritionProfile,
 } from '../context-builder/build-user-health-context.service';
+import type { CoachDecisionReadModelPayload } from '../../../../../shared/mappers';
+import type { NotificationPromptPayload } from '../../../../../shared/mappers';
+import type { CoachDecisionInfluenceProps } from '../../../domain/value-objects/coach-decision-influence.value-object';
+import type { CoachDecisionPriority } from '../../../domain/value-objects/coach-decision-priority.value-object';
 
 export const COACH_FEEDBACK_GENERATOR_VERSION = 'heuristic-v1';
 
@@ -52,18 +54,9 @@ export type CoachFeedbackGeneratorInput = {
     reasoning: string;
     influences: AdaptiveTrainingInfluenceProps[];
   };
-  coachDecision?: {
-    priority: CoachDecisionPriority;
-    headline: string;
-    summary: string;
-    actionItems: string[];
-    influences: Array<
-      CoachDecisionInfluenceProps & {
-        code: string;
-      }
-    >;
-  };
+  coachDecision?: CoachDecisionReadModelPayload;
   nutritionProfile?: UserHealthContextNutritionProfile;
+  notification?: NotificationPromptPayload;
 };
 
 export type CoachFeedbackGeneratorOutput = {
@@ -215,6 +208,12 @@ export class CoachFeedbackGenerator {
       recommendations,
       influences,
     });
+    this.applyNotificationSignals({
+      notification: input.notification,
+      insights,
+      recommendations,
+      influences,
+    });
     this.applyTrainingSignals({
       logsCount,
       expectedWorkouts: input.expectedWorkouts,
@@ -341,6 +340,62 @@ export class CoachFeedbackGenerator {
           input.recommendations,
           'Keep momentum and stay on track',
         );
+    }
+  }
+
+  private applyNotificationSignals(input: {
+    notification?: NotificationPromptPayload;
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const notification = input.notification;
+
+    if (!notification) {
+      return;
+    }
+
+    const current = notification.current;
+    const engagementSummary = notification.engagementSummary;
+
+    if (current?.suppressed) {
+      input.influences.add('notification:suppressed');
+      this.upsertInsight(
+        input.insights,
+        'Notification fatigue is high, so reminders should stay light',
+      );
+      this.prependRecommendation(
+        input.recommendations,
+        'Avoid excessive reminders and keep the next step simple',
+      );
+    }
+
+    if ((current?.fatigueLevel ?? engagementSummary?.fatigueLevel) === 'high') {
+      input.influences.add('notification:fatigue_high');
+      this.upsertInsight(
+        input.insights,
+        'Notification fatigue is currently high',
+      );
+    }
+
+    if ((engagementSummary?.dismissedCount ?? 0) >= 2) {
+      input.influences.add('notification:dismissed_frequently');
+      this.prependRecommendation(
+        input.recommendations,
+        'Recommend fewer interruptions and keep the next message shorter',
+      );
+    }
+
+    if ((engagementSummary?.engagementScore ?? 50) >= 80) {
+      input.influences.add('notification:high_engagement');
+      this.upsertInsight(
+        input.insights,
+        'Notification engagement is strong right now',
+      );
+      this.prependRecommendation(
+        input.recommendations,
+        'Reinforce the positive behavior the user is already showing',
+      );
     }
   }
 

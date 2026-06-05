@@ -13,6 +13,8 @@ import { BuildUserHealthContextService } from '../../../../ai/application/servic
 import { GetCurrentCoachDecisionUseCase } from '../../../../ai/application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case';
 import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
 import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import { Goal } from '../../../../goals/domain/entities/goal.entity';
 import { GoalForecast } from '../../../../goals/domain/entities/goal-forecast.entity';
 import { GoalMilestone } from '../../../../goals/domain/entities/goal-milestone.entity';
@@ -22,6 +24,8 @@ import { GoalMilestoneTypeValueObject } from '../../../../goals/domain/value-obj
 import { GoalStatusValueObject } from '../../../../goals/domain/value-objects/goal-status.value-object';
 import { GoalTrendValueObject } from '../../../../goals/domain/value-objects/goal-trend.value-object';
 import { CoachDecision } from '../../../../ai/domain/entities/coach-decision.entity';
+import { NotificationDecision } from '../../../../notifications/domain/entities/notification-decision.entity';
+import { NotificationInfluence } from '../../../../notifications/domain/value-objects/notification-influence.value-object';
 import { DashboardAdaptiveSignalsService } from '../../services/dashboard-adaptive-signals/dashboard-adaptive-signals.service';
 import { GET_HOME_DASHBOARD_ERROR_CODES } from './get-home-dashboard.errors';
 import { GetHomeDashboardUseCase } from './get-home-dashboard.use-case';
@@ -41,6 +45,12 @@ describe('GetHomeDashboardUseCase', () => {
   };
   let getGoalMilestonesUseCase: {
     execute: jest.MockedFunction<GetGoalMilestonesUseCase['execute']>;
+  };
+  let getCurrentNotificationUseCase: {
+    execute: jest.MockedFunction<GetCurrentNotificationUseCase['execute']>;
+  };
+  let getEngagementSummaryUseCase: {
+    execute: jest.MockedFunction<GetEngagementSummaryUseCase['execute']>;
   };
   let buildUserHealthContextService: {
     build: jest.MockedFunction<BuildUserHealthContextService['build']>;
@@ -87,6 +97,16 @@ describe('GetHomeDashboardUseCase', () => {
     getGoalMilestonesUseCase = {
       execute: jest.fn(),
     };
+    getCurrentNotificationUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        notificationDecision: undefined,
+      }),
+    };
+    getEngagementSummaryUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        engagementSummary: undefined,
+      }),
+    };
     buildUserHealthContextService = {
       build: jest.fn().mockResolvedValue({
         authUserId: 'auth_user_123',
@@ -119,6 +139,8 @@ describe('GetHomeDashboardUseCase', () => {
       getCurrentCoachDecisionUseCase as unknown as GetCurrentCoachDecisionUseCase,
       getCurrentGoalUseCase as unknown as GetCurrentGoalUseCase,
       getGoalMilestonesUseCase as unknown as GetGoalMilestonesUseCase,
+      getCurrentNotificationUseCase as unknown as GetCurrentNotificationUseCase,
+      getEngagementSummaryUseCase as unknown as GetEngagementSummaryUseCase,
       dashboardAdaptiveSignalsService,
     );
   });
@@ -293,11 +315,72 @@ function mockDailyCheckInHistory(
     };
   }
 
+  function buildNotificationDecision(): NotificationDecision {
+    return new NotificationDecision({
+      id: 'notification_123',
+      userProfileId: 'profile_123',
+      date: '2026-04-30',
+      type: 'coach_nudge',
+      priority: 'medium',
+      channel: 'in_app',
+      status: 'planned',
+      title: 'Small action, big progress',
+      message: 'Keep the next step simple and consistent.',
+      influences: [
+        {
+          code: 'COACH_CONSISTENCY_NUDGE',
+          label: 'Coach consistency nudge',
+          impact: 'neutral',
+          source: 'coach',
+        } as NotificationInfluence,
+      ] as never,
+      sourceContext: {
+        coachDecisionId: 'decision_123',
+        coachDecisionPriority: 'consistency',
+        coachDecisionHeadline: 'Focus on consistency',
+        readinessScore: 64,
+        fatigueScore: 38,
+        fatigueLevel: 'low',
+        adaptiveRecommendationType: 'maintain',
+        goalProgressTrend: 'stable',
+        goalMilestoneClose: false,
+        goalAchievementReached: false,
+        nutritionAdherence: 72,
+        missedWorkouts: 0,
+        noRecentActivity: false,
+        recentEngagementEventsCount: 2,
+        formulaVersion: 'notification-engine-v1',
+        generatedAt: '2026-04-30T10:00:00.000Z',
+      },
+      suppressed: false,
+      suppressionReasons: [],
+      fatigueLevel: 'low',
+      formulaVersion: 'notification-engine-v1',
+      generatedBy: 'deterministic',
+      createdAt: new Date('2026-04-30T10:00:00.000Z'),
+      updatedAt: new Date('2026-04-30T10:00:00.000Z'),
+    });
+  }
+
   it('returns fitnessProfile and trainingPlan as null when no active fitness profile exists', async () => {
     mockUserProfile();
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
     getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
       coachDecision: buildCoachDecision(),
+    } as never);
+    getCurrentNotificationUseCase.execute.mockResolvedValue({
+      notificationDecision: buildNotificationDecision(),
+    } as never);
+    getEngagementSummaryUseCase.execute.mockResolvedValue({
+      engagementSummary: {
+        engagementScore: 84,
+        fatigueLevel: 'high',
+        openedCount: 2,
+        clickedCount: 1,
+        dismissedCount: 2,
+        completedCount: 1,
+        recentEventsCount: 6,
+      },
     } as never);
 
     const result = await useCase.execute({
@@ -326,6 +409,24 @@ function mockDailyCheckInHistory(
           fatigueScore: undefined,
           recoveryInfluences: undefined,
         },
+        notification: {
+          current: {
+            type: 'coach_nudge',
+            priority: 'medium',
+            status: 'planned',
+            suppressed: false,
+            fatigueLevel: 'low',
+          },
+          engagementSummary: {
+            engagementScore: 84,
+            fatigueLevel: 'high',
+            openedCount: 2,
+            clickedCount: 1,
+            dismissedCount: 2,
+            completedCount: 1,
+            recentEventsCount: 6,
+          },
+        },
         coachDecision: {
           priority: 'motivation',
           headline: 'Keep building momentum',
@@ -341,6 +442,27 @@ function mockDailyCheckInHistory(
         },
       },
     });
+    expect(result.dashboard.notification).toEqual({
+      current: {
+        type: 'coach_nudge',
+        priority: 'medium',
+        status: 'planned',
+        suppressed: false,
+        fatigueLevel: 'low',
+      },
+      engagementSummary: {
+        engagementScore: 84,
+        fatigueLevel: 'high',
+        openedCount: 2,
+        clickedCount: 1,
+        dismissedCount: 2,
+        completedCount: 1,
+        recentEventsCount: 6,
+      },
+    });
+    expect(JSON.stringify(result.dashboard.notification)).not.toContain(
+      'sourceContext',
+    );
     expect(
       trainingPlanRepository.findActiveByFitnessProfileId,
     ).not.toHaveBeenCalled();
@@ -412,7 +534,12 @@ function mockDailyCheckInHistory(
 
     expect(result.dashboard.goal).toEqual({
       current: buildGoalReadModel().goal.toJSON(),
-      progressSnapshot: buildGoalReadModel().progressSnapshot.toJSON(),
+      progressSnapshot: (() => {
+        const { sourceContext: _sourceContext, ...safeProgressSnapshot } =
+          buildGoalReadModel().progressSnapshot.toJSON();
+
+        return safeProgressSnapshot;
+      })(),
       forecast: buildGoalReadModel().forecast.toJSON(),
       milestones: buildGoalReadModel().milestones.map((milestone) =>
         milestone.toJSON(),

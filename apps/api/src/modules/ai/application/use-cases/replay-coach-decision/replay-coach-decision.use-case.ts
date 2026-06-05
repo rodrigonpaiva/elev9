@@ -12,12 +12,15 @@ import {
   CoachDecisionCalculatorInput,
   CoachDecisionCalculatorService,
 } from '../../services/coach-decision-calculator.service';
+import type { CoachDecisionSourceContext } from '../../../../../shared/source-context';
+import { ReplayComparator } from '../../../../../shared/replay';
 import {
   REPLAY_COACH_DECISION_ERROR_CODES,
   ReplayCoachDecisionError,
 } from './replay-coach-decision.errors';
 import { ReplayCoachDecisionInput } from './replay-coach-decision.input';
 import {
+  CoachDecisionReplayField,
   CoachDecisionRecalculatedResult,
   ReplayCoachDecisionOutput,
 } from './replay-coach-decision.output';
@@ -92,14 +95,18 @@ export class ReplayCoachDecisionUseCase {
         formulaVersion: recalculated.formulaVersion,
       };
 
-      const differences = this.buildDifferences(coachDecision, recalculatedResult);
+      const comparison = ReplayComparator.compare({
+        persisted: coachDecision,
+        recalculated: recalculatedResult,
+        fields: this.replayFields,
+      });
 
       return {
         persisted: coachDecision,
         recalculated: recalculatedResult,
         comparison: {
-          matches: differences.length === 0,
-          differences,
+          matches: comparison.matches,
+          differences: comparison.differences,
         },
         replayedAt: new Date().toISOString(),
       };
@@ -116,7 +123,7 @@ export class ReplayCoachDecisionUseCase {
   }
 
   private mapSourceContextToCalculatorInput(
-    sourceContext: Record<string, unknown>,
+    sourceContext: CoachDecisionSourceContext,
   ): CoachDecisionCalculatorInput {
     return {
       readinessScore: this.resolveNumber(sourceContext.readinessScore),
@@ -139,90 +146,6 @@ export class ReplayCoachDecisionUseCase {
         sourceContext.goalAchievementReached,
       ),
     };
-  }
-
-  private buildDifferences(
-    persisted: {
-      priority: string;
-      headline: string;
-      summary: string;
-      actionItems: string[];
-      influences: unknown[];
-      formulaVersion: string;
-    },
-    recalculated: CoachDecisionRecalculatedResult,
-  ): Array<{
-    field: 'priority' | 'headline' | 'summary' | 'actionItems' | 'influences' | 'formulaVersion';
-    persisted: unknown;
-    recalculated: unknown;
-  }> {
-    const differences: Array<{
-      field: 'priority' | 'headline' | 'summary' | 'actionItems' | 'influences' | 'formulaVersion';
-      persisted: unknown;
-      recalculated: unknown;
-    }> = [];
-
-    this.pushDifference(
-      differences,
-      'priority',
-      persisted.priority,
-      recalculated.priority,
-    );
-    this.pushDifference(
-      differences,
-      'headline',
-      persisted.headline,
-      recalculated.headline,
-    );
-    this.pushDifference(
-      differences,
-      'summary',
-      persisted.summary,
-      recalculated.summary,
-    );
-    this.pushDifference(
-      differences,
-      'actionItems',
-      persisted.actionItems,
-      recalculated.actionItems,
-    );
-    this.pushDifference(
-      differences,
-      'influences',
-      persisted.influences,
-      recalculated.influences,
-    );
-    this.pushDifference(
-      differences,
-      'formulaVersion',
-      persisted.formulaVersion,
-      recalculated.formulaVersion,
-    );
-
-    return differences;
-  }
-
-  private pushDifference(
-    differences: Array<{
-      field: 'priority' | 'headline' | 'summary' | 'actionItems' | 'influences' | 'formulaVersion';
-      persisted: unknown;
-      recalculated: unknown;
-    }>,
-    field: 'priority' | 'headline' | 'summary' | 'actionItems' | 'influences' | 'formulaVersion',
-    persisted: unknown,
-    recalculated: unknown,
-  ): void {
-    if (!this.areEqual(persisted, recalculated)) {
-      differences.push({
-        field,
-        persisted,
-        recalculated,
-      });
-    }
-  }
-
-  private areEqual(left: unknown, right: unknown): boolean {
-    return JSON.stringify(left) === JSON.stringify(right);
   }
 
   private resolveString(value: unknown): string | undefined {
@@ -274,6 +197,15 @@ export class ReplayCoachDecisionUseCase {
 
     return value;
   }
+
+  private readonly replayFields: readonly CoachDecisionReplayField[] = [
+    'priority',
+    'headline',
+    'summary',
+    'actionItems',
+    'influences',
+    'formulaVersion',
+  ] as const;
 
   private serializeInfluence(
     influence: unknown,

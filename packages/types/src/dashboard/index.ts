@@ -8,6 +8,10 @@ import {
   GoalMilestone,
   GoalProgressSnapshot,
 } from '../goals';
+import {
+  NotificationDecision,
+  NotificationEngagementSummary,
+} from '../notifications';
 import { CoachDecisionInfluence, CoachDecisionPriority } from '../ai';
 import {
   AdaptiveRecommendedIntensity,
@@ -81,6 +85,10 @@ export type DashboardHomeResponse = {
       progressSnapshot?: GoalProgressSnapshot;
       forecast?: GoalForecast;
       milestones?: GoalMilestone[];
+    };
+    notification?: {
+      current?: NotificationDecision;
+      engagementSummary?: NotificationEngagementSummary;
     };
     progressSummary: {
       period: 'week';

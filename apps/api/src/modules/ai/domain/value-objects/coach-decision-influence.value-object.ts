@@ -7,7 +7,8 @@ export type CoachDecisionInfluenceSource =
   | 'nutrition'
   | 'training'
   | 'progress'
-  | 'memory';
+  | 'memory'
+  | 'notification';
 
 export type CoachDecisionInfluenceProps = {
   code: CoachDecisionInfluenceCode;

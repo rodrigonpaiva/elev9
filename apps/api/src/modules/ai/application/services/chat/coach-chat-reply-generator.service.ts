@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
-import { CoachDecisionInfluenceProps } from '../../../domain/value-objects/coach-decision-influence.value-object';
 import { BuildUserHealthContextService } from '../context-builder/build-user-health-context.service';
+import {
+  CoachDecisionReadModelPayload,
+  NotificationPromptPayload,
+} from '../../../../../shared/mappers';
 
 type UserHealthContext = Awaited<
   ReturnType<BuildUserHealthContextService['build']>
@@ -13,7 +15,8 @@ export class CoachChatReplyGenerator {
   generate(input: {
     message: string;
     healthContext: UserHealthContext;
-    coachDecision?: CoachDecisionLike;
+    coachDecision?: CoachDecisionReadModelPayload;
+    notification?: NotificationPromptPayload;
   }): string {
     const normalizedMessage = input.message.trim().toLowerCase();
     const asksAboutTraining =
@@ -24,6 +27,12 @@ export class CoachChatReplyGenerator {
 
     if (coachDecisionReply) {
       return coachDecisionReply;
+    }
+
+    const notificationReply = this.buildNotificationReply(input.notification);
+
+    if (notificationReply) {
+      return notificationReply;
     }
 
     const latestCheckIn = input.healthContext.latestCheckIn;
@@ -71,8 +80,36 @@ export class CoachChatReplyGenerator {
     return 'Your context looks steady. Keep the routine consistent and check in after your session.';
   }
 
+  private buildNotificationReply(
+    notification?: NotificationPromptPayload,
+  ): string | null {
+    if (!notification) {
+      return null;
+    }
+
+    const current = notification.current;
+    const engagementSummary = notification.engagementSummary;
+    const fatigueLevel = current?.fatigueLevel ?? engagementSummary?.fatigueLevel;
+    const engagementScore = engagementSummary?.engagementScore ?? 50;
+    const dismissedCount = engagementSummary?.dismissedCount ?? 0;
+
+    if (current?.suppressed || fatigueLevel === 'high') {
+      return 'Notification fatigue is high right now, so keep reminders light and focused.';
+    }
+
+    if (dismissedCount >= 2) {
+      return 'Recent dismissals suggest keeping interruptions to a minimum.';
+    }
+
+    if (engagementScore >= 80) {
+      return 'Notification engagement looks strong, so this is a good moment to reinforce positive behavior.';
+    }
+
+    return 'Your notification pattern looks steady, so keep the next step simple and consistent.';
+  }
+
   private buildCoachDecisionReply(
-    coachDecision?: CoachDecisionLike,
+    coachDecision?: CoachDecisionReadModelPayload,
   ): string | null {
     if (!coachDecision) {
       return null;
@@ -140,7 +177,7 @@ export class CoachChatReplyGenerator {
     return actionItems.slice(0, 2).join(' and ');
   }
 
-  private buildInfluenceCue(coachDecision: CoachDecisionLike): string {
+  private buildInfluenceCue(coachDecision: CoachDecisionReadModelPayload): string {
     const codes = coachDecision.influences.map((influence) => influence.code);
 
     if (
@@ -206,10 +243,3 @@ export class CoachChatReplyGenerator {
     return normalized.endsWith('.') ? normalized : `${normalized}.`;
   }
 }
-
-type CoachDecisionLike = Pick<
-  CoachDecision,
-  'priority' | 'headline' | 'summary' | 'actionItems'
-> & {
-  influences: CoachDecisionInfluenceProps[];
-};

@@ -1,10 +1,10 @@
 import {
   RecoveryInfluenceProps,
-  RecoverySourceContext,
   RecoveryTrend,
   RecommendedIntensity,
   RecoverySnapshot,
 } from '../entities/recovery-snapshot.entity';
+import type { RecoverySourceContext } from '../../../../shared/source-context';
 
 export interface RecoverySnapshotQueryOptions {
   limit?: number;

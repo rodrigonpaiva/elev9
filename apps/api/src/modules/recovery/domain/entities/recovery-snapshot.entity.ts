@@ -1,3 +1,5 @@
+import type { RecoverySourceContext } from '../../../../shared/source-context';
+
 export type RecoveryInfluenceImpact = 'positive' | 'negative' | 'neutral';
 export type RecoveryTrend = 'improving' | 'stable' | 'declining';
 export type RecommendedIntensity = 'recovery' | 'light' | 'moderate' | 'hard';
@@ -17,22 +19,6 @@ export type RecoveryInfluenceProps = {
   impact: RecoveryInfluenceImpact;
   weight?: number;
   value?: number;
-};
-
-export type RecoverySourceContext = {
-  sleepQuality?: number;
-  energyLevel?: number;
-  muscleSoreness?: number;
-  adherenceScore?: number;
-  recentWorkoutLoad?: number;
-  currentStreak?: number;
-  missedWorkouts?: number;
-  recentCheckInsCount?: number;
-  recentWorkoutLogsCount?: number;
-  trainingPlanId?: string;
-  previousReadinessScores?: number[];
-  formulaVersion?: string;
-  generatedAt?: string;
 };
 
 export type RecoverySnapshotProps = {

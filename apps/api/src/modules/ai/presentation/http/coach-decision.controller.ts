@@ -307,14 +307,20 @@ function mapCoachDecision(coachDecision: {
   headline: string;
   summary: string;
   actionItems: string[];
-  influences: Array<{
-    code: string;
-    label: string;
-    impact: 'positive' | 'negative' | 'neutral';
-    source: 'recovery' | 'nutrition' | 'training' | 'progress' | 'memory';
-    weight?: number;
-    value?: number;
-  }>;
+    influences: Array<{
+      code: string;
+      label: string;
+      impact: 'positive' | 'negative' | 'neutral';
+      source:
+        | 'recovery'
+        | 'nutrition'
+        | 'training'
+        | 'progress'
+        | 'memory'
+        | 'notification';
+      weight?: number;
+      value?: number;
+    }>;
   sourceContext: Record<string, unknown>;
   formulaVersion: string;
   generatedBy: 'deterministic' | 'llm_assisted';

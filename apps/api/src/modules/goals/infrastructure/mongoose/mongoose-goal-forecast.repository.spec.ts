@@ -45,6 +45,24 @@ describe('MongooseGoalForecastRepository', () => {
     expect(findOne).toHaveBeenCalledWith({ goalId: 'goal_123' });
     expect(result?.confidence.value).toBe('high');
   });
+
+  it('returns the existing forecast when the upsert hits a duplicate key', async () => {
+    const findOneAndUpdate = jest.fn().mockReturnValue({
+      exec: jest.fn().mockRejectedValue({ code: 11000 }),
+    });
+    const findOne = jest.fn().mockReturnValue({
+      exec: jest.fn().mockResolvedValue(buildDocument()),
+    });
+    const repository = new MongooseGoalForecastRepository({
+      findOneAndUpdate,
+      findOne,
+    } as never);
+
+    const result = await repository.upsertForecast(buildInput());
+
+    expect(findOne).toHaveBeenCalledWith({ goalId: 'goal_123' });
+    expect(result.goalId).toBe('goal_123');
+  });
 });
 
 function buildInput() {

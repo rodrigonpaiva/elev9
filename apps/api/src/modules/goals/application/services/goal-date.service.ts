@@ -1,11 +1,28 @@
+import { Injectable } from '@nestjs/common';
+
+import { PlatformDateService } from '../../../../shared/date/platform-date.service';
+
+@Injectable()
 export class GoalDateService {
-  todayUtcDateString(): string {
-    return new Date().toISOString().slice(0, 10);
+  constructor(
+    private readonly platformDateService: PlatformDateService = new PlatformDateService(),
+  ) {}
+
+  todayUtcDateString(now: Date = new Date()): string {
+    return this.platformDateService.getTodayDateString(now);
+  }
+
+  getDateString(date: Date): string {
+    return this.platformDateService.getDateString(date);
+  }
+
+  getUtcDayRange(dateString: string): { start: Date; end: Date } {
+    return this.platformDateService.getUtcDayRange(dateString);
   }
 
   addDaysToDateString(dateString: string, days: number): string {
     const date = new Date(`${dateString}T00:00:00.000Z`);
     date.setUTCDate(date.getUTCDate() + days);
-    return date.toISOString().slice(0, 10);
+    return this.platformDateService.getDateString(date);
   }
 }

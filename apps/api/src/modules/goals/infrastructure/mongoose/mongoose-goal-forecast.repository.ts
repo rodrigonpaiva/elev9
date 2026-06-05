@@ -15,6 +15,7 @@ import {
   GoalForecastDocument,
   GoalForecastSchemaClass,
 } from './goal-forecast.schema';
+import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
 
 @Injectable()
 export class MongooseGoalForecastRepository implements GoalForecastRepository {
@@ -65,17 +66,18 @@ export class MongooseGoalForecastRepository implements GoalForecastRepository {
 
       return this.toEntity(document as GoalForecastDocument);
     } catch (error) {
-      if (isDuplicateKeyError(error)) {
-        const existingDocument = await this.goalForecastModel
-          .findOne({ goalId: input.goalId })
-          .exec();
+      return IdempotentUpsertHelper.handleDuplicateKeyFallback({
+        error,
+        reload: async () => {
+          const existingDocument = await this.goalForecastModel
+            .findOne({ goalId: input.goalId })
+            .exec();
 
-        if (existingDocument) {
-          return this.toEntity(existingDocument as GoalForecastDocument);
-        }
-      }
-
-      throw error;
+          return existingDocument
+            ? this.toEntity(existingDocument as GoalForecastDocument)
+            : null;
+        },
+      });
     }
   }
 
@@ -92,13 +94,4 @@ export class MongooseGoalForecastRepository implements GoalForecastRepository {
       formulaVersion: document.formulaVersion,
     });
   }
-}
-
-function isDuplicateKeyError(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    (error as { code?: number }).code === 11000
-  );
 }

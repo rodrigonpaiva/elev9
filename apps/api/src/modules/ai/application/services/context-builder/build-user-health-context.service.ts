@@ -22,6 +22,7 @@ import {
   CLOCK,
   Clock,
 } from '../../../../progress/domain/services/clock.service';
+import { PlatformDateService } from '../../../../../shared/date/platform-date.service';
 import {
   NUTRITION_PROFILE_REPOSITORY,
   NutritionProfileRepository,
@@ -155,6 +156,7 @@ export class BuildUserHealthContextService {
     private readonly buildRecoverySnapshotUseCase: BuildRecoverySnapshotUseCase,
     @Inject(CLOCK)
     private readonly clock: Clock,
+    private readonly platformDateService: PlatformDateService = new PlatformDateService(),
   ) {}
 
   async build(input: { authUserId: string }): Promise<UserHealthContext> {
@@ -569,7 +571,7 @@ export class BuildUserHealthContextService {
   }
 
   private toUtcDateString(date: Date): string {
-    return date.toISOString().slice(0, 10);
+    return this.platformDateService.getDateString(date);
   }
 
   private roundToTwoDecimals(value: number): number {

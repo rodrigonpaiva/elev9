@@ -1,4 +1,5 @@
 import type { GoalProgressSnapshotContract } from '../goals.contract';
+import type { GoalSourceContext } from '../../../../shared/source-context';
 import { GoalTrendValueObject } from '../value-objects/goal-trend.value-object';
 
 export type GoalProgressSnapshotProps = {
@@ -9,7 +10,7 @@ export type GoalProgressSnapshotProps = {
   currentValue: number;
   targetValue: number;
   trend: GoalTrendValueObject;
-  sourceContext: Record<string, unknown>;
+  sourceContext: GoalSourceContext;
   formulaVersion: string;
 };
 
@@ -21,7 +22,7 @@ export class GoalProgressSnapshot {
   readonly currentValue: number;
   readonly targetValue: number;
   readonly trend: GoalTrendValueObject;
-  readonly sourceContext: Record<string, unknown>;
+  readonly sourceContext: GoalSourceContext;
   readonly formulaVersion: string;
 
   constructor(props: GoalProgressSnapshotProps) {

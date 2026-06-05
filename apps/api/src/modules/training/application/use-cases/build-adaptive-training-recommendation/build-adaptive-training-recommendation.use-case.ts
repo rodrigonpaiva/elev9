@@ -40,6 +40,7 @@ import {
   ADAPTIVE_TRAINING_RECOMMENDATION_REPOSITORY,
   AdaptiveTrainingRecommendationRepository,
 } from '../../../domain/repositories/adaptive-training-recommendation.repository';
+import type { AdaptiveTrainingSourceContext } from '../../../../../shared/source-context';
 import {
   AdaptiveTrainingRecommendationCalculatorInput,
   AdaptiveTrainingRecommendationCalculatorService,
@@ -204,7 +205,7 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
           calculatorInput,
         );
 
-      const sourceContext = {
+      const sourceContext: AdaptiveTrainingSourceContext = {
         readinessScore: calculatorInput.readinessScore,
         fatigueScore: calculatorInput.fatigueScore,
         recoveryTrend: calculatorInput.recoveryTrend,
@@ -374,7 +375,7 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
     end.setUTCDate(end.getUTCDate() - (RECENT_WINDOW_DAYS - 1));
 
     return {
-      startDate: end.toISOString().slice(0, 10),
+      startDate: this.adaptiveTrainingDateService.getDateString(end),
       endDate,
     };
   }

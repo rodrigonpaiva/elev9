@@ -1,6 +1,8 @@
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
 import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
 import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import { DailyCheckIn } from '../../../../progress/domain/entities/daily-check-in.entity';
 import { DailyCheckInRepository } from '../../../../progress/domain/repositories/daily-check-in.repository';
 import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
@@ -19,6 +21,12 @@ describe('GetHomeDashboardDebugUseCase', () => {
   };
   let getGoalMilestonesUseCase: {
     execute: jest.MockedFunction<GetGoalMilestonesUseCase['execute']>;
+  };
+  let getCurrentNotificationUseCase: {
+    execute: jest.MockedFunction<GetCurrentNotificationUseCase['execute']>;
+  };
+  let getEngagementSummaryUseCase: {
+    execute: jest.MockedFunction<GetEngagementSummaryUseCase['execute']>;
   };
   let dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService;
   let useCase: GetHomeDashboardDebugUseCase;
@@ -65,6 +73,16 @@ describe('GetHomeDashboardDebugUseCase', () => {
     getGoalMilestonesUseCase = {
       execute: jest.fn(),
     };
+    getCurrentNotificationUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        notificationDecision: undefined,
+      }),
+    };
+    getEngagementSummaryUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        engagementSummary: undefined,
+      }),
+    };
     dashboardAdaptiveSignalsService = new DashboardAdaptiveSignalsService();
 
     useCase = new GetHomeDashboardDebugUseCase(
@@ -73,6 +91,8 @@ describe('GetHomeDashboardDebugUseCase', () => {
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
       getCurrentGoalUseCase as unknown as GetCurrentGoalUseCase,
       getGoalMilestonesUseCase as unknown as GetGoalMilestonesUseCase,
+      getCurrentNotificationUseCase as unknown as GetCurrentNotificationUseCase,
+      getEngagementSummaryUseCase as unknown as GetEngagementSummaryUseCase,
       dashboardAdaptiveSignalsService,
     );
   });

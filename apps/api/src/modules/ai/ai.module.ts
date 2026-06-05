@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { COACH_FEEDBACK_REPOSITORY } from './domain/repositories/coach-feedback.repository';
@@ -14,48 +14,16 @@ import {
   CoachDecisionSchema,
 } from './infrastructure/mongoose/coach-decision.schema';
 import { AuthModule } from '../auth/auth.module';
+import { UsersModule } from '../users/users.module';
+import { FitnessModule } from '../fitness/fitness.module';
+import { ProgressModule } from '../progress/progress.module';
+import { NutritionModule } from '../nutrition/nutrition.module';
 import { GoalsModule } from '../goals/goals.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
-import { FITNESS_PROFILE_REPOSITORY } from '../fitness/domain/repositories/fitness-profile.repository';
-import { MongooseFitnessProfileRepository } from '../fitness/infrastructure/mongoose/mongoose-fitness-profile.repository';
-import {
-  FITNESS_PROFILE_MODEL_NAME,
-  FitnessProfileSchema,
-} from '../fitness/infrastructure/mongoose/fitness-profile.schema';
-import { NUTRITION_PROFILE_REPOSITORY } from '../nutrition/domain/repositories/nutrition-profile.repository';
-import { MongooseNutritionProfileRepository } from '../nutrition/infrastructure/mongoose/mongoose-nutrition-profile.repository';
-import {
-  NUTRITION_PROFILE_MODEL_NAME,
-  NutritionProfileSchema,
-} from '../nutrition/infrastructure/mongoose/nutrition-profile.schema';
-import { DAILY_CHECK_IN_REPOSITORY } from '../progress/domain/repositories/daily-check-in.repository';
-import { WORKOUT_LOG_REPOSITORY } from '../progress/domain/repositories/workout-log.repository';
-import { CLOCK } from '../progress/domain/services/clock.service';
-import { MongooseDailyCheckInRepository } from '../progress/infrastructure/mongoose/mongoose-daily-check-in.repository';
-import { MongooseWorkoutLogRepository } from '../progress/infrastructure/mongoose/mongoose-workout-log.repository';
-import { SystemClockService } from '../progress/infrastructure/system-clock.service';
-import {
-  DAILY_CHECK_IN_MODEL_NAME,
-  DailyCheckInSchema,
-} from '../progress/infrastructure/mongoose/daily-check-in.schema';
-import {
-  WORKOUT_LOG_MODEL_NAME,
-  WorkoutLogSchema,
-} from '../progress/infrastructure/mongoose/workout-log.schema';
-import { TRAINING_PLAN_REPOSITORY } from '../training/domain/repositories/training-plan.repository';
-import { MongooseTrainingPlanRepository } from '../training/infrastructure/mongoose/mongoose-training-plan.repository';
-import {
-  TRAINING_PLAN_MODEL_NAME,
-  TrainingPlanSchema,
-} from '../training/infrastructure/mongoose/training-plan.schema';
-import { USER_PROFILE_REPOSITORY } from '../users/domain/repositories/user-profile.repository';
-import { MongooseUserProfileRepository } from '../users/infrastructure/mongoose/mongoose-user-profile.repository';
-import {
-  USER_PROFILE_MODEL_NAME,
-  UserProfileSchema,
-} from '../users/infrastructure/mongoose/user-profile.schema';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
+import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { BuildUserHealthContextService } from './application/services/context-builder/build-user-health-context.service';
 import { CoachDecisionCalculatorService } from './application/services/coach-decision-calculator.service';
 import { CoachDecisionDateService } from './application/services/coach-decision-date.service';
@@ -107,34 +75,15 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
 @Module({
   imports: [
     AuthModule,
+    UsersModule,
+    FitnessModule,
+    ProgressModule,
+    NutritionModule,
     GoalsModule,
     RecoveryModule,
     TrainingModule,
+    forwardRef(() => NotificationsModule),
     MongooseModule.forFeature([
-      {
-        name: USER_PROFILE_MODEL_NAME,
-        schema: UserProfileSchema,
-      },
-      {
-        name: FITNESS_PROFILE_MODEL_NAME,
-        schema: FitnessProfileSchema,
-      },
-      {
-        name: NUTRITION_PROFILE_MODEL_NAME,
-        schema: NutritionProfileSchema,
-      },
-      {
-        name: TRAINING_PLAN_MODEL_NAME,
-        schema: TrainingPlanSchema,
-      },
-      {
-        name: WORKOUT_LOG_MODEL_NAME,
-        schema: WorkoutLogSchema,
-      },
-      {
-        name: DAILY_CHECK_IN_MODEL_NAME,
-        schema: DailyCheckInSchema,
-      },
       {
         name: COACH_FEEDBACK_MODEL_NAME,
         schema: CoachFeedbackSchema,
@@ -160,6 +109,7 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
   controllers: [AiController, CoachDecisionController],
   providers: [
     AuthSessionGuard,
+    PlatformDateService,
     BuildUserHealthContextService,
     BuildCoachDecisionUseCase,
     GetTodayCoachDecisionUseCase,
@@ -186,34 +136,6 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
     GenerateCoachFeedbackUseCase,
     ReplayCoachFeedbackUseCase,
     {
-      provide: CLOCK,
-      useClass: SystemClockService,
-    },
-    {
-      provide: USER_PROFILE_REPOSITORY,
-      useClass: MongooseUserProfileRepository,
-    },
-    {
-      provide: FITNESS_PROFILE_REPOSITORY,
-      useClass: MongooseFitnessProfileRepository,
-    },
-    {
-      provide: NUTRITION_PROFILE_REPOSITORY,
-      useClass: MongooseNutritionProfileRepository,
-    },
-    {
-      provide: TRAINING_PLAN_REPOSITORY,
-      useClass: MongooseTrainingPlanRepository,
-    },
-    {
-      provide: WORKOUT_LOG_REPOSITORY,
-      useClass: MongooseWorkoutLogRepository,
-    },
-    {
-      provide: DAILY_CHECK_IN_REPOSITORY,
-      useClass: MongooseDailyCheckInRepository,
-    },
-    {
       provide: COACH_FEEDBACK_REPOSITORY,
       useClass: MongooseCoachFeedbackRepository,
     },
@@ -239,7 +161,14 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
     },
   ],
   exports: [
+    BuildUserHealthContextService,
+    COACH_DECISION_REPOSITORY,
     GetCurrentCoachDecisionUseCase,
+    GenerateCoachFeedbackUseCase,
+    CreateCoachChatUseCase,
+    AiPromptBuilder,
+    CoachChatReplyGenerator,
+    CoachConversationMemorySummarizer,
   ],
 })
 export class AiModule {}

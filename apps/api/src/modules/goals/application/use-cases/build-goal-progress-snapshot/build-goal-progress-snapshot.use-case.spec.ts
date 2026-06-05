@@ -138,6 +138,11 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
         }),
       }),
     );
+    const persistedInput =
+      goalProgressSnapshotRepository.upsertDailySnapshot.mock.calls[0][0];
+    expect(persistedInput.sourceContext).not.toHaveProperty('authUserId');
+    expect(persistedInput.sourceContext).not.toHaveProperty('rawHealthContext');
+    expect(persistedInput.sourceContext).not.toHaveProperty('prompt');
     expect(result.goalProgressSnapshot).toBeDefined();
   });
 

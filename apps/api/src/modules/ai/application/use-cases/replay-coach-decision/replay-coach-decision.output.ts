@@ -5,17 +5,25 @@ import {
 import {
   CoachDecisionPriority,
 } from '../../../domain/value-objects/coach-decision-priority.value-object';
+import {
+  ReplayComparison,
+  ReplayDifference,
+  ReplayResult,
+} from '../../../../../shared/replay';
 
-export type CoachDecisionReplayDifference = {
-  field: 'priority' | 'headline' | 'summary' | 'actionItems' | 'influences' | 'formulaVersion';
-  persisted: unknown;
-  recalculated: unknown;
-};
+export type CoachDecisionReplayField =
+  | 'priority'
+  | 'headline'
+  | 'summary'
+  | 'actionItems'
+  | 'influences'
+  | 'formulaVersion';
 
-export type CoachDecisionReplayComparison = {
-  matches: boolean;
-  differences: CoachDecisionReplayDifference[];
-};
+export type CoachDecisionReplayDifference =
+  ReplayDifference<CoachDecisionReplayField>;
+
+export type CoachDecisionReplayComparison =
+  ReplayComparison<CoachDecisionReplayField>;
 
 export type CoachDecisionRecalculatedResult = {
   priority: CoachDecisionPriority;
@@ -32,3 +40,9 @@ export type ReplayCoachDecisionOutput = {
   comparison: CoachDecisionReplayComparison;
   replayedAt: string;
 };
+
+export type CoachDecisionReplayResult = ReplayResult<
+  CoachDecision,
+  CoachDecisionRecalculatedResult,
+  CoachDecisionReplayField
+>;

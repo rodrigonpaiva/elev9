@@ -3,6 +3,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
 import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
 import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import {
+  NotificationReadModelMapper,
+  type NotificationReadModelPayload,
+} from '../../../../../shared/mappers';
 import {
   DAILY_CHECK_IN_REPOSITORY,
   DailyCheckInRepository,
@@ -28,6 +34,8 @@ export class GetHomeDashboardDebugUseCase {
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
     private readonly getCurrentGoalUseCase: GetCurrentGoalUseCase,
     private readonly getGoalMilestonesUseCase: GetGoalMilestonesUseCase,
+    private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
+    private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
     private readonly dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService,
   ) {}
 
@@ -64,6 +72,7 @@ export class GetHomeDashboardDebugUseCase {
         )
       ).slice(0, 3);
       const goal = await this.resolveGoal(authUserId);
+      const notification = await this.resolveNotification(authUserId);
       const recovery =
         this.dashboardAdaptiveSignalsService.buildRecoverySummary(
           healthContext,
@@ -80,6 +89,7 @@ export class GetHomeDashboardDebugUseCase {
         recovery,
         nutritionGuidance,
         goal,
+        notification,
       );
     } catch (error) {
       if (error instanceof GetHomeDashboardError) {
@@ -110,5 +120,27 @@ export class GetHomeDashboardDebugUseCase {
     } catch {
       return undefined;
     }
+  }
+
+  private async resolveNotification(authUserId: string): Promise<
+    | {
+        current?: NotificationReadModelPayload['current'];
+        engagementSummary?: NotificationReadModelPayload['engagementSummary'];
+      }
+    | undefined
+  > {
+    const [currentResult, engagementSummaryResult] = await Promise.allSettled([
+      this.getCurrentNotificationUseCase.execute({ authUserId }),
+      this.getEngagementSummaryUseCase.execute({ authUserId }),
+    ]);
+
+    return NotificationReadModelMapper.toDashboardPayload(
+      currentResult.status === 'fulfilled'
+        ? currentResult.value.notificationDecision
+        : undefined,
+      engagementSummaryResult.status === 'fulfilled'
+        ? engagementSummaryResult.value.engagementSummary
+        : undefined,
+    );
   }
 }

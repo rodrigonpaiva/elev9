@@ -26,9 +26,17 @@ import { GetCurrentRecoveryUseCase } from '../../../../recovery/application/use-
 import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
 import { GetCurrentAdaptiveTrainingUseCase } from '../../../../training/application/use-cases/get-current-adaptive-training/get-current-adaptive-training.use-case';
 import {
+  GoalCoachDecisionSignals,
+  GoalReadModelMapper,
+} from '../../../../../shared/mappers';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { NotificationReadModelMapper } from '../../../../../shared/mappers';
+import {
   COACH_DECISION_REPOSITORY,
   CoachDecisionRepository,
 } from '../../../domain/repositories/coach-decision.repository';
+import type { CoachDecisionSourceContext } from '../../../../../shared/source-context';
 import {
   COACH_DECISION_CALCULATOR_VERSION,
   CoachDecisionCalculatorInput,
@@ -64,6 +72,8 @@ export class BuildCoachDecisionUseCase {
     private readonly getCurrentRecoveryUseCase: GetCurrentRecoveryUseCase,
     private readonly getCurrentGoalUseCase: GetCurrentGoalUseCase,
     private readonly getCurrentAdaptiveTrainingUseCase: GetCurrentAdaptiveTrainingUseCase,
+    private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
+    private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
     private readonly coachDecisionCalculatorService: CoachDecisionCalculatorService,
     private readonly coachDecisionDateService: CoachDecisionDateService,
   ) {}
@@ -99,6 +109,9 @@ export class BuildCoachDecisionUseCase {
         (await this.getCurrentRecoveryUseCase.execute({ authUserId }))
           .recoverySnapshot;
       const goalContext = await this.resolveGoalContext(authUserId);
+      const notificationSignals = await this.resolveNotificationSignals(
+        authUserId,
+      );
 
       const latestNutritionRecommendation =
         await this.nutritionRecommendationRepository.findManyByUserProfileId(
@@ -164,26 +177,27 @@ export class BuildCoachDecisionUseCase {
         adaptiveIntensity: adaptiveTrainingRecommendation?.recommendedIntensity,
         currentStreak: recentWorkoutLogsCount > 0 ? currentStreak : undefined,
         missedWorkouts: recentWorkoutLogsCount > 0 ? missedWorkouts : undefined,
-        goalProgressPercentage: goalContext?.progressPercentage,
-        goalTrend: goalContext?.trend,
-        goalForecastConfidence: goalContext?.forecastConfidence,
-        goalMilestoneClose: goalContext?.milestoneClose,
-        goalAchievementReached: goalContext?.achievementReached,
+        goalProgressPercentage: goalContext?.goalProgressPercentage,
+        goalTrend: goalContext?.goalTrend,
+        goalForecastConfidence: goalContext?.goalForecastConfidence,
+        goalMilestoneClose: goalContext?.goalMilestoneClose,
+        goalAchievementReached: goalContext?.goalAchievementReached,
+        ...notificationSignals,
       };
 
       const calculatedResult =
         this.coachDecisionCalculatorService.calculate(calculatorInput);
 
-      const sourceContext = {
+      const sourceContext: CoachDecisionSourceContext = {
         ...(goalContext
           ? {
               goalId: goalContext.goalId,
               goalType: goalContext.goalType,
-              goalProgressPercentage: goalContext.progressPercentage,
-              goalTrend: goalContext.trend,
-              goalForecastConfidence: goalContext.forecastConfidence,
-              goalMilestoneClose: goalContext.milestoneClose,
-              goalAchievementReached: goalContext.achievementReached,
+              goalProgressPercentage: goalContext.goalProgressPercentage,
+              goalTrend: goalContext.goalTrend,
+              goalForecastConfidence: goalContext.goalForecastConfidence,
+              goalMilestoneClose: goalContext.goalMilestoneClose,
+              goalAchievementReached: goalContext.goalAchievementReached,
             }
           : {}),
         readinessScore: calculatorInput.readinessScore,
@@ -253,7 +267,7 @@ export class BuildCoachDecisionUseCase {
     start.setUTCDate(today.getUTCDate() - (RECENT_WINDOW_DAYS - 1));
 
     return {
-      startDate: start.toISOString().slice(0, 10),
+      startDate: this.coachDecisionDateService.getDateString(start),
       endDate: todayDate,
     };
   }
@@ -266,32 +280,74 @@ export class BuildCoachDecisionUseCase {
     return Math.min(100, Math.max(0, Math.round(value)));
   }
 
-  private async resolveGoalContext(authUserId: string): Promise<{
-    goalId?: string;
-    goalType?: string;
-    progressPercentage?: number;
-    trend?: 'improving' | 'stable' | 'declining';
-    forecastConfidence?: 'low' | 'medium' | 'high';
-    milestoneClose?: boolean;
-    achievementReached?: boolean;
-  } | null> {
+  private async resolveGoalContext(
+    authUserId: string,
+  ): Promise<
+    | (GoalCoachDecisionSignals & {
+        goalMilestoneClose: boolean;
+        goalAchievementReached: boolean;
+      })
+    | null
+  > {
     try {
       const result = await this.getCurrentGoalUseCase.execute({
         authUserId,
       });
 
-      const progressPercentage = result.progressSnapshot.progressPercentage;
+      const goalSignals = GoalReadModelMapper.toCoachDecisionSignals(result);
+
+      if (!goalSignals) {
+        return null;
+      }
 
       return {
-        goalId: result.goal.id,
-        goalType: result.goal.type,
-        progressPercentage,
-        trend: result.progressSnapshot.trend.value,
-        forecastConfidence: result.forecast.confidence.value,
-        milestoneClose: progressPercentage >= 75 && progressPercentage < 100,
-        achievementReached:
-          result.goal.status.value === 'achieved' || progressPercentage >= 100,
+        ...goalSignals,
+        goalMilestoneClose:
+          goalSignals.goalProgressPercentage >= 75 &&
+          goalSignals.goalProgressPercentage < 100,
+        goalAchievementReached:
+          result.goal.status.value === 'achieved' ||
+          goalSignals.goalProgressPercentage >= 100,
       };
+    } catch {
+      return null;
+    }
+  }
+
+  private async resolveNotificationSignals(
+    authUserId: string,
+  ): Promise<Pick<
+    CoachDecisionCalculatorInput,
+    | 'notificationSuppressed'
+    | 'notificationFatigueHigh'
+    | 'notificationDismissedFrequently'
+    | 'notificationHighEngagement'
+  > | null> {
+    try {
+      const [currentResult, engagementSummaryResult] = await Promise.allSettled([
+        this.getCurrentNotificationUseCase.execute({
+          authUserId,
+        }),
+        this.getEngagementSummaryUseCase.execute({
+          authUserId,
+        }),
+      ]);
+
+      const current =
+        currentResult.status === 'fulfilled'
+          ? currentResult.value.notificationDecision
+          : undefined;
+      const engagementSummary =
+        engagementSummaryResult.status === 'fulfilled'
+          ? engagementSummaryResult.value.engagementSummary
+          : undefined;
+      const notificationSignals =
+        NotificationReadModelMapper.toCoachDecisionSignals(
+          current,
+          engagementSummary,
+        );
+
+      return notificationSignals ?? null;
     } catch {
       return null;
     }

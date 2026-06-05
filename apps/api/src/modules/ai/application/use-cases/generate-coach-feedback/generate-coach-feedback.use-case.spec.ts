@@ -10,6 +10,10 @@ import {
   UserHealthContext,
 } from '../../services/context-builder/build-user-health-context.service';
 import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
+import { NotificationDecision } from '../../../../notifications/domain/entities/notification-decision.entity';
+import { NotificationInfluence } from '../../../../notifications/domain/value-objects/notification-influence.value-object';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import { GENERATE_COACH_FEEDBACK_ERROR_CODES } from './generate-coach-feedback.errors';
 import { GenerateCoachFeedbackUseCase } from './generate-coach-feedback.use-case';
 
@@ -20,6 +24,12 @@ describe('GenerateCoachFeedbackUseCase', () => {
   };
   let getCurrentCoachDecisionUseCase: {
     execute: jest.MockedFunction<GetCurrentCoachDecisionUseCase['execute']>;
+  };
+  let getCurrentNotificationUseCase: {
+    execute: jest.MockedFunction<GetCurrentNotificationUseCase['execute']>;
+  };
+  let getEngagementSummaryUseCase: {
+    execute: jest.MockedFunction<GetEngagementSummaryUseCase['execute']>;
   };
   let coachFeedbackGenerator: CoachFeedbackGenerator;
   let generateSpy: jest.SpiedFunction<CoachFeedbackGenerator['generate']>;
@@ -37,6 +47,16 @@ describe('GenerateCoachFeedbackUseCase', () => {
     getCurrentCoachDecisionUseCase = {
       execute: jest.fn(),
     };
+    getCurrentNotificationUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        notificationDecision: undefined,
+      }),
+    };
+    getEngagementSummaryUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        engagementSummary: undefined,
+      }),
+    };
     coachFeedbackGenerator = new CoachFeedbackGenerator();
     generateSpy = jest.spyOn(coachFeedbackGenerator, 'generate');
 
@@ -45,6 +65,8 @@ describe('GenerateCoachFeedbackUseCase', () => {
       coachFeedbackGenerator,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
       getCurrentCoachDecisionUseCase as unknown as GetCurrentCoachDecisionUseCase,
+      getCurrentNotificationUseCase as unknown as GetCurrentNotificationUseCase,
+      getEngagementSummaryUseCase as unknown as GetEngagementSummaryUseCase,
     );
   });
 
@@ -63,6 +85,20 @@ describe('GenerateCoachFeedbackUseCase', () => {
         ],
       }),
     );
+    getCurrentNotificationUseCase.execute.mockResolvedValue({
+      notificationDecision: buildNotificationDecision(),
+    } as never);
+    getEngagementSummaryUseCase.execute.mockResolvedValue({
+      engagementSummary: {
+        engagementScore: 84,
+        fatigueLevel: 'high',
+        openedCount: 2,
+        clickedCount: 1,
+        dismissedCount: 2,
+        completedCount: 1,
+        recentEventsCount: 6,
+      },
+    } as never);
 
     const result = await useCase.execute({
       authUserId: 'auth_user_123',
@@ -76,6 +112,15 @@ describe('GenerateCoachFeedbackUseCase', () => {
         fatigueLevel: 'MODERATE',
         latestCheckIn: undefined,
         nutritionProfile: undefined,
+        notification: expect.objectContaining({
+          current: expect.objectContaining({
+            type: 'coach_nudge',
+            suppressed: false,
+          }),
+          engagementSummary: expect.objectContaining({
+            engagementScore: 84,
+          }),
+        }),
       }) as CoachFeedbackGeneratorInput,
     );
     expect(coachFeedbackRepository.create).toHaveBeenCalledWith({
@@ -575,6 +620,100 @@ function buildWorkoutLog(
     date,
     createdAt: new Date(createdAt),
     updatedAt: new Date(createdAt),
+  });
+}
+
+function buildNotificationDecision(): NotificationDecision {
+  return new NotificationDecision({
+    id: 'notification_123',
+    userProfileId: 'profile_123',
+    date: '2026-05-04',
+    type: 'coach_nudge',
+    priority: 'low',
+    channel: 'in_app',
+    status: 'planned',
+    title: 'Small action, big progress',
+    message: 'Keep the next step simple and consistent.',
+    influences: [
+      new NotificationInfluence({
+        code: 'COACH_CONSISTENCY_NUDGE',
+        label: 'Coach consistency nudge',
+        impact: 'neutral',
+        source: 'coach',
+      }),
+    ],
+    sourceContext: {
+      coachDecisionId: 'decision_123',
+      coachDecisionPriority: 'consistency',
+      coachDecisionHeadline: 'Focus on consistency',
+      readinessScore: 64,
+      fatigueScore: 38,
+      fatigueLevel: 'low',
+      adaptiveRecommendationType: 'maintain',
+      goalProgressTrend: 'stable',
+      goalMilestoneClose: false,
+      goalAchievementReached: false,
+      nutritionAdherence: 72,
+      missedWorkouts: 0,
+      noRecentActivity: false,
+      recentEngagementEventsCount: 2,
+      formulaVersion: 'notification-engine-v1',
+      generatedAt: '2026-05-04T10:00:00.000Z',
+    },
+    suppressed: false,
+    suppressionReasons: [],
+    fatigueLevel: 'low',
+    formulaVersion: 'notification-engine-v1',
+    generatedBy: 'deterministic',
+    createdAt: new Date('2026-05-04T10:00:00.000Z'),
+    updatedAt: new Date('2026-05-04T10:00:00.000Z'),
+  });
+}
+
+function buildNotificationDecision(): NotificationDecision {
+  return new NotificationDecision({
+    id: 'notification_123',
+    userProfileId: 'profile_123',
+    date: '2026-05-04',
+    type: 'coach_nudge',
+    priority: 'low',
+    channel: 'in_app',
+    status: 'planned',
+    title: 'Small action, big progress',
+    message: 'Keep the next step simple and consistent.',
+    influences: [
+      new NotificationInfluence({
+        code: 'COACH_CONSISTENCY_NUDGE',
+        label: 'Coach consistency nudge',
+        impact: 'neutral',
+        source: 'coach',
+      }),
+    ],
+    sourceContext: {
+      coachDecisionId: 'decision_123',
+      coachDecisionPriority: 'consistency',
+      coachDecisionHeadline: 'Focus on consistency',
+      readinessScore: 64,
+      fatigueScore: 38,
+      fatigueLevel: 'low',
+      adaptiveRecommendationType: 'maintain',
+      goalProgressTrend: 'stable',
+      goalMilestoneClose: false,
+      goalAchievementReached: false,
+      nutritionAdherence: 72,
+      missedWorkouts: 0,
+      noRecentActivity: false,
+      recentEngagementEventsCount: 2,
+      formulaVersion: 'notification-engine-v1',
+      generatedAt: '2026-05-04T10:00:00.000Z',
+    },
+    suppressed: false,
+    suppressionReasons: [],
+    fatigueLevel: 'low',
+    formulaVersion: 'notification-engine-v1',
+    generatedBy: 'deterministic',
+    createdAt: new Date('2026-05-04T10:00:00.000Z'),
+    updatedAt: new Date('2026-05-04T10:00:00.000Z'),
   });
 }
 

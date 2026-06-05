@@ -1,6 +1,7 @@
 import { GoalProgressSnapshot } from '../entities/goal-progress-snapshot.entity';
 import { GoalTrend } from '../goals.types';
 import { GoalMilestoneType } from '../goals.types';
+import type { GoalSourceContext } from '../../../../shared/source-context';
 
 export interface GoalProgressSnapshotQueryOptions {
   limit?: number;
@@ -14,7 +15,7 @@ export interface UpsertGoalProgressSnapshotRepositoryInput {
   currentValue: number;
   targetValue: number;
   trend: GoalTrend;
-  sourceContext: Record<string, unknown>;
+  sourceContext: GoalSourceContext;
   formulaVersion: string;
 }
 

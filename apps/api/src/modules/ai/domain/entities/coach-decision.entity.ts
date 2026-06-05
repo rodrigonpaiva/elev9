@@ -1,3 +1,4 @@
+import type { CoachDecisionSourceContext } from '../../../../shared/source-context';
 import {
   CoachDecisionInfluence,
   type CoachDecisionInfluenceProps,
@@ -6,8 +7,6 @@ import {
   CoachDecisionPriority,
   CoachDecisionPriorityProps,
 } from '../value-objects/coach-decision-priority.value-object';
-
-export type CoachDecisionSourceContext = Record<string, unknown>;
 
 export type CoachDecisionProps = {
   id: string;

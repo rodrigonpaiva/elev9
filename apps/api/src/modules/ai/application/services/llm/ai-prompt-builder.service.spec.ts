@@ -88,6 +88,61 @@ describe('AiPromptBuilder', () => {
     });
   });
 
+  it('includes canonical notification context without sourceContext leakage', () => {
+    const builder = new AiPromptBuilder();
+    const prompt = builder.build({
+      message: 'Should I train today?',
+      healthContext: {
+        authUserId: 'auth_user_123',
+        userProfileId: 'profile_123',
+        userName: 'Rodrigo Paiva',
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
+        weeklyFrequency: 4,
+        adherenceScore: 75,
+        currentStreak: 5,
+        averageWorkoutDuration: 48,
+        fatigueLevel: 'HIGH',
+        availableEquipment: [],
+        limitations: [],
+        todayWorkout: null,
+        activeTrainingPlanId: 'training_123',
+        recentWorkoutLogs: [],
+        generatedAt: new Date('2026-05-18T10:00:00.000Z'),
+      },
+      conversationHistory: [],
+      notification: {
+        current: {
+          type: 'coach_nudge',
+          priority: 'low',
+          status: 'planned',
+          suppressed: true,
+          fatigueLevel: 'high',
+        },
+        engagementSummary: {
+          engagementScore: 84,
+          fatigueLevel: 'high',
+          openedCount: 2,
+          clickedCount: 1,
+          dismissedCount: 2,
+          completedCount: 1,
+          recentEventsCount: 6,
+        },
+      },
+    });
+
+    const joined = prompt.messages.map((message) => message.content).join('\n');
+
+    expect(joined).toContain('Notifications (canonical):');
+    expect(joined).toContain('- type: coach_nudge');
+    expect(joined).toContain('- suppressed: true');
+    expect(joined).toContain('- engagement score: 84');
+    expect(joined).toContain(
+      'do not recalculate notifications; treat the notification decision as canonical.',
+    );
+    expect(joined).not.toContain('sourceContext');
+  });
+
   it('builds a sanitized debug snapshot without raw prompt leakage', () => {
     const builder = new AiPromptBuilder();
     const snapshot = builder.buildDebugSnapshot({

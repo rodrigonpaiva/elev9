@@ -5,6 +5,7 @@ import type {
   GoalTrend,
   GoalType,
 } from './goals.types';
+import type { GoalSourceContext } from '../../../shared/source-context';
 
 export interface GoalContract {
   id: string;
@@ -27,7 +28,7 @@ export interface GoalProgressSnapshotContract {
   currentValue: number;
   targetValue: number;
   trend: GoalTrend;
-  sourceContext: Record<string, unknown>;
+  sourceContext: GoalSourceContext;
   formulaVersion: string;
 }
 
