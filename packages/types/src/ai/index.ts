@@ -47,13 +47,25 @@ export type CoachDecisionInfluenceCode =
   | 'NOTIFICATION_SUPPRESSED'
   | 'NOTIFICATION_FATIGUE_HIGH'
   | 'NOTIFICATION_DISMISSED_FREQUENTLY'
-  | 'NOTIFICATION_HIGH_ENGAGEMENT';
+  | 'NOTIFICATION_HIGH_ENGAGEMENT'
+  | 'HABIT_CONSISTENCY_IMPROVING'
+  | 'HABIT_CONSISTENCY_DECLINING'
+  | 'HABIT_RISK_HIGH'
+  | 'HABIT_STREAK_STRONG'
+  | 'HABIT_DROPOUT_RISK';
 
 export interface CoachDecisionInfluence {
   code: CoachDecisionInfluenceCode;
   label: string;
   impact: 'positive' | 'negative' | 'neutral';
-  source: 'recovery' | 'nutrition' | 'training' | 'progress' | 'memory' | 'notification';
+  source:
+    | 'recovery'
+    | 'nutrition'
+    | 'training'
+    | 'progress'
+    | 'memory'
+    | 'notification'
+    | 'habit';
   weight?: number;
   value?: number;
 }
@@ -98,6 +110,13 @@ export interface CoachDecisionSourceContext {
   goalForecastConfidence?: 'low' | 'medium' | 'high';
   goalMilestoneClose?: boolean;
   goalAchievementReached?: boolean;
+  habitConsistencyScore?: number;
+  habitTrend?: 'improving' | 'stable' | 'declining';
+  habitCurrentStreak?: number;
+  habitRiskLevel?: 'low' | 'medium' | 'high';
+  habitRiskSignals?: Array<
+    'inactivity_pattern' | 'streak_at_risk' | 'declining_consistency' | 'dropout_risk'
+  >;
   generatedAt: string;
 }
 

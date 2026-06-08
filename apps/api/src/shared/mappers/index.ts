@@ -19,6 +19,15 @@ export {
   type RecoveryReadModelPayload,
 } from './recovery-read-model.mapper';
 export {
+  HabitReadModelMapper,
+  type HabitCoachDecisionSignals,
+  type HabitMemoryPayload,
+  type HabitPromptPayload,
+  type HabitReadModel,
+  type HabitReadModelPayload,
+  type HabitSnapshotDashboardPayload,
+} from './habit-read-model.mapper';
+export {
   NotificationReadModelMapper,
   type NotificationCoachDecisionSignals,
   type NotificationMemoryPayload,

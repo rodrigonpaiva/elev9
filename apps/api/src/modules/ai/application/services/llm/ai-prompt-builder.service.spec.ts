@@ -143,6 +143,78 @@ describe('AiPromptBuilder', () => {
     expect(joined).not.toContain('sourceContext');
   });
 
+  it('includes canonical habit context without sourceContext leakage', () => {
+    const builder = new AiPromptBuilder();
+    const prompt = builder.build({
+      message: 'Should I train today?',
+      healthContext: {
+        authUserId: 'auth_user_123',
+        userProfileId: 'profile_123',
+        userName: 'Rodrigo Paiva',
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
+        weeklyFrequency: 4,
+        adherenceScore: 75,
+        currentStreak: 5,
+        averageWorkoutDuration: 48,
+        fatigueLevel: 'HIGH',
+        availableEquipment: [],
+        limitations: [],
+        todayWorkout: null,
+        activeTrainingPlanId: 'training_123',
+        recentWorkoutLogs: [],
+        generatedAt: new Date('2026-05-18T10:00:00.000Z'),
+      },
+      conversationHistory: [],
+      habit: {
+        current: {
+          userProfileId: 'profile_123',
+          date: '2026-05-18',
+          consistencyScore: 78,
+          streakDays: 5,
+          adherenceScore: 82,
+          trend: 'improving',
+          sourceContext: {
+            formulaVersion: 'habit-engine-v1',
+            generatedAt: '2026-05-18T10:00:00.000Z',
+          },
+          formulaVersion: 'habit-engine-v1',
+          generatedAt: '2026-05-18T10:00:00.000Z',
+        } as never,
+        summary: {
+          userProfileId: 'profile_123',
+          score: 78,
+          trend: 'improving',
+          currentStreak: 5,
+          longestStreak: 7,
+          adherenceRate: 82,
+          riskLevel: 'low',
+          updatedAt: '2026-05-18T10:00:00.000Z',
+          formulaVersion: 'habit-engine-v1',
+        } as never,
+        riskSignals: [
+          {
+            userProfileId: 'profile_123',
+            type: 'streak_at_risk',
+            level: 'medium',
+            title: 'Streak at risk',
+            description: 'Consistency is still healthy, but watch the rhythm.',
+            generatedAt: '2026-05-18T10:00:00.000Z',
+            formulaVersion: 'habit-engine-v1',
+          } as never,
+        ],
+      },
+    });
+
+    const joined = prompt.messages.map((message) => message.content).join('\n');
+
+    expect(joined).toContain('Habits & Consistency (canonical):');
+    expect(joined).toContain('- consistency score: 78');
+    expect(joined).toContain('- instruction: do not recalculate consistency; treat Habit Engine outputs as canonical.');
+    expect(prompt.messages).toHaveLength(4);
+    expect(JSON.stringify(prompt)).not.toContain('sourceContext');
+  });
+
   it('builds a sanitized debug snapshot without raw prompt leakage', () => {
     const builder = new AiPromptBuilder();
     const snapshot = builder.buildDebugSnapshot({

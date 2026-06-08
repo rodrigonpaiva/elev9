@@ -8,7 +8,8 @@ export type CoachDecisionInfluenceSource =
   | 'training'
   | 'progress'
   | 'memory'
-  | 'notification';
+  | 'notification'
+  | 'habit';
 
 export type CoachDecisionInfluenceProps = {
   code: CoachDecisionInfluenceCode;

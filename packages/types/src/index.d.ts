@@ -2,6 +2,7 @@ export * from './auth';
 export * from './users';
 export * from './fitness';
 export * from './goals';
+export * from './habits';
 export * from './notifications';
 export * from './training';
 export * from './progress';

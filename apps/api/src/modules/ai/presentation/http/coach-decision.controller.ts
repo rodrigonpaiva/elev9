@@ -317,7 +317,8 @@ function mapCoachDecision(coachDecision: {
         | 'training'
         | 'progress'
         | 'memory'
-        | 'notification';
+        | 'notification'
+        | 'habit';
       weight?: number;
       value?: number;
     }>;

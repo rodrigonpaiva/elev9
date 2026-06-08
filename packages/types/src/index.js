@@ -18,6 +18,8 @@ __exportStar(require("./auth"), exports);
 __exportStar(require("./users"), exports);
 __exportStar(require("./fitness"), exports);
 __exportStar(require("./goals"), exports);
+__exportStar(require("./habits"), exports);
+__exportStar(require("./notifications"), exports);
 __exportStar(require("./training"), exports);
 __exportStar(require("./progress"), exports);
 __exportStar(require("./dashboard"), exports);

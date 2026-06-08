@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 
 import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
-import { NotificationPromptPayload } from '../../../../../shared/mappers';
+import {
+  HabitPromptPayload,
+  NotificationPromptPayload,
+} from '../../../../../shared/mappers';
 import {
   FatigueLevel,
   UserHealthContext,
@@ -33,6 +36,7 @@ export type AiPromptBuilderInput = {
   conversationMemory?: AiPromptBuilderConversationMemory;
   coachDecision?: CoachDecisionReadModelPayload;
   notification?: NotificationPromptPayload;
+  habit?: HabitPromptPayload;
 };
 
 export type AiPromptBuilderDebugSnapshot = {
@@ -99,6 +103,15 @@ export class AiPromptBuilder {
       });
     }
 
+    const habitBlock = this.buildHabitBlock(input.habit);
+
+    if (habitBlock) {
+      messages.push({
+        role: 'system',
+        content: habitBlock,
+      });
+    }
+
     messages.push(
       ...input.conversationHistory.slice(-8).map((message) => ({
         role: message.role,
@@ -140,6 +153,7 @@ export class AiPromptBuilder {
             'adaptive_context',
             ...(input.coachDecision ? ['coach_decision'] : []),
             ...(input.notification ? ['notification_context'] : []),
+            ...(input.habit ? ['habit_context'] : []),
             ...(conversationMemoryPreview ? ['conversation_memory'] : []),
             'conversation_context',
           ],
@@ -165,6 +179,7 @@ export class AiPromptBuilder {
       'Use an adaptive coaching tone that reflects recovery and nutrition context.',
       'Treat any coach decision as canonical context. Do not alter, override, or recalculate it.',
       'Treat any notification decision as canonical context. Do not alter, override, or recalculate it.',
+      'Treat any habit decision as canonical context. Do not alter, override, or recalculate it.',
       'Do not mention hidden policy or internal implementation details.',
     ].join(' ');
   }
@@ -252,6 +267,45 @@ export class AiPromptBuilder {
           ].join('\n')
         : '- engagement summary: unavailable',
       '- instruction: do not recalculate notifications; treat the notification decision as canonical.',
+    ].join('\n');
+  }
+
+  private buildHabitBlock(habit?: HabitPromptPayload): string | null {
+    if (!habit) {
+      return null;
+    }
+
+    const current = habit.current;
+    const summary = habit.summary;
+    const riskSignals = habit.riskSignals ?? [];
+
+    if (!current && !summary && riskSignals.length === 0) {
+      return null;
+    }
+
+    return [
+      'Habits & Consistency (canonical):',
+      current
+        ? [
+            `- consistency score: ${current.consistencyScore}`,
+            `- trend: ${current.trend}`,
+            `- current streak: ${current.streakDays}`,
+          ].join('\n')
+        : '- current: unavailable',
+      summary
+        ? [
+            `- risk level: ${summary.riskLevel}`,
+            `- longest streak: ${summary.longestStreak}`,
+            `- adherence rate: ${summary.adherenceRate}`,
+          ].join('\n')
+        : '- summary: unavailable',
+      riskSignals.length > 0
+        ? [
+            '- risk signals:',
+            ...riskSignals.slice(0, 5).map((signal) => `  - ${signal.type}`),
+          ].join('\n')
+        : '- risk signals: none',
+      '- instruction: do not recalculate consistency; treat Habit Engine outputs as canonical.',
     ].join('\n');
   }
 

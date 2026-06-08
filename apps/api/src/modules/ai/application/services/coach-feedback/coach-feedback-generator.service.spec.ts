@@ -840,6 +840,70 @@ describe('CoachFeedbackGenerator', () => {
     );
   });
 
+  it('uses habit context as supporting coaching context', () => {
+    const result = generator.generate({
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 40,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 30),
+        buildWorkoutLog('2026-05-03', 40),
+        buildWorkoutLog('2026-05-04', 50),
+      ],
+      hasTrainingPlan: true,
+      habit: {
+        current: {
+          userProfileId: 'profile_123',
+          date: '2026-05-04',
+          consistencyScore: 38,
+          streakDays: 1,
+          adherenceScore: 42,
+          trend: 'declining',
+          sourceContext: {
+            formulaVersion: 'habit-engine-v1',
+            generatedAt: '2026-05-04T10:00:00.000Z',
+          },
+          formulaVersion: 'habit-engine-v1',
+          generatedAt: '2026-05-04T10:00:00.000Z',
+        } as never,
+        summary: {
+          userProfileId: 'profile_123',
+          score: 38,
+          trend: 'declining',
+          currentStreak: 1,
+          longestStreak: 4,
+          adherenceRate: 42,
+          riskLevel: 'high',
+          updatedAt: '2026-05-04T10:00:00.000Z',
+          formulaVersion: 'habit-engine-v1',
+        } as never,
+        riskSignals: [
+          {
+            userProfileId: 'profile_123',
+            type: 'dropout_risk',
+            level: 'high',
+            title: 'Dropout risk',
+            description: 'Consistency is trending down.',
+            generatedAt: '2026-05-04T10:00:00.000Z',
+            formulaVersion: 'habit-engine-v1',
+          } as never,
+        ],
+      },
+    });
+
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'habit:high_risk',
+        'habit:dropout_risk',
+      ]),
+    );
+    expect(result.recommendations).toContain(
+      'Use one small habit that is easy to complete today',
+    );
+  });
+
   it('enforces output limits', () => {
     const result = generator.generate({
       goal: 'gain_muscle',

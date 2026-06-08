@@ -4,6 +4,7 @@ import { BuildUserHealthContextService } from '../context-builder/build-user-hea
 import {
   CoachDecisionReadModelPayload,
   NotificationPromptPayload,
+  HabitPromptPayload,
 } from '../../../../../shared/mappers';
 
 type UserHealthContext = Awaited<
@@ -17,6 +18,7 @@ export class CoachChatReplyGenerator {
     healthContext: UserHealthContext;
     coachDecision?: CoachDecisionReadModelPayload;
     notification?: NotificationPromptPayload;
+    habit?: HabitPromptPayload;
   }): string {
     const normalizedMessage = input.message.trim().toLowerCase();
     const asksAboutTraining =
@@ -33,6 +35,12 @@ export class CoachChatReplyGenerator {
 
     if (notificationReply) {
       return notificationReply;
+    }
+
+    const habitReply = this.buildHabitReply(input.habit);
+
+    if (habitReply) {
+      return habitReply;
     }
 
     const latestCheckIn = input.healthContext.latestCheckIn;
@@ -106,6 +114,36 @@ export class CoachChatReplyGenerator {
     }
 
     return 'Your notification pattern looks steady, so keep the next step simple and consistent.';
+  }
+
+  private buildHabitReply(habit?: HabitPromptPayload): string | null {
+    if (!habit) {
+      return null;
+    }
+
+    const current = habit.current;
+    const summary = habit.summary;
+    const riskSignals = habit.riskSignals ?? [];
+    const trend = summary?.trend ?? current?.trend ?? 'stable';
+    const currentStreak = summary?.currentStreak ?? current?.streakDays ?? 0;
+    const riskLevel = summary?.riskLevel ?? 'low';
+
+    if (
+      riskSignals.some((signal) => signal.type === 'dropout_risk') ||
+      riskLevel === 'high'
+    ) {
+      return 'Your consistency signals suggest keeping the next step small and easy to repeat.';
+    }
+
+    if (trend === 'declining') {
+      return 'Your routine is slipping a bit, so focus on one repeatable action today.';
+    }
+
+    if (trend === 'improving' || currentStreak >= 5) {
+      return 'Your consistency looks strong. Keep the routine steady and protect the streak.';
+    }
+
+    return null;
   }
 
   private buildCoachDecisionReply(

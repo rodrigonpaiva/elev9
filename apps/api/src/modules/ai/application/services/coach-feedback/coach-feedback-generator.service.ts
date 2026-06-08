@@ -25,6 +25,7 @@ import type { CoachDecisionReadModelPayload } from '../../../../../shared/mapper
 import type { NotificationPromptPayload } from '../../../../../shared/mappers';
 import type { CoachDecisionInfluenceProps } from '../../../domain/value-objects/coach-decision-influence.value-object';
 import type { CoachDecisionPriority } from '../../../domain/value-objects/coach-decision-priority.value-object';
+import type { HabitPromptPayload } from '../../../../../shared/mappers';
 
 export const COACH_FEEDBACK_GENERATOR_VERSION = 'heuristic-v1';
 
@@ -54,6 +55,7 @@ export type CoachFeedbackGeneratorInput = {
     reasoning: string;
     influences: AdaptiveTrainingInfluenceProps[];
   };
+  habit?: HabitPromptPayload;
   coachDecision?: CoachDecisionReadModelPayload;
   nutritionProfile?: UserHealthContextNutritionProfile;
   notification?: NotificationPromptPayload;
@@ -204,6 +206,12 @@ export class CoachFeedbackGenerator {
     });
     this.applyCoachDecisionSignals({
       coachDecision,
+      insights,
+      recommendations,
+      influences,
+    });
+    this.applyHabitSignals({
+      habit: input.habit,
       insights,
       recommendations,
       influences,
@@ -395,6 +403,70 @@ export class CoachFeedbackGenerator {
       this.prependRecommendation(
         input.recommendations,
         'Reinforce the positive behavior the user is already showing',
+      );
+    }
+  }
+
+  private applyHabitSignals(input: {
+    habit?: HabitPromptPayload;
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const habit = input.habit;
+
+    if (!habit) {
+      return;
+    }
+
+    const summary = habit.summary ?? habit.current
+      ? {
+          score: habit.summary?.score ?? habit.current?.consistencyScore ?? 50,
+          trend: habit.summary?.trend ?? habit.current?.trend ?? 'stable',
+          currentStreak:
+            habit.summary?.currentStreak ?? habit.current?.streakDays ?? 0,
+          riskLevel: habit.summary?.riskLevel ?? 'low',
+        }
+      : null;
+    const riskSignals = habit.riskSignals ?? [];
+
+    if (!summary) {
+      return;
+    }
+
+    if (summary.trend === 'declining' || summary.riskLevel === 'high') {
+      input.influences.add('habit:high_risk');
+      this.upsertInsight(
+        input.insights,
+        'Habit consistency is trending down, so keep the routine easy to repeat',
+      );
+      this.prependRecommendation(
+        input.recommendations,
+        'Use one small habit that is easy to complete today',
+      );
+    }
+
+    if (summary.trend === 'improving') {
+      input.influences.add('habit:improving');
+      this.upsertInsight(
+        input.insights,
+        'Habit consistency is improving',
+      );
+    }
+
+    if (summary.currentStreak >= 5) {
+      input.influences.add('habit:strong_streak');
+      this.prependRecommendation(
+        input.recommendations,
+        'Protect the routine that is already working',
+      );
+    }
+
+    if (riskSignals.some((signal) => signal.type === 'dropout_risk')) {
+      input.influences.add('habit:dropout_risk');
+      this.prependRecommendation(
+        input.recommendations,
+        'Keep pressure low and focus on completion over perfection',
       );
     }
   }

@@ -4,7 +4,9 @@ import { BuildUserHealthContextService } from '../../../../ai/application/servic
 import {
   AdaptiveTrainingReadModelMapper,
   CoachDecisionReadModelMapper,
+  HabitReadModelMapper,
   type CoachDecisionReadModelPayload,
+  type HabitReadModel,
   GoalReadModel,
   GoalReadModelMapper,
   type NotificationReadModelPayload,
@@ -25,6 +27,12 @@ export class DashboardAdaptiveSignalsService {
     goalReadModel: GoalReadModel | null | undefined,
   ): GetHomeDashboardOutput['dashboard']['goal'] | undefined {
     return GoalReadModelMapper.toDashboardPayload(goalReadModel);
+  }
+
+  buildHabits(
+    habitReadModel: HabitReadModel | null | undefined,
+  ): GetHomeDashboardOutput['dashboard']['habits'] | undefined {
+    return HabitReadModelMapper.toDashboardPayload(habitReadModel);
   }
 
   buildNotification(
@@ -175,10 +183,12 @@ export class DashboardAdaptiveSignalsService {
     recovery: GetHomeDashboardOutput['dashboard']['recovery'],
     nutritionGuidance: GetHomeDashboardOutput['dashboard']['nutritionGuidance'],
     goal?: GoalReadModel | null,
+    habits?: HabitReadModel | null,
     notification?: GetHomeDashboardOutput['dashboard']['notification'],
   ): GetHomeDashboardDebugOutput {
     const adaptiveTrainingRecommendation =
       this.buildAdaptiveTrainingRecommendation(healthContext);
+    const dashboardHabits = this.buildHabits(habits);
 
     return {
       generatedAt: healthContext.generatedAt.toISOString(),
@@ -203,6 +213,7 @@ export class DashboardAdaptiveSignalsService {
             goal: this.buildGoal(goal),
           }
         : {}),
+      ...(dashboardHabits ? { habits: dashboardHabits } : {}),
       ...(notification
         ? {
             notification,

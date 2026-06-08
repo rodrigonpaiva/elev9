@@ -31,7 +31,11 @@ import {
 } from '../../../../../shared/mappers';
 import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
 import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
+import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
+import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
 import { NotificationReadModelMapper } from '../../../../../shared/mappers';
+import { HabitReadModelMapper } from '../../../../../shared/mappers';
 import {
   COACH_DECISION_REPOSITORY,
   CoachDecisionRepository,
@@ -74,6 +78,9 @@ export class BuildCoachDecisionUseCase {
     private readonly getCurrentAdaptiveTrainingUseCase: GetCurrentAdaptiveTrainingUseCase,
     private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
     private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
+    private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
+    private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
+    private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
     private readonly coachDecisionCalculatorService: CoachDecisionCalculatorService,
     private readonly coachDecisionDateService: CoachDecisionDateService,
   ) {}
@@ -112,6 +119,7 @@ export class BuildCoachDecisionUseCase {
       const notificationSignals = await this.resolveNotificationSignals(
         authUserId,
       );
+      const habitContext = await this.resolveHabitContext(authUserId);
 
       const latestNutritionRecommendation =
         await this.nutritionRecommendationRepository.findManyByUserProfileId(
@@ -183,6 +191,7 @@ export class BuildCoachDecisionUseCase {
         goalMilestoneClose: goalContext?.goalMilestoneClose,
         goalAchievementReached: goalContext?.goalAchievementReached,
         ...notificationSignals,
+        ...habitContext?.signals,
       };
 
       const calculatedResult =
@@ -209,6 +218,7 @@ export class BuildCoachDecisionUseCase {
         currentStreak,
         missedWorkouts,
         noRecentActivity,
+        ...(habitContext?.sourceContext ?? {}),
         ...(nutritionRecommendation?.id
           ? { nutritionRecommendationId: nutritionRecommendation.id }
           : {}),
@@ -348,6 +358,96 @@ export class BuildCoachDecisionUseCase {
         );
 
       return notificationSignals ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  private async resolveHabitContext(
+    authUserId: string,
+  ): Promise<
+    | {
+        signals?: Pick<
+          CoachDecisionCalculatorInput,
+          | 'habitConsistencyImproving'
+          | 'habitConsistencyDeclining'
+          | 'habitRiskHigh'
+          | 'habitStreakStrong'
+          | 'habitDropoutRisk'
+        >;
+        sourceContext?: Pick<
+          CoachDecisionSourceContext,
+          | 'habitConsistencyScore'
+          | 'habitTrend'
+          | 'habitCurrentStreak'
+          | 'habitRiskLevel'
+          | 'habitRiskSignals'
+        >;
+      }
+    | null
+  > {
+    try {
+      const [currentResult, summaryResult, riskSignalsResult] =
+        await Promise.allSettled([
+          this.getCurrentHabitsUseCase.execute({ authUserId }),
+          this.getConsistencySummaryUseCase.execute({ authUserId }),
+          this.getHabitRiskSignalsUseCase.execute({ authUserId }),
+        ]);
+
+      const habitReadModel = {
+        ...(currentResult.status === 'fulfilled'
+          ? { current: currentResult.value.habitSnapshot }
+          : {}),
+        ...(summaryResult.status === 'fulfilled'
+          ? { summary: summaryResult.value.consistencySummary }
+          : {}),
+        ...(riskSignalsResult.status === 'fulfilled'
+          ? { riskSignals: riskSignalsResult.value.habitRiskSignals }
+          : {}),
+      };
+
+      const signals = HabitReadModelMapper.toCoachDecisionSignals(
+        habitReadModel,
+      );
+      const dashboardPayload =
+        HabitReadModelMapper.toDashboardPayload(habitReadModel);
+
+      if (!signals && !dashboardPayload) {
+        return null;
+      }
+
+      return {
+        ...(signals ? { signals } : {}),
+        ...(dashboardPayload
+          ? {
+              sourceContext: {
+                ...(dashboardPayload.summary
+                  ? {
+                      habitConsistencyScore: dashboardPayload.summary.score,
+                      habitTrend: dashboardPayload.summary.trend,
+                      habitCurrentStreak: dashboardPayload.summary.currentStreak,
+                      habitRiskLevel: dashboardPayload.summary.riskLevel,
+                    }
+                  : dashboardPayload.current
+                    ? {
+                        habitConsistencyScore:
+                          dashboardPayload.current.consistencyScore,
+                        habitTrend: dashboardPayload.current.trend,
+                        habitCurrentStreak: dashboardPayload.current.streakDays,
+                        habitRiskLevel: 'low' as const,
+                      }
+                    : {}),
+                ...(dashboardPayload.riskSignals
+                  ? {
+                      habitRiskSignals: dashboardPayload.riskSignals.map(
+                        (signal) => signal.type,
+                      ),
+                    }
+                  : {}),
+              },
+            }
+          : {}),
+      };
     } catch {
       return null;
     }

@@ -30,6 +30,15 @@ export type CoachDecisionCalculatorInput = {
   notificationFatigueHigh?: boolean;
   notificationDismissedFrequently?: boolean;
   notificationHighEngagement?: boolean;
+  habitConsistencyScore?: number;
+  habitTrend?: 'improving' | 'stable' | 'declining';
+  habitCurrentStreak?: number;
+  habitRiskLevel?: 'low' | 'medium' | 'high';
+  habitConsistencyImproving?: boolean;
+  habitConsistencyDeclining?: boolean;
+  habitRiskHigh?: boolean;
+  habitStreakStrong?: boolean;
+  habitDropoutRisk?: boolean;
 };
 
 export type CoachDecisionCalculatorOutput = {
@@ -58,6 +67,15 @@ type ResolvedInput = {
   notificationFatigueHigh: boolean;
   notificationDismissedFrequently: boolean;
   notificationHighEngagement: boolean;
+  habitConsistencyScore: number;
+  habitTrend?: 'improving' | 'stable' | 'declining';
+  habitCurrentStreak: number;
+  habitRiskLevel: 'low' | 'medium' | 'high';
+  habitConsistencyImproving: boolean;
+  habitConsistencyDeclining: boolean;
+  habitRiskHigh: boolean;
+  habitStreakStrong: boolean;
+  habitDropoutRisk: boolean;
   hasReadinessScore: boolean;
   hasFatigueScore: boolean;
   hasNutritionAdherence: boolean;
@@ -114,6 +132,15 @@ export class CoachDecisionCalculatorService {
       notificationFatigueHigh: Boolean(input.notificationFatigueHigh),
       notificationDismissedFrequently: Boolean(input.notificationDismissedFrequently),
       notificationHighEngagement: Boolean(input.notificationHighEngagement),
+      habitConsistencyScore: this.resolveScore(input.habitConsistencyScore, 50),
+      habitTrend: input.habitTrend,
+      habitCurrentStreak: this.resolveNonNegativeInteger(input.habitCurrentStreak),
+      habitRiskLevel: input.habitRiskLevel ?? 'low',
+      habitConsistencyImproving: Boolean(input.habitConsistencyImproving),
+      habitConsistencyDeclining: Boolean(input.habitConsistencyDeclining),
+      habitRiskHigh: Boolean(input.habitRiskHigh),
+      habitStreakStrong: Boolean(input.habitStreakStrong),
+      habitDropoutRisk: Boolean(input.habitDropoutRisk),
       hasReadinessScore: typeof input.readinessScore === 'number',
       hasFatigueScore: typeof input.fatigueScore === 'number',
       hasNutritionAdherence: typeof input.nutritionAdherence === 'number',
@@ -173,6 +200,18 @@ export class CoachDecisionCalculatorService {
       }
 
       return 'consistency';
+    }
+
+    if (
+      input.habitDropoutRisk ||
+      input.habitRiskHigh ||
+      input.habitConsistencyDeclining
+    ) {
+      return 'consistency';
+    }
+
+    if (input.habitConsistencyImproving || input.habitStreakStrong) {
+      return 'motivation';
     }
 
     if (
@@ -254,6 +293,14 @@ export class CoachDecisionCalculatorService {
           return 'Goal progress is slowing, so consistency should be reinforced today.';
         }
 
+        if (input.habitDropoutRisk || input.habitRiskHigh) {
+          return 'Habit risk is elevated, so keep the routine simple and repeatable today.';
+        }
+
+        if (input.habitConsistencyDeclining) {
+          return 'Habit consistency is declining, so focus on rebuilding your routine today.';
+        }
+
         if (
           input.notificationSuppressed ||
           input.notificationFatigueHigh ||
@@ -269,6 +316,10 @@ export class CoachDecisionCalculatorService {
         return 'Recent activity shows a consistency gap that should be closed today.';
       case 'motivation':
       default:
+        if (input.habitConsistencyImproving || input.habitStreakStrong) {
+          return 'Habit consistency is improving, so this is a good day to protect the streak.';
+        }
+
         if (input.notificationHighEngagement) {
           return 'Notification engagement is strong, so this is a good moment to reinforce progress.';
         }
@@ -623,6 +674,71 @@ export class CoachDecisionCalculatorService {
       );
     }
 
+    if (input.habitConsistencyImproving) {
+      influences.push(
+        this.createInfluence(
+          'HABIT_CONSISTENCY_IMPROVING',
+          'Habit consistency is improving.',
+          'positive',
+          'habit',
+          0.18,
+          input.habitConsistencyScore,
+        ),
+      );
+    }
+
+    if (input.habitConsistencyDeclining) {
+      influences.push(
+        this.createInfluence(
+          'HABIT_CONSISTENCY_DECLINING',
+          'Habit consistency is declining.',
+          'negative',
+          'habit',
+          0.22,
+          input.habitConsistencyScore,
+        ),
+      );
+    }
+
+    if (input.habitRiskHigh) {
+      influences.push(
+        this.createInfluence(
+          'HABIT_RISK_HIGH',
+          'Habit risk is high.',
+          'negative',
+          'habit',
+          0.24,
+          input.habitConsistencyScore,
+        ),
+      );
+    }
+
+    if (input.habitStreakStrong) {
+      influences.push(
+        this.createInfluence(
+          'HABIT_STREAK_STRONG',
+          'The habit streak is strong.',
+          'positive',
+          'habit',
+          0.2,
+          input.habitCurrentStreak,
+        ),
+      );
+    }
+
+    if (input.habitDropoutRisk) {
+      influences.push(
+        this.createInfluence(
+          'HABIT_DROPOUT_RISK',
+          'Habit dropout risk needs attention.',
+          'negative',
+          'habit',
+          0.28,
+          input.habitConsistencyScore,
+        ),
+      );
+    }
+
     return this.deduplicateInfluences(influences);
   }
 
@@ -636,7 +752,8 @@ export class CoachDecisionCalculatorService {
       | 'training'
       | 'progress'
       | 'memory'
-      | 'notification',
+      | 'notification'
+      | 'habit',
     weight?: number,
     value?: number,
   ): CoachDecisionInfluence {

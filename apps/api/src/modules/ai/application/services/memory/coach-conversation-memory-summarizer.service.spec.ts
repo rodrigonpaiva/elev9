@@ -199,4 +199,48 @@ describe('CoachConversationMemorySummarizer', () => {
     expect(JSON.stringify(result)).not.toContain('sourceContext');
     expect(JSON.stringify(result)).not.toContain('raw events');
   });
+
+  it('stores only reduced habit details in the summary', () => {
+    const summarizer = new CoachConversationMemorySummarizer();
+
+    const result = summarizer.summarize({
+      healthContext: {
+        authUserId: 'auth_user_123',
+        userProfileId: 'profile_123',
+        userName: 'Rodrigo Paiva',
+        goal: 'gain_muscle',
+        activityLevel: 'medium',
+        weeklyFrequency: 4,
+        adherenceScore: 75,
+        currentStreak: 6,
+        averageWorkoutDuration: 50,
+        fatigueLevel: 'HIGH',
+        availableEquipment: [],
+        limitations: [],
+        todayWorkout: null,
+        activeTrainingPlanId: 'training_123',
+        recentWorkoutLogs: [],
+        generatedAt: new Date('2026-05-18T10:00:00.000Z'),
+      } as never,
+      conversationMessages: [
+        {
+          role: 'user',
+          content: 'I feel exhausted after my last workout',
+          createdAt: '2026-05-18T09:30:00.000Z',
+        },
+      ],
+      habit: {
+        habitConsistencyScore: 38,
+        habitTrend: 'declining',
+        habitCurrentStreak: 1,
+        habitRiskLevel: 'high',
+      },
+    });
+
+    expect(result.summary).toContain(
+      'habit=score:38,trend:declining,streak:1,risk:high',
+    );
+    expect(JSON.stringify(result)).not.toContain('sourceContext');
+    expect(JSON.stringify(result)).not.toContain('raw history');
+  });
 });

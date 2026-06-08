@@ -9,6 +9,11 @@ import {
   GoalProgressSnapshot,
 } from '../goals';
 import {
+  ConsistencySummary,
+  HabitRiskSignal,
+  HabitSnapshot,
+} from '../habits';
+import {
   NotificationDecision,
   NotificationEngagementSummary,
 } from '../notifications';
@@ -86,6 +91,11 @@ export type DashboardHomeResponse = {
       forecast?: GoalForecast;
       milestones?: GoalMilestone[];
     };
+    habits?: {
+      current?: Omit<HabitSnapshot, 'sourceContext'>;
+      summary?: ConsistencySummary;
+      riskSignals?: HabitRiskSignal[];
+    };
     notification?: {
       current?: NotificationDecision;
       engagementSummary?: NotificationEngagementSummary;
@@ -133,6 +143,11 @@ export type DashboardHomeDebugResponse = {
     recoveryInfluences?: DashboardRecoveryInfluence[];
   };
   coachDecision?: DashboardCoachDecision;
+  habits?: {
+    current?: Omit<HabitSnapshot, 'sourceContext'>;
+    summary?: ConsistencySummary;
+    riskSignals?: HabitRiskSignal[];
+  };
   adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
   nutrition: {
     priority: 'recovery' | 'consistency' | 'performance';

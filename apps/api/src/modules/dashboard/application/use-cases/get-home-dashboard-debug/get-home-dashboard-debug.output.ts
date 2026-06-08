@@ -1,5 +1,6 @@
 import {
   GoalDashboardPayload,
+  HabitReadModelPayload,
   NotificationReadModelPayload,
 } from '../../../../../shared/mappers';
 
@@ -29,6 +30,7 @@ export type GetHomeDashboardDebugOutput = {
     }>;
   };
   goal?: GoalDashboardPayload;
+  habits?: HabitReadModelPayload;
   notification?: NotificationReadModelPayload;
   adaptiveTrainingRecommendation?: {
     recommendationType:

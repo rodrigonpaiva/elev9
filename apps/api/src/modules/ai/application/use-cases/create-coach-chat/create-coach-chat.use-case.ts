@@ -16,6 +16,11 @@ import {
   type NotificationMemoryPayload,
 } from '../../../../../shared/mappers';
 import {
+  HabitReadModelMapper,
+  type HabitReadModel,
+  type HabitMemoryPayload,
+} from '../../../../../shared/mappers';
+import {
   COACH_CONVERSATION_MEMORY_REPOSITORY,
   CoachConversationMemoryRepository,
 } from '../../../domain/repositories/coach-conversation-memory.repository';
@@ -30,6 +35,9 @@ import {
 import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
 import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
 import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
+import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
+import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
 import {
   CoachConversationMemorySummarizer,
   COACH_CONVERSATION_MEMORY_VERSION,
@@ -62,6 +70,9 @@ export class CreateCoachChatUseCase {
     private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
     private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
     private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
+    private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
+    private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
+    private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
     private readonly aiPromptBuilder: AiPromptBuilder,
     private readonly aiLlmService: AiLlmService,
     private readonly coachChatReplyGenerator: CoachChatReplyGenerator,
@@ -104,6 +115,7 @@ export class CreateCoachChatUseCase {
       });
       const coachDecision = await this.resolveCoachDecision(authUserId);
       const notification = await this.resolveNotification(authUserId);
+      const habit = await this.resolveHabit(authUserId);
       const notificationMemory = notification
         ? {
             notificationType: notification.current?.type,
@@ -113,6 +125,8 @@ export class CreateCoachChatUseCase {
               notification.engagementSummary?.engagementScore ?? 50,
           }
         : undefined;
+      const habitPrompt = HabitReadModelMapper.toPromptPayload(habit);
+      const habitMemory = HabitReadModelMapper.toMemoryPayload(habit);
 
       const existingConversation =
         await this.coachConversationRepository.findLatestByUserProfileId(
@@ -168,6 +182,7 @@ export class CreateCoachChatUseCase {
           : {}),
         ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
         ...(notification ? { notification } : {}),
+        ...(habitPrompt ? { habit: habitPrompt } : {}),
       });
 
       let reply: {
@@ -194,6 +209,7 @@ export class CreateCoachChatUseCase {
           healthContext,
           ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
           ...(notification ? { notification } : {}),
+          ...(habitPrompt ? { habit: habitPrompt } : {}),
         });
 
         await this.coachMessageRepository.create({
@@ -213,6 +229,7 @@ export class CreateCoachChatUseCase {
           assistantReply: fallbackReply,
           ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
           ...(notificationMemory ? { notification: notificationMemory } : {}),
+          ...(habitMemory ? { habit: habitMemory } : {}),
         });
 
         return {
@@ -241,6 +258,7 @@ export class CreateCoachChatUseCase {
         assistantReply: reply.content,
         ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
         ...(notificationMemory ? { notification: notificationMemory } : {}),
+        ...(habitMemory ? { habit: habitMemory } : {}),
       });
 
       return {
@@ -267,6 +285,7 @@ export class CreateCoachChatUseCase {
     assistantReply: string;
     coachDecision?: CoachDecisionReadModelPayload;
     notification?: NotificationMemoryPayload;
+    habit?: HabitMemoryPayload;
   }): Promise<void> {
     const memory = this.coachConversationMemorySummarizer.summarize({
       healthContext: input.healthContext,
@@ -285,6 +304,7 @@ export class CreateCoachChatUseCase {
       ],
       coachDecision: input.coachDecision,
       ...(input.notification ? { notification: input.notification } : {}),
+      ...(input.habit ? { habit: input.habit } : {}),
     });
 
     await this.coachConversationMemoryRepository.upsertByConversationId({
@@ -331,6 +351,33 @@ export class CreateCoachChatUseCase {
           ? engagementSummaryResult.value.engagementSummary
           : undefined,
       );
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async resolveHabit(
+    authUserId: string,
+  ): Promise<HabitReadModel | undefined> {
+    try {
+      const [currentResult, summaryResult, riskSignalsResult] =
+        await Promise.allSettled([
+          this.getCurrentHabitsUseCase.execute({ authUserId }),
+          this.getConsistencySummaryUseCase.execute({ authUserId }),
+          this.getHabitRiskSignalsUseCase.execute({ authUserId }),
+        ]);
+
+      return {
+        ...(currentResult.status === 'fulfilled'
+          ? { current: currentResult.value.habitSnapshot }
+          : {}),
+        ...(summaryResult.status === 'fulfilled'
+          ? { summary: summaryResult.value.consistencySummary }
+          : {}),
+        ...(riskSignalsResult.status === 'fulfilled'
+          ? { riskSignals: riskSignalsResult.value.habitRiskSignals }
+          : {}),
+      };
     } catch {
       return undefined;
     }

@@ -8,6 +8,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FitnessModule } from './modules/fitness/fitness.module';
 import { HealthModule } from './modules/health/health.module';
 import { GoalsModule } from './modules/goals/goals.module';
+import { HabitsModule } from './modules/habits/habits.module';
 import { NutritionModule } from './modules/nutrition/nutrition.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { RecoveryModule } from './modules/recovery/recovery.module';
@@ -36,6 +37,7 @@ function getMongoDbUri(): string {
     FitnessModule,
     HealthModule,
     GoalsModule,
+    HabitsModule,
     NutritionModule,
     NotificationsModule,
     RecoveryModule,

@@ -14,6 +14,9 @@ import { NotificationDecision } from '../../../../notifications/domain/entities/
 import { NotificationInfluence } from '../../../../notifications/domain/value-objects/notification-influence.value-object';
 import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
 import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
+import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
+import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
 import { GENERATE_COACH_FEEDBACK_ERROR_CODES } from './generate-coach-feedback.errors';
 import { GenerateCoachFeedbackUseCase } from './generate-coach-feedback.use-case';
 
@@ -30,6 +33,15 @@ describe('GenerateCoachFeedbackUseCase', () => {
   };
   let getEngagementSummaryUseCase: {
     execute: jest.MockedFunction<GetEngagementSummaryUseCase['execute']>;
+  };
+  let getCurrentHabitsUseCase: {
+    execute: jest.MockedFunction<GetCurrentHabitsUseCase['execute']>;
+  };
+  let getConsistencySummaryUseCase: {
+    execute: jest.MockedFunction<GetConsistencySummaryUseCase['execute']>;
+  };
+  let getHabitRiskSignalsUseCase: {
+    execute: jest.MockedFunction<GetHabitRiskSignalsUseCase['execute']>;
   };
   let coachFeedbackGenerator: CoachFeedbackGenerator;
   let generateSpy: jest.SpiedFunction<CoachFeedbackGenerator['generate']>;
@@ -57,6 +69,15 @@ describe('GenerateCoachFeedbackUseCase', () => {
         engagementSummary: undefined,
       }),
     };
+    getCurrentHabitsUseCase = {
+      execute: jest.fn().mockResolvedValue({} as never),
+    };
+    getConsistencySummaryUseCase = {
+      execute: jest.fn().mockResolvedValue({} as never),
+    };
+    getHabitRiskSignalsUseCase = {
+      execute: jest.fn().mockResolvedValue({} as never),
+    };
     coachFeedbackGenerator = new CoachFeedbackGenerator();
     generateSpy = jest.spyOn(coachFeedbackGenerator, 'generate');
 
@@ -67,6 +88,9 @@ describe('GenerateCoachFeedbackUseCase', () => {
       getCurrentCoachDecisionUseCase as unknown as GetCurrentCoachDecisionUseCase,
       getCurrentNotificationUseCase as unknown as GetCurrentNotificationUseCase,
       getEngagementSummaryUseCase as unknown as GetEngagementSummaryUseCase,
+      getCurrentHabitsUseCase as unknown as GetCurrentHabitsUseCase,
+      getConsistencySummaryUseCase as unknown as GetConsistencySummaryUseCase,
+      getHabitRiskSignalsUseCase as unknown as GetHabitRiskSignalsUseCase,
     );
   });
 
@@ -183,6 +207,93 @@ describe('GenerateCoachFeedbackUseCase', () => {
     );
     expect(result.recommendations).toContain(
       'Schedule your next session within the next 24 hours',
+    );
+  });
+
+  it('uses habit context as supporting coaching input', async () => {
+    buildUserHealthContextService.build.mockResolvedValue(
+      buildHealthContext({
+        weeklyFrequency: 3,
+        averageWorkoutDuration: 0,
+        currentStreak: 0,
+        activeTrainingPlanId: undefined,
+        recentWorkoutLogs: [],
+      }),
+    );
+    getCurrentHabitsUseCase.execute.mockResolvedValue({
+      habitSnapshot: {
+        userProfileId: 'profile_123',
+        date: '2026-05-04',
+        consistencyScore: 38,
+        streakDays: 1,
+        adherenceScore: 42,
+        trend: 'declining',
+        sourceContext: {
+          formulaVersion: 'habit-engine-v1',
+          generatedAt: '2026-05-04T10:00:00.000Z',
+        },
+        formulaVersion: 'habit-engine-v1',
+        generatedAt: '2026-05-04T10:00:00.000Z',
+      } as never,
+    });
+    getConsistencySummaryUseCase.execute.mockResolvedValue({
+      consistencySummary: {
+        userProfileId: 'profile_123',
+        score: 38,
+        trend: 'declining',
+        currentStreak: 1,
+        longestStreak: 4,
+        adherenceRate: 42,
+        riskLevel: 'high',
+        updatedAt: '2026-05-04T10:00:00.000Z',
+        formulaVersion: 'habit-engine-v1',
+      } as never,
+    });
+    getHabitRiskSignalsUseCase.execute.mockResolvedValue({
+      habitRiskSignals: [
+        {
+          userProfileId: 'profile_123',
+          type: 'dropout_risk',
+          level: 'high',
+          title: 'Dropout risk',
+          description: 'Consistency is trending down.',
+          generatedAt: '2026-05-04T10:00:00.000Z',
+          formulaVersion: 'habit-engine-v1',
+        } as never,
+      ],
+    });
+
+    const result = await useCase.execute({
+      authUserId: 'auth_user_123',
+    });
+
+    expect(generateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        habit: expect.objectContaining({
+          summary: expect.objectContaining({
+            trend: 'declining',
+            riskLevel: 'high',
+          }),
+          riskSignals: expect.arrayContaining([
+            expect.objectContaining({
+              type: 'dropout_risk',
+            }),
+          ]),
+        }),
+      }) as CoachFeedbackGeneratorInput,
+    );
+    expect(coachFeedbackRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contextSnapshot: expect.objectContaining({
+          habitConsistencyScore: 38,
+          habitTrend: 'declining',
+          habitCurrentStreak: 1,
+          habitRiskLevel: 'high',
+        }),
+      }),
+    );
+    expect(result.message).toBe(
+      'You are ready to start your first training streak today.',
     );
   });
 

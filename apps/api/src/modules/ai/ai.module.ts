@@ -19,6 +19,7 @@ import { FitnessModule } from '../fitness/fitness.module';
 import { ProgressModule } from '../progress/progress.module';
 import { NutritionModule } from '../nutrition/nutrition.module';
 import { GoalsModule } from '../goals/goals.module';
+import { HabitsModule } from '../habits/habits.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -80,6 +81,7 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
     ProgressModule,
     NutritionModule,
     GoalsModule,
+    forwardRef(() => HabitsModule),
     RecoveryModule,
     TrainingModule,
     forwardRef(() => NotificationsModule),

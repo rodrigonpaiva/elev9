@@ -1,3 +1,4 @@
+import type { CoachDecisionInfluence } from '../../modules/ai/domain/value-objects/coach-decision-influence.value-object';
 import type { CoachDecisionInfluenceProps } from '../../modules/ai/domain/value-objects/coach-decision-influence.value-object';
 import type { CoachDecisionPriority } from '../../modules/ai/domain/value-objects/coach-decision-priority.value-object';
 
@@ -10,6 +11,7 @@ export type CoachDecisionReadModelPayload = {
 };
 
 type CoachDecisionInfluenceSource =
+  | CoachDecisionInfluence
   | CoachDecisionInfluenceProps
   | { toJSON: () => CoachDecisionInfluenceProps };
 

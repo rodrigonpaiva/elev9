@@ -9,6 +9,9 @@ import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/g
 import { GetCurrentAdaptiveTrainingUseCase } from '../../../../training/application/use-cases/get-current-adaptive-training/get-current-adaptive-training.use-case';
 import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
 import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
+import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
+import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
 import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
 import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
@@ -28,6 +31,9 @@ describe('BuildCoachDecisionUseCase', () => {
   let getCurrentAdaptiveTrainingUseCase: jest.Mocked<GetCurrentAdaptiveTrainingUseCase>;
   let getCurrentNotificationUseCase: jest.Mocked<GetCurrentNotificationUseCase>;
   let getEngagementSummaryUseCase: jest.Mocked<GetEngagementSummaryUseCase>;
+  let getCurrentHabitsUseCase: jest.Mocked<GetCurrentHabitsUseCase>;
+  let getConsistencySummaryUseCase: jest.Mocked<GetConsistencySummaryUseCase>;
+  let getHabitRiskSignalsUseCase: jest.Mocked<GetHabitRiskSignalsUseCase>;
   let useCase: BuildCoachDecisionUseCase;
 
   beforeEach(() => {
@@ -69,6 +75,15 @@ describe('BuildCoachDecisionUseCase', () => {
         engagementSummary: undefined,
       }),
     } as unknown as jest.Mocked<GetEngagementSummaryUseCase>;
+    getCurrentHabitsUseCase = {
+      execute: jest.fn().mockResolvedValue({} as never),
+    } as unknown as jest.Mocked<GetCurrentHabitsUseCase>;
+    getConsistencySummaryUseCase = {
+      execute: jest.fn().mockResolvedValue({} as never),
+    } as unknown as jest.Mocked<GetConsistencySummaryUseCase>;
+    getHabitRiskSignalsUseCase = {
+      execute: jest.fn().mockResolvedValue({} as never),
+    } as unknown as jest.Mocked<GetHabitRiskSignalsUseCase>;
 
     const calculator = new CoachDecisionCalculatorService();
     const dateService = new CoachDecisionDateService();
@@ -85,6 +100,9 @@ describe('BuildCoachDecisionUseCase', () => {
       getCurrentAdaptiveTrainingUseCase,
       getCurrentNotificationUseCase,
       getEngagementSummaryUseCase,
+      getCurrentHabitsUseCase,
+      getConsistencySummaryUseCase,
+      getHabitRiskSignalsUseCase,
       calculator,
       dateService,
     );
@@ -255,6 +273,93 @@ describe('BuildCoachDecisionUseCase', () => {
     expect(persistedInput.sourceContext).not.toHaveProperty('authUserId');
     expect(persistedInput.sourceContext).not.toHaveProperty('rawHealthContext');
     expect(persistedInput.sourceContext).not.toHaveProperty('prompt');
+  });
+
+  it('includes habit signals when available and does not override recovery', async () => {
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
+    fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
+    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
+      [],
+    );
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
+    getCurrentRecoveryUseCase.execute.mockResolvedValue({
+      recoverySnapshot: undefined,
+    } as never);
+    getCurrentAdaptiveTrainingUseCase.execute.mockResolvedValue({
+      adaptiveTrainingRecommendation: undefined,
+    } as never);
+    getCurrentNotificationUseCase.execute.mockResolvedValue({
+      notificationDecision: undefined,
+    } as never);
+    getEngagementSummaryUseCase.execute.mockResolvedValue({
+      engagementSummary: undefined,
+    } as never);
+    getCurrentHabitsUseCase.execute.mockResolvedValue({
+      habitSnapshot: buildHabitSnapshot({
+        consistencyScore: 38,
+        streakDays: 1,
+        trend: 'declining',
+      }),
+    } as never);
+    getConsistencySummaryUseCase.execute.mockResolvedValue({
+      consistencySummary: buildConsistencySummary({
+        score: 38,
+        trend: 'declining',
+        currentStreak: 1,
+        riskLevel: 'high',
+      }),
+    } as never);
+    getHabitRiskSignalsUseCase.execute.mockResolvedValue({
+      habitRiskSignals: [
+        buildHabitRiskSignal({
+          type: 'dropout_risk',
+          level: 'high',
+        }),
+      ],
+    } as never);
+    coachDecisionRepository.upsertDailyDecision.mockImplementation(async (input) =>
+      new CoachDecision({
+        id: 'decision_123',
+        userProfileId: input.userProfileId,
+        date: input.date,
+        priority: input.priority,
+        headline: input.headline,
+        summary: input.summary,
+        actionItems: input.actionItems,
+        influences: input.influences.map((influence) => ({
+          ...influence,
+          toJSON: () => influence,
+        })) as never,
+        sourceContext: input.sourceContext,
+        formulaVersion: input.formulaVersion,
+        generatedBy: input.generatedBy,
+        createdAt: new Date('2026-06-03T06:00:00.000Z'),
+        updatedAt: new Date('2026-06-03T06:00:00.000Z'),
+      }),
+    );
+
+    const result = await useCase.execute({
+      authUserId: 'auth_123',
+    });
+
+    expect(result.coachDecision.priority).toBe('consistency');
+    expect(result.coachDecision.influences.map((influence) => influence.code)).toEqual(
+      expect.arrayContaining([
+        'HABIT_CONSISTENCY_DECLINING',
+        'HABIT_RISK_HIGH',
+        'HABIT_DROPOUT_RISK',
+      ]),
+    );
+    expect(result.coachDecision.sourceContext).toMatchObject({
+      habitConsistencyScore: 38,
+      habitTrend: 'declining',
+      habitCurrentStreak: 1,
+      habitRiskLevel: 'high',
+      habitRiskSignals: ['dropout_risk'],
+    });
   });
 
   it('falls back to recovery priority when readiness is low', async () => {
@@ -545,4 +650,59 @@ function buildDecision() {
     createdAt: new Date('2026-06-03T06:00:00.000Z'),
     updatedAt: new Date('2026-06-03T06:00:00.000Z'),
   });
+}
+
+function buildHabitSnapshot(overrides: {
+  consistencyScore?: number;
+  streakDays?: number;
+  trend?: 'improving' | 'stable' | 'declining';
+} = {}) {
+  return {
+    userProfileId: 'profile_123',
+    date: '2026-06-03',
+    consistencyScore: overrides.consistencyScore ?? 72,
+    streakDays: overrides.streakDays ?? 4,
+    adherenceScore: 76,
+    trend: overrides.trend ?? 'stable',
+    sourceContext: {
+      formulaVersion: 'habit-engine-v1',
+      generatedAt: '2026-06-03T06:00:00.000Z',
+    },
+    formulaVersion: 'habit-engine-v1',
+    generatedAt: '2026-06-03T06:00:00.000Z',
+  } as never;
+}
+
+function buildConsistencySummary(overrides: {
+  score?: number;
+  trend?: 'improving' | 'stable' | 'declining';
+  currentStreak?: number;
+  riskLevel?: 'low' | 'medium' | 'high';
+} = {}) {
+  return {
+    userProfileId: 'profile_123',
+    score: overrides.score ?? 72,
+    trend: overrides.trend ?? 'stable',
+    currentStreak: overrides.currentStreak ?? 4,
+    longestStreak: 6,
+    adherenceRate: 76,
+    riskLevel: overrides.riskLevel ?? 'low',
+    updatedAt: '2026-06-03T06:00:00.000Z',
+    formulaVersion: 'habit-engine-v1',
+  } as never;
+}
+
+function buildHabitRiskSignal(overrides: {
+  type?: 'inactivity_pattern' | 'streak_at_risk' | 'declining_consistency' | 'dropout_risk';
+  level?: 'low' | 'medium' | 'high';
+} = {}) {
+  return {
+    userProfileId: 'profile_123',
+    type: overrides.type ?? 'streak_at_risk',
+    level: overrides.level ?? 'medium',
+    title: 'Habit risk',
+    description: 'A habit risk signal was generated.',
+    generatedAt: '2026-06-03T06:00:00.000Z',
+    formulaVersion: 'habit-engine-v1',
+  } as never;
 }

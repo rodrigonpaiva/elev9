@@ -64,7 +64,8 @@ export type CoachFeedbackProps = {
         | 'training'
         | 'progress'
         | 'memory'
-        | 'notification';
+        | 'notification'
+        | 'habit';
       weight?: number;
       value?: number;
     }>;

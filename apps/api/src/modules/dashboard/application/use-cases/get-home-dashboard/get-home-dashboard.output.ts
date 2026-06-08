@@ -4,6 +4,7 @@ import {
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import {
   GoalDashboardPayload,
+  HabitReadModelPayload,
   NotificationReadModelPayload,
 } from '../../../../../shared/mappers';
 import {
@@ -112,6 +113,7 @@ export type GetHomeDashboardOutput = {
       todayWorkout: DashboardTodayWorkout | null;
     } | null;
     goal?: GoalDashboardPayload;
+    habits?: HabitReadModelPayload;
     notification?: NotificationReadModelPayload;
     progressSummary: {
       period: 'week';

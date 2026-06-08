@@ -4,6 +4,7 @@ import { AiModule } from '../ai/ai.module';
 import { AuthModule } from '../auth/auth.module';
 import { FitnessModule } from '../fitness/fitness.module';
 import { GoalsModule } from '../goals/goals.module';
+import { HabitsModule } from '../habits/habits.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { ProgressModule } from '../progress/progress.module';
 import { TrainingModule } from '../training/training.module';
@@ -19,6 +20,7 @@ import { DashboardController } from './presentation/http/dashboard.controller';
     AiModule,
     forwardRef(() => NotificationsModule),
     GoalsModule,
+    HabitsModule,
     UsersModule,
     FitnessModule,
     ProgressModule,

@@ -250,6 +250,12 @@ describe('CoachDecisionCalculatorService', () => {
       goalForecastConfidence: 'low',
       goalMilestoneClose: true,
       goalAchievementReached: true,
+      habitConsistencyScore: 32,
+      habitTrend: 'declining',
+      habitRiskLevel: 'high',
+      habitConsistencyDeclining: true,
+      habitRiskHigh: true,
+      habitDropoutRisk: true,
       currentStreak: 6,
       missedWorkouts: 0,
     });
@@ -263,6 +269,59 @@ describe('CoachDecisionCalculatorService', () => {
         'GOAL_FORECAST_LOW_CONFIDENCE',
         'GOAL_MILESTONE_CLOSE',
         'GOAL_ACHIEVEMENT_REACHED',
+        'HABIT_CONSISTENCY_DECLINING',
+        'HABIT_RISK_HIGH',
+        'HABIT_DROPOUT_RISK',
+      ]),
+    );
+  });
+
+  it('adds habit decline and dropout signals and keeps consistency when no crisis exists', () => {
+    const result = service.calculate({
+      readinessScore: 70,
+      fatigueScore: 30,
+      nutritionAdherence: 72,
+      habitConsistencyScore: 38,
+      habitTrend: 'declining',
+      habitRiskLevel: 'high',
+      habitRiskHigh: true,
+      habitConsistencyDeclining: true,
+      habitDropoutRisk: true,
+      habitCurrentStreak: 1,
+      currentStreak: 1,
+      missedWorkouts: 1,
+    });
+
+    expect(result.priority).toBe('consistency');
+    expect(result.influences.map((influence) => influence.code)).toEqual(
+      expect.arrayContaining([
+        'HABIT_CONSISTENCY_DECLINING',
+        'HABIT_RISK_HIGH',
+        'HABIT_DROPOUT_RISK',
+      ]),
+    );
+  });
+
+  it('adds habit improving and strong streak signals and uses motivation when no crisis exists', () => {
+    const result = service.calculate({
+      readinessScore: 76,
+      fatigueScore: 24,
+      nutritionAdherence: 78,
+      habitConsistencyScore: 84,
+      habitTrend: 'improving',
+      habitRiskLevel: 'low',
+      habitConsistencyImproving: true,
+      habitStreakStrong: true,
+      habitCurrentStreak: 6,
+      currentStreak: 4,
+      missedWorkouts: 0,
+    });
+
+    expect(result.priority).toBe('motivation');
+    expect(result.influences.map((influence) => influence.code)).toEqual(
+      expect.arrayContaining([
+        'HABIT_CONSISTENCY_IMPROVING',
+        'HABIT_STREAK_STRONG',
       ]),
     );
   });

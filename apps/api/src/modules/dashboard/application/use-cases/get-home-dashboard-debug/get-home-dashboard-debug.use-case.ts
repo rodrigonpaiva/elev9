@@ -5,9 +5,16 @@ import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/g
 import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
 import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
 import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
+import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
+import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
 import {
   NotificationReadModelMapper,
   type NotificationReadModelPayload,
+} from '../../../../../shared/mappers';
+import {
+  HabitReadModelMapper,
+  type HabitReadModel,
 } from '../../../../../shared/mappers';
 import {
   DAILY_CHECK_IN_REPOSITORY,
@@ -36,6 +43,9 @@ export class GetHomeDashboardDebugUseCase {
     private readonly getGoalMilestonesUseCase: GetGoalMilestonesUseCase,
     private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
     private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
+    private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
+    private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
+    private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
     private readonly dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService,
   ) {}
 
@@ -73,6 +83,7 @@ export class GetHomeDashboardDebugUseCase {
       ).slice(0, 3);
       const goal = await this.resolveGoal(authUserId);
       const notification = await this.resolveNotification(authUserId);
+      const habits = await this.resolveHabits(authUserId);
       const recovery =
         this.dashboardAdaptiveSignalsService.buildRecoverySummary(
           healthContext,
@@ -89,6 +100,7 @@ export class GetHomeDashboardDebugUseCase {
         recovery,
         nutritionGuidance,
         goal,
+        habits,
         notification,
       );
     } catch (error) {
@@ -142,5 +154,38 @@ export class GetHomeDashboardDebugUseCase {
         ? engagementSummaryResult.value.engagementSummary
         : undefined,
     );
+  }
+
+  private async resolveHabits(authUserId: string): Promise<HabitReadModel | undefined> {
+    try {
+      const [currentResult, summaryResult, riskSignalsResult] =
+        await Promise.allSettled([
+          this.getCurrentHabitsUseCase.execute({ authUserId }),
+          this.getConsistencySummaryUseCase.execute({ authUserId }),
+          this.getHabitRiskSignalsUseCase.execute({ authUserId }),
+        ]);
+
+      const current =
+        currentResult.status === 'fulfilled'
+          ? currentResult.value.habitSnapshot
+          : undefined;
+      const summary =
+        summaryResult.status === 'fulfilled'
+          ? summaryResult.value.consistencySummary
+          : undefined;
+      const riskSignals =
+        riskSignalsResult.status === 'fulfilled'
+          ? riskSignalsResult.value.habitRiskSignals
+          : undefined;
+      const habits = {
+        ...(current ? { current } : {}),
+        ...(summary ? { summary } : {}),
+        ...(riskSignals ? { riskSignals } : {}),
+      };
+
+      return Object.keys(habits).length > 0 ? habits : undefined;
+    } catch {
+      return undefined;
+    }
   }
 }

@@ -1,6 +1,8 @@
 import { FitnessProfileActivityLevel, FitnessProfileGoal } from '../fitness';
-import { CoachDecisionInfluence, CoachDecisionPriority } from '../ai';
 import { Goal, GoalForecast, GoalMilestone, GoalProgressSnapshot } from '../goals';
+import { ConsistencySummary, HabitRiskSignal, HabitSnapshot } from '../habits';
+import { NotificationDecision, NotificationEngagementSummary } from '../notifications';
+import { CoachDecisionInfluence, CoachDecisionPriority } from '../ai';
 import { AdaptiveRecommendedIntensity, AdaptiveRecommendationType, AdaptiveTrainingInfluence, AdaptiveVolumeAction, TrainingPlanIntensity } from '../training';
 export type DashboardRecoveryInfluence = {
     code: 'LOW_SLEEP' | 'LOW_ENERGY' | 'HIGH_MUSCLE_SORENESS' | 'HIGH_ADHERENCE' | 'LOW_ADHERENCE' | 'HIGH_WORKOUT_LOAD' | 'RECENT_WORKOUT_COMPLETION' | 'LONG_STREAK' | 'MISSED_WORKOUTS';
@@ -49,6 +51,21 @@ export type DashboardHomeResponse = {
                 }>;
             } | null;
         } | null;
+        goal?: {
+            current: Goal;
+            progressSnapshot?: GoalProgressSnapshot;
+            forecast?: GoalForecast;
+            milestones?: GoalMilestone[];
+        };
+        habits?: {
+            current?: Omit<HabitSnapshot, 'sourceContext'>;
+            summary?: ConsistencySummary;
+            riskSignals?: HabitRiskSignal[];
+        };
+        notification?: {
+            current?: NotificationDecision;
+            engagementSummary?: NotificationEngagementSummary;
+        };
         progressSummary: {
             period: 'week';
             workoutsCompleted: number;
@@ -71,13 +88,12 @@ export type DashboardHomeResponse = {
                 createdAt: string;
             };
         };
-        goal?: {
-            current: Goal;
-            progressSnapshot?: GoalProgressSnapshot;
-            forecast?: GoalForecast;
-            milestones?: GoalMilestone[];
-        };
         coachDecision?: DashboardCoachDecision;
+        habits?: {
+            current?: Omit<HabitSnapshot, 'sourceContext'>;
+            summary?: ConsistencySummary;
+            riskSignals?: HabitRiskSignal[];
+        };
         adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
         nutritionGuidance: {
             priority: 'recovery' | 'consistency' | 'performance';
@@ -95,12 +111,6 @@ export type DashboardHomeDebugResponse = {
         readinessScore?: number;
         fatigueScore?: number;
         recoveryInfluences?: DashboardRecoveryInfluence[];
-    };
-    goal?: {
-        current: Goal;
-        progressSnapshot?: GoalProgressSnapshot;
-        forecast?: GoalForecast;
-        milestones?: GoalMilestone[];
     };
     coachDecision?: DashboardCoachDecision;
     adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;

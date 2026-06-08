@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 
 import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
 import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
-import { NotificationMemoryPayload } from '../../../../../shared/mappers';
+import {
+  HabitMemoryPayload,
+  NotificationMemoryPayload,
+} from '../../../../../shared/mappers';
 import { UserHealthContext } from '../context-builder/build-user-health-context.service';
 
 export const COACH_CONVERSATION_MEMORY_VERSION = 'memory-v1';
@@ -18,6 +21,7 @@ export type CoachConversationMemorySummarizerInput = {
   conversationMessages: CoachConversationMemorySummarizerMessage[];
   coachDecision?: CoachDecisionLike;
   notification?: NotificationMemoryPayload;
+  habit?: HabitMemoryPayload;
 };
 
 export type CoachConversationMemorySummaryResult = {
@@ -46,6 +50,7 @@ export class CoachConversationMemorySummarizer {
     const notificationSummary = input.notification
       ? this.buildNotificationSummary(input.notification)
       : null;
+    const habitSummary = input.habit ? this.buildHabitSummary(input.habit) : null;
 
     const summary = [
       `goal=${this.normalizeValue(input.healthContext.goal ?? 'unknown')}`,
@@ -55,6 +60,7 @@ export class CoachConversationMemorySummarizer {
       `workout_continuity=streak:${input.healthContext.currentStreak}, recent_workouts:${workoutCount}`,
       ...(coachDecisionSummary ? [coachDecisionSummary] : []),
       ...(notificationSummary ? [notificationSummary] : []),
+      ...(habitSummary ? [habitSummary] : []),
       `user_concern=${concern}`,
     ].join('; ');
 
@@ -138,6 +144,15 @@ export class CoachConversationMemorySummarizer {
       `suppressed:${notification.suppressed ? 'true' : 'false'}`,
       `fatigue:${notification.fatigueLevel}`,
       `engagement:${notification.engagementScore}`,
+    ].join(',');
+  }
+
+  private buildHabitSummary(habit: HabitMemoryPayload): string {
+    return [
+      `habit=score:${habit.habitConsistencyScore}`,
+      `trend:${habit.habitTrend}`,
+      `streak:${habit.habitCurrentStreak}`,
+      `risk:${habit.habitRiskLevel}`,
     ].join(',');
   }
 

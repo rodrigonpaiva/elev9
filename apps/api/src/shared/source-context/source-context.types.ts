@@ -48,6 +48,16 @@ export type CoachDecisionSourceContext = SourceContextBase & {
   goalForecastConfidence?: 'low' | 'medium' | 'high';
   goalMilestoneClose?: boolean;
   goalAchievementReached?: boolean;
+  habitConsistencyScore?: number;
+  habitTrend?: 'improving' | 'stable' | 'declining';
+  habitCurrentStreak?: number;
+  habitRiskLevel?: 'low' | 'medium' | 'high';
+  habitRiskSignals?: Array<
+    | 'inactivity_pattern'
+    | 'streak_at_risk'
+    | 'declining_consistency'
+    | 'dropout_risk'
+  >;
   recoverySnapshotId?: string;
   nutritionRecommendationId?: string;
   adaptiveTrainingRecommendationId?: string;

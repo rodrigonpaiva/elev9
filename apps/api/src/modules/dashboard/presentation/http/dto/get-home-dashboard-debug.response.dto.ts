@@ -4,6 +4,7 @@ import {
   GoalMilestoneContract,
   GoalProgressSnapshotContract,
 } from '../../../../goals/domain/goals.contract';
+import type { HabitReadModelPayload } from '../../../../../shared/mappers';
 
 export class GetHomeDashboardDebugResponseDto {
   generatedAt!: string;
@@ -36,6 +37,7 @@ export class GetHomeDashboardDebugResponseDto {
     forecast?: GoalForecastContract;
     milestones?: GoalMilestoneContract[];
   };
+  habits?: HabitReadModelPayload;
   adaptiveTrainingRecommendation?: {
     recommendationType:
       | 'increase_intensity'

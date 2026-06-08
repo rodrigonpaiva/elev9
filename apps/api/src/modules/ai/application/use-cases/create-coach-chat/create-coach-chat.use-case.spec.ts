@@ -15,6 +15,9 @@ import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/ge
 import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
 import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
 import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
+import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
+import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
 import { UserProfile } from '../../../../users/domain/entities/user-profile.entity';
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
 import { CreateCoachChatUseCase } from './create-coach-chat.use-case';
@@ -39,6 +42,15 @@ describe('CreateCoachChatUseCase', () => {
   };
   let getEngagementSummaryUseCase: {
     execute: jest.MockedFunction<GetEngagementSummaryUseCase['execute']>;
+  };
+  let getCurrentHabitsUseCase: {
+    execute: jest.MockedFunction<GetCurrentHabitsUseCase['execute']>;
+  };
+  let getConsistencySummaryUseCase: {
+    execute: jest.MockedFunction<GetConsistencySummaryUseCase['execute']>;
+  };
+  let getHabitRiskSignalsUseCase: {
+    execute: jest.MockedFunction<GetHabitRiskSignalsUseCase['execute']>;
   };
   let useCase: CreateCoachChatUseCase;
 
@@ -89,6 +101,15 @@ describe('CreateCoachChatUseCase', () => {
         engagementSummary: undefined,
       }),
     };
+    getCurrentHabitsUseCase = {
+      execute: jest.fn().mockResolvedValue({} as never),
+    };
+    getConsistencySummaryUseCase = {
+      execute: jest.fn().mockResolvedValue({} as never),
+    };
+    getHabitRiskSignalsUseCase = {
+      execute: jest.fn().mockResolvedValue({} as never),
+    };
     coachConversationMemorySummarizer.summarize.mockReturnValue(
       buildMemorySummary({
         summary:
@@ -106,6 +127,9 @@ describe('CreateCoachChatUseCase', () => {
       getCurrentCoachDecisionUseCase as unknown as GetCurrentCoachDecisionUseCase,
       getCurrentNotificationUseCase as unknown as GetCurrentNotificationUseCase,
       getEngagementSummaryUseCase as unknown as GetEngagementSummaryUseCase,
+      getCurrentHabitsUseCase as unknown as GetCurrentHabitsUseCase,
+      getConsistencySummaryUseCase as unknown as GetConsistencySummaryUseCase,
+      getHabitRiskSignalsUseCase as unknown as GetHabitRiskSignalsUseCase,
       aiPromptBuilder,
       aiLlmService,
       replyGenerator,
@@ -363,6 +387,153 @@ describe('CreateCoachChatUseCase', () => {
       expect.objectContaining({
         summary: expect.stringContaining(
           'notification=type:coach_nudge,suppressed:true,fatigue:high,engagement:84',
+        ),
+      }),
+    );
+  });
+
+  it('includes reduced habit context in the prompt and memory flow', async () => {
+    mockUserProfile(userProfileRepository);
+    coachConversationRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
+    coachConversationMemoryRepository.findByConversationId.mockResolvedValue(
+      null,
+    );
+    buildUserHealthContextService.build.mockResolvedValue(buildHealthContext());
+    getCurrentHabitsUseCase.execute.mockResolvedValue({
+      habitSnapshot: {
+        userProfileId: 'profile_123',
+        date: '2026-05-18',
+        consistencyScore: 38,
+        streakDays: 1,
+        adherenceScore: 42,
+        trend: 'declining',
+        sourceContext: {
+          formulaVersion: 'habit-engine-v1',
+          generatedAt: '2026-05-18T10:00:00.000Z',
+        },
+        formulaVersion: 'habit-engine-v1',
+        generatedAt: '2026-05-18T10:00:00.000Z',
+      } as never,
+    });
+    getConsistencySummaryUseCase.execute.mockResolvedValue({
+      consistencySummary: {
+        userProfileId: 'profile_123',
+        score: 38,
+        trend: 'declining',
+        currentStreak: 1,
+        longestStreak: 4,
+        adherenceRate: 42,
+        riskLevel: 'high',
+        updatedAt: '2026-05-18T10:00:00.000Z',
+        formulaVersion: 'habit-engine-v1',
+      } as never,
+    });
+    getHabitRiskSignalsUseCase.execute.mockResolvedValue({
+      habitRiskSignals: [
+        {
+          userProfileId: 'profile_123',
+          type: 'dropout_risk',
+          level: 'high',
+          title: 'Dropout risk',
+          description: 'Consistency is trending down.',
+          generatedAt: '2026-05-18T10:00:00.000Z',
+          formulaVersion: 'habit-engine-v1',
+        } as never,
+      ],
+    });
+    coachConversationMemorySummarizer.summarize.mockReturnValue(
+      buildMemorySummary({
+        summary:
+          'goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; habit=score:38,trend:declining,streak:1,risk:high; user_concern=general',
+        generatedFromMessageCount: 2,
+      }),
+    );
+    aiPromptBuilder.build.mockReturnValue({
+      promptVersion: 'coach-chat-prompt-v1',
+      messages: [{ role: 'system', content: 'prompt' }],
+    });
+    aiLlmService.generateReply.mockResolvedValue({
+      content: 'OpenAI coach reply',
+      provider: 'openai',
+      model: 'gpt-4.1-mini',
+      promptVersion: 'coach-chat-prompt-v1',
+    });
+    coachMessageRepository.create
+      .mockResolvedValueOnce({
+        id: 'message_user_123',
+        conversationId: 'conversation_123',
+        role: 'user',
+        content: 'Should I train today?',
+        createdAt: new Date('2026-05-18T10:00:01.000Z'),
+      })
+      .mockResolvedValueOnce({
+        id: 'message_assistant_123',
+        conversationId: 'conversation_123',
+        role: 'assistant',
+        content: 'OpenAI coach reply',
+        createdAt: new Date('2026-05-18T10:00:02.000Z'),
+      });
+    coachConversationRepository.create.mockResolvedValue(
+      new CoachConversation({
+        id: 'conversation_123',
+        userProfileId: 'profile_123',
+        createdAt: new Date('2026-05-18T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-18T10:00:00.000Z'),
+      }),
+    );
+    coachConversationMemoryRepository.upsertByConversationId.mockResolvedValue(
+      new CoachConversationMemory({
+        id: 'memory_123',
+        conversationId: 'conversation_123',
+        summary:
+          'goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; habit=score:38,trend:declining,streak:1,risk:high; user_concern=general',
+        metadata: {
+          generatedFromMessageCount: 2,
+          version: 'memory-v1',
+        },
+        createdAt: new Date('2026-05-18T10:00:03.000Z'),
+        updatedAt: new Date('2026-05-18T10:00:03.000Z'),
+      }),
+    );
+
+    await useCase.execute({
+      authUserId: 'auth_user_123',
+      message: 'Should I train today?',
+    });
+
+    expect(aiPromptBuilder.build).toHaveBeenCalledWith(
+      expect.objectContaining({
+        habit: expect.objectContaining({
+          summary: expect.objectContaining({
+            trend: 'declining',
+            riskLevel: 'high',
+          }),
+          riskSignals: expect.arrayContaining([
+            expect.objectContaining({
+              type: 'dropout_risk',
+            }),
+          ]),
+        }),
+      }),
+    );
+    expect(coachConversationMemorySummarizer.summarize).toHaveBeenCalledWith(
+      expect.objectContaining({
+        habit: expect.objectContaining({
+          habitConsistencyScore: 38,
+          habitTrend: 'declining',
+          habitCurrentStreak: 1,
+          habitRiskLevel: 'high',
+        }),
+      }),
+    );
+    expect(
+      coachConversationMemoryRepository.upsertByConversationId,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        summary: expect.stringContaining(
+          'habit=score:38,trend:declining,streak:1,risk:high',
         ),
       }),
     );

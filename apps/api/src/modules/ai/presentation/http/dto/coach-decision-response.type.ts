@@ -23,7 +23,16 @@ export type CoachDecisionInfluenceResponse = {
   | 'GOAL_PROGRESS_IMPROVING'
   | 'GOAL_FORECAST_LOW_CONFIDENCE'
   | 'GOAL_MILESTONE_CLOSE'
-  | 'GOAL_ACHIEVEMENT_REACHED';
+  | 'GOAL_ACHIEVEMENT_REACHED'
+  | 'NOTIFICATION_SUPPRESSED'
+  | 'NOTIFICATION_FATIGUE_HIGH'
+  | 'NOTIFICATION_DISMISSED_FREQUENTLY'
+  | 'NOTIFICATION_HIGH_ENGAGEMENT'
+  | 'HABIT_CONSISTENCY_IMPROVING'
+  | 'HABIT_CONSISTENCY_DECLINING'
+  | 'HABIT_RISK_HIGH'
+  | 'HABIT_STREAK_STRONG'
+  | 'HABIT_DROPOUT_RISK';
   label: string;
   impact: 'positive' | 'negative' | 'neutral';
   source:
@@ -32,7 +41,8 @@ export type CoachDecisionInfluenceResponse = {
     | 'training'
     | 'progress'
     | 'memory'
-    | 'notification';
+    | 'notification'
+    | 'habit';
   weight?: number;
   value?: number;
 };

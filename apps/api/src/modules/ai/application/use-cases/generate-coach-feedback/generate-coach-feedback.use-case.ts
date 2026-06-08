@@ -7,12 +7,18 @@ import {
 import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
 import {
   CoachDecisionReadModelMapper,
+  type HabitReadModel,
+  type HabitMemoryPayload,
 } from '../../../../../shared/mappers';
 import { NotificationReadModelMapper } from '../../../../../shared/mappers';
+import { HabitReadModelMapper } from '../../../../../shared/mappers';
 import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
 import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
 import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
 import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
+import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
+import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
 import {
   COACH_FEEDBACK_REPOSITORY,
   CoachFeedbackRepository,
@@ -35,6 +41,9 @@ export class GenerateCoachFeedbackUseCase {
     private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
     private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
     private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
+    private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
+    private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
+    private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
   ) {}
 
   async execute(
@@ -56,6 +65,8 @@ export class GenerateCoachFeedbackUseCase {
       });
       const coachDecision = await this.resolveCoachDecision(authUserId);
       const notification = await this.resolveNotification(authUserId);
+      const habit = await this.resolveHabit(authUserId);
+      const habitMemory = HabitReadModelMapper.toMemoryPayload(habit);
 
       if (!healthContext.userProfileId) {
         throw new GenerateCoachFeedbackError(
@@ -89,6 +100,7 @@ export class GenerateCoachFeedbackUseCase {
         recommendedIntensity: healthContext.recommendedIntensity,
         adaptiveTrainingRecommendation:
           healthContext.adaptiveTrainingRecommendation,
+        habit: HabitReadModelMapper.toPromptPayload(habit),
         coachDecision: CoachDecisionReadModelMapper.toFeedbackPayload(
           coachDecision,
         ),
@@ -106,7 +118,11 @@ export class GenerateCoachFeedbackUseCase {
         recommendations: feedback.recommendations,
         influences: feedback.influences,
         generatorVersion: COACH_FEEDBACK_GENERATOR_VERSION,
-        contextSnapshot: this.buildContextSnapshot(healthContext, coachDecision),
+        contextSnapshot: this.buildContextSnapshot(
+          healthContext,
+          coachDecision,
+          habitMemory,
+        ),
       });
 
       return {
@@ -141,6 +157,7 @@ export class GenerateCoachFeedbackUseCase {
   private buildContextSnapshot(
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
     coachDecision?: CoachDecision,
+    habit?: HabitMemoryPayload,
   ): {
     goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
     activityLevel?: 'low' | 'medium' | 'high';
@@ -249,10 +266,15 @@ export class GenerateCoachFeedbackUseCase {
           | 'training'
           | 'progress'
           | 'memory'
-          | 'notification';
+          | 'notification'
+          | 'habit';
         weight?: number;
         value?: number;
       }>;
+    habitConsistencyScore?: number;
+    habitTrend?: 'improving' | 'stable' | 'declining';
+    habitCurrentStreak?: number;
+    habitRiskLevel?: 'low' | 'medium' | 'high';
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -347,6 +369,14 @@ export class GenerateCoachFeedbackUseCase {
             ...CoachDecisionReadModelMapper.toFeedbackContextSnapshot(coachDecision),
           }
         : {}),
+      ...(habit
+        ? {
+            habitConsistencyScore: habit.habitConsistencyScore,
+            habitTrend: habit.habitTrend,
+            habitCurrentStreak: habit.habitCurrentStreak,
+            habitRiskLevel: habit.habitRiskLevel,
+          }
+        : {}),
       weeklyFrequency: healthContext.weeklyFrequency,
       currentStreak: healthContext.currentStreak,
       averageWorkoutDuration: healthContext.averageWorkoutDuration,
@@ -370,6 +400,33 @@ export class GenerateCoachFeedbackUseCase {
         }
         : undefined,
     };
+  }
+
+  private async resolveHabit(
+    authUserId: string,
+  ): Promise<HabitReadModel | undefined> {
+    try {
+      const [currentResult, summaryResult, riskSignalsResult] =
+        await Promise.allSettled([
+          this.getCurrentHabitsUseCase.execute({ authUserId }),
+          this.getConsistencySummaryUseCase.execute({ authUserId }),
+          this.getHabitRiskSignalsUseCase.execute({ authUserId }),
+        ]);
+
+      return {
+        ...(currentResult.status === 'fulfilled'
+          ? { current: currentResult.value.habitSnapshot }
+          : {}),
+        ...(summaryResult.status === 'fulfilled'
+          ? { summary: summaryResult.value.consistencySummary }
+          : {}),
+        ...(riskSignalsResult.status === 'fulfilled'
+          ? { riskSignals: riskSignalsResult.value.habitRiskSignals }
+          : {}),
+      };
+    } catch {
+      return undefined;
+    }
   }
 
   private async resolveCoachDecision(authUserId: string) {

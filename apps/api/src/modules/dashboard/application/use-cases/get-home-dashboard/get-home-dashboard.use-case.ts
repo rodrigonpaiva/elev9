@@ -6,6 +6,9 @@ import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/g
 import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
 import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
 import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
+import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
+import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
@@ -33,6 +36,7 @@ import {
 } from '../../../../users/domain/repositories/user-profile.repository';
 import {
   GoalReadModel,
+  HabitReadModel,
   NotificationReadModelMapper,
   NotificationReadModelPayload,
 } from '../../../../../shared/mappers';
@@ -64,6 +68,9 @@ export class GetHomeDashboardUseCase {
     private readonly getGoalMilestonesUseCase: GetGoalMilestonesUseCase,
     private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
     private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
+    private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
+    private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
+    private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
     private readonly dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService,
   ) {}
 
@@ -86,6 +93,7 @@ export class GetHomeDashboardUseCase {
       });
       const coachDecision = await this.resolveCoachDecision(authUserId);
       const notification = await this.resolveNotification(authUserId);
+      const habits = await this.resolveHabits(authUserId);
 
       if (!userProfile) {
         throw new GetHomeDashboardError(
@@ -107,6 +115,9 @@ export class GetHomeDashboardUseCase {
       const dashboardCoachDecision =
         this.dashboardAdaptiveSignalsService.buildCoachDecision(coachDecision);
       const dashboardGoal = this.dashboardAdaptiveSignalsService.buildGoal(goal);
+      const dashboardHabits = this.dashboardAdaptiveSignalsService.buildHabits(
+        habits,
+      );
       const dashboardNotification =
         this.dashboardAdaptiveSignalsService.buildNotification(notification);
       const recovery = this.buildRecoverySummary(
@@ -134,6 +145,7 @@ export class GetHomeDashboardUseCase {
             progressSummary: this.buildEmptySummary(),
             recovery,
             ...(dashboardGoal ? { goal: dashboardGoal } : {}),
+            ...(dashboardHabits ? { habits: dashboardHabits } : {}),
             ...(dashboardNotification
               ? { notification: dashboardNotification }
               : {}),
@@ -168,6 +180,7 @@ export class GetHomeDashboardUseCase {
             progressSummary: this.buildEmptySummary(),
             recovery,
             ...(dashboardGoal ? { goal: dashboardGoal } : {}),
+            ...(dashboardHabits ? { habits: dashboardHabits } : {}),
             ...(dashboardNotification
               ? { notification: dashboardNotification }
               : {}),
@@ -209,6 +222,7 @@ export class GetHomeDashboardUseCase {
           progressSummary: this.buildSummaryFromLogs(workoutLogs),
           recovery,
           ...(dashboardGoal ? { goal: dashboardGoal } : {}),
+          ...(dashboardHabits ? { habits: dashboardHabits } : {}),
           ...(dashboardNotification ? { notification: dashboardNotification } : {}),
           ...(dashboardCoachDecision
             ? { coachDecision: dashboardCoachDecision }
@@ -411,6 +425,41 @@ export class GetHomeDashboardUseCase {
         forecast: currentGoal.forecast,
         milestones: milestones.goalMilestones,
       };
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async resolveHabits(
+    authUserId: string,
+  ): Promise<HabitReadModel | undefined> {
+    try {
+      const [currentResult, summaryResult, riskSignalsResult] =
+        await Promise.allSettled([
+          this.getCurrentHabitsUseCase.execute({ authUserId }),
+          this.getConsistencySummaryUseCase.execute({ authUserId }),
+          this.getHabitRiskSignalsUseCase.execute({ authUserId }),
+        ]);
+
+      const current =
+        currentResult.status === 'fulfilled'
+          ? currentResult.value.habitSnapshot
+          : undefined;
+      const summary =
+        summaryResult.status === 'fulfilled'
+          ? summaryResult.value.consistencySummary
+          : undefined;
+      const riskSignals =
+        riskSignalsResult.status === 'fulfilled'
+          ? riskSignalsResult.value.habitRiskSignals
+          : undefined;
+      const habits = {
+        ...(current ? { current } : {}),
+        ...(summary ? { summary } : {}),
+        ...(riskSignals ? { riskSignals } : {}),
+      };
+
+      return Object.keys(habits).length > 0 ? habits : undefined;
     } catch {
       return undefined;
     }

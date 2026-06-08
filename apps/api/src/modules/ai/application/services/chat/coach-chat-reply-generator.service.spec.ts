@@ -147,4 +147,53 @@ describe('CoachChatReplyGenerator', () => {
 
     expect(reply).toContain('Notification fatigue is high right now');
   });
+
+  it('uses habit context when higher priority signals are absent', () => {
+    const reply = generator.generate({
+      message: 'Should I train today?',
+      healthContext,
+      habit: {
+        current: {
+          userProfileId: 'profile_123',
+          date: '2026-05-18',
+          consistencyScore: 38,
+          streakDays: 1,
+          adherenceScore: 42,
+          trend: 'declining',
+          sourceContext: {
+            formulaVersion: 'habit-engine-v1',
+            generatedAt: '2026-05-18T10:00:00.000Z',
+          },
+          formulaVersion: 'habit-engine-v1',
+          generatedAt: '2026-05-18T10:00:00.000Z',
+        } as never,
+        summary: {
+          userProfileId: 'profile_123',
+          score: 38,
+          trend: 'declining',
+          currentStreak: 1,
+          longestStreak: 4,
+          adherenceRate: 42,
+          riskLevel: 'high',
+          updatedAt: '2026-05-18T10:00:00.000Z',
+          formulaVersion: 'habit-engine-v1',
+        } as never,
+        riskSignals: [
+          {
+            userProfileId: 'profile_123',
+            type: 'dropout_risk',
+            level: 'high',
+            title: 'Dropout risk',
+            description: 'Consistency is trending down.',
+            generatedAt: '2026-05-18T10:00:00.000Z',
+            formulaVersion: 'habit-engine-v1',
+          } as never,
+        ],
+      },
+    });
+
+    expect(reply).toContain(
+      'Your consistency signals suggest keeping the next step small and easy to repeat.',
+    );
+  });
 });
