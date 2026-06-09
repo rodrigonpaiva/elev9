@@ -17,6 +17,9 @@ import { GetEngagementSummaryUseCase } from '../../../../notifications/applicati
 import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
 import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
 import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
+import { GetCurrentPersonalizationUseCase } from '../../../../personalization/application/use-cases/get-current-personalization/get-current-personalization.use-case';
+import { GetBehavioralPatternsUseCase } from '../../../../personalization/application/use-cases/get-behavioral-patterns/get-behavioral-patterns.use-case';
+import { GetUserBehaviorProfileUseCase } from '../../../../personalization/application/use-cases/get-user-behavior-profile/get-user-behavior-profile.use-case';
 import { GENERATE_COACH_FEEDBACK_ERROR_CODES } from './generate-coach-feedback.errors';
 import { GenerateCoachFeedbackUseCase } from './generate-coach-feedback.use-case';
 
@@ -42,6 +45,15 @@ describe('GenerateCoachFeedbackUseCase', () => {
   };
   let getHabitRiskSignalsUseCase: {
     execute: jest.MockedFunction<GetHabitRiskSignalsUseCase['execute']>;
+  };
+  let getCurrentPersonalizationUseCase: {
+    execute: jest.MockedFunction<GetCurrentPersonalizationUseCase['execute']>;
+  };
+  let getUserBehaviorProfileUseCase: {
+    execute: jest.MockedFunction<GetUserBehaviorProfileUseCase['execute']>;
+  };
+  let getBehavioralPatternsUseCase: {
+    execute: jest.MockedFunction<GetBehavioralPatternsUseCase['execute']>;
   };
   let coachFeedbackGenerator: CoachFeedbackGenerator;
   let generateSpy: jest.SpiedFunction<CoachFeedbackGenerator['generate']>;
@@ -78,6 +90,21 @@ describe('GenerateCoachFeedbackUseCase', () => {
     getHabitRiskSignalsUseCase = {
       execute: jest.fn().mockResolvedValue({} as never),
     };
+    getCurrentPersonalizationUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        personalizationSnapshot: undefined,
+      }),
+    };
+    getUserBehaviorProfileUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        userBehaviorProfile: undefined,
+      }),
+    };
+    getBehavioralPatternsUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        behavioralPatterns: [],
+      }),
+    };
     coachFeedbackGenerator = new CoachFeedbackGenerator();
     generateSpy = jest.spyOn(coachFeedbackGenerator, 'generate');
 
@@ -91,6 +118,9 @@ describe('GenerateCoachFeedbackUseCase', () => {
       getCurrentHabitsUseCase as unknown as GetCurrentHabitsUseCase,
       getConsistencySummaryUseCase as unknown as GetConsistencySummaryUseCase,
       getHabitRiskSignalsUseCase as unknown as GetHabitRiskSignalsUseCase,
+      getCurrentPersonalizationUseCase as unknown as GetCurrentPersonalizationUseCase,
+      getUserBehaviorProfileUseCase as unknown as GetUserBehaviorProfileUseCase,
+      getBehavioralPatternsUseCase as unknown as GetBehavioralPatternsUseCase,
     );
   });
 

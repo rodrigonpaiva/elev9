@@ -1,0 +1,4 @@
+- returns bounded history
+- respects limit validation
+- respects canonical ordering
+- respects ownership isolation

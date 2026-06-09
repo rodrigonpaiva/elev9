@@ -1,0 +1,6 @@
+- Patterns must be derived from persisted read models, not raw events.
+- Patterns must be deterministic and explainable.
+- Pattern types must remain canonical and finite.
+- Pattern persistence must be user-isolated.
+- Latest ordering must be stable across retries.
+- Pattern derivation must avoid duplicate ownership of upstream signals.

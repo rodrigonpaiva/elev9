@@ -1,0 +1,5 @@
+- Use authenticated ownership only.
+- Do not accept `userBehaviorProfileId` from the client.
+- Do not recalculate personalization in the read path.
+- Use canonical latest ordering.
+- Return the persisted snapshot as-is.

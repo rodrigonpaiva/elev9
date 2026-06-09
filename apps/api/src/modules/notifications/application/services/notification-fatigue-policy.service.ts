@@ -15,6 +15,8 @@ export type NotificationFatiguePolicyInput = {
   dismissedCount: number;
   engagementScore: number;
   hoursSinceLastNotification?: number;
+  personalizationNotificationResponsiveness?: 'low' | 'medium' | 'high';
+  personalizationRiskOfDisengagement?: 'low' | 'medium' | 'high';
 };
 
 @Injectable()
@@ -56,6 +58,31 @@ export class NotificationFatiguePolicyService {
       input.candidatePriority === 'low'
     ) {
       reasons.push('recent_notification');
+    }
+
+    if (
+      input.personalizationNotificationResponsiveness === 'low' &&
+      input.candidatePriority === 'low'
+    ) {
+      reasons.push('low_personalization_responsiveness');
+    }
+
+    if (
+      input.personalizationRiskOfDisengagement === 'high' &&
+      input.candidatePriority === 'medium'
+    ) {
+      return {
+        suppressed:
+          reasons.filter(
+            (reason) =>
+              reason !== 'already_engaged' && reason !== 'recent_notification',
+          ).length > 0,
+        fatigueLevel,
+        reasons: reasons.filter(
+          (reason) =>
+            reason !== 'already_engaged' && reason !== 'recent_notification',
+        ),
+      };
     }
 
     return {

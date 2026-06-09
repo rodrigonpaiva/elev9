@@ -6,6 +6,7 @@ import { FitnessModule } from '../fitness/fitness.module';
 import { GoalsModule } from '../goals/goals.module';
 import { HabitsModule } from '../habits/habits.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { PersonalizationModule } from '../personalization/personalization.module';
 import { ProgressModule } from '../progress/progress.module';
 import { TrainingModule } from '../training/training.module';
 import { UsersModule } from '../users/users.module';
@@ -22,6 +23,7 @@ import { DashboardController } from './presentation/http/dashboard.controller';
     GoalsModule,
     HabitsModule,
     UsersModule,
+    PersonalizationModule,
     FitnessModule,
     ProgressModule,
     TrainingModule,

@@ -26,6 +26,7 @@ import type { NotificationPromptPayload } from '../../../../../shared/mappers';
 import type { CoachDecisionInfluenceProps } from '../../../domain/value-objects/coach-decision-influence.value-object';
 import type { CoachDecisionPriority } from '../../../domain/value-objects/coach-decision-priority.value-object';
 import type { HabitPromptPayload } from '../../../../../shared/mappers';
+import type { PersonalizationPromptPayload } from '../../../../../shared/mappers';
 
 export const COACH_FEEDBACK_GENERATOR_VERSION = 'heuristic-v1';
 
@@ -59,6 +60,7 @@ export type CoachFeedbackGeneratorInput = {
   coachDecision?: CoachDecisionReadModelPayload;
   nutritionProfile?: UserHealthContextNutritionProfile;
   notification?: NotificationPromptPayload;
+  personalization?: PersonalizationPromptPayload;
 };
 
 export type CoachFeedbackGeneratorOutput = {
@@ -81,6 +83,7 @@ export class CoachFeedbackGenerator {
       input.workoutLogs,
     );
     const coachDecision = input.coachDecision;
+    const personalization = input.personalization;
 
     const message = this.limitMessage(
       this.buildMessage({
@@ -93,6 +96,7 @@ export class CoachFeedbackGenerator {
         isBeginner,
         isInconsistent,
         coachDecision,
+        personalization,
       }),
     );
 
@@ -222,6 +226,12 @@ export class CoachFeedbackGenerator {
       recommendations,
       influences,
     });
+    this.applyPersonalizationSignals({
+      personalization,
+      insights,
+      recommendations,
+      influences,
+    });
     this.applyTrainingSignals({
       logsCount,
       expectedWorkouts: input.expectedWorkouts,
@@ -256,32 +266,83 @@ export class CoachFeedbackGenerator {
       priority: CoachDecisionPriority;
       headline: string;
     };
+    personalization?: PersonalizationPromptPayload;
   }): string {
+    const personalizationTail = this.buildPersonalizationTail(
+      input.personalization,
+    );
+
     if (input.coachDecision) {
-      return input.coachDecision.headline;
+      return this.limitMessage(
+        [input.coachDecision.headline, personalizationTail]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
     if (input.isNoLogs) {
-      return 'You are ready to start your first training streak today.';
+      return this.limitMessage(
+        [
+          'You are ready to start your first training streak today.',
+          personalizationTail,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
     if (input.hasHighStreak) {
-      return `Great consistency this week. You're on a ${input.currentStreak}-day streak.`;
+      return this.limitMessage(
+        [
+          `Great consistency this week. You're on a ${input.currentStreak}-day streak.`,
+          personalizationTail,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
     if (input.isConsistent) {
-      return 'You matched your expected training rhythm this week.';
+      return this.limitMessage(
+        [
+          'You matched your expected training rhythm this week.',
+          personalizationTail,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
     if (input.isBeginner) {
-      return 'Good start this week. You already logged your first workouts and can build consistency from here.';
+      return this.limitMessage(
+        [
+          'Good start this week. You already logged your first workouts and can build consistency from here.',
+          personalizationTail,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
     if (input.isInconsistent) {
-      return 'You have room to rebuild your rhythm this week.';
+      return this.limitMessage(
+        [
+          'You have room to rebuild your rhythm this week.',
+          personalizationTail,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
-    return `You're making progress. Aim for ${input.expectedWorkouts} workouts this week to keep momentum.`;
+    return this.limitMessage(
+      [
+        `You're making progress. Aim for ${input.expectedWorkouts} workouts this week to keep momentum.`,
+        personalizationTail,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    );
   }
 
   private applyCoachDecisionSignals(input: {
@@ -407,6 +468,72 @@ export class CoachFeedbackGenerator {
     }
   }
 
+  private applyPersonalizationSignals(input: {
+    personalization?: PersonalizationPromptPayload;
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const personalization = input.personalization;
+
+    if (!personalization) {
+      return;
+    }
+
+    switch (personalization.preferredCoachingStyle) {
+      case 'direct':
+        input.influences.add('personalization:direct_style');
+        this.prependRecommendation(
+          input.recommendations,
+          'Keep the guidance short and specific',
+        );
+        break;
+      case 'motivational':
+        input.influences.add('personalization:motivational_style');
+        this.prependRecommendation(
+          input.recommendations,
+          'Use encouraging language and keep momentum visible',
+        );
+        break;
+      case 'educational':
+        input.influences.add('personalization:educational_style');
+        this.prependRecommendation(
+          input.recommendations,
+          'Explain the why behind the next step',
+        );
+        break;
+      case 'balanced':
+      default:
+        break;
+    }
+
+    if (personalization.notificationResponsiveness === 'low') {
+      input.influences.add('personalization:low_notification_responsiveness');
+      this.prependRecommendation(
+        input.recommendations,
+        'Avoid reminder-heavy language and keep the message low-pressure',
+      );
+    }
+
+    if (personalization.riskOfDisengagement === 'high') {
+      input.influences.add('personalization:high_disengagement_risk');
+      this.prependRecommendation(
+        input.recommendations,
+        'Keep pressure low and focus on one achievable action',
+      );
+    }
+
+    if (personalization.topBehavioralPatterns.includes('responds_to_streaks')) {
+      input.influences.add('personalization:responds_to_streaks');
+      this.upsertInsight(input.insights, 'Personalization responds to streaks');
+    }
+
+    if (personalization.topBehavioralPatterns.includes('responds_to_goals')) {
+      input.influences.add('personalization:responds_to_goals');
+      this.upsertInsight(input.insights, 'Personalization responds to goals');
+    }
+  }
+
   private applyHabitSignals(input: {
     habit?: HabitPromptPayload;
     insights: string[];
@@ -468,6 +595,26 @@ export class CoachFeedbackGenerator {
         input.recommendations,
         'Keep pressure low and focus on completion over perfection',
       );
+    }
+  }
+
+  private buildPersonalizationTail(
+    personalization?: PersonalizationPromptPayload,
+  ): string {
+    if (!personalization?.preferredCoachingStyle) {
+      return '';
+    }
+
+    switch (personalization.preferredCoachingStyle) {
+      case 'direct':
+        return 'Keep it short and specific.';
+      case 'motivational':
+        return 'Keep the encouragement visible.';
+      case 'educational':
+        return 'Explain the why behind the next step.';
+      case 'balanced':
+      default:
+        return '';
     }
   }
 

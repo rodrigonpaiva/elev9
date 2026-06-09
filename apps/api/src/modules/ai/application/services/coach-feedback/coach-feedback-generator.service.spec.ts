@@ -237,6 +237,43 @@ describe('CoachFeedbackGenerator', () => {
     );
   });
 
+  it('adapts message tone with personalization context', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 46,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 45),
+        buildWorkoutLog('2026-05-04', 47),
+      ],
+      hasTrainingPlan: true,
+      personalization: {
+        preferredCoachingStyle: 'educational',
+        engagementProfile: 'high',
+        notificationResponsiveness: 'low',
+        goalResponsiveness: 'high',
+        recoveryResponsiveness: 'medium',
+        habitResponsiveness: 'high',
+        riskOfDisengagement: 'high',
+        topBehavioralPatterns: ['responds_to_goals'],
+        trend: 'stable',
+        formulaVersion: 'personalization-engine-v1',
+        generatedAt: '2026-05-18T10:00:00.000Z',
+      },
+    });
+
+    expect(result.message).toContain('Explain the why behind the next step.');
+    expect(result.recommendations).toEqual(
+      expect.arrayContaining([
+        'Explain the why behind the next step',
+        'Avoid reminder-heavy language and keep the message low-pressure',
+        'Keep pressure low and focus on one achievable action',
+      ]),
+    );
+  });
+
   it('uses notification context as supporting guidance', () => {
     const result = generator.generate({
       goal: 'maintain',

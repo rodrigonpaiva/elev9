@@ -27,7 +27,8 @@ export type NotificationSuppressionReason =
   | 'same_type_cooldown'
   | 'high_dismissal_ratio'
   | 'already_engaged'
-  | 'recent_notification';
+  | 'recent_notification'
+  | 'low_personalization_responsiveness';
 
 export interface NotificationFatigueEvaluation {
   suppressed: boolean;

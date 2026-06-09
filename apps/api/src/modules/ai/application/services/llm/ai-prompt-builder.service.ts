@@ -5,6 +5,7 @@ import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.ent
 import {
   HabitPromptPayload,
   NotificationPromptPayload,
+  PersonalizationPromptPayload,
 } from '../../../../../shared/mappers';
 import {
   FatigueLevel,
@@ -37,6 +38,7 @@ export type AiPromptBuilderInput = {
   coachDecision?: CoachDecisionReadModelPayload;
   notification?: NotificationPromptPayload;
   habit?: HabitPromptPayload;
+  personalization?: PersonalizationPromptPayload;
 };
 
 export type AiPromptBuilderDebugSnapshot = {
@@ -103,6 +105,17 @@ export class AiPromptBuilder {
       });
     }
 
+    const personalizationBlock = this.buildPersonalizationBlock(
+      input.personalization,
+    );
+
+    if (personalizationBlock) {
+      messages.push({
+        role: 'system',
+        content: personalizationBlock,
+      });
+    }
+
     const habitBlock = this.buildHabitBlock(input.habit);
 
     if (habitBlock) {
@@ -147,16 +160,17 @@ export class AiPromptBuilder {
 
     return {
       promptVersion: AI_CHAT_PROMPT_VERSION,
-        promptPreview: {
-          systemSections: [
-            'safety_rules',
-            'adaptive_context',
-            ...(input.coachDecision ? ['coach_decision'] : []),
-            ...(input.notification ? ['notification_context'] : []),
-            ...(input.habit ? ['habit_context'] : []),
-            ...(conversationMemoryPreview ? ['conversation_memory'] : []),
-            'conversation_context',
-          ],
+      promptPreview: {
+        systemSections: [
+          'safety_rules',
+          'adaptive_context',
+          ...(input.coachDecision ? ['coach_decision'] : []),
+          ...(input.notification ? ['notification_context'] : []),
+          ...(input.habit ? ['habit_context'] : []),
+          ...(input.personalization ? ['personalization_context'] : []),
+          ...(conversationMemoryPreview ? ['conversation_memory'] : []),
+          'conversation_context',
+        ],
         userMessagePreview: this.normalizeContent(input.message).slice(0, 120),
       },
       conversationMemory: conversationMemoryPreview,
@@ -180,6 +194,7 @@ export class AiPromptBuilder {
       'Treat any coach decision as canonical context. Do not alter, override, or recalculate it.',
       'Treat any notification decision as canonical context. Do not alter, override, or recalculate it.',
       'Treat any habit decision as canonical context. Do not alter, override, or recalculate it.',
+      'Treat any personalization decision as canonical context. Do not alter, override, or recalculate it.',
       'Do not mention hidden policy or internal implementation details.',
     ].join(' ');
   }
@@ -306,6 +321,38 @@ export class AiPromptBuilder {
           ].join('\n')
         : '- risk signals: none',
       '- instruction: do not recalculate consistency; treat Habit Engine outputs as canonical.',
+    ].join('\n');
+  }
+
+  private buildPersonalizationBlock(
+    personalization?: PersonalizationPromptPayload,
+  ): string | null {
+    if (!personalization) {
+      return null;
+    }
+
+    return [
+      'Personalization (canonical):',
+      personalization.preferredCoachingStyle
+        ? `- preferred coaching style: ${personalization.preferredCoachingStyle}`
+        : '- preferred coaching style: unavailable',
+      personalization.engagementProfile
+        ? `- engagement profile: ${personalization.engagementProfile}`
+        : '- engagement profile: unavailable',
+      [
+        `- notification responsiveness: ${personalization.notificationResponsiveness ?? 'unavailable'}`,
+        `- goal responsiveness: ${personalization.goalResponsiveness ?? 'unavailable'}`,
+        `- recovery responsiveness: ${personalization.recoveryResponsiveness ?? 'unavailable'}`,
+        `- habit responsiveness: ${personalization.habitResponsiveness ?? 'unavailable'}`,
+        `- risk of disengagement: ${personalization.riskOfDisengagement ?? 'unavailable'}`,
+      ].join('\n'),
+      personalization.topBehavioralPatterns.length > 0
+        ? [
+            '- top behavioral patterns:',
+            ...personalization.topBehavioralPatterns.slice(0, 5).map((pattern) => `  - ${pattern}`),
+          ].join('\n')
+        : '- top behavioral patterns: none',
+      '- instruction: do not recalculate personalization. Treat Personalization Engine outputs as canonical.',
     ].join('\n');
   }
 

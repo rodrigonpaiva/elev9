@@ -9,6 +9,7 @@ import {
   GoalProgressSnapshotContract,
 } from '../../../../goals/domain/goals.contract';
 import type { HabitReadModelPayload } from '../../../../../shared/mappers';
+import type { PersonalizationDashboardPayload } from '../../../../../shared/mappers';
 
 export class GetHomeDashboardResponseDto {
   dashboard!: {
@@ -38,6 +39,7 @@ export class GetHomeDashboardResponseDto {
       milestones?: GoalMilestoneContract[];
     };
     habits?: HabitReadModelPayload;
+    personalization?: PersonalizationDashboardPayload;
     progressSummary: {
       period: 'week';
       workoutsCompleted: number;

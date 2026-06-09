@@ -6,6 +6,7 @@ import {
   GoalDashboardPayload,
   HabitReadModelPayload,
   NotificationReadModelPayload,
+  PersonalizationDashboardPayload,
 } from '../../../../../shared/mappers';
 import {
   CoachDecisionInfluenceProps,
@@ -115,6 +116,7 @@ export type GetHomeDashboardOutput = {
     goal?: GoalDashboardPayload;
     habits?: HabitReadModelPayload;
     notification?: NotificationReadModelPayload;
+    personalization?: PersonalizationDashboardPayload;
     progressSummary: {
       period: 'week';
       workoutsCompleted: number;

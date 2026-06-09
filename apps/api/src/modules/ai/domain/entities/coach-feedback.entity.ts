@@ -65,10 +65,24 @@ export type CoachFeedbackProps = {
         | 'progress'
         | 'memory'
         | 'notification'
-        | 'habit';
+        | 'habit'
+        | 'personalization';
       weight?: number;
       value?: number;
     }>;
+    personalization?: {
+      preferredCoachingStyle?: 'motivational' | 'direct' | 'educational' | 'balanced';
+      engagementProfile?: 'low' | 'medium' | 'high';
+      notificationResponsiveness?: 'low' | 'medium' | 'high';
+      goalResponsiveness?: 'low' | 'medium' | 'high';
+      recoveryResponsiveness?: 'low' | 'medium' | 'high';
+      habitResponsiveness?: 'low' | 'medium' | 'high';
+      riskOfDisengagement?: 'low' | 'medium' | 'high';
+      topBehavioralPatterns?: string[];
+      trend?: 'improving' | 'stable' | 'declining';
+      formulaVersion?: string;
+      generatedAt?: string;
+    };
   };
   createdAt: Date;
 };

@@ -10,6 +10,8 @@ import { CoachChatReplyGenerator } from '../../services/chat/coach-chat-reply-ge
 import {
   CoachDecisionReadModelMapper,
   type CoachDecisionReadModelPayload,
+  PersonalizationReadModelMapper,
+  type PersonalizationReadModelSource,
 } from '../../../../../shared/mappers';
 import {
   NotificationReadModelMapper,
@@ -38,6 +40,9 @@ import { GetEngagementSummaryUseCase } from '../../../../notifications/applicati
 import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
 import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
 import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
+import { GetCurrentPersonalizationUseCase } from '../../../../personalization/application/use-cases/get-current-personalization/get-current-personalization.use-case';
+import { GetBehavioralPatternsUseCase } from '../../../../personalization/application/use-cases/get-behavioral-patterns/get-behavioral-patterns.use-case';
+import { GetUserBehaviorProfileUseCase } from '../../../../personalization/application/use-cases/get-user-behavior-profile/get-user-behavior-profile.use-case';
 import {
   CoachConversationMemorySummarizer,
   COACH_CONVERSATION_MEMORY_VERSION,
@@ -73,6 +78,9 @@ export class CreateCoachChatUseCase {
     private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
     private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
     private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
+    private readonly getCurrentPersonalizationUseCase: GetCurrentPersonalizationUseCase,
+    private readonly getUserBehaviorProfileUseCase: GetUserBehaviorProfileUseCase,
+    private readonly getBehavioralPatternsUseCase: GetBehavioralPatternsUseCase,
     private readonly aiPromptBuilder: AiPromptBuilder,
     private readonly aiLlmService: AiLlmService,
     private readonly coachChatReplyGenerator: CoachChatReplyGenerator,
@@ -116,6 +124,7 @@ export class CreateCoachChatUseCase {
       const coachDecision = await this.resolveCoachDecision(authUserId);
       const notification = await this.resolveNotification(authUserId);
       const habit = await this.resolveHabit(authUserId);
+      const personalization = await this.resolvePersonalization(authUserId);
       const notificationMemory = notification
         ? {
             notificationType: notification.current?.type,
@@ -127,6 +136,10 @@ export class CreateCoachChatUseCase {
         : undefined;
       const habitPrompt = HabitReadModelMapper.toPromptPayload(habit);
       const habitMemory = HabitReadModelMapper.toMemoryPayload(habit);
+      const personalizationPrompt =
+        PersonalizationReadModelMapper.toPromptPayload(personalization);
+      const personalizationMemory =
+        PersonalizationReadModelMapper.toMemoryPayload(personalization);
 
       const existingConversation =
         await this.coachConversationRepository.findLatestByUserProfileId(
@@ -183,6 +196,9 @@ export class CreateCoachChatUseCase {
         ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
         ...(notification ? { notification } : {}),
         ...(habitPrompt ? { habit: habitPrompt } : {}),
+        ...(personalizationPrompt
+          ? { personalization: personalizationPrompt }
+          : {}),
       });
 
       let reply: {
@@ -210,6 +226,9 @@ export class CreateCoachChatUseCase {
           ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
           ...(notification ? { notification } : {}),
           ...(habitPrompt ? { habit: habitPrompt } : {}),
+          ...(personalizationPrompt
+            ? { personalization: personalizationPrompt }
+            : {}),
         });
 
         await this.coachMessageRepository.create({
@@ -230,6 +249,9 @@ export class CreateCoachChatUseCase {
           ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
           ...(notificationMemory ? { notification: notificationMemory } : {}),
           ...(habitMemory ? { habit: habitMemory } : {}),
+          ...(personalizationMemory
+            ? { personalization: personalizationMemory }
+            : {}),
         });
 
         return {
@@ -250,16 +272,19 @@ export class CreateCoachChatUseCase {
         },
       });
 
-      await this.updateConversationMemory({
-        conversationId: conversation.id,
-        healthContext,
-        conversationHistory,
-        userMessage: message,
-        assistantReply: reply.content,
-        ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
-        ...(notificationMemory ? { notification: notificationMemory } : {}),
-        ...(habitMemory ? { habit: habitMemory } : {}),
-      });
+        await this.updateConversationMemory({
+          conversationId: conversation.id,
+          healthContext,
+          conversationHistory,
+          userMessage: message,
+          assistantReply: reply.content,
+          ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
+          ...(notificationMemory ? { notification: notificationMemory } : {}),
+          ...(habitMemory ? { habit: habitMemory } : {}),
+          ...(personalizationMemory
+            ? { personalization: personalizationMemory }
+            : {}),
+        });
 
       return {
         conversationId: conversation.id,
@@ -286,6 +311,7 @@ export class CreateCoachChatUseCase {
     coachDecision?: CoachDecisionReadModelPayload;
     notification?: NotificationMemoryPayload;
     habit?: HabitMemoryPayload;
+    personalization?: ReturnType<typeof PersonalizationReadModelMapper.toMemoryPayload>;
   }): Promise<void> {
     const memory = this.coachConversationMemorySummarizer.summarize({
       healthContext: input.healthContext,
@@ -305,6 +331,9 @@ export class CreateCoachChatUseCase {
       coachDecision: input.coachDecision,
       ...(input.notification ? { notification: input.notification } : {}),
       ...(input.habit ? { habit: input.habit } : {}),
+      ...(input.personalization
+        ? { personalization: input.personalization }
+        : {}),
     });
 
     await this.coachConversationMemoryRepository.upsertByConversationId({
@@ -315,6 +344,39 @@ export class CreateCoachChatUseCase {
         version: memory.metadata.version ?? COACH_CONVERSATION_MEMORY_VERSION,
       },
     });
+  }
+
+  private async resolvePersonalization(
+    authUserId: string,
+  ): Promise<
+    | PersonalizationReadModelSource
+    | undefined
+  > {
+    try {
+      const [snapshotResult, profileResult, patternsResult] =
+        await Promise.allSettled([
+          this.getCurrentPersonalizationUseCase.execute({ authUserId }),
+          this.getUserBehaviorProfileUseCase.execute({ authUserId }),
+          this.getBehavioralPatternsUseCase.execute({ authUserId }),
+        ]);
+
+      return {
+        snapshot:
+          snapshotResult.status === 'fulfilled'
+            ? snapshotResult.value.personalizationSnapshot
+            : undefined,
+        profile:
+          profileResult.status === 'fulfilled'
+            ? profileResult.value.userBehaviorProfile
+            : undefined,
+        patterns:
+          patternsResult.status === 'fulfilled'
+            ? patternsResult.value.behavioralPatterns
+            : undefined,
+      };
+    } catch {
+      return undefined;
+    }
   }
 
   private async resolveCoachDecision(authUserId: string) {

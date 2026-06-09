@@ -56,6 +56,12 @@ import {
   NOTIFICATION_DECISION_REPOSITORY,
   NotificationDecisionRepository,
 } from '../../../domain/repositories/notification-decision.repository';
+import { GetCurrentPersonalizationUseCase } from '../../../../personalization/application/use-cases/get-current-personalization/get-current-personalization.use-case';
+import type { PersonalizationReadModelSource } from '../../../../../shared/mappers';
+import {
+  PersonalizationReadModelMapper,
+  type PersonalizationNotificationPayload,
+} from '../../../../../shared/mappers';
 import { NotificationDecisionCalculatorService } from '../../services/notification-decision-calculator.service';
 import {
   NotificationFatiguePolicyService,
@@ -128,6 +134,7 @@ export class BuildNotificationDecisionUseCase {
     private readonly engagementEventRepository: EngagementEventRepository,
     @Inject(NOTIFICATION_DECISION_REPOSITORY)
     private readonly notificationDecisionRepository: NotificationDecisionRepository,
+    private readonly getCurrentPersonalizationUseCase: GetCurrentPersonalizationUseCase,
     private readonly notificationDecisionCalculatorService: NotificationDecisionCalculatorService,
     private readonly notificationFatiguePolicyService: NotificationFatiguePolicyService,
     private readonly platformDateService: PlatformDateService,
@@ -249,6 +256,9 @@ export class BuildNotificationDecisionUseCase {
       const coachDecisionPriority = this.resolveCoachDecisionPriority(
         latestCoachDecision?.priority,
       );
+      const personalization = await this.resolvePersonalization(authUserId);
+      const personalizationPayload =
+        PersonalizationReadModelMapper.toNotificationPayload(personalization);
 
       const calculatorInput = {
         coachDecisionPriority,
@@ -295,6 +305,7 @@ export class BuildNotificationDecisionUseCase {
             candidatePriority: calculatedResult.priority,
             recentNotifications: recentNotificationsInWindow,
             recentEngagementEvents,
+            personalization: personalizationPayload,
           }),
         );
 
@@ -493,6 +504,7 @@ export class BuildNotificationDecisionUseCase {
     recentEngagementEvents: Array<{
       type: 'impression' | 'opened' | 'clicked' | 'dismissed' | 'completed';
     }>;
+    personalization?: PersonalizationNotificationPayload;
   }): NotificationFatiguePolicyInput {
     const dismissedCount = input.recentEngagementEvents.filter(
       (event) => event.type === 'dismissed',
@@ -520,7 +532,36 @@ export class BuildNotificationDecisionUseCase {
       hoursSinceLastNotification: this.resolveHoursSinceLastNotification(
         input.recentNotifications[0]?.createdAt,
       ),
+      ...(input.personalization
+        ? {
+            personalizationNotificationResponsiveness:
+              input.personalization.notificationResponsiveness,
+            personalizationRiskOfDisengagement:
+              input.personalization.riskOfDisengagement,
+          }
+        : {}),
     };
+  }
+
+  private async resolvePersonalization(
+    authUserId: string,
+  ): Promise<
+    | PersonalizationReadModelSource
+    | undefined
+  > {
+    try {
+      const result = await this.getCurrentPersonalizationUseCase.execute({
+        authUserId,
+      });
+
+      return {
+        snapshot: result.personalizationSnapshot,
+        profile: undefined,
+        patterns: undefined,
+      };
+    } catch {
+      return undefined;
+    }
   }
 
   private resolveEngagementScore(

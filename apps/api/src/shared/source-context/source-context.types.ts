@@ -54,10 +54,22 @@ export type CoachDecisionSourceContext = SourceContextBase & {
   habitRiskLevel?: 'low' | 'medium' | 'high';
   habitRiskSignals?: Array<
     | 'inactivity_pattern'
-    | 'streak_at_risk'
-    | 'declining_consistency'
-    | 'dropout_risk'
+      | 'streak_at_risk'
+      | 'declining_consistency'
+      | 'dropout_risk'
   >;
+  personalizationPreferredCoachingStyle?:
+    | 'motivational'
+    | 'direct'
+    | 'educational'
+    | 'balanced';
+  personalizationEngagementProfile?: 'low' | 'medium' | 'high';
+  personalizationNotificationResponsiveness?: 'low' | 'medium' | 'high';
+  personalizationGoalResponsiveness?: 'low' | 'medium' | 'high';
+  personalizationRecoveryResponsiveness?: 'low' | 'medium' | 'high';
+  personalizationHabitResponsiveness?: 'low' | 'medium' | 'high';
+  personalizationRiskOfDisengagement?: 'low' | 'medium' | 'high';
+  personalizationTopBehavioralPatterns?: string[];
   recoverySnapshotId?: string;
   nutritionRecommendationId?: string;
   adaptiveTrainingRecommendationId?: string;
@@ -75,4 +87,25 @@ export type GoalSourceContext = SourceContextBase & {
   checkInsCount?: number;
   recoverySnapshotId?: string;
   adaptiveTrainingRecommendationId?: string;
+};
+
+export type PersonalizationSourceContext = SourceContextBase & {
+  engagementScore?: number;
+  notificationDismissalRate?: number;
+  notificationCompletionRate?: number;
+  consistencyScore?: number;
+  habitTrend?: 'improving' | 'stable' | 'declining';
+  habitRiskLevel?: 'low' | 'medium' | 'high';
+  goalTrend?: 'improving' | 'stable' | 'declining';
+  goalMilestoneReached?: boolean;
+  goalAchievementReached?: boolean;
+  recoveryTrend?: 'improving' | 'stable' | 'declining';
+  recoveryAlertEngagement?: number;
+  coachDecisionPriorityHistory?: string[];
+  activityHourDistribution?: {
+    morning: number;
+    afternoon: number;
+    evening: number;
+  };
+  previousSnapshotScore?: number;
 };

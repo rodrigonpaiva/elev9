@@ -1,0 +1,5 @@
+- Use the platform date service for UTC date partitioning.
+- Do not accept `userBehaviorProfileId` from the client.
+- Do not recalculate personalization in the read path.
+- Preserve user isolation.
+- Prefer canonical current-day lookup over ad hoc filtering.

@@ -1,0 +1,6 @@
+- builds streak responsiveness patterns
+- builds goal responsiveness patterns
+- builds recovery responsiveness patterns
+- builds notification responsiveness patterns
+- builds time-of-day engagement patterns
+- persists one canonical pattern set per user and window

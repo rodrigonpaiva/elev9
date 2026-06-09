@@ -5,6 +5,7 @@ import {
   CoachDecisionReadModelPayload,
   NotificationPromptPayload,
   HabitPromptPayload,
+  PersonalizationPromptPayload,
 } from '../../../../../shared/mappers';
 
 type UserHealthContext = Awaited<
@@ -19,12 +20,8 @@ export class CoachChatReplyGenerator {
     coachDecision?: CoachDecisionReadModelPayload;
     notification?: NotificationPromptPayload;
     habit?: HabitPromptPayload;
+    personalization?: PersonalizationPromptPayload;
   }): string {
-    const normalizedMessage = input.message.trim().toLowerCase();
-    const asksAboutTraining =
-      normalizedMessage.includes('train') ||
-      normalizedMessage.includes('workout') ||
-      normalizedMessage.includes('session');
     const coachDecisionReply = this.buildCoachDecisionReply(input.coachDecision);
 
     if (coachDecisionReply) {
@@ -53,6 +50,9 @@ export class CoachChatReplyGenerator {
       ? latestCheckIn.motivationLevel <= 2
       : false;
     const nutritionProfile = input.healthContext.nutritionProfile;
+    const personalizationTone = this.buildPersonalizationTone(
+      input.personalization,
+    );
 
     if (
       input.healthContext.fatigueLevel === 'HIGH' ||
@@ -60,9 +60,10 @@ export class CoachChatReplyGenerator {
       hasLowSleep ||
       hasHighSoreness
     ) {
-      return asksAboutTraining
-        ? "Your recovery signals suggest keeping today's session lighter."
-        : "Your recovery signals suggest keeping today's session lighter.";
+      return this.applyTone(
+        "Your recovery signals suggest keeping today's session lighter.",
+        personalizationTone,
+      );
     }
 
     if (
@@ -71,21 +72,33 @@ export class CoachChatReplyGenerator {
       latestCheckIn &&
       latestCheckIn.motivationLevel >= 4
     ) {
-      return 'Your recent consistency looks strong. This may be a good moment for controlled progression.';
+      return this.applyTone(
+        'Your recent consistency looks strong. This may be a good moment for controlled progression.',
+        personalizationTone,
+      );
     }
 
     if (
       nutritionProfile?.mealsPerDay !== undefined &&
       nutritionProfile.mealsPerDay <= 2
     ) {
-      return 'Keeping your meals consistent today will support recovery and training.';
+      return this.applyTone(
+        'Keeping your meals consistent today will support recovery and training.',
+        personalizationTone,
+      );
     }
 
     if (hasLowMotivation || input.healthContext.currentStreak >= 3) {
-      return 'Your recent consistency looks steady. Keep the routine simple and repeatable today.';
+      return this.applyTone(
+        'Your recent consistency looks steady. Keep the routine simple and repeatable today.',
+        personalizationTone,
+      );
     }
 
-    return 'Your context looks steady. Keep the routine consistent and check in after your session.';
+    return this.applyTone(
+      'Your context looks steady. Keep the routine consistent and check in after your session.',
+      personalizationTone,
+    );
   }
 
   private buildNotificationReply(
@@ -279,5 +292,25 @@ export class CoachChatReplyGenerator {
     const normalized = value.trim().replace(/\s+/g, ' ');
 
     return normalized.endsWith('.') ? normalized : `${normalized}.`;
+  }
+
+  private buildPersonalizationTone(
+    personalization?: PersonalizationPromptPayload,
+  ): 'direct' | 'motivational' | 'educational' | 'balanced' {
+    return personalization?.preferredCoachingStyle ?? 'balanced';
+  }
+
+  private applyTone(message: string, tone: string): string {
+    switch (tone) {
+      case 'direct':
+        return message;
+      case 'motivational':
+        return `${message} Keep going.`;
+      case 'educational':
+        return `${message} The next step should make the reason clear.`;
+      case 'balanced':
+      default:
+        return message;
+    }
   }
 }

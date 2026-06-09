@@ -89,11 +89,6 @@ export type DashboardHomeResponse = {
             };
         };
         coachDecision?: DashboardCoachDecision;
-        habits?: {
-            current?: Omit<HabitSnapshot, 'sourceContext'>;
-            summary?: ConsistencySummary;
-            riskSignals?: HabitRiskSignal[];
-        };
         adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
         nutritionGuidance: {
             priority: 'recovery' | 'consistency' | 'performance';
@@ -113,6 +108,11 @@ export type DashboardHomeDebugResponse = {
         recoveryInfluences?: DashboardRecoveryInfluence[];
     };
     coachDecision?: DashboardCoachDecision;
+    habits?: {
+        current?: Omit<HabitSnapshot, 'sourceContext'>;
+        summary?: ConsistencySummary;
+        riskSignals?: HabitRiskSignal[];
+    };
     adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
     nutrition: {
         priority: 'recovery' | 'consistency' | 'performance';

@@ -35,3 +35,13 @@ export {
   type NotificationReadModelCurrentPayload,
   type NotificationReadModelPayload,
 } from './notification-read-model.mapper';
+export {
+  PersonalizationReadModelMapper,
+  type PersonalizationCoachDecisionSignals,
+  type PersonalizationDashboardPayload,
+  type PersonalizationDashboardSnapshotPayload,
+  type PersonalizationMemoryPayload,
+  type PersonalizationNotificationPayload,
+  type PersonalizationPromptPayload,
+  type PersonalizationReadModelSource,
+} from './personalization-read-model.mapper';

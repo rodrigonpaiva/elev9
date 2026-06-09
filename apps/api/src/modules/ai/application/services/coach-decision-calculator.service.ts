@@ -30,6 +30,12 @@ export type CoachDecisionCalculatorInput = {
   notificationFatigueHigh?: boolean;
   notificationDismissedFrequently?: boolean;
   notificationHighEngagement?: boolean;
+  personalizationHighDisengagementRisk?: boolean;
+  personalizationRespondsToStreaks?: boolean;
+  personalizationRespondsToGoals?: boolean;
+  personalizationPrefersDirectCoaching?: boolean;
+  personalizationPrefersMotivationalCoaching?: boolean;
+  personalizationLowNotificationResponsiveness?: boolean;
   habitConsistencyScore?: number;
   habitTrend?: 'improving' | 'stable' | 'declining';
   habitCurrentStreak?: number;
@@ -67,6 +73,12 @@ type ResolvedInput = {
   notificationFatigueHigh: boolean;
   notificationDismissedFrequently: boolean;
   notificationHighEngagement: boolean;
+  personalizationHighDisengagementRisk: boolean;
+  personalizationRespondsToStreaks: boolean;
+  personalizationRespondsToGoals: boolean;
+  personalizationPrefersDirectCoaching: boolean;
+  personalizationPrefersMotivationalCoaching: boolean;
+  personalizationLowNotificationResponsiveness: boolean;
   habitConsistencyScore: number;
   habitTrend?: 'improving' | 'stable' | 'declining';
   habitCurrentStreak: number;
@@ -132,6 +144,24 @@ export class CoachDecisionCalculatorService {
       notificationFatigueHigh: Boolean(input.notificationFatigueHigh),
       notificationDismissedFrequently: Boolean(input.notificationDismissedFrequently),
       notificationHighEngagement: Boolean(input.notificationHighEngagement),
+      personalizationHighDisengagementRisk: Boolean(
+        input.personalizationHighDisengagementRisk,
+      ),
+      personalizationRespondsToStreaks: Boolean(
+        input.personalizationRespondsToStreaks,
+      ),
+      personalizationRespondsToGoals: Boolean(
+        input.personalizationRespondsToGoals,
+      ),
+      personalizationPrefersDirectCoaching: Boolean(
+        input.personalizationPrefersDirectCoaching,
+      ),
+      personalizationPrefersMotivationalCoaching: Boolean(
+        input.personalizationPrefersMotivationalCoaching,
+      ),
+      personalizationLowNotificationResponsiveness: Boolean(
+        input.personalizationLowNotificationResponsiveness,
+      ),
       habitConsistencyScore: this.resolveScore(input.habitConsistencyScore, 50),
       habitTrend: input.habitTrend,
       habitCurrentStreak: this.resolveNonNegativeInteger(input.habitCurrentStreak),
@@ -230,6 +260,20 @@ export class CoachDecisionCalculatorService {
     }
 
     if (input.notificationHighEngagement) {
+      return 'motivation';
+    }
+
+    if (
+      input.personalizationHighDisengagementRisk ||
+      input.personalizationRespondsToStreaks ||
+      input.personalizationRespondsToGoals ||
+      input.personalizationPrefersDirectCoaching ||
+      input.personalizationLowNotificationResponsiveness
+    ) {
+      return 'consistency';
+    }
+
+    if (input.personalizationPrefersMotivationalCoaching) {
       return 'motivation';
     }
 
@@ -674,6 +718,84 @@ export class CoachDecisionCalculatorService {
       );
     }
 
+    if (input.personalizationHighDisengagementRisk) {
+      influences.push(
+        this.createInfluence(
+          'PERSONALIZATION_HIGH_DISENGAGEMENT_RISK',
+          'Personalization signals suggest disengagement risk.',
+          'negative',
+          'personalization',
+          0.22,
+          1,
+        ),
+      );
+    }
+
+    if (input.personalizationRespondsToStreaks) {
+      influences.push(
+        this.createInfluence(
+          'PERSONALIZATION_RESPONDS_TO_STREAKS',
+          'Personalization shows a strong streak response.',
+          'positive',
+          'personalization',
+          0.16,
+          1,
+        ),
+      );
+    }
+
+    if (input.personalizationRespondsToGoals) {
+      influences.push(
+        this.createInfluence(
+          'PERSONALIZATION_RESPONDS_TO_GOALS',
+          'Personalization shows a strong goal response.',
+          'positive',
+          'personalization',
+          0.16,
+          1,
+        ),
+      );
+    }
+
+    if (input.personalizationPrefersDirectCoaching) {
+      influences.push(
+        this.createInfluence(
+          'PERSONALIZATION_PREFERS_DIRECT_COACHING',
+          'Personalization prefers direct coaching.',
+          'neutral',
+          'personalization',
+          0.1,
+          1,
+        ),
+      );
+    }
+
+    if (input.personalizationPrefersMotivationalCoaching) {
+      influences.push(
+        this.createInfluence(
+          'PERSONALIZATION_PREFERS_MOTIVATIONAL_COACHING',
+          'Personalization prefers motivational coaching.',
+          'positive',
+          'personalization',
+          0.14,
+          1,
+        ),
+      );
+    }
+
+    if (input.personalizationLowNotificationResponsiveness) {
+      influences.push(
+        this.createInfluence(
+          'PERSONALIZATION_LOW_NOTIFICATION_RESPONSIVENESS',
+          'Personalization shows low notification responsiveness.',
+          'negative',
+          'personalization',
+          0.2,
+          1,
+        ),
+      );
+    }
+
     if (input.habitConsistencyImproving) {
       influences.push(
         this.createInfluence(
@@ -753,7 +875,8 @@ export class CoachDecisionCalculatorService {
       | 'progress'
       | 'memory'
       | 'notification'
-      | 'habit',
+      | 'habit'
+      | 'personalization',
     weight?: number,
     value?: number,
   ): CoachDecisionInfluence {

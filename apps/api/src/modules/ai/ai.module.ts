@@ -23,6 +23,7 @@ import { HabitsModule } from '../habits/habits.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { PersonalizationModule } from '../personalization/personalization.module';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { BuildUserHealthContextService } from './application/services/context-builder/build-user-health-context.service';
@@ -85,6 +86,7 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
     RecoveryModule,
     TrainingModule,
     forwardRef(() => NotificationsModule),
+    forwardRef(() => PersonalizationModule),
     MongooseModule.forFeature([
       {
         name: COACH_FEEDBACK_MODEL_NAME,

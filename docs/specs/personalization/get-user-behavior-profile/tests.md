@@ -1,0 +1,4 @@
+- returns the persisted behavior profile
+- respects ownership isolation
+- does not recalculate the profile
+- returns not found when no profile exists

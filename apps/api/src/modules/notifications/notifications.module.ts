@@ -6,6 +6,7 @@ import { FitnessModule } from '../fitness/fitness.module';
 import { GoalsModule } from '../goals/goals.module';
 import { NutritionModule } from '../nutrition/nutrition.module';
 import { ProgressModule } from '../progress/progress.module';
+import { PersonalizationModule } from '../personalization/personalization.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
 import { UsersModule } from '../users/users.module';
@@ -50,6 +51,7 @@ import { NotificationFatiguePolicyService } from './application/services/notific
     RecoveryModule,
     TrainingModule,
     forwardRef(() => AiModule),
+    forwardRef(() => PersonalizationModule),
     MongooseModule.forFeature([
       {
         name: NOTIFICATION_DECISION_MODEL_NAME,

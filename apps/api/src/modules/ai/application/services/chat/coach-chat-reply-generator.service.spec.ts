@@ -196,4 +196,25 @@ describe('CoachChatReplyGenerator', () => {
       'Your consistency signals suggest keeping the next step small and easy to repeat.',
     );
   });
+
+  it('adapts fallback replies to the preferred coaching style', () => {
+    const reply = generator.generate({
+      message: 'Should I train today?',
+      healthContext,
+      personalization: {
+        preferredCoachingStyle: 'motivational',
+        engagementProfile: 'high',
+        notificationResponsiveness: 'low',
+        goalResponsiveness: 'medium',
+        recoveryResponsiveness: 'medium',
+        habitResponsiveness: 'medium',
+        riskOfDisengagement: 'medium',
+        topBehavioralPatterns: ['responds_to_streaks'],
+        formulaVersion: 'personalization-engine-v1',
+        generatedAt: '2026-05-18T10:00:00.000Z',
+      },
+    });
+
+    expect(reply).toContain('Keep going.');
+  });
 });

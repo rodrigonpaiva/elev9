@@ -9,7 +9,8 @@ export type CoachDecisionInfluenceSource =
   | 'progress'
   | 'memory'
   | 'notification'
-  | 'habit';
+  | 'habit'
+  | 'personalization';
 
 export type CoachDecisionInfluenceProps = {
   code: CoachDecisionInfluenceCode;

@@ -9,6 +9,10 @@ import {
   CoachDecisionReadModelMapper,
   type HabitReadModel,
   type HabitMemoryPayload,
+  PersonalizationReadModelMapper,
+  type PersonalizationReadModelSource,
+  type PersonalizationMemoryPayload,
+  type PersonalizationPromptPayload,
 } from '../../../../../shared/mappers';
 import { NotificationReadModelMapper } from '../../../../../shared/mappers';
 import { HabitReadModelMapper } from '../../../../../shared/mappers';
@@ -19,6 +23,9 @@ import { GetEngagementSummaryUseCase } from '../../../../notifications/applicati
 import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
 import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
 import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
+import { GetCurrentPersonalizationUseCase } from '../../../../personalization/application/use-cases/get-current-personalization/get-current-personalization.use-case';
+import { GetBehavioralPatternsUseCase } from '../../../../personalization/application/use-cases/get-behavioral-patterns/get-behavioral-patterns.use-case';
+import { GetUserBehaviorProfileUseCase } from '../../../../personalization/application/use-cases/get-user-behavior-profile/get-user-behavior-profile.use-case';
 import {
   COACH_FEEDBACK_REPOSITORY,
   CoachFeedbackRepository,
@@ -44,6 +51,9 @@ export class GenerateCoachFeedbackUseCase {
     private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
     private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
     private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
+    private readonly getCurrentPersonalizationUseCase: GetCurrentPersonalizationUseCase,
+    private readonly getUserBehaviorProfileUseCase: GetUserBehaviorProfileUseCase,
+    private readonly getBehavioralPatternsUseCase: GetBehavioralPatternsUseCase,
   ) {}
 
   async execute(
@@ -67,6 +77,11 @@ export class GenerateCoachFeedbackUseCase {
       const notification = await this.resolveNotification(authUserId);
       const habit = await this.resolveHabit(authUserId);
       const habitMemory = HabitReadModelMapper.toMemoryPayload(habit);
+      const personalization = await this.resolvePersonalization(authUserId);
+      const personalizationPrompt =
+        PersonalizationReadModelMapper.toPromptPayload(personalization);
+      const personalizationMemory =
+        PersonalizationReadModelMapper.toMemoryPayload(personalization);
 
       if (!healthContext.userProfileId) {
         throw new GenerateCoachFeedbackError(
@@ -108,6 +123,9 @@ export class GenerateCoachFeedbackUseCase {
           notification?.current,
           notification?.engagementSummary,
         ),
+        ...(personalizationPrompt
+          ? { personalization: personalizationPrompt }
+          : {}),
         nutritionProfile: healthContext.nutritionProfile,
       });
 
@@ -122,6 +140,7 @@ export class GenerateCoachFeedbackUseCase {
           healthContext,
           coachDecision,
           habitMemory,
+          personalizationPrompt ?? personalizationMemory,
         ),
       });
 
@@ -158,6 +177,7 @@ export class GenerateCoachFeedbackUseCase {
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
     coachDecision?: CoachDecision,
     habit?: HabitMemoryPayload,
+    personalization?: PersonalizationPromptPayload | PersonalizationMemoryPayload,
   ): {
     goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
     activityLevel?: 'low' | 'medium' | 'high';
@@ -254,27 +274,29 @@ export class GenerateCoachFeedbackUseCase {
     coachDecisionId?: string;
     coachDecisionPriority?: 'recovery' | 'nutrition' | 'training' | 'consistency' | 'motivation';
     coachDecisionHeadline?: string;
-    coachDecisionSummary?: string;
-    coachDecisionActionItems?: string[];
-      coachDecisionInfluences?: Array<{
-        code: string;
-        label: string;
-        impact: 'positive' | 'negative' | 'neutral';
-        source:
-          | 'recovery'
-          | 'nutrition'
-          | 'training'
-          | 'progress'
-          | 'memory'
-          | 'notification'
-          | 'habit';
-        weight?: number;
-        value?: number;
-      }>;
+      coachDecisionSummary?: string;
+      coachDecisionActionItems?: string[];
+    coachDecisionInfluences?: Array<{
+      code: string;
+      label: string;
+      impact: 'positive' | 'negative' | 'neutral';
+      source:
+        | 'recovery'
+        | 'nutrition'
+        | 'training'
+        | 'progress'
+        | 'memory'
+        | 'notification'
+        | 'habit'
+        | 'personalization';
+      weight?: number;
+      value?: number;
+    }>;
     habitConsistencyScore?: number;
     habitTrend?: 'improving' | 'stable' | 'declining';
     habitCurrentStreak?: number;
     habitRiskLevel?: 'low' | 'medium' | 'high';
+    personalization?: PersonalizationPromptPayload | PersonalizationMemoryPayload;
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -377,6 +399,13 @@ export class GenerateCoachFeedbackUseCase {
             habitRiskLevel: habit.habitRiskLevel,
           }
         : {}),
+      ...(personalization
+        ? {
+            personalization: {
+              ...personalization,
+            },
+          }
+        : {}),
       weeklyFrequency: healthContext.weeklyFrequency,
       currentStreak: healthContext.currentStreak,
       averageWorkoutDuration: healthContext.averageWorkoutDuration,
@@ -423,6 +452,39 @@ export class GenerateCoachFeedbackUseCase {
         ...(riskSignalsResult.status === 'fulfilled'
           ? { riskSignals: riskSignalsResult.value.habitRiskSignals }
           : {}),
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async resolvePersonalization(
+    authUserId: string,
+  ): Promise<
+    | PersonalizationReadModelSource
+    | undefined
+  > {
+    try {
+      const [snapshotResult, profileResult, patternsResult] =
+        await Promise.allSettled([
+          this.getCurrentPersonalizationUseCase.execute({ authUserId }),
+          this.getUserBehaviorProfileUseCase.execute({ authUserId }),
+          this.getBehavioralPatternsUseCase.execute({ authUserId }),
+        ]);
+
+      return {
+        snapshot:
+          snapshotResult.status === 'fulfilled'
+            ? snapshotResult.value.personalizationSnapshot
+            : undefined,
+        profile:
+          profileResult.status === 'fulfilled'
+            ? profileResult.value.userBehaviorProfile
+            : undefined,
+        patterns:
+          patternsResult.status === 'fulfilled'
+            ? patternsResult.value.behavioralPatterns
+            : undefined,
       };
     } catch {
       return undefined;

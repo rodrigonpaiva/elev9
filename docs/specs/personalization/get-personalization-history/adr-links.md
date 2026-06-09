@@ -1,0 +1,3 @@
+- [Personalization & Learning Engine](../../../adr/personalization-learning-engine.md)
+- [Latest Ordering Standardization](../../platform/latest-ordering-standardization/README.md)
+- [SourceContext Governance](../../platform/source-context-governance/README.md)

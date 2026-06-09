@@ -1,0 +1,4 @@
+- Patterns are read-only outputs.
+- Do not recalculate patterns in the read path.
+- Keep ownership scoped to the authenticated user.
+- Use canonical latest ordering.

@@ -5,6 +5,7 @@ import { CoachMessageRole } from '../../../domain/entities/coach-message.entity'
 import {
   HabitMemoryPayload,
   NotificationMemoryPayload,
+  PersonalizationMemoryPayload,
 } from '../../../../../shared/mappers';
 import { UserHealthContext } from '../context-builder/build-user-health-context.service';
 
@@ -22,6 +23,7 @@ export type CoachConversationMemorySummarizerInput = {
   coachDecision?: CoachDecisionLike;
   notification?: NotificationMemoryPayload;
   habit?: HabitMemoryPayload;
+  personalization?: PersonalizationMemoryPayload;
 };
 
 export type CoachConversationMemorySummaryResult = {
@@ -51,6 +53,9 @@ export class CoachConversationMemorySummarizer {
       ? this.buildNotificationSummary(input.notification)
       : null;
     const habitSummary = input.habit ? this.buildHabitSummary(input.habit) : null;
+    const personalizationSummary = input.personalization
+      ? this.buildPersonalizationSummary(input.personalization)
+      : null;
 
     const summary = [
       `goal=${this.normalizeValue(input.healthContext.goal ?? 'unknown')}`,
@@ -61,6 +66,7 @@ export class CoachConversationMemorySummarizer {
       ...(coachDecisionSummary ? [coachDecisionSummary] : []),
       ...(notificationSummary ? [notificationSummary] : []),
       ...(habitSummary ? [habitSummary] : []),
+      ...(personalizationSummary ? [personalizationSummary] : []),
       `user_concern=${concern}`,
     ].join('; ');
 
@@ -153,6 +159,17 @@ export class CoachConversationMemorySummarizer {
       `trend:${habit.habitTrend}`,
       `streak:${habit.habitCurrentStreak}`,
       `risk:${habit.habitRiskLevel}`,
+    ].join(',');
+  }
+
+  private buildPersonalizationSummary(
+    personalization: PersonalizationMemoryPayload,
+  ): string {
+    return [
+      `personalization=style:${personalization.preferredCoachingStyle}`,
+      `engagement:${personalization.engagementProfile}`,
+      `risk:${personalization.riskOfDisengagement}`,
+      `patterns:${personalization.topBehavioralPatterns.join('|') || 'none'}`,
     ].join(',');
   }
 

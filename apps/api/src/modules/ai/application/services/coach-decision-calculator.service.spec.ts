@@ -240,6 +240,48 @@ describe('CoachDecisionCalculatorService', () => {
     );
   });
 
+  it('uses personalization signals to favor consistency when stronger signals are absent', () => {
+    const result = service.calculate({
+      readinessScore: 72,
+      fatigueScore: 28,
+      nutritionAdherence: 74,
+      personalizationHighDisengagementRisk: true,
+      personalizationRespondsToStreaks: true,
+      personalizationRespondsToGoals: true,
+      personalizationPrefersDirectCoaching: true,
+      personalizationLowNotificationResponsiveness: true,
+      currentStreak: 4,
+      missedWorkouts: 0,
+    });
+
+    expect(result.priority).toBe('consistency');
+    expect(result.influences.map((influence) => influence.code)).toEqual(
+      expect.arrayContaining([
+        'PERSONALIZATION_HIGH_DISENGAGEMENT_RISK',
+        'PERSONALIZATION_RESPONDS_TO_STREAKS',
+        'PERSONALIZATION_RESPONDS_TO_GOALS',
+        'PERSONALIZATION_PREFERS_DIRECT_COACHING',
+        'PERSONALIZATION_LOW_NOTIFICATION_RESPONSIVENESS',
+      ]),
+    );
+  });
+
+  it('keeps motivation when personalization prefers encouragement', () => {
+    const result = service.calculate({
+      readinessScore: 72,
+      fatigueScore: 28,
+      nutritionAdherence: 74,
+      personalizationPrefersMotivationalCoaching: true,
+      currentStreak: 4,
+      missedWorkouts: 0,
+    });
+
+    expect(result.priority).toBe('motivation');
+    expect(result.influences.map((influence) => influence.code)).toContain(
+      'PERSONALIZATION_PREFERS_MOTIVATIONAL_COACHING',
+    );
+  });
+
   it('does not let goal signals override a recovery crisis', () => {
     const result = service.calculate({
       readinessScore: 24,

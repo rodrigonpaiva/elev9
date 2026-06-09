@@ -12,6 +12,9 @@ import { GetEngagementSummaryUseCase } from '../../../../notifications/applicati
 import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
 import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
 import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
+import { GetCurrentPersonalizationUseCase } from '../../../../personalization/application/use-cases/get-current-personalization/get-current-personalization.use-case';
+import { GetBehavioralPatternsUseCase } from '../../../../personalization/application/use-cases/get-behavioral-patterns/get-behavioral-patterns.use-case';
+import { GetUserBehaviorProfileUseCase } from '../../../../personalization/application/use-cases/get-user-behavior-profile/get-user-behavior-profile.use-case';
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
 import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
 import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
@@ -34,6 +37,9 @@ describe('BuildCoachDecisionUseCase', () => {
   let getCurrentHabitsUseCase: jest.Mocked<GetCurrentHabitsUseCase>;
   let getConsistencySummaryUseCase: jest.Mocked<GetConsistencySummaryUseCase>;
   let getHabitRiskSignalsUseCase: jest.Mocked<GetHabitRiskSignalsUseCase>;
+  let getCurrentPersonalizationUseCase: jest.Mocked<GetCurrentPersonalizationUseCase>;
+  let getUserBehaviorProfileUseCase: jest.Mocked<GetUserBehaviorProfileUseCase>;
+  let getBehavioralPatternsUseCase: jest.Mocked<GetBehavioralPatternsUseCase>;
   let useCase: BuildCoachDecisionUseCase;
 
   beforeEach(() => {
@@ -84,6 +90,21 @@ describe('BuildCoachDecisionUseCase', () => {
     getHabitRiskSignalsUseCase = {
       execute: jest.fn().mockResolvedValue({} as never),
     } as unknown as jest.Mocked<GetHabitRiskSignalsUseCase>;
+    getCurrentPersonalizationUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        personalizationSnapshot: undefined,
+      }),
+    } as unknown as jest.Mocked<GetCurrentPersonalizationUseCase>;
+    getUserBehaviorProfileUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        userBehaviorProfile: undefined,
+      }),
+    } as unknown as jest.Mocked<GetUserBehaviorProfileUseCase>;
+    getBehavioralPatternsUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        behavioralPatterns: [],
+      }),
+    } as unknown as jest.Mocked<GetBehavioralPatternsUseCase>;
 
     const calculator = new CoachDecisionCalculatorService();
     const dateService = new CoachDecisionDateService();
@@ -103,6 +124,9 @@ describe('BuildCoachDecisionUseCase', () => {
       getCurrentHabitsUseCase,
       getConsistencySummaryUseCase,
       getHabitRiskSignalsUseCase,
+      getCurrentPersonalizationUseCase,
+      getUserBehaviorProfileUseCase,
+      getBehavioralPatternsUseCase,
       calculator,
       dateService,
     );

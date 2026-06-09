@@ -1,0 +1,7 @@
+- builds with a full upstream signal set
+- builds with neutral fallbacks when signals are missing
+- persists reduced source context only
+- upserts daily snapshot
+- uses current UTC date
+- derives deterministic responsiveness and engagement signals
+- does not mutate persisted records during replay-style rebuilds

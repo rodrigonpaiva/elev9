@@ -1,0 +1,7 @@
+- Use the platform date service for UTC daily partitioning.
+- Do not query live AI prompts or external providers.
+- Do not persist raw upstream payloads.
+- Use only reduced source context.
+- Treat upstream read models as canonical inputs and never as mutable dependencies.
+- Keep the snapshot idempotent per user and date.
+- Do not infer personalization from raw logs or check-ins directly when a reduced read model already exists.

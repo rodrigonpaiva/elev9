@@ -10,3 +10,4 @@ export * from './dashboard';
 export * from './ai';
 export * from './nutrition';
 export * from './recovery';
+export * from './personalization';

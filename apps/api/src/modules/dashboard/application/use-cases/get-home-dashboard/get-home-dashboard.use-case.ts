@@ -9,6 +9,9 @@ import { GetEngagementSummaryUseCase } from '../../../../notifications/applicati
 import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
 import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
 import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
+import { GetCurrentPersonalizationUseCase } from '../../../../personalization/application/use-cases/get-current-personalization/get-current-personalization.use-case';
+import { GetBehavioralPatternsUseCase } from '../../../../personalization/application/use-cases/get-behavioral-patterns/get-behavioral-patterns.use-case';
+import { GetUserBehaviorProfileUseCase } from '../../../../personalization/application/use-cases/get-user-behavior-profile/get-user-behavior-profile.use-case';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
@@ -39,6 +42,7 @@ import {
   HabitReadModel,
   NotificationReadModelMapper,
   NotificationReadModelPayload,
+  PersonalizationDashboardPayload,
 } from '../../../../../shared/mappers';
 import {
   GET_HOME_DASHBOARD_ERROR_CODES,
@@ -71,6 +75,9 @@ export class GetHomeDashboardUseCase {
     private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
     private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
     private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
+    private readonly getCurrentPersonalizationUseCase: GetCurrentPersonalizationUseCase,
+    private readonly getUserBehaviorProfileUseCase: GetUserBehaviorProfileUseCase,
+    private readonly getBehavioralPatternsUseCase: GetBehavioralPatternsUseCase,
     private readonly dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService,
   ) {}
 
@@ -94,6 +101,7 @@ export class GetHomeDashboardUseCase {
       const coachDecision = await this.resolveCoachDecision(authUserId);
       const notification = await this.resolveNotification(authUserId);
       const habits = await this.resolveHabits(authUserId);
+      const personalization = await this.resolvePersonalization(authUserId);
 
       if (!userProfile) {
         throw new GetHomeDashboardError(
@@ -149,6 +157,7 @@ export class GetHomeDashboardUseCase {
             ...(dashboardNotification
               ? { notification: dashboardNotification }
               : {}),
+            ...(personalization ? { personalization } : {}),
             ...(dashboardCoachDecision
               ? { coachDecision: dashboardCoachDecision }
               : {}),
@@ -184,6 +193,7 @@ export class GetHomeDashboardUseCase {
             ...(dashboardNotification
               ? { notification: dashboardNotification }
               : {}),
+            ...(personalization ? { personalization } : {}),
             ...(dashboardCoachDecision
               ? { coachDecision: dashboardCoachDecision }
               : {}),
@@ -224,6 +234,7 @@ export class GetHomeDashboardUseCase {
           ...(dashboardGoal ? { goal: dashboardGoal } : {}),
           ...(dashboardHabits ? { habits: dashboardHabits } : {}),
           ...(dashboardNotification ? { notification: dashboardNotification } : {}),
+          ...(personalization ? { personalization } : {}),
           ...(dashboardCoachDecision
             ? { coachDecision: dashboardCoachDecision }
             : {}),
@@ -339,6 +350,36 @@ export class GetHomeDashboardUseCase {
       current,
       engagementSummary,
     );
+  }
+
+  private async resolvePersonalization(
+    authUserId: string,
+  ): Promise<PersonalizationDashboardPayload | undefined> {
+    try {
+      const [snapshotResult, profileResult, patternsResult] =
+        await Promise.allSettled([
+          this.getCurrentPersonalizationUseCase.execute({ authUserId }),
+          this.getUserBehaviorProfileUseCase.execute({ authUserId }),
+          this.getBehavioralPatternsUseCase.execute({ authUserId }),
+        ]);
+
+      return this.dashboardAdaptiveSignalsService.buildPersonalization({
+        snapshot:
+          snapshotResult.status === 'fulfilled'
+            ? snapshotResult.value.personalizationSnapshot
+            : undefined,
+        profile:
+          profileResult.status === 'fulfilled'
+            ? profileResult.value.userBehaviorProfile
+            : undefined,
+        patterns:
+          patternsResult.status === 'fulfilled'
+            ? patternsResult.value.behavioralPatterns
+            : undefined,
+      });
+    } catch {
+      return undefined;
+    }
   }
 
   private buildEmptySummary(): GetHomeDashboardOutput['dashboard']['progressSummary'] {

@@ -42,6 +42,7 @@ import {
   NotificationDecisionRepository,
   UpsertNotificationDecisionRepositoryInput,
 } from '../../../domain/repositories/notification-decision.repository';
+import { GetCurrentPersonalizationUseCase } from '../../../../personalization/application/use-cases/get-current-personalization/get-current-personalization.use-case';
 
 describe('BuildNotificationDecisionUseCase', () => {
   let userProfileRepository: jest.Mocked<UserProfileRepository>;
@@ -58,6 +59,9 @@ describe('BuildNotificationDecisionUseCase', () => {
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let engagementEventRepository: jest.Mocked<EngagementEventRepository>;
   let notificationDecisionRepository: jest.Mocked<NotificationDecisionRepository>;
+  let getCurrentPersonalizationUseCase: {
+    execute: jest.MockedFunction<GetCurrentPersonalizationUseCase['execute']>;
+  };
   let notificationDecisionCalculatorService: NotificationDecisionCalculatorService;
   let notificationFatiguePolicyService: NotificationFatiguePolicyService;
   let platformDateService: PlatformDateService;
@@ -82,6 +86,11 @@ describe('BuildNotificationDecisionUseCase', () => {
     dailyCheckInRepository = buildDailyCheckInRepository();
     engagementEventRepository = buildEngagementEventRepository();
     notificationDecisionRepository = buildNotificationDecisionRepository();
+    getCurrentPersonalizationUseCase = {
+      execute: jest.fn().mockResolvedValue({
+        personalizationSnapshot: undefined,
+      }),
+    };
     notificationDecisionCalculatorService =
       new NotificationDecisionCalculatorService();
     notificationFatiguePolicyService =
@@ -114,6 +123,7 @@ describe('BuildNotificationDecisionUseCase', () => {
       dailyCheckInRepository,
       engagementEventRepository,
       notificationDecisionRepository,
+      getCurrentPersonalizationUseCase as unknown as GetCurrentPersonalizationUseCase,
       notificationDecisionCalculatorService,
       notificationFatiguePolicyService,
       platformDateService,

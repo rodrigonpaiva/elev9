@@ -10,6 +10,9 @@ import {
   GoalReadModel,
   GoalReadModelMapper,
   type NotificationReadModelPayload,
+  type PersonalizationReadModelSource,
+  PersonalizationReadModelMapper,
+  type PersonalizationDashboardPayload,
   RecoveryReadModelMapper,
 } from '../../../../../shared/mappers';
 import { GetHomeDashboardOutput } from '../../use-cases/get-home-dashboard/get-home-dashboard.output';
@@ -39,6 +42,12 @@ export class DashboardAdaptiveSignalsService {
     notification: NotificationReadModelPayload | null | undefined,
   ): GetHomeDashboardOutput['dashboard']['notification'] | undefined {
     return notification ?? undefined;
+  }
+
+  buildPersonalization(
+    personalization: PersonalizationReadModelSource | null | undefined,
+  ): PersonalizationDashboardPayload | undefined {
+    return PersonalizationReadModelMapper.toDashboardPayload(personalization);
   }
 
   buildAdaptiveTrainingRecommendation(

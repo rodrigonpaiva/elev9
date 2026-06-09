@@ -1,0 +1,4 @@
+- returns the latest personalization snapshot
+- respects ownership isolation
+- returns not found for missing user profiles
+- does not recalculate the snapshot

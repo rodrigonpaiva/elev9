@@ -34,8 +34,12 @@ import { GetEngagementSummaryUseCase } from '../../../../notifications/applicati
 import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
 import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
 import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
+import { GetCurrentPersonalizationUseCase } from '../../../../personalization/application/use-cases/get-current-personalization/get-current-personalization.use-case';
+import { GetBehavioralPatternsUseCase } from '../../../../personalization/application/use-cases/get-behavioral-patterns/get-behavioral-patterns.use-case';
+import { GetUserBehaviorProfileUseCase } from '../../../../personalization/application/use-cases/get-user-behavior-profile/get-user-behavior-profile.use-case';
 import { NotificationReadModelMapper } from '../../../../../shared/mappers';
 import { HabitReadModelMapper } from '../../../../../shared/mappers';
+import { PersonalizationReadModelMapper } from '../../../../../shared/mappers';
 import {
   COACH_DECISION_REPOSITORY,
   CoachDecisionRepository,
@@ -81,6 +85,9 @@ export class BuildCoachDecisionUseCase {
     private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
     private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
     private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
+    private readonly getCurrentPersonalizationUseCase: GetCurrentPersonalizationUseCase,
+    private readonly getUserBehaviorProfileUseCase: GetUserBehaviorProfileUseCase,
+    private readonly getBehavioralPatternsUseCase: GetBehavioralPatternsUseCase,
     private readonly coachDecisionCalculatorService: CoachDecisionCalculatorService,
     private readonly coachDecisionDateService: CoachDecisionDateService,
   ) {}
@@ -120,6 +127,8 @@ export class BuildCoachDecisionUseCase {
         authUserId,
       );
       const habitContext = await this.resolveHabitContext(authUserId);
+      const personalizationContext =
+        await this.resolvePersonalizationContext(authUserId);
 
       const latestNutritionRecommendation =
         await this.nutritionRecommendationRepository.findManyByUserProfileId(
@@ -192,6 +201,7 @@ export class BuildCoachDecisionUseCase {
         goalAchievementReached: goalContext?.goalAchievementReached,
         ...notificationSignals,
         ...habitContext?.signals,
+        ...personalizationContext?.signals,
       };
 
       const calculatedResult =
@@ -219,6 +229,7 @@ export class BuildCoachDecisionUseCase {
         missedWorkouts,
         noRecentActivity,
         ...(habitContext?.sourceContext ?? {}),
+        ...(personalizationContext?.sourceContext ?? {}),
         ...(nutritionRecommendation?.id
           ? { nutritionRecommendationId: nutritionRecommendation.id }
           : {}),
@@ -444,6 +455,96 @@ export class BuildCoachDecisionUseCase {
                       ),
                     }
                   : {}),
+              },
+            }
+          : {}),
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  private async resolvePersonalizationContext(
+    authUserId: string,
+  ): Promise<
+    | {
+        signals?: Pick<
+          CoachDecisionCalculatorInput,
+          | 'personalizationHighDisengagementRisk'
+          | 'personalizationRespondsToStreaks'
+          | 'personalizationRespondsToGoals'
+          | 'personalizationPrefersDirectCoaching'
+          | 'personalizationPrefersMotivationalCoaching'
+          | 'personalizationLowNotificationResponsiveness'
+        >;
+        sourceContext?: Pick<
+          CoachDecisionSourceContext,
+          | 'personalizationPreferredCoachingStyle'
+          | 'personalizationEngagementProfile'
+          | 'personalizationNotificationResponsiveness'
+          | 'personalizationGoalResponsiveness'
+          | 'personalizationRecoveryResponsiveness'
+          | 'personalizationHabitResponsiveness'
+          | 'personalizationRiskOfDisengagement'
+          | 'personalizationTopBehavioralPatterns'
+        >;
+      }
+    | null
+  > {
+    try {
+      const [snapshotResult, profileResult, patternsResult] =
+        await Promise.allSettled([
+          this.getCurrentPersonalizationUseCase.execute({ authUserId }),
+          this.getUserBehaviorProfileUseCase.execute({ authUserId }),
+          this.getBehavioralPatternsUseCase.execute({ authUserId }),
+        ]);
+
+      const personalizationReadModel = {
+        ...(snapshotResult.status === 'fulfilled'
+          ? { snapshot: snapshotResult.value.personalizationSnapshot }
+          : {}),
+        ...(profileResult.status === 'fulfilled'
+          ? { profile: profileResult.value.userBehaviorProfile }
+          : {}),
+        ...(patternsResult.status === 'fulfilled'
+          ? { patterns: patternsResult.value.behavioralPatterns }
+          : {}),
+      };
+
+      const signals =
+        PersonalizationReadModelMapper.toCoachDecisionSignals(
+          personalizationReadModel,
+        );
+      const promptPayload =
+        PersonalizationReadModelMapper.toPromptPayload(
+          personalizationReadModel,
+        );
+
+      if (!signals && !promptPayload) {
+        return null;
+      }
+
+      return {
+        ...(signals ? { signals } : {}),
+        ...(promptPayload
+          ? {
+              sourceContext: {
+                personalizationPreferredCoachingStyle:
+                  promptPayload.preferredCoachingStyle,
+                personalizationEngagementProfile:
+                  promptPayload.engagementProfile,
+                personalizationNotificationResponsiveness:
+                  promptPayload.notificationResponsiveness,
+                personalizationGoalResponsiveness:
+                  promptPayload.goalResponsiveness,
+                personalizationRecoveryResponsiveness:
+                  promptPayload.recoveryResponsiveness,
+                personalizationHabitResponsiveness:
+                  promptPayload.habitResponsiveness,
+                personalizationRiskOfDisengagement:
+                  promptPayload.riskOfDisengagement,
+                personalizationTopBehavioralPatterns:
+                  promptPayload.topBehavioralPatterns,
               },
             }
           : {}),

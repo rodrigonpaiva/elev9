@@ -1,0 +1,4 @@
+- The profile is read-only.
+- Do not recalculate the profile in the read path.
+- Use authenticated ownership only.
+- Keep the output reduced and explainable.
