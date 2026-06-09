@@ -1,55 +1,30 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
-compose() {
-  docker compose "$@"
-}
+readonly api_container="elev9-api"
+readonly base_url="http://localhost:3000"
 
-check_health() {
-  curl -fsS --max-time 3 "$1" >/dev/null 2>&1
-}
+echo "[Smoke] Starting Docker runtime"
+docker compose up -d --build
 
-cleanup() {
-  local exit_code=$?
+for endpoint in "/health" "/health/ready"; do
+  echo "[Smoke] Waiting for ${endpoint}"
 
-  compose down --remove-orphans >/dev/null 2>&1 || true
+  for attempt in $(seq 1 30); do
+    if curl --fail --silent --show-error "${base_url}${endpoint}" >/dev/null; then
+      echo "[Smoke] ${endpoint} responded successfully"
+      break
+    fi
 
-  exit "$exit_code"
-}
+    if [[ "${attempt}" -eq 30 ]]; then
+      echo "[Smoke] ${endpoint} did not become healthy in time"
+      docker logs "${api_container}" || true
+      exit 1
+    fi
 
-trap cleanup EXIT
-
-echo "Starting Docker runtime..."
-compose up -d --build >/dev/null
-
-echo "Waiting for API readiness..."
-ready=false
-for _ in $(seq 1 30); do
-  if check_health http://127.0.0.1:3000/health/ready; then
-    ready=true
-    break
-  fi
-
-  sleep 2
+    sleep 2
+  done
 done
 
-if [ "$ready" != "true" ]; then
-  echo "API readiness check timed out."
-  compose logs api --no-color
-  exit 1
-fi
-
-if ! check_health http://127.0.0.1:3000/health; then
-  echo "API liveness check failed."
-  compose logs api --no-color
-  exit 1
-fi
-
-if ! check_health http://127.0.0.1:3000/health/ready; then
-  echo "API readiness check failed."
-  compose logs api --no-color
-  exit 1
-fi
-
-echo "API ready."
-echo "Smoke validation passed."
+echo "[Smoke] Docker runtime smoke check passed"

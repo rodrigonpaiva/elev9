@@ -159,10 +159,11 @@ Use `.env.docker.example` as a separate runtime template from the standard appli
 ```bash
 cp .env.docker.example .env
 docker compose up --build
+./scripts/docker-smoke.sh
 ```
 
 The compose setup builds the API image deterministically and starts MongoDB alongside the backend.
-Runtime requests emit lightweight logs with `x-request-id` correlation.
+The API runtime exposes explicit health/readiness endpoints, request correlation, and bootstrap logs so `docker logs elev9-api` stays useful during smoke validation.
 
 ## Project Status
 
