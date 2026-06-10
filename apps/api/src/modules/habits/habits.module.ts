@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { AuthModule } from '../auth/auth.module';
 import { FitnessModule } from '../fitness/fitness.module';
 import { GoalsModule } from '../goals/goals.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -8,6 +9,7 @@ import { ProgressModule } from '../progress/progress.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
 import { UsersModule } from '../users/users.module';
+import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { HabitConsistencyCalculatorService } from './application/services/habit-consistency-calculator.service';
 import { GetConsistencySummaryUseCase } from './application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
@@ -42,6 +44,7 @@ import { HabitsController } from './presentation/http/habits.controller';
 @Module({
   controllers: [HabitsController],
   imports: [
+    AuthModule,
     UsersModule,
     FitnessModule,
     ProgressModule,
@@ -56,6 +59,7 @@ import { HabitsController } from './presentation/http/habits.controller';
     ]),
   ],
   providers: [
+    AuthSessionGuard,
     PlatformDateService,
     HabitConsistencyCalculatorService,
     BuildHabitSnapshotUseCase,

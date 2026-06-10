@@ -13,7 +13,7 @@ cp .env.example .env
 Then set:
 
 ```bash
-EXPO_PUBLIC_API_URL=http://YOUR_LOCAL_IP:3000
+EXPO_PUBLIC_API_URL=http://YOUR_LOCAL_IP:3333
 ```
 
 ## How To Find Your Local IP
@@ -46,7 +46,7 @@ From the repository root:
 npm run start
 ```
 
-This starts the API on port `3000`.
+This starts the API on port `3333`.
 
 ## Run The Mobile App
 

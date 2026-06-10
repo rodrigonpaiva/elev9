@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { AuthModule } from '../auth/auth.module';
 import { RecoveryScoreCalculatorService } from './application/services/recovery-score-calculator.service';
 import { RecoveryDateService } from './application/services/recovery-date.service';
 import { PlatformDateService } from '../../shared/date/platform-date.service';
@@ -23,10 +24,12 @@ import {
   RECOVERY_SNAPSHOT_MODEL_NAME,
   RecoverySnapshotSchema,
 } from './infrastructure/mongoose/recovery-snapshot.schema';
+import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { RecoveryController } from './presentation/http/recovery.controller';
 
 @Module({
   imports: [
+    AuthModule,
     UsersModule,
     FitnessModule,
     ProgressModule,
@@ -43,6 +46,7 @@ import { RecoveryController } from './presentation/http/recovery.controller';
   ],
   controllers: [RecoveryController],
   providers: [
+    AuthSessionGuard,
     PlatformDateService,
     RecoveryScoreCalculatorService,
     RecoveryDateService,

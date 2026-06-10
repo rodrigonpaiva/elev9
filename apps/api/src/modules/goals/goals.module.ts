@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { AuthModule } from '../auth/auth.module';
 import { FitnessModule } from '../fitness/fitness.module';
 import { NutritionModule } from '../nutrition/nutrition.module';
 import { ProgressModule } from '../progress/progress.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
 import { UsersModule } from '../users/users.module';
+import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { GoalDateService } from './application/services/goal-date.service';
 import { GoalProgressCalculatorService } from './application/services/goal-progress-calculator.service';
@@ -48,6 +50,7 @@ import { GOAL_MODEL_NAME, GoalSchema } from './infrastructure/mongoose/goal.sche
 
 @Module({
   imports: [
+    AuthModule,
     UsersModule,
     FitnessModule,
     ProgressModule,
@@ -66,6 +69,7 @@ import { GOAL_MODEL_NAME, GoalSchema } from './infrastructure/mongoose/goal.sche
     ]),
   ],
   providers: [
+    AuthSessionGuard,
     PlatformDateService,
     GoalDateService,
     GoalProgressCalculatorService,

@@ -10,6 +10,7 @@ import { PersonalizationModule } from '../personalization/personalization.module
 import { ProgressModule } from '../progress/progress.module';
 import { TrainingModule } from '../training/training.module';
 import { UsersModule } from '../users/users.module';
+import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { DashboardAdaptiveSignalsService } from './application/services/dashboard-adaptive-signals/dashboard-adaptive-signals.service';
 import { GetHomeDashboardDebugUseCase } from './application/use-cases/get-home-dashboard-debug/get-home-dashboard-debug.use-case';
 import { GetHomeDashboardUseCase } from './application/use-cases/get-home-dashboard/get-home-dashboard.use-case';
@@ -30,6 +31,7 @@ import { DashboardController } from './presentation/http/dashboard.controller';
   ],
   controllers: [DashboardController],
   providers: [
+    AuthSessionGuard,
     DashboardAdaptiveSignalsService,
     GetHomeDashboardUseCase,
     GetHomeDashboardDebugUseCase,

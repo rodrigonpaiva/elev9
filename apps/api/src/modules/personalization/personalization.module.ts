@@ -1,12 +1,14 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { AuthModule } from '../auth/auth.module';
 import { AiModule } from '../ai/ai.module';
 import { GoalsModule } from '../goals/goals.module';
 import { HabitsModule } from '../habits/habits.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { UsersModule } from '../users/users.module';
+import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { PersonalizationCalculatorService } from './application/services/personalization-calculator.service';
 import { BuildBehavioralPatternsUseCase } from './application/use-cases/build-behavioral-patterns/build-behavioral-patterns.use-case';
 import { BuildPersonalizationSnapshotUseCase } from './application/use-cases/build-personalization-snapshot/build-personalization-snapshot.use-case';
@@ -17,6 +19,7 @@ import { GetPersonalizationHistoryUseCase } from './application/use-cases/get-pe
 import { GetTodayPersonalizationUseCase } from './application/use-cases/get-today-personalization/get-today-personalization.use-case';
 import { GetUserBehaviorProfileUseCase } from './application/use-cases/get-user-behavior-profile/get-user-behavior-profile.use-case';
 import { ReplayPersonalizationSnapshotUseCase } from './application/use-cases/replay-personalization-snapshot/replay-personalization-snapshot.use-case';
+import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { BEHAVIORAL_PATTERN_REPOSITORY } from './domain/repositories/behavioral-pattern.repository';
 import { PERSONALIZATION_SNAPSHOT_REPOSITORY } from './domain/repositories/personalization-snapshot.repository';
 import { USER_BEHAVIOR_PROFILE_REPOSITORY } from './domain/repositories/user-behavior-profile.repository';
@@ -39,9 +42,10 @@ import { PersonalizationController } from './presentation/http/personalization.c
 
 @Module({
   imports: [
+    AuthModule,
     UsersModule,
     forwardRef(() => NotificationsModule),
-    HabitsModule,
+    forwardRef(() => HabitsModule),
     GoalsModule,
     RecoveryModule,
     forwardRef(() => AiModule),
@@ -62,6 +66,8 @@ import { PersonalizationController } from './presentation/http/personalization.c
   ],
   controllers: [PersonalizationController],
   providers: [
+    AuthSessionGuard,
+    PlatformDateService,
     PersonalizationCalculatorService,
     BuildPersonalizationSnapshotUseCase,
     BuildBehavioralPatternsUseCase,

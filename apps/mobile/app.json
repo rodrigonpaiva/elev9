@@ -2,6 +2,7 @@
   "expo": {
     "name": "Elev9",
     "slug": "elev9-mobile",
+    "entryPoint": "./index.ts",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",

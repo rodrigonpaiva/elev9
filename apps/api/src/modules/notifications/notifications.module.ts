@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { AuthModule } from '../auth/auth.module';
 import { AiModule } from '../ai/ai.module';
 import { FitnessModule } from '../fitness/fitness.module';
 import { GoalsModule } from '../goals/goals.module';
@@ -10,6 +11,7 @@ import { PersonalizationModule } from '../personalization/personalization.module
 import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
 import { UsersModule } from '../users/users.module';
+import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { NotificationDecisionCalculatorService } from './application/services/notification-decision-calculator.service';
 import { BuildNotificationDecisionUseCase } from './application/use-cases/build-notification-decision/build-notification-decision.use-case';
@@ -43,6 +45,7 @@ import { NotificationFatiguePolicyService } from './application/services/notific
 @Module({
   controllers: [NotificationsController],
   imports: [
+    AuthModule,
     UsersModule,
     FitnessModule,
     ProgressModule,
@@ -68,6 +71,7 @@ import { NotificationFatiguePolicyService } from './application/services/notific
     ]),
   ],
   providers: [
+    AuthSessionGuard,
     PlatformDateService,
     NotificationDecisionCalculatorService,
     NotificationFatiguePolicyService,
