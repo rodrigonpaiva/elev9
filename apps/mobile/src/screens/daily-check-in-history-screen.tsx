@@ -118,10 +118,10 @@ export function DailyCheckInHistoryScreen() {
         <Card style={styles.heroCard}>
           <Badge label="Recovery" variant="primary" />
           <Text variant="headline" style={styles.title}>
-            Daily Check-in History
+            Recovery Check-ins
           </Text>
           <Text style={styles.subtitle}>
-            Review your recent recovery inputs and how you have been feeling.
+            Review how you&apos;ve been feeling before each session.
           </Text>
         </Card>
 
@@ -142,17 +142,17 @@ export function DailyCheckInHistoryScreen() {
           </Card>
         ) : dailyCheckIns.length === 0 ? (
           <Card style={styles.feedbackCard}>
-            <Text variant="title">No recovery check-ins yet</Text>
+            <Text variant="title">No check-ins yet</Text>
             <Text style={styles.subtitle}>
-              Complete your first daily check-in from the dashboard to start
-              tracking recovery trends.
+              Complete your first check-in from the dashboard to start seeing
+              your recovery pattern.
             </Text>
           </Card>
         ) : (
           <View style={styles.listContent}>
             <SectionHeader
               title="Recent check-ins"
-              subtitle={`${dailyCheckIns.length} recovery update${dailyCheckIns.length === 1 ? '' : 's'}.`}
+              subtitle={`${dailyCheckIns.length} check-in${dailyCheckIns.length === 1 ? '' : 's'}.`}
             />
             {dailyCheckIns.map((item) => (
               <Card key={item.id} style={styles.itemCard}>

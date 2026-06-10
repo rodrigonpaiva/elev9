@@ -140,8 +140,8 @@ export function CoachChatScreen() {
             Talk with your coach
           </Text>
           <Text style={styles.subtitle}>
-            Ask about recovery, training pace, or nutrition consistency. Replies
-            are deterministic and based on your current health context.
+            Ask about recovery, training pace, or what to eat today. Replies
+            stay grounded in your current training state.
           </Text>
         </View>
 
@@ -171,8 +171,8 @@ export function CoachChatScreen() {
                 Start the conversation
               </Text>
               <Text style={styles.emptyText}>
-                Ask your coach about today&apos;s session, recovery, or
-                nutrition priorities.
+                Ask your coach about today&apos;s session, recovery, or fuel
+                priorities.
               </Text>
             </View>
           )}
@@ -183,7 +183,7 @@ export function CoachChatScreen() {
         <Card style={styles.composerCard}>
           <Input
             label="Message"
-            placeholder="Ask your coach something..."
+            placeholder="Ask about today&apos;s plan..."
             value={draftMessage}
             onChangeText={setDraftMessage}
             editable={!isSending && !isLoadingHistory}

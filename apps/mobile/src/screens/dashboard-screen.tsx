@@ -16,6 +16,10 @@ import {
   Button,
   Card,
   colors,
+  formatGenericEnumLabel,
+  formatGoalType,
+  formatTrainingRecommendation,
+  formatTrend,
   Screen,
   SectionHeader,
   Text,
@@ -221,7 +225,7 @@ export function DashboardScreen({
             Welcome, {dashboard.user.name}
           </Text>
           <Text style={styles.heroSubtitle}>
-            Stay consistent with today&apos;s plan and your weekly momentum.
+            Build momentum with today&apos;s session and this week&apos;s work.
           </Text>
           <View style={styles.streakBanner}>
             <Text style={styles.streakBannerLabel}>🔥 Current streak</Text>
@@ -239,8 +243,8 @@ export function DashboardScreen({
       >
         <Card style={styles.sectionCard}>
           <SectionHeader
-            title="Weekly Progress"
-            subtitle="A quick view of your recent training output."
+            title="This Week"
+            subtitle="A quick look at your training momentum."
           />
           <View style={styles.metricsGrid}>
             <View style={styles.metricCard}>
@@ -276,9 +280,11 @@ export function DashboardScreen({
           </View>
           <View style={styles.metricsGrid}>
             <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Fitness goal</Text>
+              <Text style={styles.metricLabel}>Goal</Text>
               <Text style={styles.metricSecondary}>
-                {dashboard.fitnessProfile?.goal ?? 'Not created yet'}
+                {dashboard.fitnessProfile?.goal
+                  ? formatGoalType(dashboard.fitnessProfile.goal)
+                  : 'Not created yet'}
               </Text>
             </View>
           </View>
@@ -290,8 +296,8 @@ export function DashboardScreen({
       >
         <Card style={styles.sectionCard}>
           <SectionHeader
-            title="Recovery Status"
-            subtitle="A simple signal for today's training intensity."
+            title="Recovery Check"
+            subtitle="How ready you are for today&apos;s session."
           />
           <View style={styles.metricsGrid}>
             <View
@@ -302,13 +308,17 @@ export function DashboardScreen({
             >
               <Text style={styles.metricLabel}>Fatigue</Text>
               <Text style={styles.metricSecondary}>
-                {dashboard.recovery.fatigueLevel}
+                {formatGenericEnumLabel(
+                  dashboard.recovery.fatigueLevel.toLowerCase(),
+                )}
               </Text>
             </View>
             <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Recommended intensity</Text>
+              <Text style={styles.metricLabel}>Recommended pace</Text>
               <Text style={styles.metricSecondary}>
-                {dashboard.recovery.recommendedIntensity}
+                {formatTrainingRecommendation(
+                  dashboard.recovery.recommendedIntensity,
+                )}
               </Text>
             </View>
           </View>
@@ -320,7 +330,7 @@ export function DashboardScreen({
                 recoveryTrendStyleMap[dashboard.recovery.recoveryTrend],
               ]}
             >
-              {formatRecoveryTrend(dashboard.recovery.recoveryTrend)}
+              {formatTrend(dashboard.recovery.recoveryTrend)}
             </Text>
           </View>
           {dashboard.recovery.latestCheckIn ? (
@@ -347,7 +357,7 @@ export function DashboardScreen({
             <View style={styles.fallbackBox}>
               <Text style={styles.metricValue}>No check-in yet</Text>
               <Text style={styles.fallbackText}>
-                Save today's recovery signals to personalize this dashboard.
+                Save today&apos;s check-in to tailor the next session.
               </Text>
               <Button
                 label="View recovery history"
@@ -365,8 +375,8 @@ export function DashboardScreen({
       >
         <Card style={styles.sectionCard}>
           <SectionHeader
-            title="Nutrition Guidance"
-            subtitle="A simple adaptive signal based on recovery and routine."
+            title="Fuel Today"
+            subtitle="A simple nutrition nudge based on your recovery and routine."
           />
           <View
             style={[
@@ -377,9 +387,9 @@ export function DashboardScreen({
             ]}
           >
             <View style={styles.workoutHeader}>
-              <Text style={styles.metricLabel}>Priority</Text>
+              <Text style={styles.metricLabel}>Focus</Text>
               <Badge
-                label={formatNutritionGuidancePriority(
+                label={formatGenericEnumLabel(
                   dashboard.nutritionGuidance.priority,
                 )}
                 variant="muted"
@@ -389,10 +399,10 @@ export function DashboardScreen({
               {dashboard.nutritionGuidance.message}
             </Text>
             <View style={styles.nutritionSignalsGroup}>
-              <Text style={styles.metricLabel}>Why this guidance?</Text>
+              <Text style={styles.metricLabel}>Why this advice?</Text>
               {dashboard.nutritionGuidance.signals.map((signal) => (
                 <Text key={signal} style={styles.metricValue}>
-                  • {formatNutritionGuidanceSignal(signal)}
+                  • {formatGenericEnumLabel(signal.toLowerCase())}
                 </Text>
               ))}
             </View>
@@ -405,24 +415,24 @@ export function DashboardScreen({
       >
         <Card style={styles.sectionCard}>
           <SectionHeader
-            title="Adaptive Signals"
-            subtitle="Deterministic signals behind today's dashboard decisions."
+            title="Coach Notes"
+            subtitle="What is driving today&apos;s coaching choices."
           />
           {dashboardDebug ? (
             <View style={styles.metricCard}>
               <View style={styles.nutritionSignalsGroup}>
-                <Text style={styles.metricLabel}>Recovery signals</Text>
+                <Text style={styles.metricLabel}>Recovery notes</Text>
                 {dashboardDebug.recovery.recoverySignals.map((signal) => (
                   <Text key={`recovery-${signal}`} style={styles.metricValue}>
-                    • {formatNutritionGuidanceSignal(signal)}
+                    • {formatGenericEnumLabel(signal.toLowerCase())}
                   </Text>
                 ))}
               </View>
               <View style={styles.nutritionSignalsGroup}>
-                <Text style={styles.metricLabel}>Nutrition signals</Text>
+                <Text style={styles.metricLabel}>Nutrition notes</Text>
                 {dashboardDebug.nutrition.signals.map((signal) => (
                   <Text key={`nutrition-${signal}`} style={styles.metricValue}>
-                    • {formatNutritionGuidanceSignal(signal)}
+                    • {formatGenericEnumLabel(signal.toLowerCase())}
                   </Text>
                 ))}
               </View>
@@ -433,10 +443,10 @@ export function DashboardScreen({
           ) : (
             <View style={styles.fallbackBox}>
               <Text style={styles.metricValue}>
-                Adaptive signals unavailable
+                Coach notes unavailable
               </Text>
               <Text style={styles.fallbackText}>
-                The internal debug snapshot could not be loaded.
+                We could not load the coaching breakdown right now.
               </Text>
             </View>
           )}
@@ -448,8 +458,8 @@ export function DashboardScreen({
       >
         <Card style={styles.sectionCard}>
           <SectionHeader
-            title="Daily Check-in"
-            subtitle="Track how you feel before today's session."
+            title="How You&apos;re Feeling"
+            subtitle="Check in before today&apos;s session."
           />
           <RatingField
             label="Energy"
@@ -476,7 +486,7 @@ export function DashboardScreen({
             }
           />
           <Button
-            label="Save Daily Check-in"
+            label="Save Check-in"
             onPress={() => void submitDailyCheckIn()}
             loading={isSubmittingCheckIn}
             style={styles.fullButton}
@@ -489,11 +499,11 @@ export function DashboardScreen({
       >
         <Card style={styles.sectionCard}>
           <SectionHeader
-            title="Today's Workout"
+            title="Today&apos;s Session"
             subtitle={
               trainingPlan && todayWorkout
                 ? 'Ready when you are.'
-                : 'No workout is scheduled for today.'
+                : 'Your plan has a rest day today.'
             }
           />
           {trainingPlan && todayWorkout ? (
@@ -509,7 +519,10 @@ export function DashboardScreen({
               <View style={styles.workoutContent}>
                 <View style={styles.workoutHeader}>
                   <Text style={styles.workoutTitle}>{todayWorkout.title}</Text>
-                  <Badge label={todayWorkout.intensity} variant="muted" />
+                  <Badge
+                    label={formatGenericEnumLabel(todayWorkout.intensity)}
+                    variant="muted"
+                  />
                 </View>
                 <Text style={styles.metricValue}>
                   Focus: {todayWorkout.focus}
@@ -524,9 +537,9 @@ export function DashboardScreen({
             </Pressable>
           ) : (
             <View style={styles.fallbackBox}>
-              <Text style={styles.metricValue}>No training today</Text>
+              <Text style={styles.metricValue}>Rest day today</Text>
               <Text style={styles.fallbackText}>
-                Your current plan does not include a session for today.
+                Your current plan gives you a lighter day today.
               </Text>
             </View>
           )}
@@ -538,8 +551,8 @@ export function DashboardScreen({
       >
         <Card style={styles.sectionCard}>
           <SectionHeader
-            title="Quick Actions"
-            subtitle="Jump into the most useful parts of the app."
+            title="Next Steps"
+            subtitle="Jump into the parts of the app you need most."
           />
           <View style={styles.actionsGroup}>
             <Button
@@ -890,27 +903,6 @@ function animatedStyle(value: Animated.Value, index: number) {
   };
 }
 
-function formatNutritionGuidancePriority(
-  value: DashboardHomeResponse['dashboard']['nutritionGuidance']['priority'],
-): string {
-  switch (value) {
-    case 'recovery':
-      return 'Recovery';
-    case 'performance':
-      return 'Performance';
-    case 'consistency':
-    default:
-      return 'Consistency';
-  }
-}
-
-function formatNutritionGuidanceSignal(signal: string): string {
-  return signal
-    .split('_')
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(' ');
-}
-
 function formatDashboardDate(value: string): string {
   const date = new Date(`${value}T00:00:00.000Z`);
 
@@ -931,18 +923,4 @@ function formatDateTime(value: string): string {
     hour: 'numeric',
     minute: '2-digit',
   }).format(date);
-}
-
-function formatRecoveryTrend(
-  value: DashboardHomeResponse['dashboard']['recovery']['recoveryTrend'],
-): string {
-  switch (value) {
-    case 'improving':
-      return 'Improving';
-    case 'needs_recovery':
-      return 'Needs recovery';
-    case 'stable':
-    default:
-      return 'Stable';
-  }
 }

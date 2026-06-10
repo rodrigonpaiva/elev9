@@ -15,6 +15,7 @@ import {
   Button,
   Card,
   colors,
+  formatGenericEnumLabel,
   Screen,
   SectionHeader,
   Text,
@@ -114,10 +115,10 @@ export function WorkoutHistoryScreen() {
         <Card style={styles.heroCard}>
           <Badge label="History" variant="primary" />
           <Text variant="headline" style={styles.title}>
-            Workout History
+            Training History
           </Text>
           <Text style={styles.subtitle}>
-            Review your recent sessions, duration and perceived effort.
+            Review your recent sessions, duration, and effort.
           </Text>
         </Card>
 
@@ -138,10 +139,10 @@ export function WorkoutHistoryScreen() {
           </Card>
         ) : workoutLogs.length === 0 ? (
           <Card style={styles.feedbackCard}>
-            <Text variant="title">No workouts yet</Text>
+            <Text variant="title">No sessions yet</Text>
             <Text style={styles.subtitle}>
               Finish your first session and it will appear here with duration,
-              difficulty and exercise details.
+              effort, and exercise details.
             </Text>
           </Card>
         ) : (
@@ -156,7 +157,7 @@ export function WorkoutHistoryScreen() {
                   <View style={styles.itemTitleBlock}>
                     <Text style={styles.itemDate}>{formatDate(item.date)}</Text>
                     <Text style={styles.itemDay}>
-                      Workout Day {item.workoutDayIndex + 1}
+                      Session day {item.workoutDayIndex + 1}
                     </Text>
                   </View>
                   <Badge
@@ -170,7 +171,7 @@ export function WorkoutHistoryScreen() {
                     label="Difficulty"
                     value={
                       item.feedback?.difficulty
-                        ? capitalize(item.feedback.difficulty)
+                        ? formatGenericEnumLabel(item.feedback.difficulty)
                         : 'Not rated'
                     }
                   />
@@ -214,10 +215,6 @@ function formatDate(value: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   }).format(date);
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 const styles = StyleSheet.create({

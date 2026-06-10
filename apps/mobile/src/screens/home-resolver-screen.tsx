@@ -64,7 +64,7 @@ export function HomeResolverScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage('Unable to prepare your workspace.');
+        setErrorMessage('Unable to set up your training space.');
       }
     } finally {
       setIsLoading(false);
@@ -76,13 +76,13 @@ export function HomeResolverScreen() {
       {isLoading ? (
         <View style={styles.loadingState}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={styles.loadingText}>Preparing your dashboard...</Text>
+          <Text style={styles.loadingText}>Setting up your training space...</Text>
         </View>
       ) : (
         <Card style={styles.card}>
           <Text variant="title">Unable to continue</Text>
           <Text style={styles.errorText}>
-            {errorMessage ?? 'Unable to prepare your onboarding flow.'}
+            {errorMessage ?? 'Unable to set up your training space.'}
           </Text>
           <Button
             label="Retry"

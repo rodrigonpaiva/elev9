@@ -44,7 +44,7 @@ export function AppNavigator() {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color="#22c55e" />
-        <Text style={styles.loadingText}>Loading Elev9...</Text>
+        <Text style={styles.loadingText}>Loading your training space...</Text>
       </View>
     );
   }

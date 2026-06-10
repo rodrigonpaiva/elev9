@@ -8,7 +8,16 @@ import type {
   FitnessProfileActivityLevel,
   FitnessProfileGoal,
 } from '@elev9/types';
-import { Button, Card, Input, Screen, Text, colors } from '@elev9/ui';
+import {
+  Button,
+  Card,
+  Input,
+  Screen,
+  Text,
+  colors,
+  formatGenericEnumLabel,
+  formatGoalType,
+} from '@elev9/ui';
 
 import { mobileApiClient } from '../api/client';
 import type { RootStackParamList } from '../navigation/app-navigator';
@@ -79,7 +88,7 @@ export function CreateFitnessProfileScreen() {
 
   async function handleCreateFitnessProfile() {
     if (!validation.isValid) {
-      setErrorMessage('Check your body metrics and training availability.');
+      setErrorMessage('Check your stats and training availability.');
       return;
     }
 
@@ -120,16 +129,16 @@ export function CreateFitnessProfileScreen() {
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>Onboarding</Text>
           <Text variant="headline" style={styles.title}>
-            Define your fitness goal
+            Define your training goal
           </Text>
           <Text style={styles.subtitle}>
-            Add just enough context for Elev9 to generate a first training plan.
+            Add enough detail for Elev9 to shape your first plan.
           </Text>
         </View>
 
         <Card style={styles.card}>
           <View style={styles.sectionHeader}>
-            <Text variant="title">Body metrics</Text>
+            <Text variant="title">Your stats</Text>
             <Text style={styles.sectionSubtitle}>
               Use simple estimates if needed. You can refine these later.
             </Text>
@@ -157,7 +166,7 @@ export function CreateFitnessProfileScreen() {
           <View style={styles.sectionHeader}>
             <Text variant="title">Goal</Text>
             <Text style={styles.sectionSubtitle}>
-              Pick the outcome you want to prioritize first.
+              Pick the result you want to chase first.
             </Text>
           </View>
           <View style={styles.optionsGroup}>
@@ -166,7 +175,7 @@ export function CreateFitnessProfileScreen() {
             ).map((option) => (
               <Button
                 key={option}
-                label={formatLabel(option)}
+                label={formatGoalType(option)}
                 variant={goal === option ? 'primary' : 'secondary'}
                 onPress={() => setGoal(option)}
                 style={styles.optionButton}
@@ -175,9 +184,9 @@ export function CreateFitnessProfileScreen() {
           </View>
 
           <View style={styles.sectionHeader}>
-            <Text variant="title">Activity</Text>
+            <Text variant="title">Training rhythm</Text>
             <Text style={styles.sectionSubtitle}>
-              This helps balance your training volume and weekly structure.
+              This helps set the right training load for your week.
             </Text>
           </View>
           <View style={styles.optionsGroup}>
@@ -185,7 +194,7 @@ export function CreateFitnessProfileScreen() {
               (option) => (
                 <Button
                   key={option}
-                  label={formatLabel(option)}
+                  label={formatGenericEnumLabel(option)}
                   variant={activityLevel === option ? 'primary' : 'secondary'}
                   onPress={() => setActivityLevel(option)}
                   style={styles.optionButton}
@@ -197,7 +206,7 @@ export function CreateFitnessProfileScreen() {
           <View style={styles.sectionHeader}>
             <Text variant="title">Training availability</Text>
             <Text style={styles.sectionSubtitle}>
-              Define how often and how long you can realistically train.
+              Tell us how often and how long you can realistically train.
             </Text>
           </View>
 
@@ -237,12 +246,6 @@ export function CreateFitnessProfileScreen() {
   );
 }
 
-function formatLabel(value: string): string {
-  return value
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
 
 const styles = StyleSheet.create({
   content: {

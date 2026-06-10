@@ -37,7 +37,7 @@ export function LoginScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage('Unable to login.');
+        setErrorMessage('Unable to sign you in.');
       }
     } finally {
       setIsSubmitting(false);
@@ -54,7 +54,7 @@ export function LoginScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage('Unable to start demo mode.');
+        setErrorMessage('Unable to start the demo.');
       }
     } finally {
       setIsDemoSubmitting(false);
@@ -80,13 +80,13 @@ export function LoginScreen() {
         ]}
       >
         <View style={styles.hero}>
-          <Text style={styles.eyebrow}>Performance coaching</Text>
+          <Text style={styles.eyebrow}>Training companion</Text>
           <Text variant="headline" style={styles.title}>
             Elev9 Coach
           </Text>
           <Text style={styles.subtitle}>
-            A focused mobile companion for training structure, daily execution,
-            and steady progress.
+            Your daily training companion for workouts, recovery, and steady
+            progress.
           </Text>
         </View>
 
@@ -94,7 +94,7 @@ export function LoginScreen() {
           <View style={styles.formHeader}>
             <Text variant="title">Welcome back</Text>
             <Text style={styles.formSubtitle}>
-              Sign in to access your dashboard and current training context.
+              Sign in to pick up your plan and today&apos;s coaching.
             </Text>
           </View>
 
