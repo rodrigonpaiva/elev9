@@ -206,7 +206,13 @@ function renderTab(
 ) {
   switch (activeTab) {
     case 'home':
-      return <DashboardScreen onOpenHistory={() => setActiveTab('history')} />;
+      return (
+        <DashboardScreen
+          onOpenHistory={() => setActiveTab('history')}
+          onOpenProfile={() => setActiveTab('profile')}
+          onOpenTrainingPlan={() => setActiveTab('workout')}
+        />
+      );
     case 'workout':
       return <CurrentWorkoutScreen />;
     case 'history':
@@ -216,7 +222,13 @@ function renderTab(
     case 'profile':
       return <ProfileScreen />;
     default:
-      return <DashboardScreen onOpenHistory={() => setActiveTab('history')} />;
+      return (
+        <DashboardScreen
+          onOpenHistory={() => setActiveTab('history')}
+          onOpenProfile={() => setActiveTab('profile')}
+          onOpenTrainingPlan={() => setActiveTab('workout')}
+        />
+      );
   }
 }
 

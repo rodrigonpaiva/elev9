@@ -1,926 +1,779 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
-import {
-  Badge,
-  Button,
-  Card,
-  colors,
-  formatGenericEnumLabel,
-  formatGoalType,
-  formatTrainingRecommendation,
-  formatTrend,
-  Screen,
-  SectionHeader,
-  Text,
-} from '@elev9/ui';
 import type {
-  CreateDailyCheckInRequest,
-  DashboardHomeDebugResponse,
-  DashboardHomeResponse,
+  CoachDecision,
+  CoachDecisionPriority,
+  RecoverySnapshot,
+  TodayNutrition,
   TodayWorkout,
+  TrainingPlanResponse,
 } from '@elev9/types';
+import { Text } from '@elev9/ui';
 
-import { apiClient, mobileApiClient } from '../api/client';
-import { useAuth } from '../auth/auth-provider';
+import { apiClient } from '../api/client';
+import {
+  CoachInsightCard,
+  type CoachInsightBadgeLabel,
+} from '../components/dashboard/coach-insight-card';
+import { RecoveryReadinessCard } from '../components/dashboard/recovery-readiness-card';
+import {
+  TodaysWorkoutCard,
+  type RecoveryStatus,
+} from '../components/dashboard/todays-workout-card';
+import { TodaysNutritionCard } from '../components/dashboard/todays-nutrition-card';
 import type { RootStackParamList } from '../navigation/app-navigator';
 
 type DashboardScreenProps = {
   onOpenHistory?: () => void;
+  onOpenProfile?: () => void;
+  onOpenTrainingPlan?: () => void;
   showLogout?: boolean;
 };
 
-const DEFAULT_DAILY_CHECK_IN: CreateDailyCheckInRequest = {
-  energyLevel: 3,
-  sleepQuality: 3,
-  muscleSoreness: 3,
-  motivationLevel: 3,
-};
+type DashboardState = 'loading' | 'ready' | 'error' | 'empty';
+type CoachActionTarget = 'workout' | 'coach' | 'check_in';
+
+const USER_NAME = 'Rodrigo';
+
+const MOTIVATIONAL_MESSAGES = [
+  "Let's build momentum today.",
+  'Consistency beats intensity.',
+  'Small actions create big results.',
+] as const;
+
+const DAILY_FOCUS = 'Complete your workout and hit your protein target.';
+
+const dashboardTokens = {
+  background: '#ffffff',
+  text: '#111827',
+  secondaryText: '#6b7280',
+  tertiaryText: '#9ca3af',
+  border: '#e5e7eb',
+  card: '#ffffff',
+  surface: '#f8fafc',
+  accent: '#111827',
+} as const;
 
 export function DashboardScreen({
-  onOpenHistory,
-  showLogout = false,
+  onOpenProfile,
+  onOpenTrainingPlan,
 }: DashboardScreenProps) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { signOut } = useAuth();
-  const [dashboard, setDashboard] = useState<
-    DashboardHomeResponse['dashboard'] | null
-  >(null);
-  const [dashboardDebug, setDashboardDebug] =
-    useState<DashboardHomeDebugResponse | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardState, setDashboardState] =
+    useState<DashboardState>('loading');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isSubmittingCheckIn, setIsSubmittingCheckIn] = useState(false);
-  const [currentStreak, setCurrentStreak] = useState<number>(0);
-  const [dailyCheckInForm, setDailyCheckInForm] =
-    useState<CreateDailyCheckInRequest>(DEFAULT_DAILY_CHECK_IN);
+  const [trainingPlan, setTrainingPlan] = useState<
+    TrainingPlanResponse['trainingPlan'] | null
+  >(null);
+  const [isWorkoutLoading, setIsWorkoutLoading] = useState(true);
+  const [workoutErrorMessage, setWorkoutErrorMessage] = useState<
+    string | null
+  >(null);
+  const [recoverySnapshot, setRecoverySnapshot] =
+    useState<RecoverySnapshot | null>(null);
+  const [isRecoveryLoading, setIsRecoveryLoading] = useState(true);
+  const [recoveryErrorMessage, setRecoveryErrorMessage] = useState<
+    string | null
+  >(null);
+  const [todayNutrition, setTodayNutrition] = useState<TodayNutrition | null>(
+    null,
+  );
+  const [isNutritionLoading, setIsNutritionLoading] = useState(true);
+  const [nutritionErrorMessage, setNutritionErrorMessage] = useState<
+    string | null
+  >(null);
+  const [coachDecision, setCoachDecision] = useState<CoachDecision | null>(
+    null,
+  );
+  const [isCoachLoading, setIsCoachLoading] = useState(true);
+  const [coachErrorMessage, setCoachErrorMessage] = useState<string | null>(
+    null,
+  );
   const entrance = useRef(new Animated.Value(0)).current;
 
-  const loadDashboard = useCallback(
-    async (options?: { refresh?: boolean }) => {
-      if (options?.refresh) {
-        setIsRefreshing(true);
-      } else {
-        setIsLoading(true);
+  const motivationalMessage = useMemo(() => {
+    const index = Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length);
+
+    return MOTIVATIONAL_MESSAGES[index];
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDashboardState('ready');
+    }, 450);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const loadDashboard = useCallback(async (options?: { refresh?: boolean }) => {
+    if (!options?.refresh) {
+      setIsWorkoutLoading(true);
+    }
+
+    setWorkoutErrorMessage(null);
+
+    try {
+      const response = await apiClient.training.getCurrentPlan();
+      setTrainingPlan(response.trainingPlan);
+    } catch (error) {
+      setTrainingPlan(null);
+
+      if (
+        error instanceof ApiClientError &&
+        error.code === 'TRAINING_PLAN_NOT_FOUND'
+      ) {
+        return;
       }
-      setErrorMessage(null);
-      setDashboardDebug(null);
+
+      setWorkoutErrorMessage('Workout unavailable.');
+    } finally {
+      setIsWorkoutLoading(false);
+    }
+  }, []);
+
+  const loadNutrition = useCallback(async (options?: { refresh?: boolean }) => {
+    if (!options?.refresh) {
+      setIsNutritionLoading(true);
+    }
+
+    setNutritionErrorMessage(null);
+
+    try {
+      const response = await apiClient.nutrition.getTodayNutrition();
+      setTodayNutrition(response.todayNutrition ?? null);
+    } catch (error) {
+      setTodayNutrition(null);
+
+      if (
+        error instanceof ApiClientError &&
+        (error.code === 'NUTRITION_PLAN_NOT_FOUND' ||
+          error.code === 'TODAY_NUTRITION_DAY_NOT_FOUND')
+      ) {
+        return;
+      }
+
+      setNutritionErrorMessage('Nutrition data unavailable.');
+    } finally {
+      setIsNutritionLoading(false);
+    }
+  }, []);
+
+  const loadRecovery = useCallback(async (options?: { refresh?: boolean }) => {
+    if (!options?.refresh) {
+      setIsRecoveryLoading(true);
+    }
+
+    setRecoveryErrorMessage(null);
+
+    try {
+      const response = await apiClient.recovery.getTodayRecovery();
+      setRecoverySnapshot(response.recoverySnapshot ?? null);
+    } catch (error) {
+      if (
+        error instanceof ApiClientError &&
+        error.code === 'USER_PROFILE_NOT_FOUND'
+      ) {
+        setRecoverySnapshot(null);
+        return;
+      }
+
+      setRecoveryErrorMessage('Try again in a moment.');
+    } finally {
+      setIsRecoveryLoading(false);
+    }
+  }, []);
+
+  const loadCoachInsight = useCallback(
+    async (options?: { refresh?: boolean }) => {
+      if (!options?.refresh) {
+        setIsCoachLoading(true);
+      }
+
+      setCoachErrorMessage(null);
 
       try {
-        const [response, progressSummary, debugResponse] = await Promise.all([
-          apiClient.dashboard.getHome(),
-          apiClient.progress.getSummary('week'),
-          mobileApiClient.dashboard.getHomeDebug().catch(() => null),
-        ]);
-
-        setDashboard(response.dashboard);
-        setDashboardDebug(debugResponse);
-        setCurrentStreak(progressSummary.summary.currentStreak);
+        const response = await apiClient.ai.getTodayCoachDecision();
+        setCoachDecision(response.coachDecision ?? null);
       } catch (error) {
+        setCoachDecision(null);
+
         if (
           error instanceof ApiClientError &&
-          error.code === 'AUTH_INVALID_SESSION'
+          error.code === 'USER_PROFILE_NOT_FOUND'
         ) {
-          await signOut();
           return;
         }
 
-        if (error instanceof ApiClientError) {
-          setErrorMessage(error.message);
-        } else {
-          setErrorMessage('Unable to load dashboard.');
-        }
+        setCoachErrorMessage('Coach insight unavailable.');
       } finally {
-        if (options?.refresh) {
-          setIsRefreshing(false);
-        } else {
-          setIsLoading(false);
-        }
+        setIsCoachLoading(false);
       }
-    },
-    [signOut],
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      void loadDashboard();
-    }, [loadDashboard]),
-  );
-
-  useEffect(() => {
-    if (!isLoading) {
-      entrance.setValue(0);
-      Animated.timing(entrance, {
-        toValue: 1,
-        duration: 420,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [entrance, isLoading]);
-
-  const updateDailyCheckInValue = useCallback(
-    (field: keyof CreateDailyCheckInRequest, value: number) => {
-      setDailyCheckInForm((current) => ({
-        ...current,
-        [field]: value,
-      }));
     },
     [],
   );
 
-  const submitDailyCheckIn = useCallback(async () => {
-    setIsSubmittingCheckIn(true);
-    setErrorMessage(null);
+  useEffect(() => {
+    void Promise.all([
+      loadCoachInsight(),
+      loadDashboard(),
+      loadRecovery(),
+      loadNutrition(),
+    ]);
+  }, [loadCoachInsight, loadDashboard, loadNutrition, loadRecovery]);
 
-    try {
-      await mobileApiClient.progress.createDailyCheckIn(dailyCheckInForm);
-      await loadDashboard({ refresh: true });
-    } catch (error) {
-      if (
-        error instanceof ApiClientError &&
-        error.code === 'AUTH_INVALID_SESSION'
-      ) {
-        await signOut();
-        return;
-      }
-
-      if (error instanceof ApiClientError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage('Unable to save daily check-in.');
-      }
-    } finally {
-      setIsSubmittingCheckIn(false);
+  useEffect(() => {
+    if (dashboardState !== 'ready') {
+      return;
     }
-  }, [dailyCheckInForm, loadDashboard, signOut]);
 
-  if (isLoading) {
+    entrance.setValue(0);
+    Animated.timing(entrance, {
+      toValue: 1,
+      duration: 360,
+      useNativeDriver: true,
+    }).start();
+  }, [dashboardState, entrance]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+
+    await Promise.all([
+      loadCoachInsight({ refresh: true }),
+      loadDashboard({ refresh: true }),
+      loadRecovery({ refresh: true }),
+      loadNutrition({ refresh: true }),
+      wait(1000),
+    ]);
+
+    setDashboardState('ready');
+    setIsRefreshing(false);
+  }, [loadCoachInsight, loadDashboard, loadNutrition, loadRecovery]);
+
+  const todaysWorkout = useMemo(
+    () => resolveTodaysWorkout(trainingPlan),
+    [trainingPlan],
+  );
+  const recoveryStatus = useMemo(
+    () => resolveRecoveryStatus(recoverySnapshot),
+    [recoverySnapshot],
+  );
+  const coachInsightDisplay = useMemo(
+    () => resolveCoachInsightDisplay(coachDecision, todaysWorkout),
+    [coachDecision, todaysWorkout],
+  );
+
+  const handleStartWorkout = useCallback(() => {
+    if (!trainingPlan || !todaysWorkout) {
+      return;
+    }
+
+    navigation.navigate('Workout', {
+      trainingPlanId: trainingPlan.id,
+      workout: todaysWorkout,
+    });
+  }, [navigation, todaysWorkout, trainingPlan]);
+
+  const handleViewPlan = useCallback(() => {
+    onOpenTrainingPlan?.();
+  }, [onOpenTrainingPlan]);
+
+  const handleCreateNutritionProfile = useCallback(() => {
+    onOpenProfile?.();
+  }, [onOpenProfile]);
+
+  const handleCoachCta = useCallback(() => {
+    switch (coachInsightDisplay.target) {
+      case 'workout':
+        handleStartWorkout();
+        return;
+      case 'check_in':
+        navigation.navigate('DailyCheckInHistory');
+        return;
+      case 'coach':
+      default:
+        navigation.navigate('CoachChat');
+    }
+  }, [coachInsightDisplay.target, handleStartWorkout, navigation]);
+
+  if (dashboardState === 'loading') {
     return (
-      <Screen contentStyle={styles.loadingScreen}>
-        <ActivityIndicator color={colors.primary} />
-        <Text style={styles.loadingText}>Loading dashboard...</Text>
-      </Screen>
+      <DashboardStateView
+        state="loading"
+        message="Preparing your dashboard..."
+      />
     );
   }
 
-  if (!dashboard) {
+  if (dashboardState === 'error') {
     return (
-      <Screen contentStyle={styles.emptyScreen}>
-        <Card style={styles.sectionCard}>
-          <Text variant="title">Dashboard unavailable</Text>
-          <Text style={styles.mutedText}>
-            {errorMessage ?? 'Unable to load your home dashboard.'}
-          </Text>
-        </Card>
-        <Button
-          label="Retry"
-          onPress={() => void loadDashboard()}
-          style={styles.fullButton}
-        />
-        <Button
-          label="Logout"
-          onPress={() => void signOut()}
-          variant="secondary"
-          style={styles.fullButton}
-        />
-      </Screen>
+      <DashboardStateView
+        state="error"
+        message="We couldn't load your dashboard."
+      />
     );
   }
 
-  const trainingPlan = dashboard.trainingPlan;
-  const todayWorkout = trainingPlan?.todayWorkout;
+  if (dashboardState === 'empty') {
+    return (
+      <DashboardStateView
+        state="empty"
+        message="Your personalized coaching experience will appear here."
+      />
+    );
+  }
 
   return (
-    <Screen
-      contentStyle={styles.scrollContent}
-      scroll
-      scrollProps={{
-        refreshControl: (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView
+        alwaysBounceVertical
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
-            onRefresh={() => void loadDashboard({ refresh: true })}
-            tintColor={colors.primary}
+            onRefresh={() => void handleRefresh()}
+            tintColor={dashboardTokens.accent}
           />
-        ),
-      }}
-    >
-      <Animated.View
-        style={[styles.animatedSection, animatedStyle(entrance, 0)]}
+        }
       >
-        <Card style={styles.heroCard}>
-          <Badge variant="primary" label="Elev9 Home" />
-          <Text variant="headline" style={styles.heroTitle}>
-            Welcome, {dashboard.user.name}
-          </Text>
-          <Text style={styles.heroSubtitle}>
-            Build momentum with today&apos;s session and this week&apos;s work.
-          </Text>
-          <View style={styles.streakBanner}>
-            <Text style={styles.streakBannerLabel}>🔥 Current streak</Text>
-            <Text style={styles.streakBannerValue}>
-              {currentStreak === 0
-                ? 'Start your first streak today'
-                : `${currentStreak} day${currentStreak === 1 ? '' : 's'}`}
-            </Text>
-          </View>
-        </Card>
-      </Animated.View>
-
-      <Animated.View
-        style={[styles.animatedSection, animatedStyle(entrance, 1)]}
-      >
-        <Card style={styles.sectionCard}>
-          <SectionHeader
-            title="This Week"
-            subtitle="A quick look at your training momentum."
-          />
-          <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Weekly workouts</Text>
-              <Text style={styles.metricHighlight}>
-                {dashboard.progressSummary.workoutsCompleted}
-              </Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Total minutes</Text>
-              <Text style={styles.metricHighlight}>
-                {dashboard.progressSummary.totalDurationMinutes}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.metricsGrid}>
-            <View style={[styles.metricCard, styles.metricCardAccent]}>
-              <Text style={styles.metricLabel}>🔥 Streak</Text>
-              <Text style={styles.metricHighlight}>
-                {currentStreak} day{currentStreak === 1 ? '' : 's'}
-              </Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Last workout</Text>
-              <Text style={styles.metricSecondary}>
-                {dashboard.progressSummary.lastWorkoutDate
-                  ? formatDashboardDate(
-                      dashboard.progressSummary.lastWorkoutDate,
-                    )
-                  : 'No activity yet'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Goal</Text>
-              <Text style={styles.metricSecondary}>
-                {dashboard.fitnessProfile?.goal
-                  ? formatGoalType(dashboard.fitnessProfile.goal)
-                  : 'Not created yet'}
-              </Text>
-            </View>
-          </View>
-        </Card>
-      </Animated.View>
-
-      <Animated.View
-        style={[styles.animatedSection, animatedStyle(entrance, 2)]}
-      >
-        <Card style={styles.sectionCard}>
-          <SectionHeader
-            title="Recovery Check"
-            subtitle="How ready you are for today&apos;s session."
-          />
-          <View style={styles.metricsGrid}>
-            <View
-              style={[
-                styles.metricCard,
-                recoveryCardStyleMap[dashboard.recovery.fatigueLevel],
-              ]}
-            >
-              <Text style={styles.metricLabel}>Fatigue</Text>
-              <Text style={styles.metricSecondary}>
-                {formatGenericEnumLabel(
-                  dashboard.recovery.fatigueLevel.toLowerCase(),
-                )}
-              </Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Recommended pace</Text>
-              <Text style={styles.metricSecondary}>
-                {formatTrainingRecommendation(
-                  dashboard.recovery.recommendedIntensity,
-                )}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.recoveryTrendRow}>
-            <Text style={styles.metricLabel}>Recovery trend</Text>
-            <Text
-              style={[
-                styles.recoveryTrendValue,
-                recoveryTrendStyleMap[dashboard.recovery.recoveryTrend],
-              ]}
-            >
-              {formatTrend(dashboard.recovery.recoveryTrend)}
-            </Text>
-          </View>
-          {dashboard.recovery.latestCheckIn ? (
-            <View style={styles.recoverySnapshot}>
-              <Text style={styles.metricLabel}>Latest check-in</Text>
-              <Text style={styles.metricValue}>
-                Energy {dashboard.recovery.latestCheckIn.energyLevel} • Sleep{' '}
-                {dashboard.recovery.latestCheckIn.sleepQuality} • Soreness{' '}
-                {dashboard.recovery.latestCheckIn.muscleSoreness} • Motivation{' '}
-                {dashboard.recovery.latestCheckIn.motivationLevel}
-              </Text>
-              <Text style={styles.recoveryTimestamp}>
-                Updated{' '}
-                {formatDateTime(dashboard.recovery.latestCheckIn.createdAt)}
-              </Text>
-              <Button
-                label="View recovery history"
-                onPress={() => navigation.navigate('DailyCheckInHistory')}
-                variant="secondary"
-                style={styles.historyButton}
-              />
-            </View>
-          ) : (
-            <View style={styles.fallbackBox}>
-              <Text style={styles.metricValue}>No check-in yet</Text>
-              <Text style={styles.fallbackText}>
-                Save today&apos;s check-in to tailor the next session.
-              </Text>
-              <Button
-                label="View recovery history"
-                onPress={() => navigation.navigate('DailyCheckInHistory')}
-                variant="secondary"
-                style={styles.historyButton}
-              />
-            </View>
-          )}
-        </Card>
-      </Animated.View>
-
-      <Animated.View
-        style={[styles.animatedSection, animatedStyle(entrance, 3)]}
-      >
-        <Card style={styles.sectionCard}>
-          <SectionHeader
-            title="Fuel Today"
-            subtitle="A simple nutrition nudge based on your recovery and routine."
-          />
-          <View
-            style={[
-              styles.metricCard,
-              nutritionGuidanceCardStyleMap[
-                dashboard.nutritionGuidance.priority
+        <Animated.View
+          style={[
+            styles.content,
+            {
+              opacity: entrance,
+              transform: [
+                {
+                  translateY: entrance.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [14, 0],
+                  }),
+                },
               ],
-            ]}
-          >
-            <View style={styles.workoutHeader}>
-              <Text style={styles.metricLabel}>Focus</Text>
-              <Badge
-                label={formatGenericEnumLabel(
-                  dashboard.nutritionGuidance.priority,
-                )}
-                variant="muted"
-              />
-            </View>
-            <Text style={styles.metricSecondary}>
-              {dashboard.nutritionGuidance.message}
-            </Text>
-            <View style={styles.nutritionSignalsGroup}>
-              <Text style={styles.metricLabel}>Why this advice?</Text>
-              {dashboard.nutritionGuidance.signals.map((signal) => (
-                <Text key={signal} style={styles.metricValue}>
-                  • {formatGenericEnumLabel(signal.toLowerCase())}
-                </Text>
-              ))}
-            </View>
-          </View>
-        </Card>
-      </Animated.View>
+            },
+          ]}
+        >
+          <DashboardHeader onOpenProfile={onOpenProfile} />
 
-      <Animated.View
-        style={[styles.animatedSection, animatedStyle(entrance, 4)]}
-      >
-        <Card style={styles.sectionCard}>
-          <SectionHeader
-            title="Coach Notes"
-            subtitle="What is driving today&apos;s coaching choices."
-          />
-          {dashboardDebug ? (
-            <View style={styles.metricCard}>
-              <View style={styles.nutritionSignalsGroup}>
-                <Text style={styles.metricLabel}>Recovery notes</Text>
-                {dashboardDebug.recovery.recoverySignals.map((signal) => (
-                  <Text key={`recovery-${signal}`} style={styles.metricValue}>
-                    • {formatGenericEnumLabel(signal.toLowerCase())}
-                  </Text>
-                ))}
-              </View>
-              <View style={styles.nutritionSignalsGroup}>
-                <Text style={styles.metricLabel}>Nutrition notes</Text>
-                {dashboardDebug.nutrition.signals.map((signal) => (
-                  <Text key={`nutrition-${signal}`} style={styles.metricValue}>
-                    • {formatGenericEnumLabel(signal.toLowerCase())}
-                  </Text>
-                ))}
-              </View>
-              <Text style={styles.recoveryTimestamp}>
-                Generated {formatDateTime(dashboardDebug.generatedAt)}
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.fallbackBox}>
-              <Text style={styles.metricValue}>
-                Coach notes unavailable
-              </Text>
-              <Text style={styles.fallbackText}>
-                We could not load the coaching breakdown right now.
-              </Text>
-            </View>
-          )}
-        </Card>
-      </Animated.View>
+          <WelcomeSection motivationalMessage={motivationalMessage} />
 
-      <Animated.View
-        style={[styles.animatedSection, animatedStyle(entrance, 5)]}
-      >
-        <Card style={styles.sectionCard}>
-          <SectionHeader
-            title="How You&apos;re Feeling"
-            subtitle="Check in before today&apos;s session."
-          />
-          <RatingField
-            label="Energy"
-            value={dailyCheckInForm.energyLevel}
-            onChange={(value) => updateDailyCheckInValue('energyLevel', value)}
-          />
-          <RatingField
-            label="Sleep"
-            value={dailyCheckInForm.sleepQuality}
-            onChange={(value) => updateDailyCheckInValue('sleepQuality', value)}
-          />
-          <RatingField
-            label="Soreness"
-            value={dailyCheckInForm.muscleSoreness}
-            onChange={(value) =>
-              updateDailyCheckInValue('muscleSoreness', value)
-            }
-          />
-          <RatingField
-            label="Motivation"
-            value={dailyCheckInForm.motivationLevel}
-            onChange={(value) =>
-              updateDailyCheckInValue('motivationLevel', value)
-            }
-          />
-          <Button
-            label="Save Check-in"
-            onPress={() => void submitDailyCheckIn()}
-            loading={isSubmittingCheckIn}
-            style={styles.fullButton}
-          />
-        </Card>
-      </Animated.View>
+          <DailyFocusCard focus={DAILY_FOCUS} />
 
-      <Animated.View
-        style={[styles.animatedSection, animatedStyle(entrance, 6)]}
-      >
-        <Card style={styles.sectionCard}>
-          <SectionHeader
-            title="Today&apos;s Session"
-            subtitle={
-              trainingPlan && todayWorkout
-                ? 'Ready when you are.'
-                : 'Your plan has a rest day today.'
-            }
-          />
-          {trainingPlan && todayWorkout ? (
-            <Pressable
-              onPress={() =>
-                navigation.navigate('Workout', {
-                  trainingPlanId: trainingPlan.id,
-                  workout: todayWorkout as TodayWorkout,
-                })
-              }
-              style={styles.workoutPressable}
-            >
-              <View style={styles.workoutContent}>
-                <View style={styles.workoutHeader}>
-                  <Text style={styles.workoutTitle}>{todayWorkout.title}</Text>
-                  <Badge
-                    label={formatGenericEnumLabel(todayWorkout.intensity)}
-                    variant="muted"
-                  />
-                </View>
-                <Text style={styles.metricValue}>
-                  Focus: {todayWorkout.focus}
-                </Text>
-                <Text style={styles.metricValue}>
-                  Format: {todayWorkout.format}
-                </Text>
-                <Text style={styles.metricValue}>
-                  Exercises: {todayWorkout.exercises.length}
-                </Text>
-              </View>
-            </Pressable>
-          ) : (
-            <View style={styles.fallbackBox}>
-              <Text style={styles.metricValue}>Rest day today</Text>
-              <Text style={styles.fallbackText}>
-                Your current plan gives you a lighter day today.
-              </Text>
-            </View>
-          )}
-        </Card>
-      </Animated.View>
-
-      <Animated.View
-        style={[styles.animatedSection, animatedStyle(entrance, 7)]}
-      >
-        <Card style={styles.sectionCard}>
-          <SectionHeader
-            title="Next Steps"
-            subtitle="Jump into the parts of the app you need most."
-          />
-          <View style={styles.actionsGroup}>
-            <Button
-              label="Coach Chat"
-              onPress={() => navigation.navigate('CoachChat')}
-              variant="secondary"
-              style={styles.fullButton}
+          <View style={styles.cardStack}>
+            <CoachInsightCard
+              badgeLabel={coachInsightDisplay.badgeLabel}
+              coachDecision={coachDecision}
+              ctaLabel={coachInsightDisplay.ctaLabel}
+              errorMessage={coachErrorMessage}
+              isLoading={isCoachLoading}
+              onPressCta={handleCoachCta}
+              onRetry={() => void loadCoachInsight()}
+              recommendedAction={coachInsightDisplay.recommendedAction}
             />
-            <Button
-              label="Start Workout"
-              onPress={() =>
-                trainingPlan && todayWorkout
-                  ? navigation.navigate('Workout', {
-                      trainingPlanId: trainingPlan.id,
-                      workout: todayWorkout as TodayWorkout,
-                    })
-                  : undefined
-              }
-              disabled={!trainingPlan || !todayWorkout}
-              style={styles.fullButton}
+            <RecoveryReadinessCard
+              errorMessage={recoveryErrorMessage}
+              isLoading={isRecoveryLoading}
+              onRetry={() => void loadRecovery()}
+              recoverySnapshot={recoverySnapshot}
             />
-            <Button
-              label="View History"
-              onPress={() => onOpenHistory?.()}
-              variant="secondary"
-              style={styles.fullButton}
+            <TodaysWorkoutCard
+              errorMessage={workoutErrorMessage}
+              isLoading={isWorkoutLoading}
+              onRetry={() => void loadDashboard()}
+              onStartWorkout={handleStartWorkout}
+              onViewPlan={handleViewPlan}
+              recoveryStatus={recoveryStatus}
+              workout={todaysWorkout}
             />
-            <Button
-              label="Refresh Dashboard"
-              onPress={() => void loadDashboard({ refresh: true })}
-              variant="secondary"
-              style={styles.fullButton}
+            <TodaysNutritionCard
+              errorMessage={nutritionErrorMessage}
+              isLoading={isNutritionLoading}
+              onCreateNutritionProfile={handleCreateNutritionProfile}
+              onRetry={() => void loadNutrition()}
+              todayNutrition={todayNutrition}
+              workout={todaysWorkout}
             />
           </View>
-        </Card>
-      </Animated.View>
-
-      {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
-
-      {showLogout ? (
-        <Button
-          label="Logout"
-          onPress={() => void signOut()}
-          variant="secondary"
-          style={styles.fullButton}
-        />
-      ) : null}
-    </Screen>
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-type RatingFieldProps = {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-};
-
-function RatingField({ label, value, onChange }: RatingFieldProps) {
+function DashboardHeader({ onOpenProfile }: { onOpenProfile?: () => void }) {
   return (
-    <View style={styles.ratingField}>
-      <View style={styles.ratingHeader}>
-        <Text style={styles.metricLabel}>{label}</Text>
-        <Text style={styles.metricSecondary}>{value}/5</Text>
-      </View>
-      <View style={styles.ratingScale}>
-        {[1, 2, 3, 4, 5].map((option) => {
-          const isActive = option === value;
-
-          return (
-            <Pressable
-              key={`${label}-${option}`}
-              onPress={() => onChange(option)}
-              style={[
-                styles.ratingButton,
-                isActive ? styles.ratingButtonActive : null,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.ratingButtonText,
-                  isActive ? styles.ratingButtonTextActive : null,
-                ]}
-              >
-                {option}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+    <View style={styles.header}>
+      <Text accessibilityRole="text" style={styles.dateText}>
+        {formatCurrentDate()}
+      </Text>
+      <Pressable
+        accessibilityLabel="Open profile"
+        accessibilityRole="button"
+        hitSlop={8}
+        onPress={onOpenProfile}
+        style={({ pressed }) => [
+          styles.avatarButton,
+          pressed ? styles.avatarButtonPressed : null,
+        ]}
+      >
+        <Text
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+          style={styles.avatarInitial}
+        >
+          {USER_NAME.charAt(0)}
+        </Text>
+      </Pressable>
     </View>
   );
 }
 
+function WelcomeSection({
+  motivationalMessage,
+}: {
+  motivationalMessage: string;
+}) {
+  return (
+    <View
+      accessibilityLabel={`${getGreeting()}, ${USER_NAME}. ${motivationalMessage}`}
+      style={styles.welcomeSection}
+    >
+      <Text style={styles.headline}>
+        {getGreeting()}, {USER_NAME}
+      </Text>
+      <Text style={styles.motivationalText}>{motivationalMessage}</Text>
+    </View>
+  );
+}
+
+function DailyFocusCard({ focus }: { focus: string }) {
+  return (
+    <View
+      accessibilityLabel={`Today's focus. ${focus}`}
+      style={styles.focusCard}
+    >
+      <Text style={styles.focusLabel}>TODAY&apos;S FOCUS</Text>
+      <Text style={styles.focusText}>{focus}</Text>
+    </View>
+  );
+}
+
+function DashboardStateView({
+  message,
+  state,
+}: {
+  message: string;
+  state: DashboardState;
+}) {
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View accessibilityLabel={message} style={styles.stateContent}>
+        {state === 'loading' ? (
+          <ActivityIndicator
+            accessibilityLabel="Dashboard loading"
+            color={dashboardTokens.accent}
+          />
+        ) : null}
+        <Text style={styles.stateMessage}>{message}</Text>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+
+  if (hour < 12) {
+    return 'Good Morning';
+  }
+
+  if (hour < 18) {
+    return 'Good Afternoon';
+  }
+
+  return 'Good Evening';
+}
+
+function formatCurrentDate(): string {
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date());
+}
+
+function wait(durationMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMs);
+  });
+}
+
+function resolveRecoveryStatus(
+  recoverySnapshot: RecoverySnapshot | null,
+): RecoveryStatus | null {
+  if (!recoverySnapshot) {
+    return null;
+  }
+
+  if (recoverySnapshot.readinessScore >= 80) {
+    return 'ready';
+  }
+
+  if (recoverySnapshot.readinessScore >= 60) {
+    return 'moderate';
+  }
+
+  return 'recovery_needed';
+}
+
+function resolveTodaysWorkout(
+  trainingPlan: TrainingPlanResponse['trainingPlan'] | null,
+): TodayWorkout | null {
+  if (!trainingPlan) {
+    return null;
+  }
+
+  const todayIndex = getUtcDayIndex(new Date());
+  const matchingDay = trainingPlan.weeklySchedule.find(
+    (day) => day.dayIndex === todayIndex,
+  );
+
+  if (!matchingDay) {
+    return null;
+  }
+
+  return {
+    dayIndex: matchingDay.dayIndex,
+    title: matchingDay.title,
+    focus: matchingDay.focus,
+    format: matchingDay.format,
+    intensity: matchingDay.intensity,
+    exercises: matchingDay.exercises,
+  };
+}
+
+function getUtcDayIndex(date: Date): number {
+  const day = date.getUTCDay();
+  return day === 0 ? 7 : day;
+}
+
+function resolveCoachInsightDisplay(
+  coachDecision: CoachDecision | null,
+  workout: TodayWorkout | null,
+): {
+  badgeLabel: CoachInsightBadgeLabel;
+  recommendedAction: string;
+  ctaLabel: string;
+  target: CoachActionTarget;
+} {
+  if (!coachDecision) {
+    return {
+      badgeLabel: 'Insight',
+      recommendedAction: 'Open Coach',
+      ctaLabel: 'Open Coach',
+      target: 'coach',
+    };
+  }
+
+  const fallbackAction = getCoachRecommendedAction(
+    coachDecision.priority,
+    workout,
+  );
+  const primaryAction = coachDecision.actionItems
+    .find((action) => action.trim().length > 0)
+    ?.trim();
+  const recommendedAction = primaryAction ?? fallbackAction;
+  const target = getCoachActionTarget(coachDecision.priority, workout);
+
+  return {
+    badgeLabel: getCoachBadgeLabel(coachDecision.priority),
+    recommendedAction,
+    ctaLabel: getCoachCtaLabel(target),
+    target,
+  };
+}
+
+function getCoachBadgeLabel(
+  priority: CoachDecisionPriority,
+): CoachInsightBadgeLabel {
+  switch (priority) {
+    case 'recovery':
+      return 'Recovery Focus';
+    case 'training':
+    case 'consistency':
+      return 'Performance Focus';
+    case 'nutrition':
+      return 'Recommendation';
+    case 'motivation':
+    default:
+      return 'Insight';
+  }
+}
+
+function getCoachRecommendedAction(
+  priority: CoachDecisionPriority,
+  workout: TodayWorkout | null,
+): string {
+  switch (priority) {
+    case 'recovery':
+      return 'Prioritize Sleep';
+    case 'nutrition':
+      return 'View Nutrition';
+    case 'training':
+      return workout ? "Start Today's Workout" : 'Open Coach';
+    case 'consistency':
+      return workout ? "Start Today's Workout" : 'Complete Daily Check-In';
+    case 'motivation':
+    default:
+      return 'Open Coach';
+  }
+}
+
+function getCoachActionTarget(
+  priority: CoachDecisionPriority,
+  workout: TodayWorkout | null,
+): CoachActionTarget {
+  if (
+    workout &&
+    (priority === 'training' ||
+      priority === 'consistency' ||
+      priority === 'motivation')
+  ) {
+    return 'workout';
+  }
+
+  if (priority === 'recovery') {
+    return 'check_in';
+  }
+
+  return 'coach';
+}
+
+function getCoachCtaLabel(target: CoachActionTarget): string {
+  switch (target) {
+    case 'workout':
+      return 'Start Workout';
+    case 'check_in':
+      return 'Complete Check-In';
+    case 'coach':
+    default:
+      return 'Open Coach';
+  }
+}
+
 const styles = StyleSheet.create({
-  loadingScreen: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    color: colors.mutedText,
-  },
-  emptyScreen: {
-    justifyContent: 'center',
-    gap: 16,
+  safeArea: {
+    flex: 1,
+    backgroundColor: dashboardTokens.background,
   },
   scrollContent: {
-    gap: 18,
-    paddingBottom: 32,
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 40,
   },
-  animatedSection: {
+  content: {
     width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
+    gap: 34,
   },
-  heroCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    gap: 10,
-  },
-  heroTitle: {
-    color: colors.text,
-  },
-  heroSubtitle: {
-    color: colors.mutedText,
-  },
-  streakBanner: {
-    gap: 4,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.card,
-    padding: 14,
-  },
-  streakBannerLabel: {
-    color: colors.primary,
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '700',
-  },
-  streakBannerValue: {
-    color: colors.text,
-    fontSize: 20,
-    lineHeight: 26,
-    fontWeight: '800',
-  },
-  sectionCard: {
-    gap: 10,
-  },
-  metricsGrid: {
+  header: {
+    minHeight: 48,
     flexDirection: 'row',
-    gap: 12,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 16,
   },
-  metricCard: {
-    flex: 1,
-    gap: 8,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: '#0b1220',
-    padding: 14,
-  },
-  metricCardAccent: {
-    borderColor: colors.primary,
-  },
-  metricCardDanger: {
-    borderColor: colors.danger,
-  },
-  metricCardCalm: {
-    borderColor: colors.accent,
-  },
-  metricLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: colors.mutedText,
-  },
-  metricValue: {
-    color: colors.text,
-  },
-  metricHighlight: {
-    color: colors.primary,
-    fontSize: 28,
-    lineHeight: 32,
-    fontWeight: '800',
-  },
-  metricSecondary: {
-    color: colors.text,
-    fontSize: 15,
+  dateText: {
+    color: dashboardTokens.secondaryText,
+    fontSize: 14,
     lineHeight: 20,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  workoutTitle: {
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  workoutPressable: {
-    borderRadius: 18,
-  },
-  workoutContent: {
-    gap: 8,
-  },
-  workoutHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  fallbackBox: {
-    gap: 6,
-    borderRadius: 18,
-    backgroundColor: '#0b1220',
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  fallbackText: {
-    color: colors.mutedText,
-  },
-  recoverySnapshot: {
-    gap: 6,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: '#0b1220',
-    padding: 16,
-  },
-  recoveryTrendRow: {
-    marginTop: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  recoveryTrendValue: {
-    fontSize: 15,
-    lineHeight: 20,
-    fontWeight: '700',
-  },
-  recoveryTimestamp: {
-    color: colors.mutedText,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  historyButton: {
-    marginTop: 6,
-  },
-  ratingField: {
-    gap: 10,
-    paddingVertical: 4,
-  },
-  ratingHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 12,
-  },
-  ratingScale: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  ratingButton: {
-    flex: 1,
-    minHeight: 42,
+  avatarButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: '#0b1220',
+    borderColor: dashboardTokens.border,
+    backgroundColor: dashboardTokens.surface,
   },
-  ratingButtonActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary,
+  avatarButtonPressed: {
+    opacity: 0.72,
   },
-  ratingButtonText: {
-    color: colors.text,
+  avatarInitial: {
+    color: dashboardTokens.text,
     fontSize: 16,
     lineHeight: 20,
     fontWeight: '700',
   },
-  ratingButtonTextActive: {
-    color: colors.primaryText,
+  welcomeSection: {
+    gap: 10,
+    paddingTop: 12,
   },
-  error: {
-    color: '#fca5a5',
+  headline: {
+    color: dashboardTokens.text,
+    fontSize: 36,
+    lineHeight: 42,
+    fontWeight: '800',
   },
-  mutedText: {
-    color: colors.mutedText,
+  motivationalText: {
+    color: dashboardTokens.secondaryText,
+    fontSize: 17,
+    lineHeight: 25,
+    fontWeight: '400',
   },
-  actionsGroup: {
+  focusCard: {
     gap: 12,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: dashboardTokens.border,
+    backgroundColor: dashboardTokens.card,
+    paddingHorizontal: 22,
+    paddingVertical: 22,
   },
-  nutritionSignalsGroup: {
-    gap: 6,
-    marginTop: 4,
+  focusLabel: {
+    color: dashboardTokens.tertiaryText,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 1.1,
   },
-  fullButton: {
-    width: '100%',
+  focusText: {
+    color: dashboardTokens.text,
+    fontSize: 20,
+    lineHeight: 28,
+    fontWeight: '700',
+  },
+  cardStack: {
+    gap: 28,
+  },
+  stateContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 14,
+    paddingHorizontal: 32,
+  },
+  stateMessage: {
+    color: dashboardTokens.secondaryText,
+    fontSize: 17,
+    lineHeight: 24,
+    textAlign: 'center',
   },
 });
-
-const recoveryCardStyleMap: Record<
-  DashboardHomeResponse['dashboard']['recovery']['fatigueLevel'],
-  object
-> = {
-  HIGH: styles.metricCardDanger,
-  MODERATE: styles.metricCardAccent,
-  LOW: styles.metricCardCalm,
-};
-
-const recoveryTrendStyleMap: Record<
-  DashboardHomeResponse['dashboard']['recovery']['recoveryTrend'],
-  object
-> = {
-  improving: {
-    color: '#86efac',
-  },
-  stable: {
-    color: colors.text,
-  },
-  needs_recovery: {
-    color: '#fdba74',
-  },
-};
-
-const nutritionGuidanceCardStyleMap: Record<
-  DashboardHomeResponse['dashboard']['nutritionGuidance']['priority'],
-  object
-> = {
-  recovery: styles.metricCardDanger,
-  consistency: styles.metricCardAccent,
-  performance: styles.metricCardCalm,
-};
-
-function animatedStyle(value: Animated.Value, index: number) {
-  return {
-    opacity: value,
-    transform: [
-      {
-        translateY: value.interpolate({
-          inputRange: [0, 1],
-          outputRange: [18 + index * 6, 0],
-        }),
-      },
-    ],
-  };
-}
-
-function formatDashboardDate(value: string): string {
-  const date = new Date(`${value}T00:00:00.000Z`);
-
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(date);
-}
-
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date);
-}

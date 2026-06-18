@@ -245,12 +245,12 @@ function badgeLabelForCheckIn(item: DailyCheckInHistoryItem): string {
 
 function badgeVariantForCheckIn(
   item: DailyCheckInHistoryItem,
-): 'primary' | 'secondary' | 'muted' {
+): 'primary' | 'danger' | 'muted' {
   const label = badgeLabelForCheckIn(item);
 
   switch (label) {
     case 'High':
-      return 'secondary';
+      return 'danger';
     case 'Low':
       return 'primary';
     case 'Moderate':
