@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -12,28 +12,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { ApiClientError } from '@elev9/api-client';
-import type {
-  CoachDecision,
-  CoachDecisionPriority,
-  RecoverySnapshot,
-  TodayNutrition,
-  TodayWorkout,
-  TrainingPlanResponse,
-} from '@elev9/types';
 import { Text } from '@elev9/ui';
 
-import { apiClient } from '../api/client';
-import {
-  CoachInsightCard,
-  type CoachInsightBadgeLabel,
-} from '../components/dashboard/coach-insight-card';
+import { CoachInsightCard } from '../components/dashboard/coach-insight-card';
 import { RecoveryReadinessCard } from '../components/dashboard/recovery-readiness-card';
-import {
-  TodaysWorkoutCard,
-  type RecoveryStatus,
-} from '../components/dashboard/todays-workout-card';
+import { TodaysWorkoutCard } from '../components/dashboard/todays-workout-card';
 import { TodaysNutritionCard } from '../components/dashboard/todays-nutrition-card';
+import { WeeklyProgressCard } from '../components/dashboard/weekly-progress-card';
+import { useDashboard } from '../hooks/use-dashboard';
+import type { UseDashboardResult } from '../hooks/use-dashboard';
 import type { RootStackParamList } from '../navigation/app-navigator';
 
 type DashboardScreenProps = {
@@ -43,8 +30,7 @@ type DashboardScreenProps = {
   showLogout?: boolean;
 };
 
-type DashboardState = 'loading' | 'ready' | 'error' | 'empty';
-type CoachActionTarget = 'workout' | 'coach' | 'check_in';
+type DashboardState = 'loading' | 'error';
 
 const USER_NAME = 'Rodrigo';
 
@@ -73,36 +59,7 @@ export function DashboardScreen({
 }: DashboardScreenProps) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [dashboardState, setDashboardState] =
-    useState<DashboardState>('loading');
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [trainingPlan, setTrainingPlan] = useState<
-    TrainingPlanResponse['trainingPlan'] | null
-  >(null);
-  const [isWorkoutLoading, setIsWorkoutLoading] = useState(true);
-  const [workoutErrorMessage, setWorkoutErrorMessage] = useState<
-    string | null
-  >(null);
-  const [recoverySnapshot, setRecoverySnapshot] =
-    useState<RecoverySnapshot | null>(null);
-  const [isRecoveryLoading, setIsRecoveryLoading] = useState(true);
-  const [recoveryErrorMessage, setRecoveryErrorMessage] = useState<
-    string | null
-  >(null);
-  const [todayNutrition, setTodayNutrition] = useState<TodayNutrition | null>(
-    null,
-  );
-  const [isNutritionLoading, setIsNutritionLoading] = useState(true);
-  const [nutritionErrorMessage, setNutritionErrorMessage] = useState<
-    string | null
-  >(null);
-  const [coachDecision, setCoachDecision] = useState<CoachDecision | null>(
-    null,
-  );
-  const [isCoachLoading, setIsCoachLoading] = useState(true);
-  const [coachErrorMessage, setCoachErrorMessage] = useState<string | null>(
-    null,
-  );
+  const dashboard = useDashboard();
   const entrance = useRef(new Animated.Value(0)).current;
 
   const motivationalMessage = useMemo(() => {
@@ -112,131 +69,7 @@ export function DashboardScreen({
   }, []);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDashboardState('ready');
-    }, 450);
-
-    return () => clearTimeout(timeout);
-  }, []);
-
-  const loadDashboard = useCallback(async (options?: { refresh?: boolean }) => {
-    if (!options?.refresh) {
-      setIsWorkoutLoading(true);
-    }
-
-    setWorkoutErrorMessage(null);
-
-    try {
-      const response = await apiClient.training.getCurrentPlan();
-      setTrainingPlan(response.trainingPlan);
-    } catch (error) {
-      setTrainingPlan(null);
-
-      if (
-        error instanceof ApiClientError &&
-        error.code === 'TRAINING_PLAN_NOT_FOUND'
-      ) {
-        return;
-      }
-
-      setWorkoutErrorMessage('Workout unavailable.');
-    } finally {
-      setIsWorkoutLoading(false);
-    }
-  }, []);
-
-  const loadNutrition = useCallback(async (options?: { refresh?: boolean }) => {
-    if (!options?.refresh) {
-      setIsNutritionLoading(true);
-    }
-
-    setNutritionErrorMessage(null);
-
-    try {
-      const response = await apiClient.nutrition.getTodayNutrition();
-      setTodayNutrition(response.todayNutrition ?? null);
-    } catch (error) {
-      setTodayNutrition(null);
-
-      if (
-        error instanceof ApiClientError &&
-        (error.code === 'NUTRITION_PLAN_NOT_FOUND' ||
-          error.code === 'TODAY_NUTRITION_DAY_NOT_FOUND')
-      ) {
-        return;
-      }
-
-      setNutritionErrorMessage('Nutrition data unavailable.');
-    } finally {
-      setIsNutritionLoading(false);
-    }
-  }, []);
-
-  const loadRecovery = useCallback(async (options?: { refresh?: boolean }) => {
-    if (!options?.refresh) {
-      setIsRecoveryLoading(true);
-    }
-
-    setRecoveryErrorMessage(null);
-
-    try {
-      const response = await apiClient.recovery.getTodayRecovery();
-      setRecoverySnapshot(response.recoverySnapshot ?? null);
-    } catch (error) {
-      if (
-        error instanceof ApiClientError &&
-        error.code === 'USER_PROFILE_NOT_FOUND'
-      ) {
-        setRecoverySnapshot(null);
-        return;
-      }
-
-      setRecoveryErrorMessage('Try again in a moment.');
-    } finally {
-      setIsRecoveryLoading(false);
-    }
-  }, []);
-
-  const loadCoachInsight = useCallback(
-    async (options?: { refresh?: boolean }) => {
-      if (!options?.refresh) {
-        setIsCoachLoading(true);
-      }
-
-      setCoachErrorMessage(null);
-
-      try {
-        const response = await apiClient.ai.getTodayCoachDecision();
-        setCoachDecision(response.coachDecision ?? null);
-      } catch (error) {
-        setCoachDecision(null);
-
-        if (
-          error instanceof ApiClientError &&
-          error.code === 'USER_PROFILE_NOT_FOUND'
-        ) {
-          return;
-        }
-
-        setCoachErrorMessage('Coach insight unavailable.');
-      } finally {
-        setIsCoachLoading(false);
-      }
-    },
-    [],
-  );
-
-  useEffect(() => {
-    void Promise.all([
-      loadCoachInsight(),
-      loadDashboard(),
-      loadRecovery(),
-      loadNutrition(),
-    ]);
-  }, [loadCoachInsight, loadDashboard, loadNutrition, loadRecovery]);
-
-  useEffect(() => {
-    if (dashboardState !== 'ready') {
+    if (dashboard.isLoading) {
       return;
     }
 
@@ -246,46 +79,18 @@ export function DashboardScreen({
       duration: 360,
       useNativeDriver: true,
     }).start();
-  }, [dashboardState, entrance]);
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-
-    await Promise.all([
-      loadCoachInsight({ refresh: true }),
-      loadDashboard({ refresh: true }),
-      loadRecovery({ refresh: true }),
-      loadNutrition({ refresh: true }),
-      wait(1000),
-    ]);
-
-    setDashboardState('ready');
-    setIsRefreshing(false);
-  }, [loadCoachInsight, loadDashboard, loadNutrition, loadRecovery]);
-
-  const todaysWorkout = useMemo(
-    () => resolveTodaysWorkout(trainingPlan),
-    [trainingPlan],
-  );
-  const recoveryStatus = useMemo(
-    () => resolveRecoveryStatus(recoverySnapshot),
-    [recoverySnapshot],
-  );
-  const coachInsightDisplay = useMemo(
-    () => resolveCoachInsightDisplay(coachDecision, todaysWorkout),
-    [coachDecision, todaysWorkout],
-  );
+  }, [dashboard.isLoading, entrance]);
 
   const handleStartWorkout = useCallback(() => {
-    if (!trainingPlan || !todaysWorkout) {
+    if (!dashboard.workout.data || !dashboard.workout.todaysWorkout) {
       return;
     }
 
     navigation.navigate('Workout', {
-      trainingPlanId: trainingPlan.id,
-      workout: todaysWorkout,
+      trainingPlanId: dashboard.workout.data.id,
+      workout: dashboard.workout.todaysWorkout,
     });
-  }, [navigation, todaysWorkout, trainingPlan]);
+  }, [dashboard.workout.data, dashboard.workout.todaysWorkout, navigation]);
 
   const handleViewPlan = useCallback(() => {
     onOpenTrainingPlan?.();
@@ -296,7 +101,7 @@ export function DashboardScreen({
   }, [onOpenProfile]);
 
   const handleCoachCta = useCallback(() => {
-    switch (coachInsightDisplay.target) {
+    switch (dashboard.coach.actionTarget) {
       case 'workout':
         handleStartWorkout();
         return;
@@ -307,9 +112,9 @@ export function DashboardScreen({
       default:
         navigation.navigate('CoachChat');
     }
-  }, [coachInsightDisplay.target, handleStartWorkout, navigation]);
+  }, [dashboard.coach.actionTarget, handleStartWorkout, navigation]);
 
-  if (dashboardState === 'loading') {
+  if (dashboard.isLoading) {
     return (
       <DashboardStateView
         state="loading"
@@ -318,20 +123,11 @@ export function DashboardScreen({
     );
   }
 
-  if (dashboardState === 'error') {
+  if (dashboard.error) {
     return (
       <DashboardStateView
         state="error"
-        message="We couldn't load your dashboard."
-      />
-    );
-  }
-
-  if (dashboardState === 'empty') {
-    return (
-      <DashboardStateView
-        state="empty"
-        message="Your personalized coaching experience will appear here."
+        message={dashboard.error}
       />
     );
   }
@@ -343,8 +139,8 @@ export function DashboardScreen({
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={() => void handleRefresh()}
+            refreshing={dashboard.isRefreshing}
+            onRefresh={() => void dashboard.refresh()}
             tintColor={dashboardTokens.accent}
           />
         }
@@ -371,44 +167,79 @@ export function DashboardScreen({
 
           <DailyFocusCard focus={DAILY_FOCUS} />
 
-          <View style={styles.cardStack}>
-            <CoachInsightCard
-              badgeLabel={coachInsightDisplay.badgeLabel}
-              coachDecision={coachDecision}
-              ctaLabel={coachInsightDisplay.ctaLabel}
-              errorMessage={coachErrorMessage}
-              isLoading={isCoachLoading}
-              onPressCta={handleCoachCta}
-              onRetry={() => void loadCoachInsight()}
-              recommendedAction={coachInsightDisplay.recommendedAction}
-            />
-            <RecoveryReadinessCard
-              errorMessage={recoveryErrorMessage}
-              isLoading={isRecoveryLoading}
-              onRetry={() => void loadRecovery()}
-              recoverySnapshot={recoverySnapshot}
-            />
-            <TodaysWorkoutCard
-              errorMessage={workoutErrorMessage}
-              isLoading={isWorkoutLoading}
-              onRetry={() => void loadDashboard()}
-              onStartWorkout={handleStartWorkout}
-              onViewPlan={handleViewPlan}
-              recoveryStatus={recoveryStatus}
-              workout={todaysWorkout}
-            />
-            <TodaysNutritionCard
-              errorMessage={nutritionErrorMessage}
-              isLoading={isNutritionLoading}
-              onCreateNutritionProfile={handleCreateNutritionProfile}
-              onRetry={() => void loadNutrition()}
-              todayNutrition={todayNutrition}
-              workout={todaysWorkout}
-            />
-          </View>
+          <DashboardCards
+            dashboard={dashboard}
+            onCoachCta={handleCoachCta}
+            onCreateNutritionProfile={handleCreateNutritionProfile}
+            onStartWorkout={handleStartWorkout}
+            onViewPlan={handleViewPlan}
+          />
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function DashboardCards({
+  dashboard,
+  onCoachCta,
+  onCreateNutritionProfile,
+  onStartWorkout,
+  onViewPlan,
+}: {
+  dashboard: UseDashboardResult;
+  onCoachCta: () => void;
+  onCreateNutritionProfile: () => void;
+  onStartWorkout: () => void;
+  onViewPlan: () => void;
+}) {
+  return (
+    <View style={styles.cardStack}>
+      <CoachInsightCard
+        badgeLabel={dashboard.coach.badgeLabel}
+        coachDecision={dashboard.coach.data}
+        ctaLabel={dashboard.coach.ctaLabel}
+        errorMessage={dashboard.coach.errorMessage}
+        isLoading={dashboard.coach.isLoading}
+        onPressCta={onCoachCta}
+        onRetry={() => void dashboard.coach.retry()}
+        recommendedAction={dashboard.coach.recommendedAction}
+      />
+      <RecoveryReadinessCard
+        errorMessage={dashboard.recovery.errorMessage}
+        isLoading={dashboard.recovery.isLoading}
+        onRetry={() => void dashboard.recovery.retry()}
+        recoverySnapshot={dashboard.recovery.data}
+      />
+      <TodaysWorkoutCard
+        errorMessage={dashboard.workout.errorMessage}
+        isLoading={dashboard.workout.isLoading}
+        onRetry={() => void dashboard.workout.retry()}
+        onStartWorkout={onStartWorkout}
+        onViewPlan={onViewPlan}
+        recoveryStatus={dashboard.recovery.status}
+        workout={dashboard.workout.todaysWorkout}
+      />
+      <TodaysNutritionCard
+        errorMessage={dashboard.nutrition.errorMessage}
+        isLoading={dashboard.nutrition.isLoading}
+        onCreateNutritionProfile={onCreateNutritionProfile}
+        onRetry={() => void dashboard.nutrition.retry()}
+        todayNutrition={dashboard.nutrition.data}
+        workout={dashboard.workout.todaysWorkout}
+      />
+      <WeeklyProgressCard
+        errorMessage={dashboard.progress.errorMessage}
+        isLoading={dashboard.progress.isLoading}
+        nutritionAdherencePercentage={
+          dashboard.nutrition.data?.progress.adherencePercentage
+        }
+        onRetry={() => void dashboard.progress.retry()}
+        plannedWorkouts={dashboard.workout.plannedWorkoutCount}
+        progressSummary={dashboard.progress.data}
+        recoveryScore={dashboard.recovery.data?.readinessScore}
+      />
+    </View>
   );
 }
 
@@ -512,165 +343,6 @@ function formatCurrentDate(): string {
     month: 'long',
     day: 'numeric',
   }).format(new Date());
-}
-
-function wait(durationMs: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, durationMs);
-  });
-}
-
-function resolveRecoveryStatus(
-  recoverySnapshot: RecoverySnapshot | null,
-): RecoveryStatus | null {
-  if (!recoverySnapshot) {
-    return null;
-  }
-
-  if (recoverySnapshot.readinessScore >= 80) {
-    return 'ready';
-  }
-
-  if (recoverySnapshot.readinessScore >= 60) {
-    return 'moderate';
-  }
-
-  return 'recovery_needed';
-}
-
-function resolveTodaysWorkout(
-  trainingPlan: TrainingPlanResponse['trainingPlan'] | null,
-): TodayWorkout | null {
-  if (!trainingPlan) {
-    return null;
-  }
-
-  const todayIndex = getUtcDayIndex(new Date());
-  const matchingDay = trainingPlan.weeklySchedule.find(
-    (day) => day.dayIndex === todayIndex,
-  );
-
-  if (!matchingDay) {
-    return null;
-  }
-
-  return {
-    dayIndex: matchingDay.dayIndex,
-    title: matchingDay.title,
-    focus: matchingDay.focus,
-    format: matchingDay.format,
-    intensity: matchingDay.intensity,
-    exercises: matchingDay.exercises,
-  };
-}
-
-function getUtcDayIndex(date: Date): number {
-  const day = date.getUTCDay();
-  return day === 0 ? 7 : day;
-}
-
-function resolveCoachInsightDisplay(
-  coachDecision: CoachDecision | null,
-  workout: TodayWorkout | null,
-): {
-  badgeLabel: CoachInsightBadgeLabel;
-  recommendedAction: string;
-  ctaLabel: string;
-  target: CoachActionTarget;
-} {
-  if (!coachDecision) {
-    return {
-      badgeLabel: 'Insight',
-      recommendedAction: 'Open Coach',
-      ctaLabel: 'Open Coach',
-      target: 'coach',
-    };
-  }
-
-  const fallbackAction = getCoachRecommendedAction(
-    coachDecision.priority,
-    workout,
-  );
-  const primaryAction = coachDecision.actionItems
-    .find((action) => action.trim().length > 0)
-    ?.trim();
-  const recommendedAction = primaryAction ?? fallbackAction;
-  const target = getCoachActionTarget(coachDecision.priority, workout);
-
-  return {
-    badgeLabel: getCoachBadgeLabel(coachDecision.priority),
-    recommendedAction,
-    ctaLabel: getCoachCtaLabel(target),
-    target,
-  };
-}
-
-function getCoachBadgeLabel(
-  priority: CoachDecisionPriority,
-): CoachInsightBadgeLabel {
-  switch (priority) {
-    case 'recovery':
-      return 'Recovery Focus';
-    case 'training':
-    case 'consistency':
-      return 'Performance Focus';
-    case 'nutrition':
-      return 'Recommendation';
-    case 'motivation':
-    default:
-      return 'Insight';
-  }
-}
-
-function getCoachRecommendedAction(
-  priority: CoachDecisionPriority,
-  workout: TodayWorkout | null,
-): string {
-  switch (priority) {
-    case 'recovery':
-      return 'Prioritize Sleep';
-    case 'nutrition':
-      return 'View Nutrition';
-    case 'training':
-      return workout ? "Start Today's Workout" : 'Open Coach';
-    case 'consistency':
-      return workout ? "Start Today's Workout" : 'Complete Daily Check-In';
-    case 'motivation':
-    default:
-      return 'Open Coach';
-  }
-}
-
-function getCoachActionTarget(
-  priority: CoachDecisionPriority,
-  workout: TodayWorkout | null,
-): CoachActionTarget {
-  if (
-    workout &&
-    (priority === 'training' ||
-      priority === 'consistency' ||
-      priority === 'motivation')
-  ) {
-    return 'workout';
-  }
-
-  if (priority === 'recovery') {
-    return 'check_in';
-  }
-
-  return 'coach';
-}
-
-function getCoachCtaLabel(target: CoachActionTarget): string {
-  switch (target) {
-    case 'workout':
-      return 'Start Workout';
-    case 'check_in':
-      return 'Complete Check-In';
-    case 'coach':
-    default:
-      return 'Open Coach';
-  }
 }
 
 const styles = StyleSheet.create({
