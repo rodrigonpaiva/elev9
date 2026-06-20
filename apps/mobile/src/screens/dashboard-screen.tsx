@@ -86,7 +86,7 @@ export function DashboardScreen({
       return;
     }
 
-    navigation.navigate('Workout', {
+    navigation.navigate('WorkoutOverview', {
       trainingPlanId: dashboard.workout.data.id,
       workout: dashboard.workout.todaysWorkout,
     });

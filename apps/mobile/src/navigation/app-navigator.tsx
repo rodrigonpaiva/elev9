@@ -6,14 +6,18 @@ import type { TodayWorkout } from '@elev9/types';
 import { Text } from '@elev9/ui';
 
 import { useAuth } from '../auth/auth-provider';
+import { ActiveWorkoutScreen } from '../screens/active-workout-screen';
 import { CreateFitnessProfileScreen } from '../screens/create-fitness-profile-screen';
 import { CreateProfileScreen } from '../screens/create-profile-screen';
 import { CreateTrainingPlanScreen } from '../screens/create-training-plan-screen';
 import { DailyCheckInHistoryScreen } from '../screens/daily-check-in-history-screen';
 import { CoachChatScreen } from '../screens/coach-chat-screen';
+import { ExerciseDetailScreen } from '../screens/exercise-detail-screen';
 import { HomeResolverScreen } from '../screens/home-resolver-screen';
 import { LoginScreen } from '../screens/login-screen';
 import { MainTabsScreen } from '../screens/main-tabs-screen';
+import { RestTimerScreen } from '../screens/rest-timer-screen';
+import { WorkoutOverviewScreen } from '../screens/workout-overview-screen';
 import { WorkoutScreen } from '../screens/workout-screen';
 
 export type RootStackParamList = {
@@ -29,6 +33,32 @@ export type RootStackParamList = {
   MainTabs: undefined;
   CoachChat: undefined;
   DailyCheckInHistory: undefined;
+  WorkoutOverview: {
+    trainingPlanId: string;
+    workout: TodayWorkout;
+  };
+  ActiveWorkout: {
+    trainingPlanId: string;
+    workout: TodayWorkout;
+  };
+  ExerciseDetail: {
+    exercise: TodayWorkout['exercises'][number];
+    workoutContext: {
+      title: string;
+      focus: string;
+      format: string;
+      intensity: TodayWorkout['intensity'];
+    };
+  };
+  RestTimer: {
+    exerciseName: string;
+    nextExerciseName: string;
+    nextSetNumber: number;
+    totalSets: number;
+    reps: string;
+    restSeconds: number;
+    isWorkoutComplete: boolean;
+  };
   Workout: {
     trainingPlanId: string;
     workout: TodayWorkout;
@@ -103,6 +133,46 @@ export function AppNavigator() {
                 },
                 headerTintColor: '#f8fafc',
                 headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="WorkoutOverview"
+              component={WorkoutOverviewScreen}
+              options={{
+                headerShown: true,
+                title: 'Workout',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="ActiveWorkout"
+              component={ActiveWorkoutScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ExerciseDetail"
+              component={ExerciseDetailScreen}
+              options={{
+                headerShown: true,
+                title: 'Exercise',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="RestTimer"
+              component={RestTimerScreen}
+              options={{
+                headerShown: false,
               }}
             />
             <Stack.Screen

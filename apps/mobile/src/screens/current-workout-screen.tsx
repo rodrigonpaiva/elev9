@@ -169,7 +169,7 @@ export function CurrentWorkoutScreen() {
             <Button
               label="Start Workout"
               onPress={() =>
-                navigation.navigate('Workout', {
+                navigation.navigate('WorkoutOverview', {
                   trainingPlanId: trainingPlan.id,
                   workout: todayWorkout as TodayWorkout,
                 })
