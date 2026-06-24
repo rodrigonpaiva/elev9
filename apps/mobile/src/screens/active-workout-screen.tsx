@@ -22,6 +22,9 @@ type ExerciseProgress = {
   completedSets: boolean[];
 };
 
+type CompletedExercise =
+  RootStackParamList['WorkoutCompletion']['completedExercises'][number];
+
 type ActiveWorkoutModel = {
   exercise: Exercise;
   exerciseIndex: number;
@@ -56,12 +59,20 @@ export function ActiveWorkoutScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ActiveWorkout'>>();
-  const { trainingPlanId, workout } = route.params;
+  const { trainingPlanId } = route.params;
+  const [workout, setWorkout] = useState(route.params.workout);
+  const [startedAt, setStartedAt] = useState(
+    () => route.params.startedAt ?? Date.now(),
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [phase, setPhase] = useState<WorkoutPhase>('exercise');
+  const [replacementBanner, setReplacementBanner] = useState<string | null>(
+    route.params.replacementBanner ?? null,
+  );
   const [progress, setProgress] = useState<ExerciseProgress[]>(() =>
-    workout.exercises.map((exercise) => ({
+    route.params.initialProgress ??
+    route.params.workout.exercises.map((exercise) => ({
       completedSets: Array.from({ length: exercise.sets }, () => false),
     })),
   );
@@ -73,6 +84,30 @@ export function ActiveWorkoutScreen() {
 
     return () => clearTimeout(timeout);
   }, []);
+
+  useEffect(() => {
+    if (!route.params.replacementToken) {
+      return;
+    }
+
+    setWorkout(route.params.workout);
+    setProgress(
+      route.params.initialProgress ??
+        route.params.workout.exercises.map((exercise) => ({
+          completedSets: Array.from({ length: exercise.sets }, () => false),
+        })),
+    );
+    setStartedAt(route.params.startedAt ?? startedAt);
+    setReplacementBanner(route.params.replacementBanner ?? null);
+    setPhase('exercise');
+  }, [
+    route.params.initialProgress,
+    route.params.replacementBanner,
+    route.params.replacementToken,
+    route.params.startedAt,
+    route.params.workout,
+    startedAt,
+  ]);
 
   const model = useMemo(
     () =>
@@ -97,32 +132,36 @@ export function ActiveWorkoutScreen() {
       isExerciseComplete && !isWorkoutComplete ? exerciseIndex + 1 : exerciseIndex;
     const nextExercise = workout.exercises[nextExerciseIndex] ?? model.exercise;
     const nextSetNumber = isExerciseComplete ? 1 : nextCompletedSetCount + 1;
+    const nextProgress = progress.map((item, index) => {
+      if (index !== exerciseIndex) {
+        return item;
+      }
 
-    setProgress((current) =>
-      current.map((item, index) => {
-        if (index !== exerciseIndex) {
-          return item;
-        }
+      const nextIncompleteSetIndex = item.completedSets.findIndex(
+        (isComplete) => !isComplete,
+      );
 
-        const nextIncompleteSetIndex = item.completedSets.findIndex(
-          (isComplete) => !isComplete,
-        );
+      if (nextIncompleteSetIndex < 0) {
+        return item;
+      }
 
-        if (nextIncompleteSetIndex < 0) {
-          return item;
-        }
-
-        return {
-          completedSets: item.completedSets.map((isComplete, setIndex) =>
-            setIndex === nextIncompleteSetIndex ? true : isComplete,
-          ),
-        };
-      }),
-    );
+      return {
+        completedSets: item.completedSets.map((isComplete, setIndex) =>
+          setIndex === nextIncompleteSetIndex ? true : isComplete,
+        ),
+      };
+    });
 
     if (isWorkoutComplete) {
-      setPhase('complete');
+      navigation.replace('WorkoutCompletion', {
+        trainingPlanId,
+        workout,
+        durationMinutes: getElapsedWorkoutMinutes(startedAt),
+        completedExercises: buildCompletedExercises(workout, nextProgress),
+      });
+      return;
     } else {
+      setProgress(nextProgress);
       setExerciseIndex(nextExerciseIndex);
       setPhase('exercise');
     }
@@ -136,7 +175,15 @@ export function ActiveWorkoutScreen() {
       restSeconds: model.exercise.restSeconds,
       totalSets: nextExercise.sets,
     });
-  }, [exerciseIndex, model, navigation, workout.exercises]);
+  }, [
+    exerciseIndex,
+    model,
+    navigation,
+    progress,
+    startedAt,
+    trainingPlanId,
+    workout,
+  ]);
 
   const handlePreviousExercise = useCallback(() => {
     setExerciseIndex((current) => Math.max(0, current - 1));
@@ -176,19 +223,46 @@ export function ActiveWorkoutScreen() {
         format: workout.format,
         intensity: workout.intensity,
       },
+      replacementContext: {
+        trainingPlanId,
+        workout,
+        exerciseIndex,
+        progress,
+        startedAt,
+      },
     });
-  }, [model, navigation, workout]);
+  }, [
+    exerciseIndex,
+    model,
+    navigation,
+    progress,
+    startedAt,
+    trainingPlanId,
+    workout,
+  ]);
+
+  const handleReplaceExercise = useCallback(() => {
+    navigation.navigate('ExerciseReplacement', {
+      trainingPlanId,
+      workout,
+      exerciseIndex,
+      progress,
+      startedAt,
+    });
+  }, [exerciseIndex, navigation, progress, startedAt, trainingPlanId, workout]);
 
   const handleResume = useCallback(() => {
     setPhase('exercise');
   }, []);
 
   const handleFinishWorkout = useCallback(() => {
-    navigation.replace('Workout', {
+    navigation.replace('WorkoutCompletion', {
       trainingPlanId,
       workout,
+      durationMinutes: getElapsedWorkoutMinutes(startedAt),
+      completedExercises: buildCompletedExercises(workout, progress),
     });
-  }, [navigation, trainingPlanId, workout]);
+  }, [navigation, progress, startedAt, trainingPlanId, workout]);
 
   const handleRetry = useCallback(() => {
     setExerciseIndex(0);
@@ -247,8 +321,24 @@ export function ActiveWorkoutScreen() {
           />
           <ProgressArea completionPercentage={model.completionPercentage} />
           <CurrentExerciseHero model={model} onPress={handleExercisePress} />
+          {replacementBanner ? (
+            <View
+              accessibilityLabel={replacementBanner}
+              style={styles.replacementBanner}
+            >
+              <Text style={styles.replacementBannerText}>
+                {replacementBanner}
+              </Text>
+            </View>
+          ) : null}
           <Prescription exercise={model.exercise} />
           <CoachGuidance guidance={model.guidance} />
+          <Button
+            accessibilityLabel={`Replace ${model.exercise.name}`}
+            label="Replace Exercise"
+            onPress={handleReplaceExercise}
+            variant="ghost"
+          />
           <SetTracker
             completedSets={model.completedSets}
             currentSetNumber={model.currentSetNumber}
@@ -530,6 +620,30 @@ function buildActiveWorkoutModel({
   };
 }
 
+function buildCompletedExercises(
+  workout: TodayWorkout,
+  progress: ExerciseProgress[],
+): CompletedExercise[] {
+  return workout.exercises.map((exercise, index) => {
+    const setsDone =
+      progress[index]?.completedSets.filter((isComplete) => isComplete).length ??
+      0;
+
+    return {
+      name: exercise.name,
+      setsDone,
+      repsDone: setsDone * parseTargetReps(exercise.reps),
+    };
+  });
+}
+
+function getElapsedWorkoutMinutes(startedAt: number): number {
+  return Math.min(
+    300,
+    Math.max(1, Math.ceil((Date.now() - startedAt) / 60000)),
+  );
+}
+
 function getCoachGuidance(exercise: Exercise, workout: TodayWorkout): string {
   const descriptor = `${exercise.name} ${workout.focus} ${workout.format}`
     .toLowerCase()
@@ -560,6 +674,12 @@ function getCoachGuidance(exercise: Exercise, workout: TodayWorkout): string {
   }
 
   return 'Focus on clean reps and consistent tempo.';
+}
+
+function parseTargetReps(value: string): number {
+  const match = value.match(/\d+/);
+
+  return match ? Number(match[0]) : 0;
 }
 
 function formatRest(restSeconds: number): string {
@@ -708,6 +828,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 23,
     fontWeight: '600',
+  },
+  replacementBanner: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: tokens.successBorder,
+    backgroundColor: tokens.successSurface,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+  },
+  replacementBannerText: {
+    color: tokens.successText,
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: '800',
   },
   setTracker: {
     flexDirection: 'row',

@@ -15,6 +15,8 @@ type WeeklyProgressCardProps = {
   isLoading: boolean;
   errorMessage?: string | null;
   onRetry: () => void;
+  onViewAnalytics?: () => void;
+  onViewHistory?: () => void;
 };
 
 type BadgeVariant = 'primary' | 'muted' | 'danger';
@@ -38,6 +40,8 @@ export const WeeklyProgressCard = memo(function WeeklyProgressCard({
   isLoading,
   nutritionAdherencePercentage,
   onRetry,
+  onViewAnalytics,
+  onViewHistory,
   plannedWorkouts,
   progressSummary,
   recoveryScore,
@@ -152,6 +156,26 @@ export const WeeklyProgressCard = memo(function WeeklyProgressCard({
         <Text style={styles.focusLabel}>THIS WEEK&apos;S FOCUS</Text>
         <Text style={styles.focusText}>{model.focus}</Text>
       </View>
+
+      {onViewHistory ? (
+        <Button
+          accessibilityLabel="View workout history"
+          label="View History"
+          onPress={onViewHistory}
+          variant="ghost"
+          style={styles.historyButton}
+        />
+      ) : null}
+
+      {onViewAnalytics ? (
+        <Button
+          accessibilityLabel="View training analytics"
+          label="View Analytics"
+          onPress={onViewAnalytics}
+          variant="ghost"
+          style={styles.historyButton}
+        />
+      ) : null}
     </View>
   );
 });
@@ -549,6 +573,9 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     width: '100%',
+  },
+  historyButton: {
+    marginTop: -8,
   },
   errorContent: {
     gap: 16,

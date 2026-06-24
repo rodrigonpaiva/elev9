@@ -42,7 +42,7 @@ export function ExerciseDetailScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ExerciseDetail'>>();
-  const { exercise, workoutContext } = route.params;
+  const { exercise, replacementContext, workoutContext } = route.params;
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -61,6 +61,14 @@ export function ExerciseDetailScreen() {
   const handleReturn = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+
+  const handleReplaceExercise = useCallback(() => {
+    if (!replacementContext) {
+      return;
+    }
+
+    navigation.navigate('ExerciseReplacement', replacementContext);
+  }, [navigation, replacementContext]);
 
   if (isLoading) {
     return <ExerciseDetailSkeleton />;
@@ -83,6 +91,14 @@ export function ExerciseDetailScreen() {
         <View accessibilityLabel={model.accessibilityLabel} style={styles.stack}>
           <ExerciseHero model={model} />
           <MediaPlaceholder />
+          {replacementContext ? (
+            <Button
+              accessibilityLabel={`Replace ${model.name}`}
+              label="Replace Exercise"
+              onPress={handleReplaceExercise}
+              variant="ghost"
+            />
+          ) : null}
           <CoachFocus focus={model.focus} />
           <InstructionSection instructions={model.instructions} />
           <MusclesSection

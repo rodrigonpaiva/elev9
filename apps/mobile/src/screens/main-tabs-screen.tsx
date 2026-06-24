@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import Animated, {
   interpolate,
   interpolateColor,
@@ -20,6 +22,7 @@ import { DashboardScreen } from './dashboard-screen';
 import { ProfileScreen } from './profile-screen';
 import { ProgressSummaryScreen } from './progress-summary-screen';
 import { WorkoutHistoryScreen } from './workout-history-screen';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 type MainTabKey = 'home' | 'workout' | 'history' | 'progress' | 'profile';
 
@@ -71,7 +74,10 @@ const themeAlpha = {
 };
 
 export function MainTabsScreen() {
-  const [activeTab, setActiveTab] = useState<MainTabKey>('home');
+  const route = useRoute<RouteProp<RootStackParamList, 'MainTabs'>>();
+  const [activeTab, setActiveTab] = useState<MainTabKey>(
+    route.params?.initialTab ?? 'home',
+  );
 
   return (
     <SafeAreaView style={styles.root} edges={['bottom']}>

@@ -6,7 +6,8 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
 import type { DashboardHomeResponse } from '@elev9/types';
@@ -24,8 +25,11 @@ import {
 
 import { apiClient } from '../api/client';
 import { useAuth } from '../auth/auth-provider';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 export function ProfileScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut, status } = useAuth();
   const [dashboard, setDashboard] = useState<
     DashboardHomeResponse['dashboard'] | null
@@ -100,6 +104,14 @@ export function ProfileScreen() {
       setIsSigningOut(false);
     }
   }, [signOut]);
+
+  const handleOpenTrainingHistory = useCallback(() => {
+    navigation.replace('MainTabs', { initialTab: 'history' });
+  }, [navigation]);
+
+  const handleOpenTrainingAnalytics = useCallback(() => {
+    navigation.navigate('TrainingAnalytics');
+  }, [navigation]);
 
   const trainingPlanStatus = resolveTrainingPlanStatus(dashboard);
 
@@ -213,6 +225,18 @@ export function ProfileScreen() {
               <InfoRow
                 label="This week"
                 value={`${dashboard?.progressSummary.workoutsCompleted ?? 0} workouts`}
+              />
+              <Button
+                label="View Training History"
+                onPress={handleOpenTrainingHistory}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="View Training Analytics"
+                onPress={handleOpenTrainingAnalytics}
+                variant="ghost"
+                style={styles.fullButton}
               />
             </Card>
 

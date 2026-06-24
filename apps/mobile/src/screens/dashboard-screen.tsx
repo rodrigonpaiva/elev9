@@ -54,6 +54,7 @@ const dashboardTokens = {
 } as const;
 
 export function DashboardScreen({
+  onOpenHistory,
   onOpenProfile,
   onOpenTrainingPlan,
 }: DashboardScreenProps) {
@@ -99,6 +100,10 @@ export function DashboardScreen({
   const handleCreateNutritionProfile = useCallback(() => {
     onOpenProfile?.();
   }, [onOpenProfile]);
+
+  const handleViewAnalytics = useCallback(() => {
+    navigation.navigate('TrainingAnalytics');
+  }, [navigation]);
 
   const handleCoachCta = useCallback(() => {
     switch (dashboard.coach.actionTarget) {
@@ -171,7 +176,9 @@ export function DashboardScreen({
             dashboard={dashboard}
             onCoachCta={handleCoachCta}
             onCreateNutritionProfile={handleCreateNutritionProfile}
+            onOpenHistory={onOpenHistory}
             onStartWorkout={handleStartWorkout}
+            onViewAnalytics={handleViewAnalytics}
             onViewPlan={handleViewPlan}
           />
         </Animated.View>
@@ -184,13 +191,17 @@ function DashboardCards({
   dashboard,
   onCoachCta,
   onCreateNutritionProfile,
+  onOpenHistory,
   onStartWorkout,
+  onViewAnalytics,
   onViewPlan,
 }: {
   dashboard: UseDashboardResult;
   onCoachCta: () => void;
   onCreateNutritionProfile: () => void;
+  onOpenHistory?: () => void;
   onStartWorkout: () => void;
+  onViewAnalytics: () => void;
   onViewPlan: () => void;
 }) {
   return (
@@ -235,6 +246,8 @@ function DashboardCards({
           dashboard.nutrition.data?.progress.adherencePercentage
         }
         onRetry={() => void dashboard.progress.retry()}
+        onViewAnalytics={onViewAnalytics}
+        onViewHistory={onOpenHistory}
         plannedWorkouts={dashboard.workout.plannedWorkoutCount}
         progressSummary={dashboard.progress.data}
         recoveryScore={dashboard.recovery.data?.readinessScore}
