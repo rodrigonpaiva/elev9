@@ -113,6 +113,18 @@ export function ProfileScreen() {
     navigation.navigate('TrainingAnalytics');
   }, [navigation]);
 
+  const handleOpenNutritionOverview = useCallback(() => {
+    navigation.navigate('NutritionOverview');
+  }, [navigation]);
+
+  const handleOpenNutritionPlan = useCallback(() => {
+    navigation.navigate('NutritionPlan');
+  }, [navigation]);
+
+  const handleOpenNutritionHistory = useCallback(() => {
+    navigation.navigate('NutritionHistory');
+  }, [navigation]);
+
   const trainingPlanStatus = resolveTrainingPlanStatus(dashboard);
 
   return (
@@ -235,6 +247,31 @@ export function ProfileScreen() {
               <Button
                 label="View Training Analytics"
                 onPress={handleOpenTrainingAnalytics}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+            </Card>
+
+            <Card style={styles.card}>
+              <SectionHeader
+                title="Nutrition"
+                subtitle="Review today&apos;s nutrition plan and coaching focus."
+              />
+              <Button
+                label="Nutrition Overview"
+                onPress={handleOpenNutritionOverview}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Nutrition Plan"
+                onPress={handleOpenNutritionPlan}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Nutrition History"
+                onPress={handleOpenNutritionHistory}
                 variant="ghost"
                 style={styles.fullButton}
               />

@@ -11,6 +11,7 @@ type TodaysNutritionCardProps = {
   errorMessage?: string | null;
   onRetry: () => void;
   onCreateNutritionProfile: () => void;
+  onOpenNutritionOverview?: () => void;
 };
 
 type BadgeVariant = 'primary' | 'muted' | 'danger';
@@ -32,6 +33,7 @@ export const TodaysNutritionCard = memo(function TodaysNutritionCard({
   errorMessage,
   isLoading,
   onCreateNutritionProfile,
+  onOpenNutritionOverview,
   onRetry,
   todayNutrition,
   workout,
@@ -136,6 +138,16 @@ export const TodaysNutritionCard = memo(function TodaysNutritionCard({
         <Text style={styles.focusLabel}>TODAY&apos;S FOCUS</Text>
         <Text style={styles.focusText}>{model.focus}</Text>
       </View>
+
+      {onOpenNutritionOverview ? (
+        <Button
+          accessibilityLabel="Open nutrition overview"
+          label="View Nutrition"
+          onPress={onOpenNutritionOverview}
+          variant="ghost"
+          style={styles.primaryButton}
+        />
+      ) : null}
     </View>
   );
 });

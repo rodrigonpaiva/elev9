@@ -73,7 +73,7 @@ export function WorkoutCompletionScreen() {
   }, [navigation]);
 
   const handleViewNutrition = useCallback(() => {
-    navigation.replace('MainTabs', { initialTab: 'home' });
+    navigation.navigate('NutritionRecommendations');
   }, [navigation]);
 
   const handleViewProgress = useCallback(() => {

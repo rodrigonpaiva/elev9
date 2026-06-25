@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { Text } from '@elev9/ui';
@@ -62,6 +62,7 @@ export function DashboardScreen({
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const dashboard = useDashboard();
   const entrance = useRef(new Animated.Value(0)).current;
+  const hasFocused = useRef(false);
 
   const motivationalMessage = useMemo(() => {
     const index = Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length);
@@ -82,6 +83,17 @@ export function DashboardScreen({
     }).start();
   }, [dashboard.isLoading, entrance]);
 
+  useFocusEffect(
+    useCallback(() => {
+      if (!hasFocused.current) {
+        hasFocused.current = true;
+        return;
+      }
+
+      void dashboard.refresh();
+    }, [dashboard.refresh]),
+  );
+
   const handleStartWorkout = useCallback(() => {
     if (!dashboard.workout.data || !dashboard.workout.todaysWorkout) {
       return;
@@ -101,6 +113,14 @@ export function DashboardScreen({
     onOpenProfile?.();
   }, [onOpenProfile]);
 
+  const handleOpenNutritionOverview = useCallback(() => {
+    navigation.navigate('NutritionOverview');
+  }, [navigation]);
+
+  const handleOpenNutritionRecommendations = useCallback(() => {
+    navigation.navigate('NutritionRecommendations');
+  }, [navigation]);
+
   const handleViewAnalytics = useCallback(() => {
     navigation.navigate('TrainingAnalytics');
   }, [navigation]);
@@ -113,11 +133,19 @@ export function DashboardScreen({
       case 'check_in':
         navigation.navigate('DailyCheckInHistory');
         return;
+      case 'nutrition':
+        handleOpenNutritionRecommendations();
+        return;
       case 'coach':
       default:
         navigation.navigate('CoachChat');
     }
-  }, [dashboard.coach.actionTarget, handleStartWorkout, navigation]);
+  }, [
+    dashboard.coach.actionTarget,
+    handleOpenNutritionRecommendations,
+    handleStartWorkout,
+    navigation,
+  ]);
 
   if (dashboard.isLoading) {
     return (
@@ -177,6 +205,7 @@ export function DashboardScreen({
             onCoachCta={handleCoachCta}
             onCreateNutritionProfile={handleCreateNutritionProfile}
             onOpenHistory={onOpenHistory}
+            onOpenNutritionOverview={handleOpenNutritionOverview}
             onStartWorkout={handleStartWorkout}
             onViewAnalytics={handleViewAnalytics}
             onViewPlan={handleViewPlan}
@@ -192,6 +221,7 @@ function DashboardCards({
   onCoachCta,
   onCreateNutritionProfile,
   onOpenHistory,
+  onOpenNutritionOverview,
   onStartWorkout,
   onViewAnalytics,
   onViewPlan,
@@ -200,6 +230,7 @@ function DashboardCards({
   onCoachCta: () => void;
   onCreateNutritionProfile: () => void;
   onOpenHistory?: () => void;
+  onOpenNutritionOverview: () => void;
   onStartWorkout: () => void;
   onViewAnalytics: () => void;
   onViewPlan: () => void;
@@ -235,6 +266,7 @@ function DashboardCards({
         errorMessage={dashboard.nutrition.errorMessage}
         isLoading={dashboard.nutrition.isLoading}
         onCreateNutritionProfile={onCreateNutritionProfile}
+        onOpenNutritionOverview={onOpenNutritionOverview}
         onRetry={() => void dashboard.nutrition.retry()}
         todayNutrition={dashboard.nutrition.data}
         workout={dashboard.workout.todaysWorkout}

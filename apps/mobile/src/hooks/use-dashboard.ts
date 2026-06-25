@@ -18,7 +18,11 @@ import type { RecoveryStatus } from '../components/dashboard/todays-workout-card
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
 type ProgressSummary = ProgressSummaryResponse['summary'];
 type DashboardDomain = 'coach' | 'recovery' | 'workout' | 'nutrition' | 'progress';
-export type DashboardCoachActionTarget = 'workout' | 'coach' | 'check_in';
+export type DashboardCoachActionTarget =
+  | 'workout'
+  | 'nutrition'
+  | 'coach'
+  | 'check_in';
 
 type DomainState<TData> = {
   data: TData | null;
@@ -521,7 +525,7 @@ function getCoachRecommendedAction(
     case 'recovery':
       return 'Prioritize Sleep';
     case 'nutrition':
-      return 'View Nutrition';
+      return 'Nutrition Recommendations';
     case 'training':
       return workout ? "Start Today's Workout" : 'Open Coach';
     case 'consistency':
@@ -549,6 +553,10 @@ function getCoachActionTarget(
     return 'check_in';
   }
 
+  if (priority === 'nutrition') {
+    return 'nutrition';
+  }
+
   return 'coach';
 }
 
@@ -558,6 +566,8 @@ function getCoachCtaLabel(target: DashboardCoachActionTarget): string {
       return 'Start Workout';
     case 'check_in':
       return 'Complete Check-In';
+    case 'nutrition':
+      return 'Nutrition Recommendations';
     case 'coach':
     default:
       return 'Open Coach';

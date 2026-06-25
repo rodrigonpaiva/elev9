@@ -16,8 +16,16 @@ import { ExerciseDetailScreen } from '../screens/exercise-detail-screen';
 import { ExerciseReplacementScreen } from '../screens/exercise-replacement-screen';
 import { HomeResolverScreen } from '../screens/home-resolver-screen';
 import { LoginScreen } from '../screens/login-screen';
+import { LogMealScreen } from '../screens/log-meal-screen';
 import { MainTabsScreen } from '../screens/main-tabs-screen';
+import { MealDetailScreen } from '../screens/meal-detail-screen';
+import { NutritionHistoryScreen } from '../screens/nutrition-history-screen';
+import { NutritionOverviewScreen } from '../screens/nutrition-overview-screen';
+import { NutritionPlanScreen } from '../screens/nutrition-plan-screen';
+import { NutritionRecommendationsScreen } from '../screens/nutrition-recommendations-screen';
+import { ReplaceMealScreen } from '../screens/replace-meal-screen';
 import { RestTimerScreen } from '../screens/rest-timer-screen';
+import { TodaysMealsScreen } from '../screens/todays-meals-screen';
 import { TrainingAnalyticsScreen } from '../screens/training-analytics-screen';
 import { WorkoutCompletionScreen } from '../screens/workout-completion-screen';
 import { WorkoutOverviewScreen } from '../screens/workout-overview-screen';
@@ -41,6 +49,20 @@ export type RootStackParamList = {
     | undefined;
   CoachChat: undefined;
   DailyCheckInHistory: undefined;
+  MealDetail: {
+    mealId: string;
+  };
+  LogMeal: {
+    mealId: string;
+  };
+  ReplaceMeal: {
+    mealId: string;
+  };
+  NutritionOverview: undefined;
+  NutritionPlan: undefined;
+  NutritionHistory: undefined;
+  NutritionRecommendations: undefined;
+  TodaysMeals: undefined;
   TrainingAnalytics: undefined;
   WorkoutOverview: {
     trainingPlanId: string;
@@ -187,6 +209,110 @@ export function AppNavigator() {
               options={{
                 headerShown: true,
                 title: 'Training Analytics',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="NutritionOverview"
+              component={NutritionOverviewScreen}
+              options={{
+                headerShown: true,
+                title: 'Nutrition',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="NutritionPlan"
+              component={NutritionPlanScreen}
+              options={{
+                headerShown: true,
+                title: 'Nutrition Plan',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="NutritionHistory"
+              component={NutritionHistoryScreen}
+              options={{
+                headerShown: true,
+                title: 'Nutrition History',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="NutritionRecommendations"
+              component={NutritionRecommendationsScreen}
+              options={{
+                headerShown: true,
+                title: 'Nutrition Recommendations',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="MealDetail"
+              component={MealDetailScreen}
+              options={{
+                headerShown: true,
+                title: 'Meal',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="LogMeal"
+              component={LogMealScreen}
+              options={{
+                headerShown: true,
+                title: 'Log Meal',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="ReplaceMeal"
+              component={ReplaceMealScreen}
+              options={{
+                headerShown: true,
+                title: 'Replace Meal',
+                headerStyle: {
+                  backgroundColor: '#ffffff',
+                },
+                headerTintColor: '#111827',
+                headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="TodaysMeals"
+              component={TodaysMealsScreen}
+              options={{
+                headerShown: true,
+                title: "Today's Meals",
                 headerStyle: {
                   backgroundColor: '#ffffff',
                 },
