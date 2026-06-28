@@ -7,7 +7,8 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
 import type { ProgressSummaryResponse } from '@elev9/types';
@@ -23,6 +24,7 @@ import {
 } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 type SummaryState = ProgressSummaryResponse['summary'] | null;
 type Period = 'week' | 'month';
@@ -30,6 +32,8 @@ type Period = 'week' | 'month';
 const PERIOD_OPTIONS: Period[] = ['week', 'month'];
 
 export function ProgressSummaryScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [summary, setSummary] = useState<SummaryState>(null);
   const [period, setPeriod] = useState<Period>('week');
   const [isLoading, setIsLoading] = useState(true);
@@ -95,6 +99,10 @@ export function ProgressSummaryScreen() {
     },
     [load, period],
   );
+
+  const handleGoalGuidance = useCallback(() => {
+    navigation.navigate('CoachGoalGuidance');
+  }, [navigation]);
 
   return (
     <Screen
@@ -214,6 +222,13 @@ export function ProgressSummaryScreen() {
                   : 'Keep the momentum going with another session today.'}
               </Text>
             </Card>
+
+            <Button
+              accessibilityLabel="Open goal guidance"
+              label="Goal Guidance"
+              onPress={handleGoalGuidance}
+              style={styles.fullButton}
+            />
 
             <View style={styles.metricsGrid}>
               <MetricCard

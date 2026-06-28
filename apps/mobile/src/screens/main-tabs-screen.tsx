@@ -17,6 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@elev9/ui';
 import { Text } from '@elev9/ui';
 
+import { CoachHomeScreen } from './coach-home-screen';
 import { CurrentWorkoutScreen } from './current-workout-screen';
 import { DashboardScreen } from './dashboard-screen';
 import { ProfileScreen } from './profile-screen';
@@ -24,7 +25,7 @@ import { ProgressSummaryScreen } from './progress-summary-screen';
 import { WorkoutHistoryScreen } from './workout-history-screen';
 import type { RootStackParamList } from '../navigation/app-navigator';
 
-type MainTabKey = 'home' | 'workout' | 'history' | 'progress' | 'profile';
+type MainTabKey = 'home' | 'coach' | 'workout' | 'history' | 'progress' | 'profile';
 
 type TabConfig = {
   key: MainTabKey;
@@ -35,6 +36,12 @@ type TabConfig = {
 
 const TABS: TabConfig[] = [
   { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
+  {
+    key: 'coach',
+    label: 'Coach',
+    icon: 'sparkles-outline',
+    activeIcon: 'sparkles',
+  },
   {
     key: 'workout',
     label: 'Workout',
@@ -219,6 +226,8 @@ function renderTab(
           onOpenTrainingPlan={() => setActiveTab('workout')}
         />
       );
+    case 'coach':
+      return <CoachHomeScreen onOpenWorkoutTab={() => setActiveTab('workout')} />;
     case 'workout':
       return <CurrentWorkoutScreen />;
     case 'history':

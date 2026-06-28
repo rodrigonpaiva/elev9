@@ -187,7 +187,7 @@ export function NutritionRecommendationsScreen() {
     trackNutritionRecommendationsEvent('nutrition_recommendation_action_selected', {
       action: 'coach',
     });
-    navigation.navigate('CoachChat');
+    navigation.navigate('AskCoach');
   }, [navigation]);
 
   const actions = useMemo(

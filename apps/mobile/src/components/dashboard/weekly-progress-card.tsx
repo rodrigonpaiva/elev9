@@ -15,6 +15,7 @@ type WeeklyProgressCardProps = {
   isLoading: boolean;
   errorMessage?: string | null;
   onRetry: () => void;
+  onOpenWeeklyReview?: () => void;
   onViewAnalytics?: () => void;
   onViewHistory?: () => void;
 };
@@ -40,6 +41,7 @@ export const WeeklyProgressCard = memo(function WeeklyProgressCard({
   isLoading,
   nutritionAdherencePercentage,
   onRetry,
+  onOpenWeeklyReview,
   onViewAnalytics,
   onViewHistory,
   plannedWorkouts,
@@ -162,6 +164,16 @@ export const WeeklyProgressCard = memo(function WeeklyProgressCard({
           accessibilityLabel="View workout history"
           label="View History"
           onPress={onViewHistory}
+          variant="ghost"
+          style={styles.historyButton}
+        />
+      ) : null}
+
+      {onOpenWeeklyReview ? (
+        <Button
+          accessibilityLabel="Open weekly review"
+          label="Weekly Review"
+          onPress={onOpenWeeklyReview}
           variant="ghost"
           style={styles.historyButton}
         />

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { ApiClientError } from '@elev9/api-client';
 import { Button, Card, colors, Screen, Text } from '@elev9/ui';
@@ -9,6 +10,8 @@ import { Button, Card, colors, Screen, Text } from '@elev9/ui';
 import { apiClient } from '../api/client';
 import { useAuth } from '../auth/auth-provider';
 import type { RootStackParamList } from '../navigation/app-navigator';
+
+const DAILY_BRIEFING_LAST_SHOWN_KEY = 'elev9.dailyBriefing.lastShownDate';
 
 export function HomeResolverScreen() {
   const navigation =
@@ -40,6 +43,12 @@ export function HomeResolverScreen() {
           goal: dashboard.fitnessProfile.goal,
           activityLevel: dashboard.fitnessProfile.activityLevel,
         });
+        return;
+      }
+
+      if (await shouldShowDailyBriefingToday()) {
+        await markDailyBriefingShownToday();
+        navigation.replace('CoachDailyBriefing');
         return;
       }
 
@@ -99,6 +108,28 @@ export function HomeResolverScreen() {
       )}
     </Screen>
   );
+}
+
+async function shouldShowDailyBriefingToday(): Promise<boolean> {
+  const todayKey = getLocalDateKey(new Date());
+  const lastShownDate = await AsyncStorage.getItem(DAILY_BRIEFING_LAST_SHOWN_KEY);
+
+  return lastShownDate !== todayKey;
+}
+
+async function markDailyBriefingShownToday(): Promise<void> {
+  await AsyncStorage.setItem(
+    DAILY_BRIEFING_LAST_SHOWN_KEY,
+    getLocalDateKey(new Date()),
+  );
+}
+
+function getLocalDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
 }
 
 const styles = StyleSheet.create({

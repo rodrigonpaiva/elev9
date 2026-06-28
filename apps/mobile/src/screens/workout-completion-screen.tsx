@@ -80,6 +80,10 @@ export function WorkoutCompletionScreen() {
     navigation.replace('MainTabs', { initialTab: 'progress' });
   }, [navigation]);
 
+  const handleAskCoach = useCallback(() => {
+    navigation.navigate('AskCoach');
+  }, [navigation]);
+
   const loadCompletion = useCallback(async () => {
     if (!workout) {
       setHasLoadError(true);
@@ -225,6 +229,12 @@ export function WorkoutCompletionScreen() {
               accessibilityLabel="Back to Dashboard"
               label="Back to Dashboard"
               onPress={handleBackToDashboard}
+            />
+            <Button
+              accessibilityLabel="Ask Coach"
+              label="Ask Coach"
+              onPress={handleAskCoach}
+              variant="ghost"
             />
             <Button
               accessibilityLabel="View workout history"

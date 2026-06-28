@@ -125,6 +125,26 @@ export function ProfileScreen() {
     navigation.navigate('NutritionHistory');
   }, [navigation]);
 
+  const handleOpenCoach = useCallback(() => {
+    navigation.navigate('AskCoach');
+  }, [navigation]);
+
+  const handleOpenCoachMemory = useCallback(() => {
+    navigation.navigate('CoachMemoryTimeline');
+  }, [navigation]);
+
+  const handleOpenCoachWeeklyReview = useCallback(() => {
+    navigation.navigate('CoachWeeklyReview');
+  }, [navigation]);
+
+  const handleOpenCoachNotifications = useCallback(() => {
+    navigation.navigate('CoachNotifications');
+  }, [navigation]);
+
+  const handleOpenGoalGuidance = useCallback(() => {
+    navigation.navigate('CoachGoalGuidance');
+  }, [navigation]);
+
   const trainingPlanStatus = resolveTrainingPlanStatus(dashboard);
 
   return (
@@ -222,6 +242,12 @@ export function ProfileScreen() {
                     : 'Not set'
                 }
               />
+              <Button
+                label="Goal Guidance"
+                onPress={handleOpenGoalGuidance}
+                variant="ghost"
+                style={styles.fullButton}
+              />
             </Card>
 
             <Card style={styles.card}>
@@ -272,6 +298,37 @@ export function ProfileScreen() {
               <Button
                 label="Nutrition History"
                 onPress={handleOpenNutritionHistory}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+            </Card>
+
+            <Card style={styles.card}>
+              <SectionHeader
+                title="Coach"
+                subtitle="Ask about training, nutrition, recovery, and your current plan."
+              />
+              <Button
+                label="Ask Coach"
+                onPress={handleOpenCoach}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Coach Memory"
+                onPress={handleOpenCoachMemory}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Coach Weekly Review"
+                onPress={handleOpenCoachWeeklyReview}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Coach Notifications"
+                onPress={handleOpenCoachNotifications}
                 variant="ghost"
                 style={styles.fullButton}
               />

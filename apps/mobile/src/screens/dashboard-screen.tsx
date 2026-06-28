@@ -125,6 +125,14 @@ export function DashboardScreen({
     navigation.navigate('TrainingAnalytics');
   }, [navigation]);
 
+  const handleOpenWeeklyReview = useCallback(() => {
+    navigation.navigate('CoachWeeklyReview');
+  }, [navigation]);
+
+  const handleOpenDailyBriefing = useCallback(() => {
+    navigation.navigate('CoachDailyBriefing');
+  }, [navigation]);
+
   const handleCoachCta = useCallback(() => {
     switch (dashboard.coach.actionTarget) {
       case 'workout':
@@ -138,7 +146,7 @@ export function DashboardScreen({
         return;
       case 'coach':
       default:
-        navigation.navigate('CoachChat');
+        navigation.navigate('AskCoach');
     }
   }, [
     dashboard.coach.actionTarget,
@@ -199,6 +207,7 @@ export function DashboardScreen({
           <WelcomeSection motivationalMessage={motivationalMessage} />
 
           <DailyFocusCard focus={DAILY_FOCUS} />
+          <DailyBriefingButton onPress={handleOpenDailyBriefing} />
 
           <DashboardCards
             dashboard={dashboard}
@@ -206,6 +215,7 @@ export function DashboardScreen({
             onCreateNutritionProfile={handleCreateNutritionProfile}
             onOpenHistory={onOpenHistory}
             onOpenNutritionOverview={handleOpenNutritionOverview}
+            onOpenWeeklyReview={handleOpenWeeklyReview}
             onStartWorkout={handleStartWorkout}
             onViewAnalytics={handleViewAnalytics}
             onViewPlan={handleViewPlan}
@@ -222,6 +232,7 @@ function DashboardCards({
   onCreateNutritionProfile,
   onOpenHistory,
   onOpenNutritionOverview,
+  onOpenWeeklyReview,
   onStartWorkout,
   onViewAnalytics,
   onViewPlan,
@@ -231,6 +242,7 @@ function DashboardCards({
   onCreateNutritionProfile: () => void;
   onOpenHistory?: () => void;
   onOpenNutritionOverview: () => void;
+  onOpenWeeklyReview: () => void;
   onStartWorkout: () => void;
   onViewAnalytics: () => void;
   onViewPlan: () => void;
@@ -278,6 +290,7 @@ function DashboardCards({
           dashboard.nutrition.data?.progress.adherencePercentage
         }
         onRetry={() => void dashboard.progress.retry()}
+        onOpenWeeklyReview={onOpenWeeklyReview}
         onViewAnalytics={onViewAnalytics}
         onViewHistory={onOpenHistory}
         plannedWorkouts={dashboard.workout.plannedWorkoutCount}
@@ -343,6 +356,22 @@ function DailyFocusCard({ focus }: { focus: string }) {
       <Text style={styles.focusLabel}>TODAY&apos;S FOCUS</Text>
       <Text style={styles.focusText}>{focus}</Text>
     </View>
+  );
+}
+
+function DailyBriefingButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityLabel="Daily Briefing"
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.briefingButton,
+        pressed ? styles.briefingButtonPressed : null,
+      ]}
+    >
+      <Text style={styles.briefingButtonText}>Daily Briefing</Text>
+    </Pressable>
   );
 }
 
@@ -476,6 +505,26 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 28,
     fontWeight: '700',
+  },
+  briefingButton: {
+    minHeight: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: dashboardTokens.border,
+    backgroundColor: dashboardTokens.surface,
+    paddingHorizontal: 18,
+    paddingVertical: 13,
+  },
+  briefingButtonPressed: {
+    opacity: 0.72,
+  },
+  briefingButtonText: {
+    color: dashboardTokens.text,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '800',
   },
   cardStack: {
     gap: 28,

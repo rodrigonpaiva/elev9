@@ -5,6 +5,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import type { TodayWorkout, WorkoutHistoryResponse } from '@elev9/types';
 import { Text } from '@elev9/ui';
 
+import { AskCoachScreen } from '../screens/ask-coach-screen';
 import { useAuth } from '../auth/auth-provider';
 import { ActiveWorkoutScreen } from '../screens/active-workout-screen';
 import { CreateFitnessProfileScreen } from '../screens/create-fitness-profile-screen';
@@ -12,6 +13,13 @@ import { CreateProfileScreen } from '../screens/create-profile-screen';
 import { CreateTrainingPlanScreen } from '../screens/create-training-plan-screen';
 import { DailyCheckInHistoryScreen } from '../screens/daily-check-in-history-screen';
 import { CoachChatScreen } from '../screens/coach-chat-screen';
+import { CoachDailyBriefingScreen } from '../screens/coach-daily-briefing-screen';
+import { CoachHomeScreen } from '../screens/coach-home-screen';
+import { CoachInsightsScreen } from '../screens/coach-insights-screen';
+import { CoachGoalGuidanceScreen } from '../screens/coach-goal-guidance-screen';
+import { CoachNotificationsScreen } from '../screens/coach-notifications-screen';
+import { CoachMemoryTimelineScreen } from '../screens/coach-memory-timeline-screen';
+import { CoachWeeklyReviewScreen } from '../screens/coach-weekly-review-screen';
 import { ExerciseDetailScreen } from '../screens/exercise-detail-screen';
 import { ExerciseReplacementScreen } from '../screens/exercise-replacement-screen';
 import { HomeResolverScreen } from '../screens/home-resolver-screen';
@@ -44,10 +52,23 @@ export type RootStackParamList = {
   };
   MainTabs:
     | {
-        initialTab?: 'home' | 'workout' | 'history' | 'progress' | 'profile';
+        initialTab?: 'home' | 'coach' | 'workout' | 'history' | 'progress' | 'profile';
       }
     | undefined;
-  CoachChat: undefined;
+  CoachHome: undefined;
+  AskCoach: undefined;
+  CoachChat:
+    | {
+        initialPrompt?: string;
+        promptId?: string;
+      }
+    | undefined;
+  CoachDailyBriefing: undefined;
+  CoachInsights: undefined;
+  CoachGoalGuidance: undefined;
+  CoachNotifications: undefined;
+  CoachMemoryTimeline: undefined;
+  CoachWeeklyReview: undefined;
   DailyCheckInHistory: undefined;
   MealDetail: {
     mealId: string;
@@ -178,16 +199,66 @@ export function AppNavigator() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="CoachInsights"
+              component={CoachInsightsScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="CoachGoalGuidance"
+              component={CoachGoalGuidanceScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="CoachNotifications"
+              component={CoachNotificationsScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="AskCoach"
+              component={AskCoachScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="CoachMemoryTimeline"
+              component={CoachMemoryTimelineScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="CoachWeeklyReview"
+              component={CoachWeeklyReviewScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="CoachDailyBriefing"
+              component={CoachDailyBriefingScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="CoachHome"
+              component={CoachHomeScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
               name="CoachChat"
               component={CoachChatScreen}
               options={{
-                headerShown: true,
-                title: 'Coach Chat',
-                headerStyle: {
-                  backgroundColor: '#020617',
-                },
-                headerTintColor: '#f8fafc',
-                headerShadowVisible: false,
+                headerShown: false,
               }}
             />
             <Stack.Screen

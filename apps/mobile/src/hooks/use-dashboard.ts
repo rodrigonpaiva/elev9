@@ -570,7 +570,7 @@ function getCoachCtaLabel(target: DashboardCoachActionTarget): string {
       return 'Nutrition Recommendations';
     case 'coach':
     default:
-      return 'Open Coach';
+      return 'Ask Coach';
   }
 }
 
