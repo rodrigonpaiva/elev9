@@ -1,0 +1,6 @@
+- Never query live upstream signals during replay.
+- Never call build use cases from replay.
+- Never mutate persisted data.
+- Preserve ownership protection.
+- Compare deterministic fields only.
+- Use the platform replay conventions established in Epic 6.

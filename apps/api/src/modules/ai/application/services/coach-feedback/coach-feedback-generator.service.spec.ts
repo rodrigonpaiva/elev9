@@ -81,6 +81,80 @@ describe('CoachFeedbackGenerator', () => {
     );
   });
 
+  it('reduces intensity when readiness is low even if fatigue is not HIGH', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 40,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-03', 38),
+        buildWorkoutLog('2026-05-04', 42),
+      ],
+      hasTrainingPlan: true,
+      readinessScore: 32,
+      fatigueScore: 58,
+      recommendedIntensity: 'recovery',
+      recoveryInfluences: [
+        {
+          code: 'LOW_SLEEP',
+          label: 'Sleep is limiting recovery.',
+          impact: 'negative',
+        },
+      ],
+    });
+
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'recovery:low_readiness',
+        'recovery:recommended_recovery',
+        'recovery:low_sleep',
+      ]),
+    );
+    expect(result.recommendations).toContain(
+      'Prioritize recovery before pushing intensity',
+    );
+  });
+
+  it('supports stronger training guidance when readiness is high', () => {
+    const result = generator.generate({
+      goal: 'gain_muscle',
+      activityLevel: 'high',
+      expectedWorkouts: 4,
+      currentStreak: 4,
+      averageDurationMinutes: 58,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-01', 50),
+        buildWorkoutLog('2026-05-02', 60),
+        buildWorkoutLog('2026-05-03', 65),
+        buildWorkoutLog('2026-05-04', 55),
+      ],
+      hasTrainingPlan: true,
+      readinessScore: 88,
+      fatigueScore: 24,
+      recommendedIntensity: 'hard',
+      recoveryInfluences: [
+        {
+          code: 'HIGH_ADHERENCE',
+          label: 'Adherence is strong.',
+          impact: 'positive',
+        },
+      ],
+    });
+
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'recovery:high_readiness',
+        'recovery:recommended_hard',
+        'recovery:high_adherence',
+      ]),
+    );
+    expect(result.insights).toContain(
+      'Your readiness looks strong for a more demanding session',
+    );
+  });
+
   it('keeps balanced recovery messaging when fatigueLevel is MODERATE', () => {
     const result = generator.generate({
       goal: 'maintain',
@@ -117,6 +191,135 @@ describe('CoachFeedbackGenerator', () => {
 
     expect(result.recommendations).toContain(
       'Keep your current plan and monitor recovery between sessions',
+    );
+  });
+
+  it('uses coach decision as the primary coaching signal when available', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 46,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 45),
+        buildWorkoutLog('2026-05-04', 47),
+      ],
+      hasTrainingPlan: true,
+      coachDecision: {
+        priority: 'recovery',
+        headline: 'Recovery should be your focus today',
+        summary: 'Recovery is the main priority because readiness is low.',
+        actionItems: [
+          'Reduce training intensity today',
+          'Prioritize sleep tonight',
+        ],
+        influences: [
+          {
+            code: 'LOW_READINESS',
+            label: 'Readiness is low.',
+            impact: 'negative',
+            source: 'recovery',
+          },
+        ],
+      },
+    });
+
+    expect(result.message).toBe('Recovery should be your focus today');
+    expect(result.influences).toEqual(
+      expect.arrayContaining(['coach:decision:recovery']),
+    );
+    expect(result.recommendations).toEqual(
+      expect.arrayContaining([
+        'Prioritize recovery before pushing intensity',
+        'Reduce training intensity today',
+      ]),
+    );
+  });
+
+  it('adapts message tone with personalization context', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 46,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 45),
+        buildWorkoutLog('2026-05-04', 47),
+      ],
+      hasTrainingPlan: true,
+      personalization: {
+        preferredCoachingStyle: 'educational',
+        engagementProfile: 'high',
+        notificationResponsiveness: 'low',
+        goalResponsiveness: 'high',
+        recoveryResponsiveness: 'medium',
+        habitResponsiveness: 'high',
+        riskOfDisengagement: 'high',
+        topBehavioralPatterns: ['responds_to_goals'],
+        trend: 'stable',
+        formulaVersion: 'personalization-engine-v1',
+        generatedAt: '2026-05-18T10:00:00.000Z',
+      },
+    });
+
+    expect(result.message).toContain('Explain the why behind the next step.');
+    expect(result.recommendations).toEqual(
+      expect.arrayContaining([
+        'Explain the why behind the next step',
+        'Avoid reminder-heavy language and keep the message low-pressure',
+        'Keep pressure low and focus on one achievable action',
+      ]),
+    );
+  });
+
+  it('uses notification context as supporting guidance', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 46,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 45),
+        buildWorkoutLog('2026-05-04', 47),
+      ],
+      hasTrainingPlan: true,
+      notification: {
+        current: {
+          type: 'coach_nudge',
+          priority: 'low',
+          status: 'planned',
+          suppressed: true,
+          fatigueLevel: 'high',
+        },
+        engagementSummary: {
+          engagementScore: 84,
+          fatigueLevel: 'high',
+          openedCount: 2,
+          clickedCount: 1,
+          dismissedCount: 2,
+          completedCount: 1,
+          recentEventsCount: 6,
+        },
+      },
+    });
+
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'notification:suppressed',
+        'notification:fatigue_high',
+        'notification:dismissed_frequently',
+        'notification:high_engagement',
+      ]),
+    );
+    expect(result.recommendations).toEqual(
+      expect.arrayContaining([
+        'Avoid excessive reminders and keep the next step simple',
+        'Recommend fewer interruptions and keep the next message shorter',
+        'Reinforce the positive behavior the user is already showing',
+      ]),
     );
   });
 
@@ -196,6 +399,128 @@ describe('CoachFeedbackGenerator', () => {
 
     expect(result.recommendations).toContain(
       'Consider mobility work, a lighter session, or extra recovery today',
+    );
+  });
+
+  it('uses rest_day from adaptive training to prioritize recovery', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
+      ],
+      hasTrainingPlan: true,
+      adaptiveTrainingRecommendation: {
+        recommendationType: 'rest_day',
+        recommendedIntensity: 'recovery',
+        volumeAction: 'decrease',
+        reasoning: 'Readiness is very low and fatigue is high.',
+        influences: [
+          {
+            code: 'LOW_READINESS',
+            label: 'Readiness is low.',
+            impact: 'negative',
+          },
+        ],
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      'Take a full rest day and prioritize recovery',
+    );
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'adaptive:rest_day',
+        'adaptive:intensity:recovery',
+        'adaptive:volume:decrease',
+        'adaptive:low_readiness',
+      ]),
+    );
+  });
+
+  it('uses increase_intensity from adaptive training to encourage progression', () => {
+    const result = generator.generate({
+      goal: 'gain_muscle',
+      activityLevel: 'high',
+      expectedWorkouts: 4,
+      currentStreak: 4,
+      averageDurationMinutes: 58,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-01', 50),
+        buildWorkoutLog('2026-05-02', 60),
+        buildWorkoutLog('2026-05-03', 65),
+        buildWorkoutLog('2026-05-04', 55),
+      ],
+      hasTrainingPlan: true,
+      adaptiveTrainingRecommendation: {
+        recommendationType: 'increase_intensity',
+        recommendedIntensity: 'hard',
+        volumeAction: 'increase',
+        reasoning: 'Recovery is stable and readiness is strong.',
+        influences: [
+          {
+            code: 'HIGH_READINESS',
+            label: 'Readiness is high.',
+            impact: 'positive',
+          },
+        ],
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      'You can progress intensity if your form stays solid',
+    );
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'adaptive:increase_intensity',
+        'adaptive:intensity:hard',
+        'adaptive:volume:increase',
+        'adaptive:high_readiness',
+      ]),
+    );
+  });
+
+  it('uses reschedule_workout from adaptive training to reinforce consistency', () => {
+    const result = generator.generate({
+      goal: 'maintain',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 1,
+      averageDurationMinutes: 42,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 40),
+        buildWorkoutLog('2026-05-04', 44),
+      ],
+      hasTrainingPlan: true,
+      adaptiveTrainingRecommendation: {
+        recommendationType: 'reschedule_workout',
+        recommendedIntensity: 'light',
+        volumeAction: 'decrease',
+        reasoning: 'The session should be moved to keep consistency.',
+        influences: [
+          {
+            code: 'LOW_ADHERENCE',
+            label: 'Adherence is low.',
+            impact: 'negative',
+          },
+        ],
+      },
+    });
+
+    expect(result.recommendations).toContain(
+      'Reschedule the workout to protect consistency',
+    );
+    expect(result.influences).toEqual(
+      expect.arrayContaining([
+        'adaptive:reschedule_workout',
+        'adaptive:intensity:light',
+        'adaptive:volume:decrease',
+        'adaptive:low_adherence',
+      ]),
     );
   });
 
@@ -549,6 +874,67 @@ describe('CoachFeedbackGenerator', () => {
 
     expect(result.insights).not.toContain(
       'Your average duration improved across the week',
+    );
+  });
+
+  it('uses habit context as supporting coaching context', () => {
+    const result = generator.generate({
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
+      expectedWorkouts: 3,
+      currentStreak: 2,
+      averageDurationMinutes: 40,
+      workoutLogs: [
+        buildWorkoutLog('2026-05-02', 30),
+        buildWorkoutLog('2026-05-03', 40),
+        buildWorkoutLog('2026-05-04', 50),
+      ],
+      hasTrainingPlan: true,
+      habit: {
+        current: {
+          userProfileId: 'profile_123',
+          date: '2026-05-04',
+          consistencyScore: 38,
+          streakDays: 1,
+          adherenceScore: 42,
+          trend: 'declining',
+          sourceContext: {
+            formulaVersion: 'habit-engine-v1',
+            generatedAt: '2026-05-04T10:00:00.000Z',
+          },
+          formulaVersion: 'habit-engine-v1',
+          generatedAt: '2026-05-04T10:00:00.000Z',
+        } as never,
+        summary: {
+          userProfileId: 'profile_123',
+          score: 38,
+          trend: 'declining',
+          currentStreak: 1,
+          longestStreak: 4,
+          adherenceRate: 42,
+          riskLevel: 'high',
+          updatedAt: '2026-05-04T10:00:00.000Z',
+          formulaVersion: 'habit-engine-v1',
+        } as never,
+        riskSignals: [
+          {
+            userProfileId: 'profile_123',
+            type: 'dropout_risk',
+            level: 'high',
+            title: 'Dropout risk',
+            description: 'Consistency is trending down.',
+            generatedAt: '2026-05-04T10:00:00.000Z',
+            formulaVersion: 'habit-engine-v1',
+          } as never,
+        ],
+      },
+    });
+
+    expect(result.influences).toEqual(
+      expect.arrayContaining(['habit:high_risk', 'habit:dropout_risk']),
+    );
+    expect(result.recommendations).toContain(
+      'Use one small habit that is easy to complete today',
     );
   });
 

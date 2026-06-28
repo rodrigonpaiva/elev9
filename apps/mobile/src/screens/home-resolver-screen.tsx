@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { ApiClientError } from '@elev9/api-client';
 import { Button, Card, colors, Screen, Text } from '@elev9/ui';
@@ -9,6 +10,8 @@ import { Button, Card, colors, Screen, Text } from '@elev9/ui';
 import { apiClient } from '../api/client';
 import { useAuth } from '../auth/auth-provider';
 import type { RootStackParamList } from '../navigation/app-navigator';
+
+const DAILY_BRIEFING_LAST_SHOWN_KEY = 'elev9.dailyBriefing.lastShownDate';
 
 export function HomeResolverScreen() {
   const navigation =
@@ -43,6 +46,12 @@ export function HomeResolverScreen() {
         return;
       }
 
+      if (await shouldShowDailyBriefingToday()) {
+        await markDailyBriefingShownToday();
+        navigation.replace('CoachDailyBriefing');
+        return;
+      }
+
       navigation.replace('MainTabs');
     } catch (error) {
       if (
@@ -64,7 +73,7 @@ export function HomeResolverScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage('Unable to prepare your workspace.');
+        setErrorMessage('Unable to set up your training space.');
       }
     } finally {
       setIsLoading(false);
@@ -76,13 +85,15 @@ export function HomeResolverScreen() {
       {isLoading ? (
         <View style={styles.loadingState}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={styles.loadingText}>Preparing your dashboard...</Text>
+          <Text style={styles.loadingText}>
+            Setting up your training space...
+          </Text>
         </View>
       ) : (
         <Card style={styles.card}>
           <Text variant="title">Unable to continue</Text>
           <Text style={styles.errorText}>
-            {errorMessage ?? 'Unable to prepare your onboarding flow.'}
+            {errorMessage ?? 'Unable to set up your training space.'}
           </Text>
           <Button
             label="Retry"
@@ -99,6 +110,30 @@ export function HomeResolverScreen() {
       )}
     </Screen>
   );
+}
+
+async function shouldShowDailyBriefingToday(): Promise<boolean> {
+  const todayKey = getLocalDateKey(new Date());
+  const lastShownDate = await AsyncStorage.getItem(
+    DAILY_BRIEFING_LAST_SHOWN_KEY,
+  );
+
+  return lastShownDate !== todayKey;
+}
+
+async function markDailyBriefingShownToday(): Promise<void> {
+  await AsyncStorage.setItem(
+    DAILY_BRIEFING_LAST_SHOWN_KEY,
+    getLocalDateKey(new Date()),
+  );
+}
+
+function getLocalDateKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
 }
 
 const styles = StyleSheet.create({

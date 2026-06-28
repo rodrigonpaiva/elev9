@@ -1,0 +1,4 @@
+- returns today’s personalization snapshot
+- respects UTC partitioning
+- returns not found for missing user profiles
+- does not recalculate the snapshot

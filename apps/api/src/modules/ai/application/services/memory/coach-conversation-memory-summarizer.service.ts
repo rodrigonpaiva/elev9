@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
+import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
 import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
 import {
-  FatigueLevel,
-  UserHealthContext,
-} from '../context-builder/build-user-health-context.service';
+  HabitMemoryPayload,
+  NotificationMemoryPayload,
+  PersonalizationMemoryPayload,
+} from '../../../../../shared/mappers';
+import { UserHealthContext } from '../context-builder/build-user-health-context.service';
 
 export const COACH_CONVERSATION_MEMORY_VERSION = 'memory-v1';
 
@@ -17,6 +20,10 @@ export type CoachConversationMemorySummarizerMessage = {
 export type CoachConversationMemorySummarizerInput = {
   healthContext: UserHealthContext;
   conversationMessages: CoachConversationMemorySummarizerMessage[];
+  coachDecision?: CoachDecisionLike;
+  notification?: NotificationMemoryPayload;
+  habit?: HabitMemoryPayload;
+  personalization?: PersonalizationMemoryPayload;
 };
 
 export type CoachConversationMemorySummaryResult = {
@@ -35,12 +42,22 @@ export class CoachConversationMemorySummarizer {
     const messages = input.conversationMessages.slice(-12);
     const latestUserMessage = this.findLatestUserMessage(messages);
     const concern = this.resolveConcern(latestUserMessage?.content ?? '');
-    const recoveryTrend = this.resolveRecoveryTrend(
-      input.healthContext.fatigueLevel,
-    );
+    const recoveryTrend = this.resolveRecoveryTrend(input.healthContext);
     const nutritionGoal = input.healthContext.nutritionProfile?.goal ?? 'none';
     const mealsPerDay = input.healthContext.nutritionProfile?.mealsPerDay ?? 0;
     const workoutCount = input.healthContext.recentWorkoutLogs.length;
+    const coachDecisionSummary = input.coachDecision
+      ? this.buildCoachDecisionSummary(input.coachDecision)
+      : null;
+    const notificationSummary = input.notification
+      ? this.buildNotificationSummary(input.notification)
+      : null;
+    const habitSummary = input.habit
+      ? this.buildHabitSummary(input.habit)
+      : null;
+    const personalizationSummary = input.personalization
+      ? this.buildPersonalizationSummary(input.personalization)
+      : null;
 
     const summary = [
       `goal=${this.normalizeValue(input.healthContext.goal ?? 'unknown')}`,
@@ -48,6 +65,10 @@ export class CoachConversationMemorySummarizer {
       `recovery=${recoveryTrend}`,
       `nutrition=${nutritionGoal}${nutritionGoal !== 'none' ? `/${mealsPerDay} meals` : ''}`,
       `workout_continuity=streak:${input.healthContext.currentStreak}, recent_workouts:${workoutCount}`,
+      ...(coachDecisionSummary ? [coachDecisionSummary] : []),
+      ...(notificationSummary ? [notificationSummary] : []),
+      ...(habitSummary ? [habitSummary] : []),
+      ...(personalizationSummary ? [personalizationSummary] : []),
       `user_concern=${concern}`,
     ].join('; ');
 
@@ -93,9 +114,13 @@ export class CoachConversationMemorySummarizer {
   }
 
   private resolveRecoveryTrend(
-    fatigueLevel: FatigueLevel,
+    healthContext: Pick<UserHealthContext, 'fatigueLevel' | 'recoveryTrend'>,
   ): 'improving' | 'stable' | 'needs_recovery' {
-    switch (fatigueLevel) {
+    if (healthContext.recoveryTrend) {
+      return healthContext.recoveryTrend;
+    }
+
+    switch (healthContext.fatigueLevel) {
       case 'LOW':
         return 'improving';
       case 'HIGH':
@@ -106,7 +131,56 @@ export class CoachConversationMemorySummarizer {
     }
   }
 
+  private buildCoachDecisionSummary(coachDecision: CoachDecisionLike): string {
+    const actionItems = coachDecision.actionItems
+      .slice(0, 3)
+      .map((item) => this.normalizeValue(item))
+      .join('|');
+
+    return [
+      `last_coach_decision=priority:${coachDecision.priority}`,
+      `headline:${this.normalizeValue(coachDecision.headline)}`,
+      `action_items:${actionItems || 'none'}`,
+    ].join(', ');
+  }
+
+  private buildNotificationSummary(
+    notification: NotificationMemoryPayload,
+  ): string {
+    return [
+      `notification=type:${notification.notificationType ?? 'none'}`,
+      `suppressed:${notification.suppressed ? 'true' : 'false'}`,
+      `fatigue:${notification.fatigueLevel}`,
+      `engagement:${notification.engagementScore}`,
+    ].join(',');
+  }
+
+  private buildHabitSummary(habit: HabitMemoryPayload): string {
+    return [
+      `habit=score:${habit.habitConsistencyScore}`,
+      `trend:${habit.habitTrend}`,
+      `streak:${habit.habitCurrentStreak}`,
+      `risk:${habit.habitRiskLevel}`,
+    ].join(',');
+  }
+
+  private buildPersonalizationSummary(
+    personalization: PersonalizationMemoryPayload,
+  ): string {
+    return [
+      `personalization=style:${personalization.preferredCoachingStyle}`,
+      `engagement:${personalization.engagementProfile}`,
+      `risk:${personalization.riskOfDisengagement}`,
+      `patterns:${personalization.topBehavioralPatterns.join('|') || 'none'}`,
+    ].join(',');
+  }
+
   private normalizeValue(value: string): string {
     return value.trim().replace(/\s+/g, '_');
   }
 }
+
+type CoachDecisionLike = Pick<
+  CoachDecision,
+  'priority' | 'headline' | 'actionItems'
+>;

@@ -1,0 +1,4 @@
+- returns the latest pattern set
+- respects ownership isolation
+- does not recalculate patterns
+- returns not found when no user profile exists

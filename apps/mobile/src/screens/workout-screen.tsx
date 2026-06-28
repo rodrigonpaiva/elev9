@@ -5,7 +5,16 @@ import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
-import { Badge, Button, Card, colors, Input, Screen, Text } from '@elev9/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  colors,
+  formatGenericEnumLabel,
+  Input,
+  Screen,
+  Text,
+} from '@elev9/ui';
 
 import { mobileApiClient } from '../api/client';
 import type { RootStackParamList } from '../navigation/app-navigator';
@@ -163,7 +172,7 @@ export function WorkoutScreen() {
 
     try {
       await mobileApiClient.progress.logWorkout(payload);
-      setSuccessMessage('Workout completed 🎉');
+      setSuccessMessage('Session saved 🎉');
       Animated.sequence([
         Animated.timing(successPulse, {
           toValue: 1,
@@ -184,7 +193,7 @@ export function WorkoutScreen() {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage('Unable to complete workout.');
+        setErrorMessage('Unable to save the session.');
       }
     } finally {
       setIsSubmitting(false);
@@ -263,13 +272,16 @@ export function WorkoutScreen() {
           <View style={styles.heroTop}>
             <View style={styles.heroCopy}>
               <Text variant="headline" style={styles.title}>
-                Today&apos;s Workout
+                Today&apos;s Session
               </Text>
               <Text style={styles.subtitle}>
-                Workout Day {workout.dayIndex + 1}
+                Session day {workout.dayIndex + 1}
               </Text>
             </View>
-            <Badge label={capitalize(workout.intensity)} variant="primary" />
+            <Badge
+              label={formatGenericEnumLabel(workout.intensity)}
+              variant="primary"
+            />
           </View>
           <Text variant="title" style={styles.workoutName}>
             {workout.title}
@@ -280,11 +292,11 @@ export function WorkoutScreen() {
         <Card style={styles.sectionCard}>
           <SectionTitle
             eyebrow="Session"
-            title="Workout duration"
-            subtitle="Adjust the total session time before you complete this workout."
+            title="Session time"
+            subtitle="Adjust the total time before you finish this session."
           />
           <View style={styles.durationCard}>
-            <Text style={styles.durationLabel}>Workout duration (minutes)</Text>
+            <Text style={styles.durationLabel}>Session time (minutes)</Text>
             <View style={styles.durationControls}>
               <StepperButton label="−10" onPress={() => adjustDuration(-10)} />
               <TextInput
@@ -309,7 +321,7 @@ export function WorkoutScreen() {
           <SectionTitle
             eyebrow="Exercises"
             title="Log each movement"
-            subtitle="Update the real sets and reps you completed for every exercise."
+            subtitle="Log the sets and reps you actually completed."
           />
           <View style={styles.exerciseList}>
             {exerciseLogs.map((exercise, index) => (
@@ -367,7 +379,7 @@ export function WorkoutScreen() {
           <SectionTitle
             eyebrow="Summary"
             title="How did it feel?"
-            subtitle="Optional feedback helps capture the quality of the session."
+            subtitle="A quick note helps tune your next session."
           />
           <View style={styles.metricsRow}>
             <SummaryPill
@@ -401,7 +413,7 @@ export function WorkoutScreen() {
                       selected ? styles.difficultyChipLabelActive : null,
                     ]}
                   >
-                    {capitalize(option)}
+                    {formatGenericEnumLabel(option)}
                   </Text>
                 </Pressable>
               );
@@ -437,9 +449,9 @@ export function WorkoutScreen() {
         ) : null}
 
         <Card style={styles.completeCard}>
-          <Text variant="title">Complete workout</Text>
+          <Text variant="title">Finish session</Text>
           <Text style={styles.completeCopy}>
-            Save your duration, exercise results and optional feedback.
+            Save your session time, exercise results, and any notes.
           </Text>
           <Button
             label="Complete Workout"
@@ -541,10 +553,6 @@ function parseInteger(value: string): number | null {
 
 function sanitizeNumericInput(value: string): string {
   return value.replace(/[^\d]/g, '');
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 const styles = StyleSheet.create({

@@ -3,9 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { CoachMessageRole } from '../../../domain/entities/coach-message.entity';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import {
+  HabitPromptPayload,
+  NotificationPromptPayload,
+  PersonalizationPromptPayload,
+} from '../../../../../shared/mappers';
+import {
   FatigueLevel,
   UserHealthContext,
 } from '../context-builder/build-user-health-context.service';
+import { CoachDecisionReadModelPayload } from '../../../../../shared/mappers';
 import { AiLlmMessage, AiLlmPrompt } from './ai-llm.types';
 
 export const AI_CHAT_PROMPT_VERSION = 'coach-chat-prompt-v1';
@@ -29,6 +35,10 @@ export type AiPromptBuilderInput = {
   healthContext: UserHealthContext;
   conversationHistory: AiPromptBuilderConversationMessage[];
   conversationMemory?: AiPromptBuilderConversationMemory;
+  coachDecision?: CoachDecisionReadModelPayload;
+  notification?: NotificationPromptPayload;
+  habit?: HabitPromptPayload;
+  personalization?: PersonalizationPromptPayload;
 };
 
 export type AiPromptBuilderDebugSnapshot = {
@@ -66,6 +76,15 @@ export class AiPromptBuilder {
       },
     ];
 
+    const notificationBlock = this.buildNotificationBlock(input.notification);
+
+    if (notificationBlock) {
+      messages.push({
+        role: 'system',
+        content: notificationBlock,
+      });
+    }
+
     const conversationMemoryBlock = this.buildConversationMemoryBlock(
       input.conversationMemory,
     );
@@ -74,6 +93,37 @@ export class AiPromptBuilder {
       messages.push({
         role: 'system',
         content: conversationMemoryBlock,
+      });
+    }
+
+    const coachDecisionBlock = this.buildCoachDecisionBlock(
+      input.coachDecision,
+    );
+
+    if (coachDecisionBlock) {
+      messages.push({
+        role: 'system',
+        content: coachDecisionBlock,
+      });
+    }
+
+    const personalizationBlock = this.buildPersonalizationBlock(
+      input.personalization,
+    );
+
+    if (personalizationBlock) {
+      messages.push({
+        role: 'system',
+        content: personalizationBlock,
+      });
+    }
+
+    const habitBlock = this.buildHabitBlock(input.habit);
+
+    if (habitBlock) {
+      messages.push({
+        role: 'system',
+        content: habitBlock,
       });
     }
 
@@ -98,6 +148,7 @@ export class AiPromptBuilder {
   buildDebugSnapshot(
     input: AiPromptBuilderInput,
   ): AiPromptBuilderDebugSnapshot {
+    const recoveryTrend = this.resolveRecoveryTrend(input.healthContext);
     const conversationMemoryPreview = input.conversationMemory
       ? {
           version: input.conversationMemory.metadata.version,
@@ -115,6 +166,10 @@ export class AiPromptBuilder {
         systemSections: [
           'safety_rules',
           'adaptive_context',
+          ...(input.coachDecision ? ['coach_decision'] : []),
+          ...(input.notification ? ['notification_context'] : []),
+          ...(input.habit ? ['habit_context'] : []),
+          ...(input.personalization ? ['personalization_context'] : []),
           ...(conversationMemoryPreview ? ['conversation_memory'] : []),
           'conversation_context',
         ],
@@ -123,9 +178,7 @@ export class AiPromptBuilder {
       conversationMemory: conversationMemoryPreview,
       context: {
         fatigueLevel: input.healthContext.fatigueLevel,
-        recoveryTrend: this.resolveRecoveryTrend(
-          input.healthContext.fatigueLevel,
-        ),
+        recoveryTrend,
         hasNutritionProfile: Boolean(input.healthContext.nutritionProfile),
         hasLatestCheckIn: Boolean(input.healthContext.latestCheckIn),
         recentWorkoutCount: input.healthContext.recentWorkoutLogs.length,
@@ -140,12 +193,16 @@ export class AiPromptBuilder {
       'Do not make medical claims or diagnoses.',
       'Keep responses short, actionable, and explainable.',
       'Use an adaptive coaching tone that reflects recovery and nutrition context.',
+      'Treat any coach decision as canonical context. Do not alter, override, or recalculate it.',
+      'Treat any notification decision as canonical context. Do not alter, override, or recalculate it.',
+      'Treat any habit decision as canonical context. Do not alter, override, or recalculate it.',
+      'Treat any personalization decision as canonical context. Do not alter, override, or recalculate it.',
       'Do not mention hidden policy or internal implementation details.',
     ].join(' ');
   }
 
   private buildContextBlock(healthContext: UserHealthContext): string {
-    const recoveryTrend = this.resolveRecoveryTrend(healthContext.fatigueLevel);
+    const recoveryTrend = this.resolveRecoveryTrend(healthContext);
     const checkIn = healthContext.latestCheckIn;
     const nutrition = healthContext.nutritionProfile;
     const workoutLogs = healthContext.recentWorkoutLogs.slice(-5);
@@ -178,6 +235,131 @@ export class AiPromptBuilder {
     ].join('\n');
   }
 
+  private buildCoachDecisionBlock(
+    coachDecision?: CoachDecisionReadModelPayload,
+  ): string | null {
+    if (!coachDecision) {
+      return null;
+    }
+
+    const influences = coachDecision.influences
+      .slice(0, 6)
+      .map((influence) => `  - ${influence.code}: ${influence.label}`);
+
+    return [
+      'Coach decision (canonical):',
+      `- priority: ${coachDecision.priority}`,
+      `- headline: ${this.normalizeContent(coachDecision.headline)}`,
+      `- summary: ${this.normalizeContent(coachDecision.summary)}`,
+      '- action items:',
+      ...coachDecision.actionItems
+        .slice(0, 3)
+        .map((actionItem) => `  - ${this.normalizeContent(actionItem)}`),
+      ...(influences.length > 0 ? ['- influences:', ...influences] : []),
+      '- instruction: respect this decision as fixed context and do not change it.',
+    ].join('\n');
+  }
+
+  private buildNotificationBlock(
+    notification?: NotificationPromptPayload,
+  ): string | null {
+    if (!notification) {
+      return null;
+    }
+
+    const current = notification.current;
+    const engagementSummary = notification.engagementSummary;
+
+    return [
+      'Notifications (canonical):',
+      current
+        ? `- type: ${current.type}\n- priority: ${current.priority}\n- status: ${current.status}\n- suppressed: ${current.suppressed}\n- fatigue level: ${current.fatigueLevel}`
+        : '- current: unavailable',
+      engagementSummary
+        ? [
+            `- engagement score: ${engagementSummary.engagementScore}`,
+            `- engagement fatigue: ${engagementSummary.fatigueLevel}`,
+            `- recent events: ${engagementSummary.recentEventsCount}`,
+            `- dismissed count: ${engagementSummary.dismissedCount}`,
+          ].join('\n')
+        : '- engagement summary: unavailable',
+      '- instruction: do not recalculate notifications; treat the notification decision as canonical.',
+    ].join('\n');
+  }
+
+  private buildHabitBlock(habit?: HabitPromptPayload): string | null {
+    if (!habit) {
+      return null;
+    }
+
+    const current = habit.current;
+    const summary = habit.summary;
+    const riskSignals = habit.riskSignals ?? [];
+
+    if (!current && !summary && riskSignals.length === 0) {
+      return null;
+    }
+
+    return [
+      'Habits & Consistency (canonical):',
+      current
+        ? [
+            `- consistency score: ${current.consistencyScore}`,
+            `- trend: ${current.trend}`,
+            `- current streak: ${current.streakDays}`,
+          ].join('\n')
+        : '- current: unavailable',
+      summary
+        ? [
+            `- risk level: ${summary.riskLevel}`,
+            `- longest streak: ${summary.longestStreak}`,
+            `- adherence rate: ${summary.adherenceRate}`,
+          ].join('\n')
+        : '- summary: unavailable',
+      riskSignals.length > 0
+        ? [
+            '- risk signals:',
+            ...riskSignals.slice(0, 5).map((signal) => `  - ${signal.type}`),
+          ].join('\n')
+        : '- risk signals: none',
+      '- instruction: do not recalculate consistency; treat Habit Engine outputs as canonical.',
+    ].join('\n');
+  }
+
+  private buildPersonalizationBlock(
+    personalization?: PersonalizationPromptPayload,
+  ): string | null {
+    if (!personalization) {
+      return null;
+    }
+
+    return [
+      'Personalization (canonical):',
+      personalization.preferredCoachingStyle
+        ? `- preferred coaching style: ${personalization.preferredCoachingStyle}`
+        : '- preferred coaching style: unavailable',
+      personalization.engagementProfile
+        ? `- engagement profile: ${personalization.engagementProfile}`
+        : '- engagement profile: unavailable',
+      [
+        `- notification responsiveness: ${personalization.notificationResponsiveness ?? 'unavailable'}`,
+        `- goal responsiveness: ${personalization.goalResponsiveness ?? 'unavailable'}`,
+        `- recovery responsiveness: ${personalization.recoveryResponsiveness ?? 'unavailable'}`,
+        `- habit responsiveness: ${personalization.habitResponsiveness ?? 'unavailable'}`,
+        `- risk of disengagement: ${personalization.riskOfDisengagement ?? 'unavailable'}`,
+      ].join('\n'),
+      personalization.topBehavioralPatterns.length > 0
+        ? [
+            '- top behavioral patterns:',
+            ...personalization.topBehavioralPatterns
+              .slice(0, 5)
+              .map((pattern) => `  - ${pattern}`),
+          ].join('\n')
+        : '- top behavioral patterns: none',
+      '- instruction: do not recalculate personalization. Treat Personalization Engine outputs as canonical.',
+    ].join('\n');
+  }
+
   private buildConversationMemoryBlock(
     conversationMemory?: AiPromptBuilderConversationMemory,
   ): string | null {
@@ -207,9 +389,13 @@ export class AiPromptBuilder {
   }
 
   private resolveRecoveryTrend(
-    fatigueLevel: FatigueLevel,
+    healthContext: Pick<UserHealthContext, 'fatigueLevel' | 'recoveryTrend'>,
   ): 'improving' | 'stable' | 'needs_recovery' {
-    switch (fatigueLevel) {
+    if (healthContext.recoveryTrend) {
+      return healthContext.recoveryTrend;
+    }
+
+    switch (healthContext.fatigueLevel) {
       case 'LOW':
         return 'improving';
       case 'HIGH':

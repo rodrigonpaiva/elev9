@@ -1,5 +1,10 @@
 {
   "ios": {
     "bundleIdentifier": "com.anonymous.elev9-coach-api"
+  },
+  "extra": {
+    "eas": {
+      "projectId": "2b4a633a-c694-4832-84c2-17873cfc6591"
+    }
   }
 }

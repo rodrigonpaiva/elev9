@@ -5,10 +5,26 @@ import {
   FitnessGoal,
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
+import type { AdaptiveTrainingInfluenceProps } from '../../../../training/domain/value-objects/adaptive-training-influence.value-object';
+import type {
+  AdaptiveRecommendedIntensity,
+  AdaptiveRecommendationType,
+  AdaptiveVolumeAction,
+} from '../../../../training/domain/value-objects/adaptive-recommendation-type.value-object';
+import {
+  RecoveryInfluenceProps,
+  RecommendedIntensity,
+} from '../../../../recovery/domain/entities/recovery-snapshot.entity';
 import {
   FatigueLevel,
   UserHealthContextNutritionProfile,
 } from '../context-builder/build-user-health-context.service';
+import type { CoachDecisionReadModelPayload } from '../../../../../shared/mappers';
+import type { NotificationPromptPayload } from '../../../../../shared/mappers';
+import type { CoachDecisionInfluenceProps } from '../../../domain/value-objects/coach-decision-influence.value-object';
+import type { CoachDecisionPriority } from '../../../domain/value-objects/coach-decision-priority.value-object';
+import type { HabitPromptPayload } from '../../../../../shared/mappers';
+import type { PersonalizationPromptPayload } from '../../../../../shared/mappers';
 
 export const COACH_FEEDBACK_GENERATOR_VERSION = 'heuristic-v1';
 
@@ -27,7 +43,22 @@ export type CoachFeedbackGeneratorInput = {
     muscleSoreness: number;
     motivationLevel: number;
   };
+  readinessScore?: number;
+  fatigueScore?: number;
+  recoveryInfluences?: RecoveryInfluenceProps[];
+  recommendedIntensity?: RecommendedIntensity;
+  adaptiveTrainingRecommendation?: {
+    recommendationType: AdaptiveRecommendationType;
+    recommendedIntensity: AdaptiveRecommendedIntensity;
+    volumeAction: AdaptiveVolumeAction;
+    reasoning: string;
+    influences: AdaptiveTrainingInfluenceProps[];
+  };
+  habit?: HabitPromptPayload;
+  coachDecision?: CoachDecisionReadModelPayload;
   nutritionProfile?: UserHealthContextNutritionProfile;
+  notification?: NotificationPromptPayload;
+  personalization?: PersonalizationPromptPayload;
 };
 
 export type CoachFeedbackGeneratorOutput = {
@@ -49,6 +80,8 @@ export class CoachFeedbackGenerator {
     const hasDurationTrendIncrease = this.hasIncreasingDurationTrend(
       input.workoutLogs,
     );
+    const coachDecision = input.coachDecision;
+    const personalization = input.personalization;
 
     const message = this.limitMessage(
       this.buildMessage({
@@ -60,6 +93,8 @@ export class CoachFeedbackGenerator {
         isConsistent,
         isBeginner,
         isInconsistent,
+        coachDecision,
+        personalization,
       }),
     );
 
@@ -156,6 +191,45 @@ export class CoachFeedbackGenerator {
       influences,
       isNoLogs,
     });
+    this.applyRecoverySnapshotSignals({
+      readinessScore: input.readinessScore,
+      fatigueScore: input.fatigueScore,
+      recommendedIntensity: input.recommendedIntensity,
+      recoveryInfluences: input.recoveryInfluences,
+      insights,
+      recommendations,
+      influences,
+    });
+    this.applyAdaptiveTrainingSignals({
+      adaptiveTrainingRecommendation: input.adaptiveTrainingRecommendation,
+      insights,
+      recommendations,
+      influences,
+    });
+    this.applyCoachDecisionSignals({
+      coachDecision,
+      insights,
+      recommendations,
+      influences,
+    });
+    this.applyHabitSignals({
+      habit: input.habit,
+      insights,
+      recommendations,
+      influences,
+    });
+    this.applyNotificationSignals({
+      notification: input.notification,
+      insights,
+      recommendations,
+      influences,
+    });
+    this.applyPersonalizationSignals({
+      personalization,
+      insights,
+      recommendations,
+      influences,
+    });
     this.applyTrainingSignals({
       logsCount,
       expectedWorkouts: input.expectedWorkouts,
@@ -186,28 +260,358 @@ export class CoachFeedbackGenerator {
     isConsistent: boolean;
     isBeginner: boolean;
     isInconsistent: boolean;
+    coachDecision?: {
+      priority: CoachDecisionPriority;
+      headline: string;
+    };
+    personalization?: PersonalizationPromptPayload;
   }): string {
+    const personalizationTail = this.buildPersonalizationTail(
+      input.personalization,
+    );
+
+    if (input.coachDecision) {
+      return this.limitMessage(
+        [input.coachDecision.headline, personalizationTail]
+          .filter(Boolean)
+          .join(' '),
+      );
+    }
+
     if (input.isNoLogs) {
-      return 'You are ready to start your first training streak today.';
+      return this.limitMessage(
+        [
+          'You are ready to start your first training streak today.',
+          personalizationTail,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
     if (input.hasHighStreak) {
-      return `Great consistency this week. You're on a ${input.currentStreak}-day streak.`;
+      return this.limitMessage(
+        [
+          `Great consistency this week. You're on a ${input.currentStreak}-day streak.`,
+          personalizationTail,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
     if (input.isConsistent) {
-      return 'You matched your expected training rhythm this week.';
+      return this.limitMessage(
+        [
+          'You matched your expected training rhythm this week.',
+          personalizationTail,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
     if (input.isBeginner) {
-      return 'Good start this week. You already logged your first workouts and can build consistency from here.';
+      return this.limitMessage(
+        [
+          'Good start this week. You already logged your first workouts and can build consistency from here.',
+          personalizationTail,
+        ]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
     if (input.isInconsistent) {
-      return 'You have room to rebuild your rhythm this week.';
+      return this.limitMessage(
+        ['You have room to rebuild your rhythm this week.', personalizationTail]
+          .filter(Boolean)
+          .join(' '),
+      );
     }
 
-    return `You're making progress. Aim for ${input.expectedWorkouts} workouts this week to keep momentum.`;
+    return this.limitMessage(
+      [
+        `You're making progress. Aim for ${input.expectedWorkouts} workouts this week to keep momentum.`,
+        personalizationTail,
+      ]
+        .filter(Boolean)
+        .join(' '),
+    );
+  }
+
+  private applyCoachDecisionSignals(input: {
+    coachDecision?: {
+      priority: CoachDecisionPriority;
+      headline: string;
+      summary: string;
+      actionItems: string[];
+      influences: Array<
+        CoachDecisionInfluenceProps & {
+          code: string;
+        }
+      >;
+    };
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const coachDecision = input.coachDecision;
+
+    if (!coachDecision) {
+      return;
+    }
+
+    input.influences.add(`coach:decision:${coachDecision.priority}`);
+
+    this.upsertInsight(
+      input.insights,
+      this.summarizeText(coachDecision.summary, 120),
+    );
+
+    for (const actionItem of [...coachDecision.actionItems]
+      .slice(0, 3)
+      .reverse()) {
+      this.prependRecommendation(input.recommendations, actionItem);
+    }
+
+    switch (coachDecision.priority) {
+      case 'recovery':
+        this.prependRecommendation(
+          input.recommendations,
+          'Prioritize recovery before pushing intensity',
+        );
+        return;
+      case 'nutrition':
+        this.prependRecommendation(
+          input.recommendations,
+          'Focus on nutrition consistency today',
+        );
+        return;
+      case 'training':
+        this.prependRecommendation(
+          input.recommendations,
+          'Follow the current training adaptation',
+        );
+        return;
+      case 'consistency':
+        this.prependRecommendation(
+          input.recommendations,
+          'Protect consistency and complete the planned session',
+        );
+        return;
+      case 'motivation':
+      default:
+        this.prependRecommendation(
+          input.recommendations,
+          'Keep momentum and stay on track',
+        );
+    }
+  }
+
+  private applyNotificationSignals(input: {
+    notification?: NotificationPromptPayload;
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const notification = input.notification;
+
+    if (!notification) {
+      return;
+    }
+
+    const current = notification.current;
+    const engagementSummary = notification.engagementSummary;
+
+    if (current?.suppressed) {
+      input.influences.add('notification:suppressed');
+      this.upsertInsight(
+        input.insights,
+        'Notification fatigue is high, so reminders should stay light',
+      );
+      this.prependRecommendation(
+        input.recommendations,
+        'Avoid excessive reminders and keep the next step simple',
+      );
+    }
+
+    if ((current?.fatigueLevel ?? engagementSummary?.fatigueLevel) === 'high') {
+      input.influences.add('notification:fatigue_high');
+      this.upsertInsight(
+        input.insights,
+        'Notification fatigue is currently high',
+      );
+    }
+
+    if ((engagementSummary?.dismissedCount ?? 0) >= 2) {
+      input.influences.add('notification:dismissed_frequently');
+      this.prependRecommendation(
+        input.recommendations,
+        'Recommend fewer interruptions and keep the next message shorter',
+      );
+    }
+
+    if ((engagementSummary?.engagementScore ?? 50) >= 80) {
+      input.influences.add('notification:high_engagement');
+      this.upsertInsight(
+        input.insights,
+        'Notification engagement is strong right now',
+      );
+      this.prependRecommendation(
+        input.recommendations,
+        'Reinforce the positive behavior the user is already showing',
+      );
+    }
+  }
+
+  private applyPersonalizationSignals(input: {
+    personalization?: PersonalizationPromptPayload;
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const personalization = input.personalization;
+
+    if (!personalization) {
+      return;
+    }
+
+    switch (personalization.preferredCoachingStyle) {
+      case 'direct':
+        input.influences.add('personalization:direct_style');
+        this.prependRecommendation(
+          input.recommendations,
+          'Keep the guidance short and specific',
+        );
+        break;
+      case 'motivational':
+        input.influences.add('personalization:motivational_style');
+        this.prependRecommendation(
+          input.recommendations,
+          'Use encouraging language and keep momentum visible',
+        );
+        break;
+      case 'educational':
+        input.influences.add('personalization:educational_style');
+        this.prependRecommendation(
+          input.recommendations,
+          'Explain the why behind the next step',
+        );
+        break;
+      case 'balanced':
+      default:
+        break;
+    }
+
+    if (personalization.notificationResponsiveness === 'low') {
+      input.influences.add('personalization:low_notification_responsiveness');
+      this.prependRecommendation(
+        input.recommendations,
+        'Avoid reminder-heavy language and keep the message low-pressure',
+      );
+    }
+
+    if (personalization.riskOfDisengagement === 'high') {
+      input.influences.add('personalization:high_disengagement_risk');
+      this.prependRecommendation(
+        input.recommendations,
+        'Keep pressure low and focus on one achievable action',
+      );
+    }
+
+    if (personalization.topBehavioralPatterns.includes('responds_to_streaks')) {
+      input.influences.add('personalization:responds_to_streaks');
+      this.upsertInsight(input.insights, 'Personalization responds to streaks');
+    }
+
+    if (personalization.topBehavioralPatterns.includes('responds_to_goals')) {
+      input.influences.add('personalization:responds_to_goals');
+      this.upsertInsight(input.insights, 'Personalization responds to goals');
+    }
+  }
+
+  private applyHabitSignals(input: {
+    habit?: HabitPromptPayload;
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const habit = input.habit;
+
+    if (!habit) {
+      return;
+    }
+
+    const summary =
+      (habit.summary ?? habit.current)
+        ? {
+            score:
+              habit.summary?.score ?? habit.current?.consistencyScore ?? 50,
+            trend: habit.summary?.trend ?? habit.current?.trend ?? 'stable',
+            currentStreak:
+              habit.summary?.currentStreak ?? habit.current?.streakDays ?? 0,
+            riskLevel: habit.summary?.riskLevel ?? 'low',
+          }
+        : null;
+    const riskSignals = habit.riskSignals ?? [];
+
+    if (!summary) {
+      return;
+    }
+
+    if (summary.trend === 'declining' || summary.riskLevel === 'high') {
+      input.influences.add('habit:high_risk');
+      this.upsertInsight(
+        input.insights,
+        'Habit consistency is trending down, so keep the routine easy to repeat',
+      );
+      this.prependRecommendation(
+        input.recommendations,
+        'Use one small habit that is easy to complete today',
+      );
+    }
+
+    if (summary.trend === 'improving') {
+      input.influences.add('habit:improving');
+      this.upsertInsight(input.insights, 'Habit consistency is improving');
+    }
+
+    if (summary.currentStreak >= 5) {
+      input.influences.add('habit:strong_streak');
+      this.prependRecommendation(
+        input.recommendations,
+        'Protect the routine that is already working',
+      );
+    }
+
+    if (riskSignals.some((signal) => signal.type === 'dropout_risk')) {
+      input.influences.add('habit:dropout_risk');
+      this.prependRecommendation(
+        input.recommendations,
+        'Keep pressure low and focus on completion over perfection',
+      );
+    }
+  }
+
+  private buildPersonalizationTail(
+    personalization?: PersonalizationPromptPayload,
+  ): string {
+    if (!personalization?.preferredCoachingStyle) {
+      return '';
+    }
+
+    switch (personalization.preferredCoachingStyle) {
+      case 'direct':
+        return 'Keep it short and specific.';
+      case 'motivational':
+        return 'Keep the encouragement visible.';
+      case 'educational':
+        return 'Explain the why behind the next step.';
+      case 'balanced':
+      default:
+        return '';
+    }
   }
 
   private buildGoalAwareRecommendation(goal: FitnessGoal): string {
@@ -411,6 +815,152 @@ export class CoachFeedbackGenerator {
     }
   }
 
+  private applyRecoverySnapshotSignals(input: {
+    readinessScore?: number;
+    fatigueScore?: number;
+    recommendedIntensity?: RecommendedIntensity;
+    recoveryInfluences?: RecoveryInfluenceProps[];
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    if (typeof input.readinessScore === 'number') {
+      if (input.readinessScore <= 40) {
+        input.influences.add('recovery:low_readiness');
+        this.upsertInsight(
+          input.insights,
+          'Your readiness is low, so recovery should stay the priority',
+        );
+        this.prependRecommendation(
+          input.recommendations,
+          'Prioritize recovery before pushing intensity',
+        );
+      } else if (input.readinessScore >= 80) {
+        input.influences.add('recovery:high_readiness');
+        this.upsertInsight(
+          input.insights,
+          'Your readiness looks strong for a more demanding session',
+        );
+        input.recommendations.push(
+          'A harder session can make sense if form stays solid',
+        );
+      }
+    }
+
+    if (typeof input.fatigueScore === 'number') {
+      if (input.fatigueScore >= 70) {
+        input.influences.add('recovery:high_fatigue_score');
+        this.prependRecommendation(
+          input.recommendations,
+          'Reduce intensity and focus on recovery today',
+        );
+      } else if (input.fatigueScore <= 35) {
+        input.influences.add('recovery:low_fatigue_score');
+        input.recommendations.push(
+          'You can keep intensity higher if recovery stays stable',
+        );
+      }
+    }
+
+    if (input.recommendedIntensity) {
+      input.influences.add(
+        `recovery:recommended_${input.recommendedIntensity}`,
+      );
+    }
+
+    for (const influence of input.recoveryInfluences ?? []) {
+      input.influences.add(`recovery:${influence.code.toLowerCase()}`);
+    }
+  }
+
+  private applyAdaptiveTrainingSignals(input: {
+    adaptiveTrainingRecommendation?: {
+      recommendationType: AdaptiveRecommendationType;
+      recommendedIntensity: AdaptiveRecommendedIntensity;
+      volumeAction: AdaptiveVolumeAction;
+      reasoning: string;
+      influences: AdaptiveTrainingInfluenceProps[];
+    };
+    insights: string[];
+    recommendations: string[];
+    influences: Set<string>;
+  }): void {
+    const recommendation = input.adaptiveTrainingRecommendation;
+
+    if (!recommendation) {
+      return;
+    }
+
+    input.influences.add(`adaptive:${recommendation.recommendationType}`);
+    input.influences.add(
+      `adaptive:intensity:${recommendation.recommendedIntensity}`,
+    );
+    input.influences.add(`adaptive:volume:${recommendation.volumeAction}`);
+
+    for (const influence of recommendation.influences) {
+      input.influences.add(`adaptive:${influence.code.toLowerCase()}`);
+    }
+
+    const reasoning = recommendation.reasoning.trim();
+    if (reasoning.length > 0) {
+      this.upsertInsight(
+        input.insights,
+        `Adaptive training recommends ${this.summarizeText(reasoning, 120)}`,
+      );
+    }
+
+    switch (recommendation.recommendationType) {
+      case 'rest_day':
+        this.prependRecommendation(
+          input.recommendations,
+          'Take a full rest day and prioritize recovery',
+        );
+        return;
+      case 'recovery_workout':
+        this.prependRecommendation(
+          input.recommendations,
+          'Keep the next session light, with mobility or recovery work',
+        );
+        return;
+      case 'increase_intensity':
+        this.prependRecommendation(
+          input.recommendations,
+          'You can progress intensity if your form stays solid',
+        );
+        return;
+      case 'increase_volume':
+        this.prependRecommendation(
+          input.recommendations,
+          'You can add a bit more volume if recovery remains stable',
+        );
+        return;
+      case 'decrease_intensity':
+        this.prependRecommendation(
+          input.recommendations,
+          'Dial back intensity and keep the session controlled',
+        );
+        return;
+      case 'decrease_volume':
+        this.prependRecommendation(
+          input.recommendations,
+          'Reduce volume and keep the next workout efficient',
+        );
+        return;
+      case 'reschedule_workout':
+        this.prependRecommendation(
+          input.recommendations,
+          'Reschedule the workout to protect consistency',
+        );
+        return;
+      case 'maintain':
+      default:
+        this.prependRecommendation(
+          input.recommendations,
+          'Keep the current training plan steady and monitor recovery',
+        );
+    }
+  }
+
   private applyTrainingSignals(input: {
     logsCount: number;
     expectedWorkouts: number;
@@ -509,5 +1059,15 @@ export class CoachFeedbackGenerator {
           item.length > 0 && array.indexOf(item) === index,
       )
       .slice(0, 3);
+  }
+
+  private summarizeText(text: string, maxLength: number): string {
+    const trimmed = text.trim();
+
+    if (trimmed.length <= maxLength) {
+      return trimmed;
+    }
+
+    return `${trimmed.slice(0, maxLength - 3).trimEnd()}...`;
   }
 }

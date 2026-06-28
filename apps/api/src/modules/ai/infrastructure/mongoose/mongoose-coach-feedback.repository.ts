@@ -74,6 +74,20 @@ export class MongooseCoachFeedbackRepository implements CoachFeedbackRepository 
             hasTrainingPlan: document.contextSnapshot.hasTrainingPlan,
             fatigueLevel: document.contextSnapshot.fatigueLevel,
             recoveryTrend: document.contextSnapshot.recoveryTrend,
+            readinessScore: document.contextSnapshot.readinessScore,
+            fatigueScore: document.contextSnapshot.fatigueScore,
+            recommendedIntensity: document.contextSnapshot.recommendedIntensity,
+            recoveryInfluences: document.contextSnapshot.recoveryInfluences
+              ? document.contextSnapshot.recoveryInfluences.map(
+                  (influence) => ({
+                    code: influence.code,
+                    label: influence.label,
+                    impact: influence.impact,
+                    weight: influence.weight,
+                    value: influence.value,
+                  }),
+                )
+              : undefined,
             weeklyFrequency: document.contextSnapshot.weeklyFrequency,
             currentStreak: document.contextSnapshot.currentStreak,
             averageWorkoutDuration:

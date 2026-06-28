@@ -31,6 +31,6 @@ import { AuthSessionGuard } from './presentation/http/guards/auth-session.guard'
       useClass: MongooseUserProfileRepository,
     },
   ],
-  exports: [CreateUserProfileUseCase],
+  exports: [CreateUserProfileUseCase, USER_PROFILE_REPOSITORY],
 })
 export class UsersModule {}

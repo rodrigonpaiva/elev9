@@ -1,0 +1,7 @@
+- builds motivational style profiles
+- builds direct style profiles
+- builds educational style profiles
+- derives notification responsiveness levels
+- derives recovery responsiveness levels
+- derives engagement responsiveness levels
+- persists a single long-term profile per user

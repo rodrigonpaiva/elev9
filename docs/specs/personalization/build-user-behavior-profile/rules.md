@@ -1,0 +1,6 @@
+- The profile must be derived from persisted read models only.
+- The profile must remain explainable and deterministic.
+- Responsiveness levels are categorical, not probabilistic ML scores.
+- The profile must not own upstream recovery, goal, coach, notification, or habit state.
+- Latest ordering must be canonical.
+- The profile must remain safe for dashboard and AI consumers.

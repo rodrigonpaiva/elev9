@@ -1,0 +1,5 @@
+- Use canonical latest ordering.
+- Keep the history bounded.
+- Do not accept `userBehaviorProfileId` from the client.
+- Reject invalid limits deterministically.
+- Return persisted snapshots only.

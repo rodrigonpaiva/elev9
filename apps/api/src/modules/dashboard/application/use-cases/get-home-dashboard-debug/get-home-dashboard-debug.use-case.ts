@@ -1,6 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { BuildUserHealthContextService } from '../../../../ai/application/services/context-builder/build-user-health-context.service';
+import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
+import { GetGoalMilestonesUseCase } from '../../../../goals/application/use-cases/get-goal-milestones/get-goal-milestones.use-case';
+import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
+import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
+import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
+import {
+  NotificationReadModelMapper,
+  type NotificationReadModelPayload,
+} from '../../../../../shared/mappers';
+import {
+  HabitReadModelMapper,
+  type HabitReadModel,
+} from '../../../../../shared/mappers';
 import {
   DAILY_CHECK_IN_REPOSITORY,
   DailyCheckInRepository,
@@ -24,6 +39,13 @@ export class GetHomeDashboardDebugUseCase {
     @Inject(DAILY_CHECK_IN_REPOSITORY)
     private readonly dailyCheckInRepository: DailyCheckInRepository,
     private readonly buildUserHealthContextService: BuildUserHealthContextService,
+    private readonly getCurrentGoalUseCase: GetCurrentGoalUseCase,
+    private readonly getGoalMilestonesUseCase: GetGoalMilestonesUseCase,
+    private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
+    private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
+    private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
+    private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
+    private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
     private readonly dashboardAdaptiveSignalsService: DashboardAdaptiveSignalsService,
   ) {}
 
@@ -59,6 +81,9 @@ export class GetHomeDashboardDebugUseCase {
           userProfile.id,
         )
       ).slice(0, 3);
+      const goal = await this.resolveGoal(authUserId);
+      const notification = await this.resolveNotification(authUserId);
+      const habits = await this.resolveHabits(authUserId);
       const recovery =
         this.dashboardAdaptiveSignalsService.buildRecoverySummary(
           healthContext,
@@ -74,6 +99,9 @@ export class GetHomeDashboardDebugUseCase {
         healthContext,
         recovery,
         nutritionGuidance,
+        goal,
+        habits,
+        notification,
       );
     } catch (error) {
       if (error instanceof GetHomeDashboardError) {
@@ -84,6 +112,83 @@ export class GetHomeDashboardDebugUseCase {
         GET_HOME_DASHBOARD_ERROR_CODES.INTERNAL_ERROR,
         'An unexpected error occurred.',
       );
+    }
+  }
+
+  private async resolveGoal(authUserId: string) {
+    try {
+      const currentGoal = await this.getCurrentGoalUseCase.execute({
+        authUserId,
+      });
+      const milestones = await this.getGoalMilestonesUseCase.execute({
+        authUserId,
+      });
+
+      return {
+        goal: currentGoal.goal,
+        progressSnapshot: currentGoal.progressSnapshot,
+        forecast: currentGoal.forecast,
+        milestones: milestones.goalMilestones,
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async resolveNotification(authUserId: string): Promise<
+    | {
+        current?: NotificationReadModelPayload['current'];
+        engagementSummary?: NotificationReadModelPayload['engagementSummary'];
+      }
+    | undefined
+  > {
+    const [currentResult, engagementSummaryResult] = await Promise.allSettled([
+      this.getCurrentNotificationUseCase.execute({ authUserId }),
+      this.getEngagementSummaryUseCase.execute({ authUserId }),
+    ]);
+
+    return NotificationReadModelMapper.toDashboardPayload(
+      currentResult.status === 'fulfilled'
+        ? currentResult.value.notificationDecision
+        : undefined,
+      engagementSummaryResult.status === 'fulfilled'
+        ? engagementSummaryResult.value.engagementSummary
+        : undefined,
+    );
+  }
+
+  private async resolveHabits(
+    authUserId: string,
+  ): Promise<HabitReadModel | undefined> {
+    try {
+      const [currentResult, summaryResult, riskSignalsResult] =
+        await Promise.allSettled([
+          this.getCurrentHabitsUseCase.execute({ authUserId }),
+          this.getConsistencySummaryUseCase.execute({ authUserId }),
+          this.getHabitRiskSignalsUseCase.execute({ authUserId }),
+        ]);
+
+      const current =
+        currentResult.status === 'fulfilled'
+          ? currentResult.value.habitSnapshot
+          : undefined;
+      const summary =
+        summaryResult.status === 'fulfilled'
+          ? summaryResult.value.consistencySummary
+          : undefined;
+      const riskSignals =
+        riskSignalsResult.status === 'fulfilled'
+          ? riskSignalsResult.value.habitRiskSignals
+          : undefined;
+      const habits = {
+        ...(current ? { current } : {}),
+        ...(summary ? { summary } : {}),
+        ...(riskSignals ? { riskSignals } : {}),
+      };
+
+      return Object.keys(habits).length > 0 ? habits : undefined;
+    } catch {
+      return undefined;
     }
   }
 }

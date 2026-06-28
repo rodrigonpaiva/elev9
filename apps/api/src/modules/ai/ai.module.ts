@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { COACH_FEEDBACK_REPOSITORY } from './domain/repositories/coach-feedback.repository';
@@ -7,47 +7,28 @@ import {
   COACH_FEEDBACK_MODEL_NAME,
   CoachFeedbackSchema,
 } from './infrastructure/mongoose/coach-feedback.schema';
+import { COACH_DECISION_REPOSITORY } from './domain/repositories/coach-decision.repository';
+import { MongooseCoachDecisionRepository } from './infrastructure/mongoose/mongoose-coach-decision.repository';
+import {
+  COACH_DECISION_MODEL_NAME,
+  CoachDecisionSchema,
+} from './infrastructure/mongoose/coach-decision.schema';
 import { AuthModule } from '../auth/auth.module';
-import { FITNESS_PROFILE_REPOSITORY } from '../fitness/domain/repositories/fitness-profile.repository';
-import { MongooseFitnessProfileRepository } from '../fitness/infrastructure/mongoose/mongoose-fitness-profile.repository';
-import {
-  FITNESS_PROFILE_MODEL_NAME,
-  FitnessProfileSchema,
-} from '../fitness/infrastructure/mongoose/fitness-profile.schema';
-import { NUTRITION_PROFILE_REPOSITORY } from '../nutrition/domain/repositories/nutrition-profile.repository';
-import { MongooseNutritionProfileRepository } from '../nutrition/infrastructure/mongoose/mongoose-nutrition-profile.repository';
-import {
-  NUTRITION_PROFILE_MODEL_NAME,
-  NutritionProfileSchema,
-} from '../nutrition/infrastructure/mongoose/nutrition-profile.schema';
-import { DAILY_CHECK_IN_REPOSITORY } from '../progress/domain/repositories/daily-check-in.repository';
-import { WORKOUT_LOG_REPOSITORY } from '../progress/domain/repositories/workout-log.repository';
-import { CLOCK } from '../progress/domain/services/clock.service';
-import { MongooseDailyCheckInRepository } from '../progress/infrastructure/mongoose/mongoose-daily-check-in.repository';
-import { MongooseWorkoutLogRepository } from '../progress/infrastructure/mongoose/mongoose-workout-log.repository';
-import { SystemClockService } from '../progress/infrastructure/system-clock.service';
-import {
-  DAILY_CHECK_IN_MODEL_NAME,
-  DailyCheckInSchema,
-} from '../progress/infrastructure/mongoose/daily-check-in.schema';
-import {
-  WORKOUT_LOG_MODEL_NAME,
-  WorkoutLogSchema,
-} from '../progress/infrastructure/mongoose/workout-log.schema';
-import { TRAINING_PLAN_REPOSITORY } from '../training/domain/repositories/training-plan.repository';
-import { MongooseTrainingPlanRepository } from '../training/infrastructure/mongoose/mongoose-training-plan.repository';
-import {
-  TRAINING_PLAN_MODEL_NAME,
-  TrainingPlanSchema,
-} from '../training/infrastructure/mongoose/training-plan.schema';
-import { USER_PROFILE_REPOSITORY } from '../users/domain/repositories/user-profile.repository';
-import { MongooseUserProfileRepository } from '../users/infrastructure/mongoose/mongoose-user-profile.repository';
-import {
-  USER_PROFILE_MODEL_NAME,
-  UserProfileSchema,
-} from '../users/infrastructure/mongoose/user-profile.schema';
+import { UsersModule } from '../users/users.module';
+import { FitnessModule } from '../fitness/fitness.module';
+import { ProgressModule } from '../progress/progress.module';
+import { NutritionModule } from '../nutrition/nutrition.module';
+import { GoalsModule } from '../goals/goals.module';
+import { HabitsModule } from '../habits/habits.module';
+import { RecoveryModule } from '../recovery/recovery.module';
+import { TrainingModule } from '../training/training.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { PersonalizationModule } from '../personalization/personalization.module';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
+import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { BuildUserHealthContextService } from './application/services/context-builder/build-user-health-context.service';
+import { CoachDecisionCalculatorService } from './application/services/coach-decision-calculator.service';
+import { CoachDecisionDateService } from './application/services/coach-decision-date.service';
 import { AiLlmConfigService } from './application/services/llm/ai-llm-config.service';
 import { AiLlmService } from './application/services/llm/ai-llm.service';
 import { AiPromptBuilder } from './application/services/llm/ai-prompt-builder.service';
@@ -64,9 +45,15 @@ import { GetCoachChatDebugIndexUseCase } from './application/use-cases/get-coach
 import { GetCoachFeedbackDebugHistoryUseCase } from './application/use-cases/get-coach-feedback-debug-history/get-coach-feedback-debug-history.use-case';
 import { GetCoachFeedbackHistoryUseCase } from './application/use-cases/get-coach-feedback-history/get-coach-feedback-history.use-case';
 import { GetCoachChatHistoryUseCase } from './application/use-cases/get-coach-chat-history/get-coach-chat-history.use-case';
+import { BuildCoachDecisionUseCase } from './application/use-cases/build-coach-decision/build-coach-decision.use-case';
+import { GetCurrentCoachDecisionUseCase } from './application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case';
+import { GetCoachDecisionHistoryUseCase } from './application/use-cases/get-coach-decision-history/get-coach-decision-history.use-case';
+import { GetTodayCoachDecisionUseCase } from './application/use-cases/get-today-coach-decision/get-today-coach-decision.use-case';
+import { ReplayCoachDecisionUseCase } from './application/use-cases/replay-coach-decision/replay-coach-decision.use-case';
 import { GenerateCoachFeedbackUseCase } from './application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case';
 import { ReplayCoachFeedbackUseCase } from './application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case';
 import { AiController } from './presentation/http/ai.controller';
+import { CoachDecisionController } from './presentation/http/coach-decision.controller';
 import { COACH_CONVERSATION_REPOSITORY } from './domain/repositories/coach-conversation.repository';
 import { MongooseCoachConversationRepository } from './infrastructure/mongoose/mongoose-coach-conversation.repository';
 import { COACH_CONVERSATION_MEMORY_REPOSITORY } from './domain/repositories/coach-conversation-memory.repository';
@@ -90,34 +77,24 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
 @Module({
   imports: [
     AuthModule,
+    UsersModule,
+    FitnessModule,
+    ProgressModule,
+    NutritionModule,
+    GoalsModule,
+    forwardRef(() => HabitsModule),
+    RecoveryModule,
+    TrainingModule,
+    forwardRef(() => NotificationsModule),
+    forwardRef(() => PersonalizationModule),
     MongooseModule.forFeature([
-      {
-        name: USER_PROFILE_MODEL_NAME,
-        schema: UserProfileSchema,
-      },
-      {
-        name: FITNESS_PROFILE_MODEL_NAME,
-        schema: FitnessProfileSchema,
-      },
-      {
-        name: NUTRITION_PROFILE_MODEL_NAME,
-        schema: NutritionProfileSchema,
-      },
-      {
-        name: TRAINING_PLAN_MODEL_NAME,
-        schema: TrainingPlanSchema,
-      },
-      {
-        name: WORKOUT_LOG_MODEL_NAME,
-        schema: WorkoutLogSchema,
-      },
-      {
-        name: DAILY_CHECK_IN_MODEL_NAME,
-        schema: DailyCheckInSchema,
-      },
       {
         name: COACH_FEEDBACK_MODEL_NAME,
         schema: CoachFeedbackSchema,
+      },
+      {
+        name: COACH_DECISION_MODEL_NAME,
+        schema: CoachDecisionSchema,
       },
       {
         name: COACH_CONVERSATION_MODEL_NAME,
@@ -133,10 +110,18 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
       },
     ]),
   ],
-  controllers: [AiController],
+  controllers: [AiController, CoachDecisionController],
   providers: [
     AuthSessionGuard,
+    PlatformDateService,
     BuildUserHealthContextService,
+    BuildCoachDecisionUseCase,
+    GetTodayCoachDecisionUseCase,
+    GetCurrentCoachDecisionUseCase,
+    GetCoachDecisionHistoryUseCase,
+    ReplayCoachDecisionUseCase,
+    CoachDecisionCalculatorService,
+    CoachDecisionDateService,
     AiLlmConfigService,
     AiPromptBuilder,
     AiLlmService,
@@ -155,36 +140,12 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
     GenerateCoachFeedbackUseCase,
     ReplayCoachFeedbackUseCase,
     {
-      provide: CLOCK,
-      useClass: SystemClockService,
-    },
-    {
-      provide: USER_PROFILE_REPOSITORY,
-      useClass: MongooseUserProfileRepository,
-    },
-    {
-      provide: FITNESS_PROFILE_REPOSITORY,
-      useClass: MongooseFitnessProfileRepository,
-    },
-    {
-      provide: NUTRITION_PROFILE_REPOSITORY,
-      useClass: MongooseNutritionProfileRepository,
-    },
-    {
-      provide: TRAINING_PLAN_REPOSITORY,
-      useClass: MongooseTrainingPlanRepository,
-    },
-    {
-      provide: WORKOUT_LOG_REPOSITORY,
-      useClass: MongooseWorkoutLogRepository,
-    },
-    {
-      provide: DAILY_CHECK_IN_REPOSITORY,
-      useClass: MongooseDailyCheckInRepository,
-    },
-    {
       provide: COACH_FEEDBACK_REPOSITORY,
       useClass: MongooseCoachFeedbackRepository,
+    },
+    {
+      provide: COACH_DECISION_REPOSITORY,
+      useClass: MongooseCoachDecisionRepository,
     },
     {
       provide: COACH_CONVERSATION_REPOSITORY,
@@ -202,6 +163,16 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
       provide: AI_LLM_PROVIDER,
       useClass: OpenAiLlmProvider,
     },
+  ],
+  exports: [
+    BuildUserHealthContextService,
+    COACH_DECISION_REPOSITORY,
+    GetCurrentCoachDecisionUseCase,
+    GenerateCoachFeedbackUseCase,
+    CreateCoachChatUseCase,
+    AiPromptBuilder,
+    CoachChatReplyGenerator,
+    CoachConversationMemorySummarizer,
   ],
 })
 export class AiModule {}

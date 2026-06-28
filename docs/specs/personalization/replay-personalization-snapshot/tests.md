@@ -1,0 +1,5 @@
+- replays with valid persisted source context
+- detects drift in deterministic fields
+- respects ownership isolation
+- does not mutate the persisted snapshot
+- does not query live upstream signals

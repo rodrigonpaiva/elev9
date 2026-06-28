@@ -5,7 +5,15 @@ import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
-import { Button, Card, Screen, Text, colors } from '@elev9/ui';
+import {
+  Button,
+  Card,
+  Screen,
+  Text,
+  colors,
+  formatGenericEnumLabel,
+  formatGoalType,
+} from '@elev9/ui';
 
 import { mobileApiClient } from '../api/client';
 import type { RootStackParamList } from '../navigation/app-navigator';
@@ -42,30 +50,30 @@ export function CreateTrainingPlanScreen() {
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>Onboarding</Text>
           <Text variant="headline" style={styles.title}>
-            Generate your first training plan
+            Build your first training plan
           </Text>
           <Text style={styles.subtitle}>
-            Elev9 will create a structured plan based on your fitness profile.
+            Elev9 will build a plan based on your goal and training setup.
           </Text>
         </View>
 
         <Card style={styles.card}>
           <Text variant="title">Ready to train</Text>
           <Text style={styles.subtitle}>
-            This plan is generated with simple coaching rules based on your
-            fitness profile, so you can start quickly and refine later.
+            Your plan is built from your goal and training rhythm, so you can
+            start quickly and refine later.
           </Text>
 
           {goal || activityLevel ? (
             <View style={styles.summaryBox}>
               {goal ? (
                 <Text style={styles.summaryText}>
-                  Goal: {formatLabel(goal)}
+                  Goal: {formatGoalType(goal)}
                 </Text>
               ) : null}
               {activityLevel ? (
                 <Text style={styles.summaryText}>
-                  Activity: {formatLabel(activityLevel)}
+                  Activity: {formatGenericEnumLabel(activityLevel)}
                 </Text>
               ) : null}
             </View>
@@ -134,10 +142,3 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 });
-
-function formatLabel(value: string): string {
-  return value
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}

@@ -3,6 +3,14 @@ import {
   FitnessGoal,
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import {
+  GoalDashboardPayload,
+  HabitReadModelPayload,
+  NotificationReadModelPayload,
+  PersonalizationDashboardPayload,
+} from '../../../../../shared/mappers';
+import { CoachDecisionInfluenceProps } from '../../../../ai/domain/value-objects/coach-decision-influence.value-object';
+import { CoachDecisionPriority } from '../../../../ai/domain/value-objects/coach-decision-priority.value-object';
+import {
   TrainingPlanDay,
   TrainingPlanExercise,
   TrainingPlanIntensity,
@@ -26,6 +34,67 @@ type DashboardNutritionGuidance = {
   signals: string[];
 };
 
+type DashboardAdaptiveTrainingRecommendation = {
+  recommendationType:
+    | 'increase_intensity'
+    | 'decrease_intensity'
+    | 'increase_volume'
+    | 'decrease_volume'
+    | 'recovery_workout'
+    | 'rest_day'
+    | 'reschedule_workout'
+    | 'maintain';
+  recommendedIntensity: 'recovery' | 'light' | 'moderate' | 'hard';
+  volumeAction: 'increase' | 'maintain' | 'decrease';
+  reasoning: string;
+  influences: Array<{
+    code:
+      | 'HIGH_READINESS'
+      | 'LOW_READINESS'
+      | 'HIGH_FATIGUE'
+      | 'LOW_FATIGUE'
+      | 'RECOVERY_TREND_IMPROVING'
+      | 'RECOVERY_TREND_DECLINING'
+      | 'HIGH_ADHERENCE'
+      | 'LOW_ADHERENCE'
+      | 'LONG_STREAK'
+      | 'MISSED_WORKOUTS'
+      | 'GOOD_NUTRITION_SUPPORT'
+      | 'POOR_NUTRITION_SUPPORT'
+      | 'RECENT_WORKOUT_LOAD_HIGH'
+      | 'RECENT_WORKOUT_LOAD_LOW';
+    label: string;
+    impact: 'positive' | 'negative' | 'neutral';
+    weight?: number;
+    value?: number;
+  }>;
+};
+
+type DashboardCoachDecision = {
+  priority: CoachDecisionPriority;
+  headline: string;
+  summary: string;
+  actionItems: string[];
+  influences: CoachDecisionInfluenceProps[];
+};
+
+type DashboardRecoveryInfluence = {
+  code:
+    | 'LOW_SLEEP'
+    | 'LOW_ENERGY'
+    | 'HIGH_MUSCLE_SORENESS'
+    | 'HIGH_ADHERENCE'
+    | 'LOW_ADHERENCE'
+    | 'HIGH_WORKOUT_LOAD'
+    | 'RECENT_WORKOUT_COMPLETION'
+    | 'LONG_STREAK'
+    | 'MISSED_WORKOUTS';
+  label: string;
+  impact: 'positive' | 'negative' | 'neutral';
+  weight?: number;
+  value?: number;
+};
+
 export type GetHomeDashboardOutput = {
   dashboard: {
     user: {
@@ -40,6 +109,10 @@ export type GetHomeDashboardOutput = {
       id: string;
       todayWorkout: DashboardTodayWorkout | null;
     } | null;
+    goal?: GoalDashboardPayload;
+    habits?: HabitReadModelPayload;
+    notification?: NotificationReadModelPayload;
+    personalization?: PersonalizationDashboardPayload;
     progressSummary: {
       period: 'week';
       workoutsCompleted: number;
@@ -51,6 +124,9 @@ export type GetHomeDashboardOutput = {
       fatigueLevel: FatigueLevel;
       recommendedIntensity: 'low' | 'medium' | 'normal';
       recoveryTrend: 'improving' | 'stable' | 'needs_recovery';
+      readinessScore?: number;
+      fatigueScore?: number;
+      recoveryInfluences?: DashboardRecoveryInfluence[];
       latestCheckIn?: {
         energyLevel: number;
         sleepQuality: number;
@@ -59,6 +135,8 @@ export type GetHomeDashboardOutput = {
         createdAt: string;
       };
     };
+    coachDecision?: DashboardCoachDecision;
+    adaptiveTrainingRecommendation?: DashboardAdaptiveTrainingRecommendation;
     nutritionGuidance: DashboardNutritionGuidance;
   };
 };

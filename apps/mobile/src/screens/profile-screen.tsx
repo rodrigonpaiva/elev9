@@ -6,19 +6,18 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
 import type { DashboardHomeResponse } from '@elev9/types';
-import type {
-  FitnessProfileActivityLevel,
-  FitnessProfileGoal,
-} from '@elev9/types';
 import {
   Badge,
   Button,
   Card,
   colors,
+  formatGenericEnumLabel,
+  formatGoalType,
   Screen,
   SectionHeader,
   Text,
@@ -26,8 +25,11 @@ import {
 
 import { apiClient } from '../api/client';
 import { useAuth } from '../auth/auth-provider';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 export function ProfileScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signOut, status } = useAuth();
   const [dashboard, setDashboard] = useState<
     DashboardHomeResponse['dashboard'] | null
@@ -103,6 +105,46 @@ export function ProfileScreen() {
     }
   }, [signOut]);
 
+  const handleOpenTrainingHistory = useCallback(() => {
+    navigation.replace('MainTabs', { initialTab: 'history' });
+  }, [navigation]);
+
+  const handleOpenTrainingAnalytics = useCallback(() => {
+    navigation.navigate('TrainingAnalytics');
+  }, [navigation]);
+
+  const handleOpenNutritionOverview = useCallback(() => {
+    navigation.navigate('NutritionOverview');
+  }, [navigation]);
+
+  const handleOpenNutritionPlan = useCallback(() => {
+    navigation.navigate('NutritionPlan');
+  }, [navigation]);
+
+  const handleOpenNutritionHistory = useCallback(() => {
+    navigation.navigate('NutritionHistory');
+  }, [navigation]);
+
+  const handleOpenCoach = useCallback(() => {
+    navigation.navigate('AskCoach');
+  }, [navigation]);
+
+  const handleOpenCoachMemory = useCallback(() => {
+    navigation.navigate('CoachMemoryTimeline');
+  }, [navigation]);
+
+  const handleOpenCoachWeeklyReview = useCallback(() => {
+    navigation.navigate('CoachWeeklyReview');
+  }, [navigation]);
+
+  const handleOpenCoachNotifications = useCallback(() => {
+    navigation.navigate('CoachNotifications');
+  }, [navigation]);
+
+  const handleOpenGoalGuidance = useCallback(() => {
+    navigation.navigate('CoachGoalGuidance');
+  }, [navigation]);
+
   const trainingPlanStatus = resolveTrainingPlanStatus(dashboard);
 
   return (
@@ -141,7 +183,7 @@ export function ProfileScreen() {
             {dashboard?.user.name ?? 'Elev9 User'}
           </Text>
           <Text style={styles.subtitle}>
-            Your account snapshot, training setup and secure session controls.
+            Your training profile, plan status, and account controls.
           </Text>
         </Card>
 
@@ -165,7 +207,7 @@ export function ProfileScreen() {
             <Card style={styles.card}>
               <SectionHeader
                 title="Account"
-                subtitle="Basic identity tied to your current session."
+                subtitle="Basic details for your current training space."
               />
               <InfoRow
                 label="Name"
@@ -173,49 +215,129 @@ export function ProfileScreen() {
               />
               <InfoRow
                 label="Session"
-                value={
-                  status === 'authenticated' ? 'Authenticated' : 'Inactive'
-                }
+                value={status === 'authenticated' ? 'Signed in' : 'Signed out'}
               />
             </Card>
 
             <Card style={styles.card}>
               <SectionHeader
                 title="Fitness Profile"
-                subtitle="Your current goal and activity rhythm."
+                subtitle="Your current goal and training rhythm."
               />
               <InfoRow
-                label="Fitness goal"
-                value={formatGoal(dashboard?.fitnessProfile?.goal)}
+                label="Goal"
+                value={
+                  dashboard?.fitnessProfile?.goal
+                    ? formatGoalType(dashboard.fitnessProfile.goal)
+                    : 'Not set'
+                }
               />
               <InfoRow
-                label="Activity level"
-                value={formatActivityLevel(
-                  dashboard?.fitnessProfile?.activityLevel,
-                )}
+                label="Training level"
+                value={
+                  dashboard?.fitnessProfile?.activityLevel
+                    ? formatGenericEnumLabel(
+                        dashboard.fitnessProfile.activityLevel,
+                      )
+                    : 'Not set'
+                }
+              />
+              <Button
+                label="Goal Guidance"
+                onPress={handleOpenGoalGuidance}
+                variant="ghost"
+                style={styles.fullButton}
               />
             </Card>
 
             <Card style={styles.card}>
               <SectionHeader
                 title="Training Plan"
-                subtitle="Current plan availability and workout readiness."
+                subtitle="Your current plan and today's readiness."
               />
               <InfoRow label="Plan status" value={trainingPlanStatus.status} />
               <InfoRow
-                label="Today workout"
+                label="Today's session"
                 value={trainingPlanStatus.todayWorkout}
               />
               <InfoRow
-                label="Weekly progress"
+                label="This week"
                 value={`${dashboard?.progressSummary.workoutsCompleted ?? 0} workouts`}
+              />
+              <Button
+                label="View Training History"
+                onPress={handleOpenTrainingHistory}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="View Training Analytics"
+                onPress={handleOpenTrainingAnalytics}
+                variant="ghost"
+                style={styles.fullButton}
               />
             </Card>
 
             <Card style={styles.card}>
               <SectionHeader
-                title="Session Control"
-                subtitle="Refresh your profile or securely leave this device."
+                title="Nutrition"
+                subtitle="Review today's nutrition plan and coaching focus."
+              />
+              <Button
+                label="Nutrition Overview"
+                onPress={handleOpenNutritionOverview}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Nutrition Plan"
+                onPress={handleOpenNutritionPlan}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Nutrition History"
+                onPress={handleOpenNutritionHistory}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+            </Card>
+
+            <Card style={styles.card}>
+              <SectionHeader
+                title="Coach"
+                subtitle="Ask about training, nutrition, recovery, and your current plan."
+              />
+              <Button
+                label="Ask Coach"
+                onPress={handleOpenCoach}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Coach Memory"
+                onPress={handleOpenCoachMemory}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Coach Weekly Review"
+                onPress={handleOpenCoachWeeklyReview}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+              <Button
+                label="Coach Notifications"
+                onPress={handleOpenCoachNotifications}
+                variant="ghost"
+                style={styles.fullButton}
+              />
+            </Card>
+
+            <Card style={styles.card}>
+              <SectionHeader
+                title="Device Access"
+                subtitle="Refresh your details or sign out from this device."
               />
               <View style={styles.actions}>
                 <Button
@@ -249,46 +371,20 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatGoal(goal?: FitnessProfileGoal) {
-  switch (goal) {
-    case 'gain_muscle':
-      return 'Gain muscle';
-    case 'lose_weight':
-      return 'Lose weight';
-    case 'maintain':
-      return 'Maintain';
-    default:
-      return 'Not set';
-  }
-}
-
-function formatActivityLevel(activityLevel?: FitnessProfileActivityLevel) {
-  switch (activityLevel) {
-    case 'high':
-      return 'High';
-    case 'medium':
-      return 'Medium';
-    case 'low':
-      return 'Low';
-    default:
-      return 'Not set';
-  }
-}
-
 function resolveTrainingPlanStatus(
   dashboard: DashboardHomeResponse['dashboard'] | null,
 ) {
   if (!dashboard?.trainingPlan) {
     return {
-      status: 'No plan created',
-      todayWorkout: 'Unavailable',
+      status: 'No plan yet',
+      todayWorkout: 'No session yet',
     };
   }
 
   if (!dashboard.trainingPlan.todayWorkout) {
     return {
       status: 'Plan active',
-      todayWorkout: 'No workout for today',
+      todayWorkout: 'Rest day today',
     };
   }
 

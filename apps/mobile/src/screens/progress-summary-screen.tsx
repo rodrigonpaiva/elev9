@@ -7,7 +7,8 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
 import type { ProgressSummaryResponse } from '@elev9/types';
@@ -16,12 +17,14 @@ import {
   Button,
   Card,
   colors,
+  formatGenericEnumLabel,
   Screen,
   SectionHeader,
   Text,
 } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
 type SummaryState = ProgressSummaryResponse['summary'] | null;
 type Period = 'week' | 'month';
@@ -29,6 +32,8 @@ type Period = 'week' | 'month';
 const PERIOD_OPTIONS: Period[] = ['week', 'month'];
 
 export function ProgressSummaryScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [summary, setSummary] = useState<SummaryState>(null);
   const [period, setPeriod] = useState<Period>('week');
   const [isLoading, setIsLoading] = useState(true);
@@ -95,6 +100,10 @@ export function ProgressSummaryScreen() {
     [load, period],
   );
 
+  const handleGoalGuidance = useCallback(() => {
+    navigation.navigate('CoachGoalGuidance');
+  }, [navigation]);
+
   return (
     <Screen
       contentStyle={styles.content}
@@ -128,17 +137,17 @@ export function ProgressSummaryScreen() {
         <Card style={styles.heroCard}>
           <Badge label="Progress" variant="primary" />
           <Text variant="headline" style={styles.title}>
-            Progress Summary
+            Training Progress
           </Text>
           <Text style={styles.subtitle}>
-            Track your volume, consistency and recent momentum over time.
+            See how your training is stacking up over time.
           </Text>
         </Card>
 
         <Card style={styles.selectorCard}>
           <SectionHeader
-            title="Period"
-            subtitle="Switch the summary range and refetch your latest metrics."
+            title="View"
+            subtitle="Switch between weekly and monthly views."
           />
           <View style={styles.periodSelector}>
             {PERIOD_OPTIONS.map((option) => {
@@ -159,7 +168,7 @@ export function ProgressSummaryScreen() {
                       isActive ? styles.periodChipLabelActive : null,
                     ]}
                   >
-                    {capitalize(option)}
+                    {formatGenericEnumLabel(option)}
                   </Text>
                 </Pressable>
               );
@@ -187,10 +196,13 @@ export function ProgressSummaryScreen() {
             <Card style={styles.overviewCard}>
               <SectionHeader
                 title={`This ${summary.period}`}
-                subtitle="Your active reporting window."
+                subtitle="Your current training window."
               />
               <View style={styles.highlightRow}>
-                <Badge label={capitalize(summary.period)} variant="primary" />
+                <Badge
+                  label={formatGenericEnumLabel(summary.period)}
+                  variant="primary"
+                />
                 <Text style={styles.highlightCopy}>
                   {summary.workoutsCompleted} workout
                   {summary.workoutsCompleted === 1 ? '' : 's'} logged
@@ -199,7 +211,7 @@ export function ProgressSummaryScreen() {
             </Card>
 
             <Card style={styles.streakCard}>
-              <Text style={styles.streakLabel}>🔥 Current streak</Text>
+              <Text style={styles.streakLabel}>🔥 Streak</Text>
               <Text style={styles.streakValue}>
                 {summary.currentStreak} day
                 {summary.currentStreak === 1 ? '' : 's'}
@@ -210,6 +222,13 @@ export function ProgressSummaryScreen() {
                   : 'Keep the momentum going with another session today.'}
               </Text>
             </Card>
+
+            <Button
+              accessibilityLabel="Open goal guidance"
+              label="Goal Guidance"
+              onPress={handleGoalGuidance}
+              style={styles.fullButton}
+            />
 
             <View style={styles.metricsGrid}>
               <MetricCard
@@ -257,10 +276,6 @@ function formatDate(value: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   }).format(date);
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 const styles = StyleSheet.create({

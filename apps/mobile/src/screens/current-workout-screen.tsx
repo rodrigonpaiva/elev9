@@ -16,6 +16,7 @@ import {
   Button,
   Card,
   colors,
+  formatGenericEnumLabel,
   Screen,
   SectionHeader,
   Text,
@@ -114,10 +115,10 @@ export function CurrentWorkoutScreen() {
         <View style={styles.hero}>
           <Badge variant="primary" label="Current Workout" />
           <Text variant="headline" style={styles.title}>
-            Train with intention
+            Train with purpose
           </Text>
           <Text style={styles.subtitle}>
-            Focus on today’s session and log it when you’re done.
+            Focus on today&apos;s session and log it when you&apos;re done.
           </Text>
         </View>
 
@@ -128,7 +129,7 @@ export function CurrentWorkoutScreen() {
           </View>
         ) : errorMessage ? (
           <Card style={styles.feedbackCard}>
-            <Text variant="title">Workout unavailable</Text>
+            <Text variant="title">Session unavailable</Text>
             <Text style={styles.errorText}>{errorMessage}</Text>
             <Button
               label="Retry"
@@ -143,7 +144,10 @@ export function CurrentWorkoutScreen() {
                 title={todayWorkout.title}
                 subtitle={`${todayWorkout.focus} • ${todayWorkout.format}`}
                 action={
-                  <Badge label={todayWorkout.intensity} variant="muted" />
+                  <Badge
+                    label={formatGenericEnumLabel(todayWorkout.intensity)}
+                    variant="muted"
+                  />
                 }
               />
               <Text style={styles.bodyText}>
@@ -165,7 +169,7 @@ export function CurrentWorkoutScreen() {
             <Button
               label="Start Workout"
               onPress={() =>
-                navigation.navigate('Workout', {
+                navigation.navigate('WorkoutOverview', {
                   trainingPlanId: trainingPlan.id,
                   workout: todayWorkout as TodayWorkout,
                 })
@@ -175,10 +179,10 @@ export function CurrentWorkoutScreen() {
           </>
         ) : (
           <Card style={styles.feedbackCard}>
-            <Text variant="title">No training today</Text>
+            <Text variant="title">Rest day today</Text>
             <Text style={styles.subtitle}>
-              Your current plan does not include a session for today. Check back
-              tomorrow or review your history.
+              Your plan gives you a lighter day today. Check back tomorrow or
+              review your recent sessions.
             </Text>
             <Button
               label="Refresh"

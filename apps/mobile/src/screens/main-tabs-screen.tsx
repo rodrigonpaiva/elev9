@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import Animated, {
   interpolate,
   interpolateColor,
@@ -15,13 +17,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@elev9/ui';
 import { Text } from '@elev9/ui';
 
+import { CoachHomeScreen } from './coach-home-screen';
 import { CurrentWorkoutScreen } from './current-workout-screen';
 import { DashboardScreen } from './dashboard-screen';
 import { ProfileScreen } from './profile-screen';
 import { ProgressSummaryScreen } from './progress-summary-screen';
 import { WorkoutHistoryScreen } from './workout-history-screen';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
-type MainTabKey = 'home' | 'workout' | 'history' | 'progress' | 'profile';
+type MainTabKey =
+  | 'home'
+  | 'coach'
+  | 'workout'
+  | 'history'
+  | 'progress'
+  | 'profile';
 
 type TabConfig = {
   key: MainTabKey;
@@ -32,6 +42,12 @@ type TabConfig = {
 
 const TABS: TabConfig[] = [
   { key: 'home', label: 'Home', icon: 'home-outline', activeIcon: 'home' },
+  {
+    key: 'coach',
+    label: 'Coach',
+    icon: 'sparkles-outline',
+    activeIcon: 'sparkles',
+  },
   {
     key: 'workout',
     label: 'Workout',
@@ -71,7 +87,10 @@ const themeAlpha = {
 };
 
 export function MainTabsScreen() {
-  const [activeTab, setActiveTab] = useState<MainTabKey>('home');
+  const route = useRoute<RouteProp<RootStackParamList, 'MainTabs'>>();
+  const [activeTab, setActiveTab] = useState<MainTabKey>(
+    route.params?.initialTab ?? 'home',
+  );
 
   return (
     <SafeAreaView style={styles.root} edges={['bottom']}>
@@ -206,7 +225,17 @@ function renderTab(
 ) {
   switch (activeTab) {
     case 'home':
-      return <DashboardScreen onOpenHistory={() => setActiveTab('history')} />;
+      return (
+        <DashboardScreen
+          onOpenHistory={() => setActiveTab('history')}
+          onOpenProfile={() => setActiveTab('profile')}
+          onOpenTrainingPlan={() => setActiveTab('workout')}
+        />
+      );
+    case 'coach':
+      return (
+        <CoachHomeScreen onOpenWorkoutTab={() => setActiveTab('workout')} />
+      );
     case 'workout':
       return <CurrentWorkoutScreen />;
     case 'history':
@@ -216,7 +245,13 @@ function renderTab(
     case 'profile':
       return <ProfileScreen />;
     default:
-      return <DashboardScreen onOpenHistory={() => setActiveTab('history')} />;
+      return (
+        <DashboardScreen
+          onOpenHistory={() => setActiveTab('history')}
+          onOpenProfile={() => setActiveTab('profile')}
+          onOpenTrainingPlan={() => setActiveTab('workout')}
+        />
+      );
   }
 }
 

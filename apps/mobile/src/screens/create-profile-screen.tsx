@@ -56,10 +56,10 @@ export function CreateProfileScreen() {
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>Onboarding</Text>
           <Text variant="headline" style={styles.title}>
-            Let&apos;s set up your profile
+            Let&apos;s set up your training profile
           </Text>
           <Text style={styles.subtitle}>
-            Start with your name so Elev9 can personalize your training flow.
+            Start with your name so Elev9 can personalize your coaching.
           </Text>
         </View>
 
@@ -67,7 +67,7 @@ export function CreateProfileScreen() {
           <View style={styles.sectionHeader}>
             <Text variant="title">Profile details</Text>
             <Text style={styles.sectionSubtitle}>
-              This is the name that will appear in your dashboard.
+              This is the name that will appear in your training space.
             </Text>
           </View>
           <Input
