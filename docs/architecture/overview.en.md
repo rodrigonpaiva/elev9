@@ -2,7 +2,7 @@
 
 ## Summary
 
-Elev9 Coach is organized as an Nx monorepo with a modular NestJS backend and an Expo React Native client. The current architecture is intentionally MVP-oriented: clear boundaries, low operational complexity, and enough structure to scale without rewriting core flows.
+Elev9 Coach is organized as an Nx monorepo with a modular NestJS backend and an Expo React Native client. The current architecture now supports the full AI Coach experience in mobile, alongside the core training, nutrition, recovery, goals, habits, personalization, and notification flows.
 
 ## Workspace Structure
 
@@ -48,6 +48,8 @@ Current mobile scope:
 - login
 - token persistence
 - authenticated dashboard flow
+- full AI Coach experience
+- workout, nutrition, recovery, and goal-linked surfaces
 
 ## Shared Packages
 
@@ -69,14 +71,14 @@ The project optimizes for:
 
 - implementation clarity
 - low-friction iteration
+- contract consistency across backend and clients
+- explainable coach surfaces
 - safe future extraction
-- strong contract consistency across backend and clients
 
 It does not yet optimize for:
 
 - distributed services
 - advanced caching
-- production-grade observability
 - large-scale operational concerns
 
 ## Engineering Highlights
@@ -90,4 +92,4 @@ It does not yet optimize for:
 
 ## Positioning
 
-This is an MVP in progress, not a production-ready platform. The architecture is designed to demonstrate sound engineering decisions, product iteration discipline, and a credible path toward broader web and mobile surfaces.
+The architecture is designed to demonstrate sound engineering decisions, product iteration discipline, and a credible path toward broader web and mobile surfaces.

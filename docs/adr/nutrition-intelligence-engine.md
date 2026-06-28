@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -27,11 +27,11 @@ The existing architecture is:
 - spec-driven
 - deterministic-first adaptive coaching
 
-The nutrition engine must integrate progressively with Dashboard and AI Context without making the product LLM-dependent.
+The nutrition engine integrates progressively with Dashboard and AI Context without making the product LLM-dependent.
 
 ## Decision
 
-The Nutrition Intelligence Engine will be implemented as a deterministic-first extension of the existing Nutrition bounded context.
+The Nutrition Intelligence Engine is implemented as a deterministic-first extension of the existing Nutrition bounded context.
 
 The module will own:
 

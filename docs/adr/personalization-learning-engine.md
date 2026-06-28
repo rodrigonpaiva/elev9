@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -21,7 +21,7 @@ This capability must not become machine learning, autonomous AI, or a second own
 
 ## Decision
 
-Create a new bounded context:
+The current product uses a new bounded context:
 
 ```ts
 personalization;
@@ -37,7 +37,7 @@ This engine will own:
 - replay/debug support
 - pattern derivation and responsiveness scoring
 
-It will consume read models from existing engines only. It will not own recovery, adaptive training, goals, coach decision, notifications, or habits.
+It consumes read models from existing engines only. It does not own recovery, adaptive training, goals, coach decision, notifications, or habits.
 
 ## Ownership Rules
 

@@ -1,6 +1,6 @@
 # Goal Achievement Engine
 
-Status: Proposed
+Status: Accepted
 
 ## Context
 
@@ -15,11 +15,11 @@ Today, goal-related state is fragmented:
 - `TrainingPlan` and `AdaptiveTrainingRecommendation` capture training intent and adaptation
 - `UserHealthContext`, `CoachDecision`, and dashboard summaries synthesize signals, but do not own goal state
 
-Epic 5 introduces a dedicated Goal Achievement Engine as the canonical source of truth for long-term outcome tracking.
+The current product uses a dedicated Goal Achievement Engine as the canonical source of truth for long-term outcome tracking.
 
 ## Decision
 
-Create a new goal bounded context with:
+The current product uses a goal bounded context with:
 
 - `Goal` as the canonical aggregate
 - `GoalProgressSnapshot` as the daily read model
@@ -27,7 +27,7 @@ Create a new goal bounded context with:
 - `GoalMilestone` as milestone tracking
 - `GoalAchievement` as completion history
 
-The engine will be read-model first and deterministic-first. It will reuse existing signals from recovery, nutrition, training, progress, and AI, but it will not depend on any of those modules owning goal state.
+The engine is read-model first and deterministic-first. It reuses existing signals from recovery, nutrition, training, progress, and AI, but it does not depend on any of those modules owning goal state.
 
 ## Consequences
 

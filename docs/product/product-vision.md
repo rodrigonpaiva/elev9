@@ -2,9 +2,9 @@
 
 ## 1. Overview
 
-Elev9 Coach é um aplicativo mobile de fitness com inteligência artificial que atua como um coach esportivo e assistente nutricional personalizado.
+Elev9 Coach é um sistema de coaching adaptativo para treino, nutrição, recuperação, objetivos, hábitos, personalização e notificações.
 
-O produto foi concebido para oferecer acompanhamento diário automatizado, ajudando usuários a melhorar sua saúde, performance física e consistência nos treinos, mesmo sem a presença de um personal trainer ou nutricionista humano.
+O produto foi concebido para oferecer acompanhamento diário automatizado, ajudando o usuário a entender o que importa hoje sem precisar interpretar métricas brutas.
 
 ---
 
@@ -31,14 +31,14 @@ Aplicativos tradicionais de fitness são estáticos:
 
 Criar um sistema inteligente que:
 
-- Aprende continuamente com o usuário
-- Adapta treino e alimentação em tempo real
-- Atua como um coach pessoal automatizado
-- Oferece recomendações contextualizadas diariamente
+- aprende continuamente com o usuário
+- adapta treino, nutrição e orientação diária
+- interpreta contexto de recuperação, metas e hábitos
+- oferece coaching contextualizado sem parecer um chatbot genérico
 
 Elev9 Coach não é apenas um aplicativo.
 
-É um sistema adaptativo baseado em IA que evolui junto com o usuário.
+É um sistema adaptativo que evolui junto com o usuário.
 
 ---
 
@@ -95,7 +95,7 @@ Evitar recomendações perigosas e sugerir profissionais quando necessário.
 
 ## 6. Product Scope (High-Level)
 
-O Elev9 Coach combina três pilares:
+O Elev9 Coach combina os seguintes pilares:
 
 ### 🏋️ Treinamento
 
@@ -107,13 +107,19 @@ O Elev9 Coach combina três pilares:
 
 - Planos alimentares personalizados
 - Cálculo de macros
-- Sugestões de refeições
+- Sugestões e substituições de refeições
 
-### 🤖 Inteligência Artificial
+### 🤖 AI Coach
 
-- Chat com Coach IA
-- Chat com Nutrition IA
-- Sistema de adaptação automática
+- Coach Home
+- Conversational Coach
+- Daily Briefing
+- Memory Timeline
+- Explainable Insights
+- Ask Coach
+- Weekly Review
+- Goal Guidance
+- Smart Notifications
 
 ---
 
@@ -133,17 +139,17 @@ O objetivo final é que o usuário:
 
 No longo prazo, o Elev9 Coach pode evoluir para:
 
-- Integração com wearables
-- Análise biométrica avançada
-- Recomendações preditivas
-- Marketplace de serviços fitness
-- Integração com profissionais reais
-- Sistema completo de saúde e performance
+- integração com wearables
+- briefing de voz e áudio
+- memória de longo prazo mais rica
+- coaching emocional
+- recomendações preditivas
+- integração com calendário e saúde da plataforma
 
 ---
 
 ## 9. Summary
 
-Elev9 Coach é um sistema inteligente que substitui a necessidade de múltiplas ferramentas (treino, dieta, acompanhamento) por uma única experiência adaptativa baseada em IA.
+Elev9 Coach é um sistema inteligente que substitui a necessidade de múltiplas ferramentas (treino, dieta, acompanhamento) por uma única experiência adaptativa baseada em IA e contexto.
 
-Ele transforma dados do usuário em decisões automatizadas, criando um ciclo contínuo de melhoria.
+Ele transforma dados do usuário em decisões e explicações úteis, criando um ciclo contínuo de melhoria.

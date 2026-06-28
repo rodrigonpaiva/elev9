@@ -35,7 +35,7 @@ None of these capabilities are currently implemented in Elev9 Coach.
 
 ## 4. Relationship With Current Architecture
 
-Current conversational coaching in Elev9 Coach remains deterministic-first with lightweight optional LLM integration.
+Current conversational coaching in Elev9 Coach remains deterministic-first and is implemented through the shipped coach surfaces documented under `docs/specs/ai/`.
 
 This exploratory track is intentionally separate from the implemented conversational coaching and explainability flows documented under `docs/specs/ai/`.
 

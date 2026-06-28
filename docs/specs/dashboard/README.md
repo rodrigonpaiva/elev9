@@ -8,11 +8,14 @@ Ele reúne leitura consolidada de:
 
 - recovery
 - nutrition guidance
-- adaptive signals
+- coach decision
+- goals
+- habits
+- personalization
+- notifications
 - daily check-ins
-- explainability snapshots
 
-Este contexto funciona como a superfície adaptativa do sistema, combinando payload público e superfície interna de debug separada.
+Este contexto funciona como a superfície adaptativa do sistema, combinando payload público e superfícies de coach reutilizadas pelo mobile.
 
 A documentação deste bounded context segue [Documentation Governance](../GOVERNANCE.md), que define as regras de navegação, placeholders e limites para superfícies internas de debug.
 
@@ -21,20 +24,20 @@ A documentação deste bounded context segue [Documentation Governance](../GOVER
 ## 2. Architecture Overview
 
 ```txt
-UserHealthContext
-→ Recovery heuristics
-→ Nutrition guidance
+User context
+→ Recovery / Nutrition / Goals / Habits / Personalization / Notifications
 → Dashboard adaptive signals
 → Public dashboard
-→ Internal debug endpoint
+→ Coach surfaces
 ```
 
 Hoje, a arquitetura do dashboard se apoia principalmente em:
 
 - `GET /dashboard/home`
 - `GET /dashboard/home/debug`
+- `GET /ai/coach-decision/today`
 - `BuildUserHealthContextService`
-- sinais determinísticos de recovery e nutrition
+- sinais determinísticos de recovery, nutrition, goals, habits e personalization
 - payloads reduzidos e seguros
 
 ---
@@ -53,12 +56,12 @@ Hoje, a arquitetura do dashboard se apoia principalmente em:
 
 ## 4. Relationship With AI
 
-O dashboard reutiliza o mesmo `UserHealthContext` que alimenta o módulo `ai`.
+O dashboard reutiliza o mesmo contexto contextual que alimenta o módulo `ai`.
 
 Na prática:
 
-- o dashboard compartilha heurísticas determinísticas com a camada de AI contextual
-- `recovery` e `nutrition guidance` seguem o mesmo espírito de explainability interna
+- o dashboard compartilha read models com a camada de AI contextual
+- `recovery`, `goals`, `habits`, `personalization` e `notifications` seguem o mesmo espírito de explainability interna
 - o endpoint de debug do dashboard alinha-se à arquitetura de explainability do sistema
 
 Importante:

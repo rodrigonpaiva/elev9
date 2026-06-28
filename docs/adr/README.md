@@ -23,6 +23,7 @@ A documentação arquitetural segue [Documentation Governance](../specs/GOVERNAN
 - [ADR-002 — Recovery & Adaptive Coaching System](./adr-002-recovery-system.md)
 - [ADR-003 — Coach Feedback Explainability & Replay System](./adr-003-coach-feedback-explainability.md)
 - [ADR-004 — Conversational Coach Architecture](./adr-004-conversational-coach-architecture.md)
+- [ADR-005 — AI Coach Experience](./adr-005-ai-coach-experience.md)
 
 ---
 
@@ -39,6 +40,10 @@ A documentação arquitetural segue [Documentation Governance](../specs/GOVERNAN
 ## Conversational Coaching
 
 - [ADR-004 — Conversational Coach Architecture](./adr-004-conversational-coach-architecture.md)
+
+## AI Coach Experience
+
+- [ADR-005 — AI Coach Experience](./adr-005-ai-coach-experience.md)
 
 ## Conversational Explainability Surfaces
 
@@ -57,6 +62,7 @@ Os ADRs atuais convergem nos seguintes temas:
 - explainability
 - replay infrastructure
 - conversational coaching
+- coach-centric mobile surfaces
 - conversational explainability surfaces
 - spec-driven evolution
 

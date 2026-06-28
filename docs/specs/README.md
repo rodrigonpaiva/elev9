@@ -9,7 +9,7 @@ Nesta organização:
 - `docs/specs/` documenta os fluxos por contexto de negócio
 - `docs/adr/` registra decisões arquiteturais mais estáveis
 - os módulos evoluem por entregas incrementais
-- o estado atual do sistema, especialmente no módulo `ai`, segue uma abordagem `deterministic-first`
+- o estado atual do sistema inclui os contextos de recovery, training, nutrition, goals, habits, personalization, notifications e AI / Coach
 - o bounded context `dashboard` documenta a superfície adaptativa da home e seus debug surfaces internos
 
 Este índice funciona como ponto central de navegação da arquitetura documental do projeto.
@@ -63,29 +63,30 @@ Repository CI validation flow, quality gates and deterministic validation policy
 O módulo `ai` documentado em [docs/specs/ai/README.md](./ai/README.md) atualmente se organiza em torno do seguinte fluxo:
 
 ```txt
-UserHealthContext
-→ Recovery System
-→ Coach Feedback
-→ Explainability
-→ Replay
+CoachDecision
+→ CoachFeedback
+→ Conversational Coach
+→ Coach Home / Daily Briefing / Memory / Insights / Ask Coach / Weekly Review / Goal Guidance
+→ Replay / Explainability
 ```
 
 Hoje, o módulo cobre principalmente:
 
 - context aggregation
-- recovery heuristics
-- nutrition awareness
+- coach decision generation
 - coach feedback generation
-- debug history
+- conversational coaching
+- explainability
 - replay
+- cross-surface coach reads
 
-O bounded context `dashboard` documentado em [docs/specs/dashboard/README.md](./dashboard/README.md) reutiliza o mesmo `UserHealthContext` e compartilha heurísticas determinísticas com essa camada contextual.
+O bounded context `dashboard` documentado em [docs/specs/dashboard/README.md](./dashboard/README.md) reutiliza o mesmo contexto contextual e compartilha read models com a camada coach.
 
 Importante:
 
-- o loop principal atual continua determinístico
-- integração com LLM ainda não faz parte do fluxo implementado principal
-- a explicabilidade do dashboard alinha-se à arquitetura de explainability do módulo `ai`
+- o loop principal atual continua deterministic-first
+- o produto usa read models já implementados para coach, habits, goals, personalization e notifications
+- a explicabilidade do dashboard e do coach alinha-se à mesma arquitetura de explainability
 
 ---
 
@@ -102,11 +103,11 @@ O estado atual da arquitetura pode ser resumido por:
 
 - modular monolith
 - spec-driven workflow
-- deterministic-first AI
-- heuristic recovery system
+- deterministic-first read models
 - safe reduced contexts
 - replay/debug infrastructure
 - internal explainability metadata
+- coach-centric mobile surfaces
 
 Essas características descrevem o sistema atual e não devem ser lidas como capacidades avançadas de IA generativa.
 
@@ -120,7 +121,6 @@ Possíveis direções arquiteturais futuras, ainda não implementadas:
 - semantic memory
 - adaptive recommendation engine
 - wearable integrations
-- nutrition intelligence
 - evaluation engine
 
 Esses itens devem ser tratados como roadmap técnico, não como comportamento atual do sistema.

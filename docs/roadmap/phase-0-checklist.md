@@ -5,6 +5,7 @@
 Preparar a base do projeto para iniciar implementação do MVP com segurança e clareza.
 
 Phase 0 não entrega valor final ao usuário. Ela reduz risco de execução.
+This checklist is kept as a historical setup artifact.
 
 ---
 
@@ -39,7 +40,7 @@ Phase 0 não entrega valor final ao usuário. Ela reduz risco de execução.
 - [ ] Definir entidades centrais do MVP
 - [ ] Definir regra de um check-in por dia
 - [ ] Definir regra de um plano ativo por usuário
-- [ ] Definir responsabilidades do `AI Agent Module`
+- [ ] Definir responsabilidades da camada `AI / Coach`
 
 ---
 
@@ -66,7 +67,7 @@ Phase 0 não entrega valor final ao usuário. Ela reduz risco de execução.
 
 ## 7. AI Preparation Checklist
 
-- [ ] Definir uso inicial da OpenAI API
+- [ ] Definir integração inicial de IA
 - [ ] Definir formato de `UserHealthContext`
 - [ ] Definir resposta estruturada para recomendações
 - [ ] Definir limites claros do uso de IA no MVP

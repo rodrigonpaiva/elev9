@@ -6,7 +6,7 @@
 
 # Elev9 Coach
 
-Elev9 Coach is an MVP fitness coaching platform built as a spec-driven monorepo. The current scope focuses on adaptive coaching, recovery intelligence, nutrition guidance, conversational coaching, and clear architectural boundaries for future growth.
+Elev9 Coach is an MVP fitness coaching platform built as a spec-driven monorepo. The current scope focuses on adaptive coaching, recovery intelligence, nutrition guidance, goal and habit tracking, notifications, and a contextual AI Coach experience.
 
 ## Stack
 
@@ -34,16 +34,15 @@ Additional architectural notes live in [docs/architecture/overview.md](/Users/ro
 
 ## Architecture & Documentation
 
-The project follows a spec-driven and deterministic-first architecture workflow.
+The project follows a spec-driven architecture workflow.
 
-Specifications document workflows, contracts, rules, tasks, and tests. ADRs document the architectural decisions behind those flows. The AI module also has its own documentation index covering context aggregation, recovery heuristics, explainability, and replay.
-The dashboard documentation covers adaptive signals and internal explainability/debug surfaces, while the conversational coaching documentation covers deterministic chat built on top of the same health context.
-Repository-wide documentation governance is defined in [docs/specs/GOVERNANCE.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/GOVERNANCE.md), which keeps specs, ADR alignment, navigation consistency, placeholders, and deterministic-first documentation rules in sync.
+Specifications document workflows, contracts, rules, tasks, and tests. ADRs document the architectural decisions behind those flows. The current AI Coach layer now spans coach home, conversation, daily briefing, memory, explainability, ask coach, weekly review, goal guidance, and notifications. Repository-wide documentation governance is defined in [docs/specs/GOVERNANCE.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/GOVERNANCE.md), which keeps specs, ADR alignment, navigation consistency, placeholders, and documentation terminology in sync.
 
 ### Specifications
 
 - [System Specs](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/README.md)
 - [AI Module Specs](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/ai/README.md)
+- [Implementation Matrix](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/product/feature-matrix.md)
 
 ### Architecture Decision Records
 
@@ -61,7 +60,7 @@ Repository-wide documentation governance is defined in [docs/specs/GOVERNANCE.md
 
 - [Pull Request Guidelines](./docs/pull-requests.md)
 
-This documentation set covers the adaptive systems, dashboard explainability, and conversational coaching layers of the product.
+This documentation set covers the adaptive systems, dashboard explainability, and coach-centric mobile layers of the product.
 
 ## Features Implemented
 
@@ -70,9 +69,15 @@ This documentation set covers the adaptive systems, dashboard explainability, an
 - Fitness: create and fetch active fitness profile
 - Training: create and fetch active training plan
 - Progress: workout logs and progress summary
+- Recovery: daily and historical readiness snapshots
+- Nutrition: plans, logs, recommendations, and meal replacement
+- Goals: current goal, forecast, milestones, and history
+- Habits: consistency snapshot, risk signals, and history
+- Personalization: today/current/history patterns and profile
+- Notifications: today/current decision, history, engagement summary, replay
 - Dashboard: consolidated home endpoint
-- AI: coach feedback, explainability, replay, and conversational chat
-- Mobile: login flow and dashboard consumption
+- AI Coach: home, conversation, daily briefing, memory, insights, ask coach, weekly review, goal guidance, notifications
+- Mobile: authenticated product experience across the main product loop
 
 ## Engineering Highlights
 
@@ -166,9 +171,7 @@ Runtime requests emit lightweight logs with `x-request-id` correlation.
 
 ## Project Status
 
-Elev9 Coach is an evolving MVP. The backend domain flow is already structured around explicit specs and modular boundaries, and the mobile app currently covers the minimum functional loop for authentication and home dashboard consumption.
-
-This repository is intentionally not presented as production-ready. The current goal is to show technical rigor, product thinking, and a clean path for continued expansion.
+Elev9 Coach is an evolving MVP with a fully implemented AI Coach experience in mobile and the supporting shared contracts across the workspace. The documentation now tracks the implemented product surfaces, current bounded contexts, and the remaining roadmap separately.
 
 ## Demo
 
@@ -176,9 +179,7 @@ A practical demo guide is available at [docs/demo/README.md](/Users/rodrigopaiva
 
 ## Next Steps
 
-- Expand the mobile experience beyond login and home dashboard
-- Add richer UI states and onboarding flows
-- Introduce web surfaces for landing page and internal/admin use cases
+- Expand web surfaces beyond the current minimal shell
 - Increase end-to-end coverage in environments where mobile and database services can run freely
 - Continue extracting stable shared contracts and presentation primitives across apps
-- Continue evolving conversational coaching without losing deterministic behavior or explainability
+- Keep the coach documentation aligned with implementation as new surfaces ship

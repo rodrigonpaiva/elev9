@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -29,16 +29,16 @@ The product needs a bounded context that can:
 
 ## Decision
 
-Introduce a dedicated bounded context:
+The current product uses a dedicated bounded context:
 
 ```ts
 notifications;
 ```
 
-The engine will be read-model-first and deterministic-first.
-It will persist daily notification decisions and event history, and it will consume existing platform engines rather than owning coaching logic.
+The engine is read-model-first and deterministic-first.
+It persists daily notification decisions and event history, and it consumes existing platform engines rather than owning coaching logic.
 
-The engine will own:
+The engine owns:
 
 - `NotificationDecision`
 - `NotificationHistory`
@@ -48,7 +48,7 @@ The engine will own:
 - formula versioning
 - replay/debug support
 
-The engine will consume existing signals from:
+The engine consumes existing signals from:
 
 - `CoachDecision`
 - `GoalProgressSnapshot`

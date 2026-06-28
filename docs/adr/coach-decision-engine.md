@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -29,15 +29,15 @@ The product needs a single deterministic coaching decision that can be consumed 
 
 ## Decision
 
-Introduce a central read model:
+The current product uses a central read model:
 
 ```ts
 CoachDecision;
 ```
 
-The MVP will persist one decision per user per day and expose current/today/history/replay reads.
-The engine will remain deterministic-first.
-LLM is allowed only as a language layer, not as the source of truth for decision content.
+The implementation persists one decision per user per day and exposes current/today/history/replay reads.
+The engine remains deterministic-first.
+LLM is allowed only as a future language layer, not as the source of truth for decision content.
 
 The engine will own:
 
@@ -57,7 +57,7 @@ The engine will consume existing signals from:
 
 The MVP will not replace `CoachChat`.
 The MVP will not remove the existing `CoachFeedback` flow.
-The MVP will create a canonical decision layer that downstream features can adopt progressively.
+The canonical decision layer is already used by downstream coach surfaces and related product reads.
 
 ## Why Deterministic First
 

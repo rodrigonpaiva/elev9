@@ -2,18 +2,18 @@
 
 ## 1. Overview
 
-O módulo `ai` do Elev9 Coach atualmente cobre uma arquitetura determinística e orientada por contexto para:
+O módulo `ai` do Elev9 Coach atualmente cobre a camada de coaching contextual para:
 
-- context aggregation
-- recovery heuristics
-- nutrition awareness
+- coach decision generation
 - coach feedback generation
-- conversational chat
+- conversational coaching
+- daily briefing
+- memory timeline
 - explainability
 - debugging
 - replay
 
-O estado atual do sistema é `deterministic-first`. Não existe integração ativa com LLM no fluxo principal atual. Qualquer evolução para providers externos, prompt orchestration ou memória semântica continua sendo futura.
+O estado atual do sistema continua `deterministic-first`. Não existe integração ativa com LLM no fluxo principal atual. A experiência do coach é construída a partir de read models já existentes e compartilhados com outros contextos.
 
 A documentação deste módulo segue [Documentation Governance](../GOVERNANCE.md), que define as regras de navegação, placeholders, `Related Specs` e limites de documentação de debug.
 
@@ -23,19 +23,19 @@ A documentação deste módulo segue [Documentation Governance](../GOVERNANCE.md
 
 ```txt
 User data
-→ UserHealthContext
-→ CoachFeedbackGenerator
-→ Recovery & Nutrition Awareness
+→ CoachDecision
+→ CoachFeedback
 → Conversational Chat
-→ Conversational Explainability Surfaces
+→ Coach Home / Briefing / Memory / Insights / Ask Coach / Weekly Review / Goal Guidance
 → Explainability Layer
 → Replay & Debug
 ```
 
 Hoje, a arquitetura interna do módulo `ai` se apoia principalmente em:
 
-- `BuildUserHealthContextService`
 - `GET /ai/context`
+- `GET /ai/coach-decision/today`
+- `GET /ai/coach-decision/current`
 - `CoachFeedbackGenerator`
 - `CoachFeedback` persistido com metadata interna
 - `CoachConversation` e `CoachMessage` persistidos para chat
@@ -99,6 +99,7 @@ O sistema atual do módulo `ai` possui as seguintes características:
 - deterministic conversational memory summarization with inspection-only preview surfaces
 - authenticated, user-scoped internal debug and replay flows
 - conversational explainability surfaces for deterministic inspection only
+- coach surfaces consume shared read models instead of duplicating domain logic
 
 Importante:
 

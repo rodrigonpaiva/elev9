@@ -2,13 +2,12 @@
 
 ## 1. Overview
 
-A arquitetura do MVP do Elev9 Coach é projetada para:
+A arquitetura atual do Elev9 Coach é projetada para:
 
-- Ser simples de implementar
-- Permitir iteração rápida
-- Validar o produto o mais cedo possível
-
-Embora o sistema final seja baseado em microservices, o MVP adota uma abordagem simplificada.
+- ser simples de implementar
+- permitir iteração rápida
+- validar o produto o mais cedo possível
+- manter o coach contextual e explicável em mobile
 
 ---
 
@@ -18,11 +17,9 @@ Mobile App (React Native)
 ↓
 API Layer (NestJS)
 ↓
-Application Services (modular, dentro do mesmo projeto)
+Application Services / Read Models
 ↓
 MongoDB
-↓
-OpenAI API
 
 ---
 
@@ -34,7 +31,7 @@ A arquitetura deve permitir evolução futura, mas sem introduzir complexidade d
 
 ---
 
-## 4. Application Structure (MVP)
+## 4. Application Structure
 
 Em vez de microservices distribuídos, usamos um **modular monolith**:
 
@@ -45,8 +42,13 @@ users/
 fitness/
 training/
 nutrition/
-ai-agent/
 progress/
+recovery/
+goals/
+habits/
+personalization/
+notifications/
+ai/
 
 Cada módulo contém:
 
@@ -82,16 +84,14 @@ MongoDB é usado por:
 
 ## 7. AI Integration
 
-### AI Agent Module
+### AI / Coach Layer
 
 Responsável por:
 
 - construir contexto do usuário
-- gerar prompts
-- chamar OpenAI API
-- processar respostas
-
----
+- expor coach decisions
+- consumir recovery, goals, habits, personalization, and notifications
+- renderizar experiências de coaching contextual no mobile
 
 ### Fluxo da IA
 
@@ -100,14 +100,17 @@ Responsável por:
    - training plan
    - nutrition plan
    - check-ins
+   - recovery
+   - goals
+   - habits
+   - personalization
+   - notification decisions
 
 2. Monta contexto
 
-3. Gera prompt
+3. Produz read models e explicações
 
-4. Chama OpenAI
-
-5. Retorna resposta
+4. O mobile renderiza a experiência de coach
 
 ---
 
@@ -118,12 +121,17 @@ INPUT:
 - treino realizado
 - alimentação
 - check-in diário
+- goal progress
+- habit signals
+- notification engagement
 
 ↓
 
 PROCESS:
 
-- AI Agent analisa
+- context aggregation
+- coach decisioning
+- explainable summarization
 
 ↓
 
@@ -131,6 +139,9 @@ OUTPUT:
 
 - ajuste de treino
 - ajuste alimentar
+- briefing diário
+- conversa contextual
+- weekly review
 
 ---
 

@@ -20,11 +20,14 @@ NestJS Backend
   ├─ Nutrition Module
   ├─ Training Module
   ├─ Progress Module
-  └─ AI Agent Module
+  ├─ Recovery Module
+  ├─ Goals Module
+  ├─ Habits Module
+  ├─ Personalization Module
+  ├─ Notifications Module
+  └─ AI / Coach Module
         ->
 MongoDB
-        ->
-OpenAI API
 ```
 
 ---
@@ -128,21 +131,62 @@ Principais entidades:
 - `BodyMetrics`
 - `ProgressSnapshot`
 
-### 3.7 AI Agent Module
+### 3.7 Recovery Module
+
+Responsável por:
+
+- construir recovery snapshots
+- calcular readiness and fatigue
+- alimentar coach and dashboard surfaces
+
+### 3.8 Goals Module
+
+Responsável por:
+
+- canonical goal state
+- progress snapshots
+- forecast
+- milestones
+- achievements
+
+### 3.9 Habits Module
+
+Responsável por:
+
+- habit snapshots
+- consistency summaries
+- risk signals
+
+### 3.10 Personalization Module
+
+Responsável por:
+
+- behavioral patterns
+- personalization snapshots
+- long-horizon adaptation
+
+### 3.11 Notifications Module
+
+Responsável por:
+
+- notification decisions
+- engagement history
+- fatigue and suppression rules
+
+### 3.12 AI / Coach Module
 
 Responsável por:
 
 - construir contexto consolidado
-- gerar prompts
-- chamar OpenAI
-- interpretar resposta
-- emitir recomendações e ajustes
+- expor coach decisions
+- explicar a recomendação do dia
+- alimentar coach home, briefing, memory, insights, ask coach, weekly review, goal guidance e notifications
 
 Principais entidades:
 
-- `UserHealthContext`
-- `AIRecommendation`
-- `PlanAdjustment`
+- `CoachDecision`
+- `CoachFeedback`
+- `ConversationMemory`
 
 ---
 
@@ -160,13 +204,13 @@ Fitness -> Training
 Fitness -> Nutrition
 Training -> Progress
 Nutrition -> Progress
-Fitness + Nutrition + Training + Progress -> AI Agent
+Fitness + Nutrition + Training + Progress + Recovery + Goals + Habits + Personalization + Notifications -> AI / Coach
 ```
 
 Leitura importante:
 
 - `Auth` não deve depender de `Fitness`, `Nutrition`, `Training`, `Progress` ou `AI`
-- `AI Agent` consome contexto dos outros módulos, mas não deve assumir ownership de seus dados principais
+- `AI / Coach` consome contexto dos outros módulos, mas não deve assumir ownership de seus dados principais
 
 ---
 
@@ -180,7 +224,7 @@ Cada módulo é dono de suas entidades e regras:
 - `Nutrition` é dono do plano alimentar
 - `Training` é dono do plano de treino
 - `Progress` é dono do histórico e check-ins
-- `AI Agent` é dono das recomendações e ajustes
+- `AI / Coach` é dono das recomendações e ajustes de coaching
 
 ---
 
@@ -200,7 +244,7 @@ No MVP:
 
 Se o produto validar, os módulos candidatos a extração futura são:
 
-1. `AI Agent`
+1. `AI / Coach`
 2. `Auth`
 3. `Training`
 4. `Nutrition`

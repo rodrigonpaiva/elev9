@@ -4,7 +4,7 @@
 
 O objetivo do MVP é validar a proposta central do produto:
 
-👉 Um sistema que adapta treino e alimentação com base no comportamento diário do usuário.
+👉 Um sistema que adapta treino, nutrição e coaching diário com base no comportamento do usuário.
 
 O MVP NÃO deve ser completo.
 
@@ -101,15 +101,17 @@ Campos:
 
 ---
 
-### 3.8 AI Interaction (Simplified)
+### 3.8 AI Coach Experience
 
-- Chat com Coach IA
-- Chat com Nutrition IA
-
-Uso inicial:
-
-- responder perguntas
-- dar recomendações simples
+- Coach Home
+- Conversational Coach
+- Daily Briefing
+- Memory Timeline
+- Explainability / Insights
+- Ask Coach
+- Weekly Review
+- Goal Guidance
+- Smart Notifications
 
 ---
 
@@ -132,6 +134,14 @@ Com base no check-in:
 - Status do usuário
 - Histórico simples
 
+### 3.11 Shared Intelligence
+
+- Goal progress snapshots
+- Habit consistency snapshots
+- Personalization snapshots
+- Notification decisions and engagement
+- Coach decision reads consumed across the product
+
 ---
 
 ## 4. Features OUT of Scope (IMPORTANT)
@@ -145,7 +155,7 @@ Essas features NÃO entram no MVP:
 - Marketplace
 - Sistema social
 - Gamificação avançada
-- Notificações inteligentes complexas
+- Notification providers and push delivery orchestration
 
 ---
 
@@ -219,10 +229,10 @@ Se não ajuda a validar isso:
 
 O MVP do Elev9 Coach é focado em um único loop:
 
-1. Usuário recebe plano
+1. Usuário recebe orientação
 2. Usuário executa
-3. Usuário faz check-in
-4. Sistema adapta
+3. Usuário registra contexto
+4. Sistema adapta e explica
 
 Se esse loop funciona:
 
