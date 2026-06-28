@@ -110,8 +110,10 @@ export function DashboardScreen({
   }, [onOpenTrainingPlan]);
 
   const handleCreateNutritionProfile = useCallback(() => {
-    onOpenProfile?.();
-  }, [onOpenProfile]);
+    navigation.navigate('CreateNutritionProfile', {
+      prefillGoal: mapTrainingGoalToNutritionGoal(dashboard.workout.data?.goal),
+    });
+  }, [dashboard.workout.data?.goal, navigation]);
 
   const handleOpenNutritionOverview = useCallback(() => {
     navigation.navigate('NutritionOverview');
@@ -219,6 +221,21 @@ export function DashboardScreen({
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function mapTrainingGoalToNutritionGoal(
+  goal: 'lose_weight' | 'gain_muscle' | 'maintain' | undefined,
+) {
+  switch (goal) {
+    case 'lose_weight':
+      return 'fat_loss';
+    case 'gain_muscle':
+      return 'muscle_gain';
+    case 'maintain':
+      return 'maintenance';
+    default:
+      return undefined;
+  }
 }
 
 function DashboardCards({

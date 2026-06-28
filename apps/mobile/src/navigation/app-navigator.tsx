@@ -8,6 +8,7 @@ import { Text } from '@elev9/ui';
 import { AskCoachScreen } from '../screens/ask-coach-screen';
 import { useAuth } from '../auth/auth-provider';
 import { ActiveWorkoutScreen } from '../screens/active-workout-screen';
+import { CreateNutritionProfileScreen } from '../screens/create-nutrition-profile-screen';
 import { CreateFitnessProfileScreen } from '../screens/create-fitness-profile-screen';
 import { CreateProfileScreen } from '../screens/create-profile-screen';
 import { CreateTrainingPlanScreen } from '../screens/create-training-plan-screen';
@@ -50,6 +51,11 @@ export type RootStackParamList = {
     goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
     activityLevel?: 'low' | 'medium' | 'high';
   };
+  CreateNutritionProfile:
+    | {
+        prefillGoal?: 'fat_loss' | 'maintenance' | 'muscle_gain';
+      }
+    | undefined;
   MainTabs:
     | {
         initialTab?:
@@ -197,6 +203,11 @@ export function AppNavigator() {
             <Stack.Screen
               name="CreateTrainingPlan"
               component={CreateTrainingPlanScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="CreateNutritionProfile"
+              component={CreateNutritionProfileScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen

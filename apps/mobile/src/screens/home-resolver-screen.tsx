@@ -32,6 +32,11 @@ export function HomeResolverScreen() {
       const response = await apiClient.dashboard.getHome();
       const dashboard = response.dashboard;
 
+      if (!dashboard.user?.name) {
+        navigation.replace('CreateProfile');
+        return;
+      }
+
       if (!dashboard.fitnessProfile) {
         navigation.replace('CreateFitnessProfile');
         return;
@@ -42,6 +47,17 @@ export function HomeResolverScreen() {
           fitnessProfileId: dashboard.fitnessProfile.id,
           goal: dashboard.fitnessProfile.goal,
           activityLevel: dashboard.fitnessProfile.activityLevel,
+        });
+        return;
+      }
+
+      const nutritionState = await resolveNutritionState();
+
+      if (nutritionState.requiresSetup) {
+        navigation.replace('CreateNutritionProfile', {
+          prefillGoal:
+            nutritionState.nutritionGoal ??
+            mapFitnessGoalToNutritionGoal(dashboard.fitnessProfile.goal),
         });
         return;
       }
@@ -78,6 +94,29 @@ export function HomeResolverScreen() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function resolveNutritionState(): Promise<{
+    requiresSetup: boolean;
+    nutritionGoal: 'fat_loss' | 'maintenance' | 'muscle_gain' | null;
+  }> {
+    const [profileResult, planResult] = await Promise.allSettled([
+      apiClient.nutrition.getNutritionProfile(),
+      apiClient.nutrition.getCurrentNutritionPlan(),
+    ]);
+
+    const nutritionProfileState = getNutritionProfileState(profileResult);
+    const nutritionPlanState = getNutritionPlanState(planResult);
+    const nutritionProfile =
+      profileResult.status === 'fulfilled'
+        ? profileResult.value.nutritionProfile
+        : null;
+
+    return {
+      requiresSetup:
+        nutritionProfileState === 'missing' || nutritionPlanState === 'missing',
+      nutritionGoal: nutritionProfile?.goal ?? null,
+    };
   }
 
   return (
@@ -126,6 +165,64 @@ async function markDailyBriefingShownToday(): Promise<void> {
     DAILY_BRIEFING_LAST_SHOWN_KEY,
     getLocalDateKey(new Date()),
   );
+}
+
+function getNutritionProfileState(
+  result: PromiseSettledResult<
+    Awaited<ReturnType<typeof apiClient.nutrition.getNutritionProfile>>
+  >,
+) {
+  if (result.status === 'fulfilled') {
+    return 'exists' as const;
+  }
+
+  if (
+    result.reason instanceof ApiClientError &&
+    result.reason.code === 'NUTRITION_PROFILE_NOT_FOUND'
+  ) {
+    return 'missing' as const;
+  }
+
+  return 'unknown' as const;
+}
+
+function getNutritionPlanState(
+  result: PromiseSettledResult<
+    Awaited<ReturnType<typeof apiClient.nutrition.getCurrentNutritionPlan>>
+  >,
+) {
+  if (result.status === 'fulfilled') {
+    return 'exists' as const;
+  }
+
+  if (
+    result.reason instanceof ApiClientError &&
+    result.reason.code === 'NUTRITION_PLAN_NOT_FOUND'
+  ) {
+    return 'missing' as const;
+  }
+
+  if (
+    result.reason instanceof ApiClientError &&
+    result.reason.code === 'NUTRITION_PROFILE_NOT_FOUND'
+  ) {
+    return 'missing' as const;
+  }
+
+  return 'unknown' as const;
+}
+
+function mapFitnessGoalToNutritionGoal(
+  goal: 'lose_weight' | 'gain_muscle' | 'maintain',
+) {
+  switch (goal) {
+    case 'lose_weight':
+      return 'fat_loss';
+    case 'gain_muscle':
+      return 'muscle_gain';
+    case 'maintain':
+      return 'maintenance';
+  }
 }
 
 function getLocalDateKey(date: Date): string {

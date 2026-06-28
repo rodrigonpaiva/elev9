@@ -32,7 +32,9 @@ export function CreateTrainingPlanScreen() {
 
     try {
       await mobileApiClient.training.createPlan({ fitnessProfileId });
-      navigation.replace('MainTabs');
+      navigation.replace('CreateNutritionProfile', {
+        prefillGoal: mapFitnessGoalToNutritionGoal(goal),
+      });
     } catch (error) {
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
@@ -93,6 +95,21 @@ export function CreateTrainingPlanScreen() {
       </View>
     </Screen>
   );
+}
+
+function mapFitnessGoalToNutritionGoal(
+  goal: 'lose_weight' | 'gain_muscle' | 'maintain' | undefined,
+) {
+  switch (goal) {
+    case 'lose_weight':
+      return 'fat_loss';
+    case 'gain_muscle':
+      return 'muscle_gain';
+    case 'maintain':
+      return 'maintenance';
+    default:
+      return undefined;
+  }
 }
 
 const styles = StyleSheet.create({

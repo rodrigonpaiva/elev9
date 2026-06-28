@@ -152,6 +152,33 @@ export type NutritionRecommendation = {
   createdAt?: string;
 };
 
+export type CreateNutritionProfileRequest = {
+  goal: NutritionGoal;
+  mealsPerDay: number;
+  dietaryRestrictions?: string[];
+  allergies?: string[];
+  dislikedFoods?: string[];
+  preferredFoods?: string[];
+};
+
+export type CreateNutritionProfileResponse = {
+  nutritionProfile: {
+    id: string;
+    userProfileId: string;
+    goal: NutritionGoal;
+    mealsPerDay: number;
+    dietaryRestrictions: string[];
+    allergies: string[];
+    dislikedFoods: string[];
+    preferredFoods: string[];
+    status: 'active';
+    createdAt: string;
+    updatedAt: string;
+  };
+};
+
+export type GetNutritionProfileResponse = CreateNutritionProfileResponse;
+
 export type CalculateMacroTargetsResponse = {
   macroTargets: MacroTargets & {
     formulaVersion: string;

@@ -1,7 +1,10 @@
 import type {
   CalculateMacroTargetsResponse,
+  CreateNutritionProfileRequest,
+  CreateNutritionProfileResponse,
   CreateNutritionPlanResponse,
   GetCurrentNutritionPlanResponse,
+  GetNutritionProfileResponse,
   GetNutritionRecommendationsResponse,
   GetTodayNutritionResponse,
   GenerateNutritionRecommendationResponse,
@@ -19,6 +22,23 @@ export function createNutritionApi(httpClient: HttpClient) {
       return httpClient.request<CalculateMacroTargetsResponse>({
         method: 'POST',
         path: '/nutrition/macro-targets/calculate',
+      });
+    },
+
+    createNutritionProfile(
+      input: CreateNutritionProfileRequest,
+    ): Promise<CreateNutritionProfileResponse> {
+      return httpClient.request<CreateNutritionProfileResponse>({
+        method: 'POST',
+        path: '/nutrition/profile',
+        body: input,
+      });
+    },
+
+    getNutritionProfile(): Promise<GetNutritionProfileResponse> {
+      return httpClient.request<GetNutritionProfileResponse>({
+        method: 'GET',
+        path: '/nutrition/profile',
       });
     },
 

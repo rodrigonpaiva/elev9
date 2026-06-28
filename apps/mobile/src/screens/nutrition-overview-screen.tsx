@@ -131,7 +131,7 @@ export function NutritionOverviewScreen() {
   );
 
   const handleCreateNutritionProfile = useCallback(() => {
-    navigation.replace('MainTabs', { initialTab: 'profile' });
+    navigation.navigate('CreateNutritionProfile');
   }, [navigation]);
 
   const handleOpenCoach = useCallback(() => {
