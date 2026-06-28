@@ -26,4 +26,3 @@
 ### Domain Contract
 
 If today's snapshot is missing, the read path may invoke the deterministic builder once and then persist the result, provided the operation remains idempotent for the same user and date.
-

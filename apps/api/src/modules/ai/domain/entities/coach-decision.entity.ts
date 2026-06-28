@@ -36,18 +36,18 @@ export type CoachDecisionProps = {
 export type CoachDecisionJSON = Omit<
   CoachDecisionProps,
   'priority' | 'influences' | 'createdAt' | 'updatedAt'
-  > & {
-    priority: CoachDecisionPriorityProps;
-    influences: CoachDecisionInfluenceProps[];
-    createdAt: string;
-    updatedAt: string;
-    llmMetadata?: {
-      provider?: string;
-      model?: string;
-      used: boolean;
-      failed?: boolean;
-    };
+> & {
+  priority: CoachDecisionPriorityProps;
+  influences: CoachDecisionInfluenceProps[];
+  createdAt: string;
+  updatedAt: string;
+  llmMetadata?: {
+    provider?: string;
+    model?: string;
+    used: boolean;
+    failed?: boolean;
   };
+};
 
 export class CoachDecision {
   readonly id: string;

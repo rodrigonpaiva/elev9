@@ -70,4 +70,9 @@ export const HabitSnapshotSchema = new Schema<HabitSnapshotSchemaClass>(
 );
 
 HabitSnapshotSchema.index({ userProfileId: 1, date: 1 }, { unique: true });
-HabitSnapshotSchema.index({ userProfileId: 1, date: -1, createdAt: -1, _id: -1 });
+HabitSnapshotSchema.index({
+  userProfileId: 1,
+  date: -1,
+  createdAt: -1,
+  _id: -1,
+});

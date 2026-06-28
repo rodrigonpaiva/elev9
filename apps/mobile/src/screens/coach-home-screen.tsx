@@ -302,11 +302,11 @@ const ActionsSection = memo(function ActionsSection({
   return (
     <Section title="Today's Actions">
       {primaryAction ? (
-          <PrimaryButton
-            accessibilityLabel={primaryAction.label}
-            label={primaryAction.label}
-            onPress={() => onActionPress(primaryAction)}
-          />
+        <PrimaryButton
+          accessibilityLabel={primaryAction.label}
+          label={primaryAction.label}
+          onPress={() => onActionPress(primaryAction)}
+        />
       ) : null}
       <View style={styles.actionGrid}>
         {secondaryActions
@@ -390,13 +390,7 @@ const CoachStatus = memo(function CoachStatus({
   );
 });
 
-function Section({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: string;
-}) {
+function Section({ children, title }: { children: ReactNode; title: string }) {
   return (
     <View style={styles.section}>
       <Text accessibilityRole="header" style={styles.sectionTitle}>

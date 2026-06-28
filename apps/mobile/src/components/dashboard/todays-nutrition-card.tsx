@@ -52,7 +52,10 @@ export const TodaysNutritionCard = memo(function TodaysNutritionCard({
 
   if (errorMessage) {
     return (
-      <View accessibilityLabel="Nutrition data unavailable." style={styles.card}>
+      <View
+        accessibilityLabel="Nutrition data unavailable."
+        style={styles.card}
+      >
         <View style={styles.errorContent}>
           <Text style={styles.label}>NUTRITION</Text>
           <Text style={styles.errorTitle}>Nutrition data unavailable.</Text>

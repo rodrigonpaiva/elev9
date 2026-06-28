@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import {
-  GoalAchievement as GoalAchievementEntity,
-} from '../../domain/entities/goal-achievement.entity';
+import { GoalAchievement as GoalAchievementEntity } from '../../domain/entities/goal-achievement.entity';
 import {
   CreateGoalAchievementRepositoryInput,
   GoalAchievementRepository,
@@ -16,9 +14,7 @@ import {
 } from './goal-achievement.schema';
 
 @Injectable()
-export class MongooseGoalAchievementRepository
-  implements GoalAchievementRepository
-{
+export class MongooseGoalAchievementRepository implements GoalAchievementRepository {
   constructor(
     @InjectModel(GOAL_ACHIEVEMENT_MODEL_NAME)
     private readonly goalAchievementModel: Model<GoalAchievementSchemaClass>,
@@ -51,9 +47,7 @@ export class MongooseGoalAchievementRepository
     return this.toEntity(document as GoalAchievementDocument);
   }
 
-  private toEntity(
-    document: GoalAchievementDocument,
-  ): GoalAchievementEntity {
+  private toEntity(document: GoalAchievementDocument): GoalAchievementEntity {
     return new GoalAchievementEntity({
       goalId: document.goalId,
       achievedAt: new Date(document.achievedAt),

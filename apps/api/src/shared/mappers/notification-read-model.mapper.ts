@@ -173,7 +173,9 @@ export class NotificationReadModelMapper {
     };
   }
 
-  private static unwrapValue<T extends string>(value: NotificationValueLike<T>): T {
+  private static unwrapValue<T extends string>(
+    value: NotificationValueLike<T>,
+  ): T {
     return typeof value === 'string' ? value : value.value;
   }
 }

@@ -28,4 +28,3 @@ Not included:
 - rewriting the active training plan
 - schedule mutation
 - non-deterministic ranking
-

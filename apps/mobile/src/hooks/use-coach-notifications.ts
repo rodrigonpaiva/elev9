@@ -5,10 +5,7 @@ import type {
   NotificationDecision,
   NotificationEngagementSummary,
 } from '@elev9/types';
-import {
-  formatNotificationStatus,
-  formatNotificationType,
-} from '@elev9/ui';
+import { formatNotificationStatus, formatNotificationType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 
@@ -168,12 +165,7 @@ export function useCoachNotifications(): CoachNotificationsResult {
         ? summaryResult.value.engagementSummary
         : null;
 
-    const results = [
-      currentResult,
-      todayResult,
-      historyResult,
-      summaryResult,
-    ];
+    const results = [currentResult, todayResult, historyResult, summaryResult];
 
     if (
       results.every((result) => result.status === 'rejected') &&
@@ -200,10 +192,10 @@ export function useCoachNotifications(): CoachNotificationsResult {
     void load();
   }, [load]);
 
-  const model = useMemo(() => buildCoachNotificationsModel(state, hasSignals), [
-    hasSignals,
-    state,
-  ]);
+  const model = useMemo(
+    () => buildCoachNotificationsModel(state, hasSignals),
+    [hasSignals, state],
+  );
 
   const hasSignals =
     Boolean(state.currentNotification) ||
@@ -236,7 +228,10 @@ function buildCoachNotificationsModel(
   const upcoming = buildUpcomingNudges(state.currentNotification);
   const history = buildHistoryItems(state.history);
   const preferences = buildPreferences(state.currentNotification);
-  const quietMode = buildQuietMode(state.engagementSummary, state.currentNotification);
+  const quietMode = buildQuietMode(
+    state.engagementSummary,
+    state.currentNotification,
+  );
   const quickActions = buildQuickActions();
 
   if (!hasSignals) {
@@ -386,8 +381,7 @@ function buildPreferences(
     {
       id: 'weekly-review',
       label: 'Weekly review',
-      detail:
-        'Read only. Weekly reminders are reserved for the right moment.',
+      detail: 'Read only. Weekly reminders are reserved for the right moment.',
     },
   ];
 }
@@ -480,7 +474,9 @@ function buildQuickActions(): CoachNotificationQuickAction[] {
   ];
 }
 
-function resolveAction(notification: NotificationDecision): CoachNotificationAction {
+function resolveAction(
+  notification: NotificationDecision,
+): CoachNotificationAction {
   const target = resolveTarget(notification);
   const label = resolveActionLabel(notification);
 
@@ -527,7 +523,9 @@ function resolveActionLabel(notification: NotificationDecision): string {
   }
 }
 
-function resolveTarget(notification: NotificationDecision): CoachNotificationTarget {
+function resolveTarget(
+  notification: NotificationDecision,
+): CoachNotificationTarget {
   const target = notification.actionTarget?.trim().toLowerCase();
 
   switch (target) {
@@ -570,7 +568,9 @@ function resolveTarget(notification: NotificationDecision): CoachNotificationTar
   }
 }
 
-function getHeroSubtitle(summary: NotificationEngagementSummary | null): string {
+function getHeroSubtitle(
+  summary: NotificationEngagementSummary | null,
+): string {
   if (!summary) {
     return 'Your coach will only remind you when it matters.';
   }

@@ -6,4 +6,3 @@ Future validation should cover:
 - drift comparison across formula versions
 - backfill preserves auditability
 - replay does not mutate the database
-

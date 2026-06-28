@@ -187,10 +187,7 @@ export function WorkoutHistoryScreen() {
           />
         }
         ListHeaderComponent={
-          <HistoryHeader
-            model={model}
-            workoutCount={workoutLogs.length}
-          />
+          <HistoryHeader model={model} workoutCount={workoutLogs.length} />
         }
         ListFooterComponent={
           <HistoryFooter
@@ -234,7 +231,9 @@ export function WorkoutSessionDetailScreen() {
         style={styles.detailContent}
       >
         <View style={styles.detailHero}>
-          <Text style={styles.detailDate}>{formatTimelineDate(workoutLog.date)}</Text>
+          <Text style={styles.detailDate}>
+            {formatTimelineDate(workoutLog.date)}
+          </Text>
           <Text style={styles.detailTitle}>{getWorkoutTitle(workoutLog)}</Text>
           <Text style={styles.detailSubtitle}>
             A focused summary of this completed workout.
@@ -242,7 +241,10 @@ export function WorkoutSessionDetailScreen() {
         </View>
 
         <View style={styles.summaryGrid}>
-          <SummaryTile label="Duration" value={`${workoutLog.durationMinutes} min`} />
+          <SummaryTile
+            label="Duration"
+            value={`${workoutLog.durationMinutes} min`}
+          />
           <SummaryTile
             label="Exercises"
             value={String(workoutLog.completedExercises.length)}
@@ -353,7 +355,9 @@ const TimelineItem = memo(function TimelineItem({
       </View>
       <View style={styles.timelineCard}>
         <View style={styles.timelineTopRow}>
-          <Text style={styles.timelineDate}>{formatTimelineDate(item.date)}</Text>
+          <Text style={styles.timelineDate}>
+            {formatTimelineDate(item.date)}
+          </Text>
           <View style={styles.statusPill}>
             <Text style={styles.statusText}>Completed</Text>
           </View>
@@ -406,7 +410,11 @@ const HistoryFooter = memo(function HistoryFooter({
             onPress={onViewAnalytics}
             variant="ghost"
           />
-          <Button label="View Progress" onPress={onViewProgress} variant="ghost" />
+          <Button
+            label="View Progress"
+            onPress={onViewProgress}
+            variant="ghost"
+          />
           <Button
             label="Review Recovery"
             onPress={onReviewRecovery}
@@ -422,7 +430,10 @@ const HistoryFooter = memo(function HistoryFooter({
 function WorkoutHistorySkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="Loading workout history" style={styles.skeletonContent}>
+      <View
+        accessibilityLabel="Loading workout history"
+        style={styles.skeletonContent}
+      >
         <View style={styles.skeletonHero} />
         <View style={styles.summaryGrid}>
           <View style={styles.skeletonMetric} />
@@ -451,10 +462,17 @@ function WorkoutHistoryStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.stateButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.stateButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -477,7 +495,8 @@ function buildHistoryModel(
     (sum, item) => sum + item.completedExercises.length,
     0,
   );
-  const currentStreak = summary?.currentStreak ?? calculateWorkoutStreak(workoutLogs);
+  const currentStreak =
+    summary?.currentStreak ?? calculateWorkoutStreak(workoutLogs);
 
   return {
     streakTitle:

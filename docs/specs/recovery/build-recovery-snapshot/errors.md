@@ -10,4 +10,3 @@
 ### Notes
 
 The builder should prefer safe fallback behavior over hard failure whenever a missing signal is not essential for the current calculation.
-

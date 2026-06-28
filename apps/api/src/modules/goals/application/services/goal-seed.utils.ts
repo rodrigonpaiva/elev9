@@ -1,4 +1,7 @@
-import type { FitnessGoal, FitnessProfile } from '../../../fitness/domain/entities/fitness-profile.entity';
+import type {
+  FitnessGoal,
+  FitnessProfile,
+} from '../../../fitness/domain/entities/fitness-profile.entity';
 import type { Goal } from '../../domain/entities/goal.entity';
 import type { GoalRepository } from '../../domain/repositories/goal.repository';
 import type { FitnessProfileRepository } from '../../../fitness/domain/repositories/fitness-profile.repository';
@@ -36,9 +39,7 @@ export class GoalReadError extends Error {
   }
 }
 
-export function mapFitnessGoalToGoalType(
-  goal: FitnessGoal,
-): GoalType | null {
+export function mapFitnessGoalToGoalType(goal: FitnessGoal): GoalType | null {
   switch (goal) {
     case 'lose_weight':
     case 'gain_muscle':
@@ -96,9 +97,8 @@ export async function resolveUserProfileOrThrow(
     );
   }
 
-  const userProfile = await input.userProfileRepository.findByAuthUserId(
-    authUserId,
-  );
+  const userProfile =
+    await input.userProfileRepository.findByAuthUserId(authUserId);
 
   if (!userProfile) {
     throw new GoalReadError(
@@ -111,14 +111,12 @@ export async function resolveUserProfileOrThrow(
   return userProfile;
 }
 
-export async function resolveActiveGoalOrSeed(
-  input: {
-    userProfile: UserProfile;
-    goalRepository: GoalRepository;
-    fitnessProfileRepository: FitnessProfileRepository;
-    goalDateService: GoalDateService;
-  },
-): Promise<{ goal: Goal; fitnessProfile: FitnessProfile | null }> {
+export async function resolveActiveGoalOrSeed(input: {
+  userProfile: UserProfile;
+  goalRepository: GoalRepository;
+  fitnessProfileRepository: FitnessProfileRepository;
+  goalDateService: GoalDateService;
+}): Promise<{ goal: Goal; fitnessProfile: FitnessProfile | null }> {
   const activeGoal = await input.goalRepository.findActiveByUserProfileId(
     input.userProfile.id,
   );

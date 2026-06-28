@@ -45,8 +45,6 @@ describe('enum-label formatters', () => {
   });
 
   it('falls back to a readable generic label', () => {
-    expect(formatGenericEnumLabel('future_new_value')).toBe(
-      'Future New Value',
-    );
+    expect(formatGenericEnumLabel('future_new_value')).toBe('Future New Value');
   });
 });

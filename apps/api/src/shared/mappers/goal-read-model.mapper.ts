@@ -1,4 +1,9 @@
-import type { GoalContract, GoalForecastContract, GoalMilestoneContract, GoalProgressSnapshotContract } from '../../modules/goals/domain/goals.contract';
+import type {
+  GoalContract,
+  GoalForecastContract,
+  GoalMilestoneContract,
+  GoalProgressSnapshotContract,
+} from '../../modules/goals/domain/goals.contract';
 import type { GoalForecastConfidence } from '../../modules/goals/domain/goals.types';
 import type { Goal } from '../../modules/goals/domain/entities/goal.entity';
 import type { GoalForecast } from '../../modules/goals/domain/entities/goal-forecast.entity';
@@ -49,7 +54,9 @@ export class GoalReadModelMapper {
             ),
           }
         : {}),
-      ...(goalReadModel.forecast ? { forecast: goalReadModel.forecast.toJSON() } : {}),
+      ...(goalReadModel.forecast
+        ? { forecast: goalReadModel.forecast.toJSON() }
+        : {}),
       ...(goalReadModel.milestones
         ? {
             milestones: goalReadModel.milestones.map((milestone) =>
@@ -63,7 +70,11 @@ export class GoalReadModelMapper {
   static toCoachDecisionSignals(
     goalReadModel: GoalReadModel | null | undefined,
   ): GoalCoachDecisionSignals | null {
-    if (!goalReadModel || !goalReadModel.progressSnapshot || !goalReadModel.forecast) {
+    if (
+      !goalReadModel ||
+      !goalReadModel.progressSnapshot ||
+      !goalReadModel.forecast
+    ) {
       return null;
     }
 

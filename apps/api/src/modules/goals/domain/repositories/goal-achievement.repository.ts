@@ -10,9 +10,7 @@ export interface CreateGoalAchievementRepositoryInput {
 
 export interface GoalAchievementRepository {
   findManyByUserProfileId(userProfileId: string): Promise<GoalAchievement[]>;
-  create(
-    input: CreateGoalAchievementRepositoryInput,
-  ): Promise<GoalAchievement>;
+  create(input: CreateGoalAchievementRepositoryInput): Promise<GoalAchievement>;
 }
 
 export const GOAL_ACHIEVEMENT_REPOSITORY = Symbol(

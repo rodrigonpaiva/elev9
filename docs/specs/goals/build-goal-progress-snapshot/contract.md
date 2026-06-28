@@ -48,7 +48,7 @@
   progressPercentage: number;
   currentValue: number;
   targetValue: number;
-  trend: "improving" | "stable" | "declining";
+  trend: 'improving' | 'stable' | 'declining';
   sourceContext: Record<string, unknown>;
   formulaVersion: string;
 }

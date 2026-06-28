@@ -24,10 +24,16 @@ describe('GetTodayPersonalizationUseCase', () => {
       findByUserProfileIdAndDate: jest.fn(),
     };
     buildPersonalizationSnapshotUseCase = { execute: jest.fn() };
-    platformDateService = { getTodayDateString: jest.fn().mockReturnValue('2026-06-03') };
+    platformDateService = {
+      getTodayDateString: jest.fn().mockReturnValue('2026-06-03'),
+    };
 
-    userProfileRepository.findByAuthUserId.mockResolvedValue({ id: 'profile_123' });
-    personalizationSnapshotRepository.findByUserProfileIdAndDate.mockResolvedValue(null);
+    userProfileRepository.findByAuthUserId.mockResolvedValue({
+      id: 'profile_123',
+    });
+    personalizationSnapshotRepository.findByUserProfileIdAndDate.mockResolvedValue(
+      null,
+    );
     buildPersonalizationSnapshotUseCase.execute.mockResolvedValue({
       personalizationSnapshot: buildSnapshot('snapshot_built'),
     });
@@ -48,9 +54,7 @@ describe('GetTodayPersonalizationUseCase', () => {
     const result = await useCase.execute({ authUserId: 'auth_123' });
 
     expect(platformDateService.getTodayDateString).toHaveBeenCalled();
-    expect(
-      buildPersonalizationSnapshotUseCase.execute,
-    ).not.toHaveBeenCalled();
+    expect(buildPersonalizationSnapshotUseCase.execute).not.toHaveBeenCalled();
     expect(
       personalizationSnapshotRepository.findByUserProfileIdAndDate,
     ).toHaveBeenCalledWith('profile_123', '2026-06-03');

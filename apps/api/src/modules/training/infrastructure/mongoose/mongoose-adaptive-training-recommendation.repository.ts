@@ -2,12 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import {
-  AdaptiveTrainingRecommendation as AdaptiveTrainingRecommendationEntity,
-} from '../../domain/entities/adaptive-training-recommendation.entity';
-import {
-  AdaptiveTrainingInfluence as AdaptiveTrainingInfluenceValueObject,
-} from '../../domain/value-objects/adaptive-training-influence.value-object';
+import { AdaptiveTrainingRecommendation as AdaptiveTrainingRecommendationEntity } from '../../domain/entities/adaptive-training-recommendation.entity';
+import { AdaptiveTrainingInfluence as AdaptiveTrainingInfluenceValueObject } from '../../domain/value-objects/adaptive-training-influence.value-object';
 import {
   AdaptiveTrainingRecommendationRepository,
   AdaptiveTrainingRecommendationQueryOptions,
@@ -22,9 +18,7 @@ import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
 import type { AdaptiveTrainingSourceContext } from '../../../../shared/source-context';
 
 @Injectable()
-export class MongooseAdaptiveTrainingRecommendationRepository
-  implements AdaptiveTrainingRecommendationRepository
-{
+export class MongooseAdaptiveTrainingRecommendationRepository implements AdaptiveTrainingRecommendationRepository {
   constructor(
     @InjectModel(ADAPTIVE_TRAINING_RECOMMENDATION_MODEL_NAME)
     private readonly adaptiveTrainingRecommendationModel: Model<AdaptiveTrainingRecommendationSchemaClass>,
@@ -134,19 +128,18 @@ export class MongooseAdaptiveTrainingRecommendationRepository
         throw new Error('Failed to upsert adaptive training recommendation.');
       }
 
-      return this.toEntity(
-        document as AdaptiveTrainingRecommendationDocument,
-      );
+      return this.toEntity(document as AdaptiveTrainingRecommendationDocument);
     } catch (error) {
       return IdempotentUpsertHelper.handleDuplicateKeyFallback({
         error,
         reload: async () => {
-          const existingDocument = await this.adaptiveTrainingRecommendationModel
-            .findOne({
-              userProfileId: input.userProfileId,
-              date: input.date,
-            })
-            .exec();
+          const existingDocument =
+            await this.adaptiveTrainingRecommendationModel
+              .findOne({
+                userProfileId: input.userProfileId,
+                date: input.date,
+              })
+              .exec();
 
           return existingDocument
             ? this.toEntity(
@@ -180,7 +173,8 @@ export class MongooseAdaptiveTrainingRecommendationRepository
             value: influence.value,
           }),
       ),
-      sourceContext: (document.sourceContext ?? {}) as AdaptiveTrainingSourceContext,
+      sourceContext: (document.sourceContext ??
+        {}) as AdaptiveTrainingSourceContext,
       formulaVersion: document.formulaVersion,
       generatedBy: document.generatedBy,
       createdAt: document.createdAt,

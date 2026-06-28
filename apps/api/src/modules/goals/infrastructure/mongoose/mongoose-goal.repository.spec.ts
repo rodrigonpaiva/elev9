@@ -35,7 +35,9 @@ describe('MongooseGoalRepository', () => {
     const updateMany = jest.fn().mockReturnValue({
       exec: jest.fn().mockResolvedValue({ modifiedCount: 1 }),
     });
-    const create = jest.fn().mockResolvedValue(buildDocument({ id: 'goal_456' }));
+    const create = jest
+      .fn()
+      .mockResolvedValue(buildDocument({ id: 'goal_456' }));
     const repository = new MongooseGoalRepository({
       updateMany,
       create,

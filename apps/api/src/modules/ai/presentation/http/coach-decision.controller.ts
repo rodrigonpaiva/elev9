@@ -276,15 +276,14 @@ export class CoachDecisionController {
 function mapRecalculatedCoachDecision(
   coachDecision: CoachDecisionRecalculatedResult,
 ): CoachDecisionRecalculatedResultResponse {
-  const influences =
-    coachDecision.influences.map((influence) => ({
-      code: influence.code as CoachDecisionRecalculatedResultResponse['influences'][number]['code'],
-      label: influence.label,
-      impact: influence.impact,
-      source: influence.source,
-      weight: influence.weight,
-      value: influence.value,
-    })) as CoachDecisionRecalculatedResultResponse['influences'];
+  const influences = coachDecision.influences.map((influence) => ({
+    code: influence.code as CoachDecisionRecalculatedResultResponse['influences'][number]['code'],
+    label: influence.label,
+    impact: influence.impact,
+    source: influence.source,
+    weight: influence.weight,
+    value: influence.value,
+  })) as CoachDecisionRecalculatedResultResponse['influences'];
 
   return {
     priority: coachDecision.priority,
@@ -303,26 +302,31 @@ function mapCoachDecision(coachDecision: {
   recoverySnapshotId?: string;
   nutritionRecommendationId?: string;
   adaptiveTrainingRecommendationId?: string;
-  priority: 'recovery' | 'nutrition' | 'training' | 'consistency' | 'motivation';
+  priority:
+    | 'recovery'
+    | 'nutrition'
+    | 'training'
+    | 'consistency'
+    | 'motivation';
   headline: string;
   summary: string;
   actionItems: string[];
-    influences: Array<{
-      code: string;
-      label: string;
-      impact: 'positive' | 'negative' | 'neutral';
-      source:
-        | 'recovery'
-        | 'nutrition'
-        | 'training'
-        | 'progress'
-        | 'memory'
-        | 'notification'
-        | 'habit'
-        | 'personalization';
-      weight?: number;
-      value?: number;
-    }>;
+  influences: Array<{
+    code: string;
+    label: string;
+    impact: 'positive' | 'negative' | 'neutral';
+    source:
+      | 'recovery'
+      | 'nutrition'
+      | 'training'
+      | 'progress'
+      | 'memory'
+      | 'notification'
+      | 'habit'
+      | 'personalization';
+    weight?: number;
+    value?: number;
+  }>;
   sourceContext: Record<string, unknown>;
   formulaVersion: string;
   generatedBy: 'deterministic' | 'llm_assisted';

@@ -16,4 +16,3 @@
 - `training plan not found` -> `404 Not Found`
 - invalid inputs -> `400 Bad Request`
 - unexpected failure -> `500 Internal Server Error`
-

@@ -4,4 +4,3 @@
 2. export repository tokens from owning modules
 3. eliminate local duplicated wiring over time
 4. preserve explicit dependency direction
-

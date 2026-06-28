@@ -361,7 +361,10 @@ const CoachFeedback = memo(function CoachFeedback({
   feedback: string;
 }) {
   return (
-    <View accessibilityLabel={`Coach feedback preview. ${feedback}`} style={styles.card}>
+    <View
+      accessibilityLabel={`Coach feedback preview. ${feedback}`}
+      style={styles.card}
+    >
       <Text style={styles.sectionLabel}>COACH FEEDBACK PREVIEW</Text>
       <Text style={styles.feedbackText}>{feedback}</Text>
     </View>
@@ -385,7 +388,10 @@ const Confirmation = memo(function Confirmation({
     <View style={styles.card}>
       <Text style={styles.sectionLabel}>CONFIRMATION</Text>
       {isSaved ? (
-        <View accessibilityLabel="Meal logged successfully." style={styles.successBox}>
+        <View
+          accessibilityLabel="Meal logged successfully."
+          style={styles.successBox}
+        >
           <Text style={styles.successText}>Meal logged successfully.</Text>
         </View>
       ) : null}
@@ -417,7 +423,10 @@ const Confirmation = memo(function Confirmation({
 function LogMealSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="Loading meal log" style={styles.skeletonContent}>
+      <View
+        accessibilityLabel="Loading meal log"
+        style={styles.skeletonContent}
+      >
         <View style={styles.skeletonHero} />
         <View style={styles.skeletonOption} />
         <View style={styles.skeletonOption} />
@@ -441,7 +450,11 @@ function LogMealStateView({
     <SafeAreaView style={styles.safeArea}>
       <View accessibilityLabel={title} style={styles.state}>
         <Text style={styles.stateTitle}>{title}</Text>
-        <Button label={actionLabel} onPress={onAction} style={styles.fullButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.fullButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -492,7 +505,9 @@ function toMealLogStatus(status: CompletionOption['id']): MealLogStatus {
   }
 }
 
-function getStatusAnalyticsEvent(status: CompletionOption['id']): AnalyticsEvent {
+function getStatusAnalyticsEvent(
+  status: CompletionOption['id'],
+): AnalyticsEvent {
   switch (status) {
     case 'completed':
       return 'meal_completed';

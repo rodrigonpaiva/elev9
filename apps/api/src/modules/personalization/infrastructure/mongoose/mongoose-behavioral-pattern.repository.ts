@@ -19,9 +19,7 @@ import {
 import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
 
 @Injectable()
-export class MongooseBehavioralPatternRepository
-  implements BehavioralPatternRepository
-{
+export class MongooseBehavioralPatternRepository implements BehavioralPatternRepository {
   constructor(
     @InjectModel(BEHAVIORAL_PATTERN_MODEL_NAME)
     private readonly behavioralPatternModel: Model<BehavioralPatternSchemaClass>,
@@ -54,7 +52,9 @@ export class MongooseBehavioralPatternRepository
       .findOne({ userProfileId, type })
       .exec();
 
-    return document ? this.toEntity(document as BehavioralPatternDocument) : null;
+    return document
+      ? this.toEntity(document as BehavioralPatternDocument)
+      : null;
   }
 
   async upsertPattern(

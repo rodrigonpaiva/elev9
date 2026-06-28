@@ -120,8 +120,9 @@ export class GetHomeDashboardDebugUseCase {
       const currentGoal = await this.getCurrentGoalUseCase.execute({
         authUserId,
       });
-      const milestones =
-        await this.getGoalMilestonesUseCase.execute({ authUserId });
+      const milestones = await this.getGoalMilestonesUseCase.execute({
+        authUserId,
+      });
 
       return {
         goal: currentGoal.goal,
@@ -156,7 +157,9 @@ export class GetHomeDashboardDebugUseCase {
     );
   }
 
-  private async resolveHabits(authUserId: string): Promise<HabitReadModel | undefined> {
+  private async resolveHabits(
+    authUserId: string,
+  ): Promise<HabitReadModel | undefined> {
     try {
       const [currentResult, summaryResult, riskSignalsResult] =
         await Promise.allSettled([

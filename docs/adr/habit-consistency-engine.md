@@ -32,7 +32,7 @@ The product needs a deterministic engine that can answer:
 Introduce a dedicated bounded context:
 
 ```ts
-habits
+habits;
 ```
 
 The Habit Engine will be read-model-first and deterministic-first.

@@ -31,10 +31,9 @@ describe('GetHabitHistoryUseCase', () => {
       authUserId: 'auth_123',
     });
 
-    expect(habitSnapshotRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 14 },
-    );
+    expect(
+      habitSnapshotRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 14 });
     expect(result.limit).toBe(14);
   });
 
@@ -49,10 +48,9 @@ describe('GetHabitHistoryUseCase', () => {
       limit: 90,
     });
 
-    expect(habitSnapshotRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 90 },
-    );
+    expect(
+      habitSnapshotRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 90 });
     expect(result.limit).toBe(90);
   });
 
@@ -80,9 +78,8 @@ describe('GetHabitHistoryUseCase', () => {
       limit: 14,
     });
 
-    expect(habitSnapshotRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_456',
-      { limit: 14 },
-    );
+    expect(
+      habitSnapshotRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_456', { limit: 14 });
   });
 });

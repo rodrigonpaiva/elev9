@@ -6,38 +6,18 @@ import { NotificationDecisionCalculatorService } from '../../services/notificati
 import { NotificationFatiguePolicyService } from '../../services/notification-fatigue-policy.service';
 import { PlatformDateService } from '../../../../../shared/date/platform-date.service';
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
-import {
-  CoachDecisionRepository,
-} from '../../../../ai/domain/repositories/coach-decision.repository';
-import {
-  RecoverySnapshotRepository,
-} from '../../../../recovery/domain/repositories/recovery-snapshot.repository';
-import {
-  AdaptiveTrainingRecommendationRepository,
-} from '../../../../training/domain/repositories/adaptive-training-recommendation.repository';
+import { CoachDecisionRepository } from '../../../../ai/domain/repositories/coach-decision.repository';
+import { RecoverySnapshotRepository } from '../../../../recovery/domain/repositories/recovery-snapshot.repository';
+import { AdaptiveTrainingRecommendationRepository } from '../../../../training/domain/repositories/adaptive-training-recommendation.repository';
 import { GoalRepository } from '../../../../goals/domain/repositories/goal.repository';
-import {
-  GoalProgressSnapshotRepository,
-} from '../../../../goals/domain/repositories/goal-progress-snapshot.repository';
+import { GoalProgressSnapshotRepository } from '../../../../goals/domain/repositories/goal-progress-snapshot.repository';
 import { GoalMilestoneRepository } from '../../../../goals/domain/repositories/goal-milestone.repository';
-import {
-  NutritionRecommendationRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-recommendation.repository';
-import {
-  FitnessProfileRepository,
-} from '../../../../fitness/domain/repositories/fitness-profile.repository';
-import {
-  TrainingPlanRepository,
-} from '../../../../training/domain/repositories/training-plan.repository';
-import {
-  WorkoutLogRepository,
-} from '../../../../progress/domain/repositories/workout-log.repository';
-import {
-  DailyCheckInRepository,
-} from '../../../../progress/domain/repositories/daily-check-in.repository';
-import {
-  EngagementEventRepository,
-} from '../../../domain/repositories/engagement-event.repository';
+import { NutritionRecommendationRepository } from '../../../../nutrition/domain/repositories/nutrition-recommendation.repository';
+import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
+import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
+import { WorkoutLogRepository } from '../../../../progress/domain/repositories/workout-log.repository';
+import { DailyCheckInRepository } from '../../../../progress/domain/repositories/daily-check-in.repository';
+import { EngagementEventRepository } from '../../../domain/repositories/engagement-event.repository';
 import {
   NotificationDecisionRepository,
   UpsertNotificationDecisionRepositoryInput,
@@ -93,8 +73,7 @@ describe('BuildNotificationDecisionUseCase', () => {
     };
     notificationDecisionCalculatorService =
       new NotificationDecisionCalculatorService();
-    notificationFatiguePolicyService =
-      new NotificationFatiguePolicyService();
+    notificationFatiguePolicyService = new NotificationFatiguePolicyService();
     platformDateService = new PlatformDateService();
 
     notificationDecisionRepository.upsertDailyDecision.mockImplementation(
@@ -103,7 +82,9 @@ describe('BuildNotificationDecisionUseCase', () => {
     notificationDecisionRepository.findByUserProfileIdAndDate.mockResolvedValue(
       null,
     );
-    notificationDecisionRepository.findManyByUserProfileId.mockResolvedValue([]);
+    notificationDecisionRepository.findManyByUserProfileId.mockResolvedValue(
+      [],
+    );
     engagementEventRepository.findRecentByUserProfileId.mockResolvedValue([]);
 
     seedNeutralState();
@@ -168,7 +149,9 @@ describe('BuildNotificationDecisionUseCase', () => {
 
     expect(result.notificationDecision.type.value).toBe('recovery_alert');
     expect(result.notificationDecision.priority.value).toBe('urgent');
-    expect(notificationDecisionRepository.upsertDailyDecision).toHaveBeenCalledWith(
+    expect(
+      notificationDecisionRepository.upsertDailyDecision,
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         date: '2026-06-03',
         generatedBy: 'deterministic',
@@ -256,9 +239,7 @@ describe('BuildNotificationDecisionUseCase', () => {
     ).toHaveBeenCalledWith(
       expect.objectContaining({
         suppressed: true,
-        suppressionReasons: expect.arrayContaining([
-          'daily_cap_reached',
-        ]),
+        suppressionReasons: expect.arrayContaining(['daily_cap_reached']),
         fatigueLevel: 'high',
         status: 'skipped',
       }),
@@ -377,7 +358,8 @@ describe('BuildNotificationDecisionUseCase', () => {
 
     expect(result.notificationDecision.type.value).toBe('weekly_summary');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         coachDecisionId: undefined,
@@ -395,7 +377,8 @@ describe('BuildNotificationDecisionUseCase', () => {
 
     expect(result.notificationDecision.type.value).toBe('recovery_alert');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         readinessScore: 20,
@@ -406,13 +389,16 @@ describe('BuildNotificationDecisionUseCase', () => {
 
   it('falls back safely when recovery is missing', async () => {
     arrangeUserProfile();
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
 
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.notificationDecision.type.value).toBe('weekly_summary');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         readinessScore: 50,
@@ -429,7 +415,8 @@ describe('BuildNotificationDecisionUseCase', () => {
 
     expect(result.notificationDecision.type.value).toBe('recovery_alert');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         adaptiveRecommendationType: 'rest_day',
@@ -451,7 +438,8 @@ describe('BuildNotificationDecisionUseCase', () => {
 
     expect(result.notificationDecision.type.value).toBe('weekly_summary');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         goalProgressTrend: 'improving',
@@ -474,7 +462,8 @@ describe('BuildNotificationDecisionUseCase', () => {
     expect(result.notificationDecision.type.value).toBe('goal_milestone');
     expect(result.notificationDecision.priority.value).toBe('high');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         goalMilestoneClose: true,
@@ -497,7 +486,8 @@ describe('BuildNotificationDecisionUseCase', () => {
     expect(result.notificationDecision.type.value).toBe('goal_achievement');
     expect(result.notificationDecision.priority.value).toBe('high');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         goalAchievementReached: true,
@@ -517,7 +507,8 @@ describe('BuildNotificationDecisionUseCase', () => {
 
     expect(result.notificationDecision.type.value).toBe('missed_workout');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         missedWorkouts: 3,
@@ -538,7 +529,8 @@ describe('BuildNotificationDecisionUseCase', () => {
 
     expect(result.notificationDecision.type.value).toBe('missed_workout');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         missedWorkouts: 0,
@@ -555,7 +547,8 @@ describe('BuildNotificationDecisionUseCase', () => {
 
     expect(result.notificationDecision.type.value).toBe('nutrition_reminder');
     expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
+      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+        .sourceContext,
     ).toEqual(
       expect.objectContaining({
         nutritionAdherence: 35,
@@ -586,23 +579,25 @@ describe('BuildNotificationDecisionUseCase', () => {
       ],
       expectedFatigueLevel: 'high' as const,
     },
-  ])('classifies fatigue as $label from recent engagement events', async ({
-    events,
-  }) => {
-    arrangeUserProfile();
-    arrangeEngagementEvents(events);
+  ])(
+    'classifies fatigue as $label from recent engagement events',
+    async ({ events }) => {
+      arrangeUserProfile();
+      arrangeEngagementEvents(events);
 
-    const result = await useCase.execute({ authUserId: 'auth_user_123' });
+      const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(
-      notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0].sourceContext,
-    ).toEqual(
-      expect.objectContaining({
-        recentEngagementEventsCount: events.length,
-      }),
-    );
-    expect(result.notificationDecision.influences[0].code).toBeDefined();
-  });
+      expect(
+        notificationDecisionRepository.upsertDailyDecision.mock.calls[0][0]
+          .sourceContext,
+      ).toEqual(
+        expect.objectContaining({
+          recentEngagementEventsCount: events.length,
+        }),
+      );
+      expect(result.notificationDecision.influences[0].code).toBeDefined();
+    },
+  );
 
   it('rejects requests without a user profile', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);
@@ -640,15 +635,23 @@ describe('BuildNotificationDecisionUseCase', () => {
   function seedNeutralState() {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);
     coachDecisionRepository.findLatestByUserProfileId.mockResolvedValue(null);
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
-    adaptiveTrainingRecommendationRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
+    adaptiveTrainingRecommendationRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     goalRepository.findActiveByUserProfileId.mockResolvedValue(null);
     goalProgressSnapshotRepository.findLatestByGoalId.mockResolvedValue(null);
     goalMilestoneRepository.findManyByGoalId.mockResolvedValue([]);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue([]);
+    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
+      [],
+    );
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     dailyCheckInRepository.findManyByUserProfileId.mockResolvedValue([]);
     engagementEventRepository.findRecentByUserProfileId.mockResolvedValue([]);
   }
@@ -665,7 +668,12 @@ describe('BuildNotificationDecisionUseCase', () => {
   }
 
   function arrangeCoachDecision(
-    priority: 'recovery' | 'nutrition' | 'training' | 'consistency' | 'motivation',
+    priority:
+      | 'recovery'
+      | 'nutrition'
+      | 'training'
+      | 'consistency'
+      | 'motivation',
     headline = 'Keep building',
     influences: Array<{
       code: 'LOW_ENGAGEMENT' | 'COACH_CONSISTENCY_NUDGE' | 'LOW_READINESS';
@@ -685,7 +693,9 @@ describe('BuildNotificationDecisionUseCase', () => {
       id: 'coach_decision_123',
       priority: { value: priority },
       headline,
-      influences: influences.map((influence) => new NotificationInfluence(influence)),
+      influences: influences.map(
+        (influence) => new NotificationInfluence(influence),
+      ),
     } as never);
   }
 
@@ -776,13 +786,15 @@ describe('BuildNotificationDecisionUseCase', () => {
   }
 
   function arrangeNutritionRecommendation(adherenceScore: number) {
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue([
-      {
-        contextSnapshot: {
-          adherenceScore,
+    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
+      [
+        {
+          contextSnapshot: {
+            adherenceScore,
+          },
         },
-      },
-    ] as never);
+      ] as never,
+    );
   }
 
   function arrangeTrainingPlanAndActivity(input: {
@@ -796,9 +808,12 @@ describe('BuildNotificationDecisionUseCase', () => {
 
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue({
       id: 'training_plan_123',
-      weeklySchedule: Array.from({ length: input.weeklyScheduleDays }, (_, index) => ({
-        dayOfWeek: index,
-      })),
+      weeklySchedule: Array.from(
+        { length: input.weeklyScheduleDays },
+        (_, index) => ({
+          dayOfWeek: index,
+        }),
+      ),
     } as never);
 
     workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
@@ -815,7 +830,9 @@ describe('BuildNotificationDecisionUseCase', () => {
   }
 
   function arrangeEngagementEvents(
-    types: Array<'impression' | 'opened' | 'clicked' | 'dismissed' | 'completed'>,
+    types: Array<
+      'impression' | 'opened' | 'clicked' | 'dismissed' | 'completed'
+    >,
   ) {
     engagementEventRepository.findRecentByUserProfileId.mockResolvedValue(
       types.map((type, index) => ({
@@ -846,7 +863,9 @@ describe('BuildNotificationDecisionUseCase', () => {
       message: input.message,
       actionLabel: input.actionLabel,
       actionTarget: input.actionTarget,
-      influences: input.influences.map((influence) => new NotificationInfluence(influence)),
+      influences: input.influences.map(
+        (influence) => new NotificationInfluence(influence),
+      ),
       sourceContext: input.sourceContext,
       suppressed: input.suppressed ?? false,
       suppressionReasons: input.suppressionReasons ?? [],

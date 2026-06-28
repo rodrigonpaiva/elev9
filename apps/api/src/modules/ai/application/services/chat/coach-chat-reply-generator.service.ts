@@ -22,7 +22,9 @@ export class CoachChatReplyGenerator {
     habit?: HabitPromptPayload;
     personalization?: PersonalizationPromptPayload;
   }): string {
-    const coachDecisionReply = this.buildCoachDecisionReply(input.coachDecision);
+    const coachDecisionReply = this.buildCoachDecisionReply(
+      input.coachDecision,
+    );
 
     if (coachDecisionReply) {
       return coachDecisionReply;
@@ -110,7 +112,8 @@ export class CoachChatReplyGenerator {
 
     const current = notification.current;
     const engagementSummary = notification.engagementSummary;
-    const fatigueLevel = current?.fatigueLevel ?? engagementSummary?.fatigueLevel;
+    const fatigueLevel =
+      current?.fatigueLevel ?? engagementSummary?.fatigueLevel;
     const engagementScore = engagementSummary?.engagementScore ?? 50;
     const dismissedCount = engagementSummary?.dismissedCount ?? 0;
 
@@ -228,7 +231,9 @@ export class CoachChatReplyGenerator {
     return actionItems.slice(0, 2).join(' and ');
   }
 
-  private buildInfluenceCue(coachDecision: CoachDecisionReadModelPayload): string {
+  private buildInfluenceCue(
+    coachDecision: CoachDecisionReadModelPayload,
+  ): string {
     const codes = coachDecision.influences.map((influence) => influence.code);
 
     if (

@@ -13,4 +13,3 @@
 - deterministic wording without LLM
 - LLM wording failure falls back safely
 - idempotent upsert for the same day
-

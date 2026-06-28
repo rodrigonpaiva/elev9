@@ -208,7 +208,10 @@ export function WorkoutOverviewScreen() {
           />
         }
       >
-        <View accessibilityLabel={model.accessibilityLabel} style={styles.stack}>
+        <View
+          accessibilityLabel={model.accessibilityLabel}
+          style={styles.stack}
+        >
           <WorkoutHero model={model} />
           <CoachNote note={model.coachNote} />
           <WorkoutSummary model={model} />
@@ -341,7 +344,9 @@ const WorkoutBenefits = memo(function WorkoutBenefits({
   return (
     <View style={styles.card}>
       <Text style={styles.label}>WORKOUT BENEFITS</Text>
-      <Text style={styles.benefitIntro}>Today&apos;s workout helps improve:</Text>
+      <Text style={styles.benefitIntro}>
+        Today&apos;s workout helps improve:
+      </Text>
       <View style={styles.benefitList}>
         {benefits.map((benefit) => (
           <View key={benefit} style={styles.benefitRow}>
@@ -358,7 +363,10 @@ function WorkoutOverviewSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View accessibilityLabel="Loading workout overview" style={styles.stack}>
+        <View
+          accessibilityLabel="Loading workout overview"
+          style={styles.stack}
+        >
           <View style={styles.hero}>
             <View style={styles.skeletonBadge} />
             <View style={styles.skeletonTitle} />
@@ -400,10 +408,17 @@ function WorkoutOverviewStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.stateButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.stateButton}
+        />
       </View>
     </SafeAreaView>
   );

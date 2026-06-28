@@ -13,13 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ApiClientError } from '@elev9/api-client';
-import {
-  Badge,
-  Button,
-  Card,
-  SectionHeader,
-  Text,
-} from '@elev9/ui';
+import { Badge, Button, Card, SectionHeader, Text } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import type {
@@ -50,7 +44,6 @@ const notificationTokens = {
   amber: '#b45309',
   rose: '#e11d48',
 } as const;
-
 
 type HistoryIconName =
   | 'fitness-outline'
@@ -91,15 +84,18 @@ export function CoachNotificationsScreen() {
     [navigation],
   );
 
-  const handleTodayDismiss = useCallback(async (today: CoachNotificationToday) => {
-    trackCoachNotificationsEvent('coach_nudge_dismissed', {
-      nudge: today.id,
-    });
+  const handleTodayDismiss = useCallback(
+    async (today: CoachNotificationToday) => {
+      trackCoachNotificationsEvent('coach_nudge_dismissed', {
+        nudge: today.id,
+      });
 
-    if (today.notificationId) {
-      void recordNotificationEvent(today.notificationId, 'dismissed');
-    }
-  }, []);
+      if (today.notificationId) {
+        void recordNotificationEvent(today.notificationId, 'dismissed');
+      }
+    },
+    [],
+  );
 
   const handleHistoryPress = useCallback(
     async (item: CoachNotificationHistoryItem) => {
@@ -199,7 +195,10 @@ export function CoachNotificationsScreen() {
           />
         }
         ListHeaderComponent={
-          <View accessibilityLabel={model.accessibilityLabel} style={styles.content}>
+          <View
+            accessibilityLabel={model.accessibilityLabel}
+            style={styles.content}
+          >
             <HeroSection model={model} />
             <TodayNudgeSection
               today={model.today}
@@ -295,7 +294,9 @@ const TodayNudgeSection = memo(function TodayNudgeSection({
                   pressed ? styles.pressed : null,
                 ]}
               >
-                <Text style={styles.dismissButtonText}>{today.dismissLabel}</Text>
+                <Text style={styles.dismissButtonText}>
+                  {today.dismissLabel}
+                </Text>
               </Pressable>
             ) : null}
           </>
@@ -399,7 +400,10 @@ const HistoryRow = memo(function HistoryRow({
       accessibilityLabel={item.accessibilityLabel}
       accessibilityRole="button"
       onPress={() => onPress(item)}
-      style={({ pressed }) => [styles.historyRow, pressed ? styles.pressed : null]}
+      style={({ pressed }) => [
+        styles.historyRow,
+        pressed ? styles.pressed : null,
+      ]}
     >
       {content}
     </Pressable>
@@ -478,13 +482,7 @@ const QuickActionsSection = memo(function QuickActionsSection({
   );
 });
 
-function Section({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: string;
-}) {
+function Section({ children, title }: { children: ReactNode; title: string }) {
   return (
     <View style={styles.section}>
       <SectionHeader title={title} />
@@ -498,7 +496,8 @@ function HistoryEmpty() {
     <Card style={styles.historyEmptyCard}>
       <Text style={styles.emptyTitle}>No notification history yet.</Text>
       <Text style={styles.emptyDetail}>
-        Once the coach starts sending reminders, the latest ones will appear here.
+        Once the coach starts sending reminders, the latest ones will appear
+        here.
       </Text>
     </Card>
   );
@@ -507,7 +506,10 @@ function HistoryEmpty() {
 function CoachNotificationsSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="Loading smart nudges" style={styles.skeletonContent}>
+      <View
+        accessibilityLabel="Loading smart nudges"
+        style={styles.skeletonContent}
+      >
         <View style={[styles.skeletonBlock, styles.skeletonHero]} />
         <View style={[styles.skeletonBlock, styles.skeletonToday]} />
         <View style={[styles.skeletonBlock, styles.skeletonUpcoming]} />
@@ -547,7 +549,10 @@ function CoachNotificationsState({
 
 function navigateToTarget(
   navigation: NativeStackNavigationProp<RootStackParamList>,
-  target: CoachNotificationToday['action']['target'] | CoachNotificationUpcoming['target'] | CoachNotificationHistoryItem['target'],
+  target:
+    | CoachNotificationToday['action']['target']
+    | CoachNotificationUpcoming['target']
+    | CoachNotificationHistoryItem['target'],
 ) {
   switch (target) {
     case 'coach-chat':
@@ -595,7 +600,9 @@ async function recordNotificationEvent(
   type: 'opened' | 'clicked' | 'dismissed' | 'completed',
 ) {
   try {
-    await apiClient.notifications.recordEngagementEvent(notificationId, { type });
+    await apiClient.notifications.recordEngagementEvent(notificationId, {
+      type,
+    });
   } catch (error) {
     if (error instanceof ApiClientError) {
       return;

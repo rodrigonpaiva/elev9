@@ -81,12 +81,13 @@ export class BuildGoalForecastUseCase {
         );
       }
 
-      const snapshots = await this.goalProgressSnapshotRepository.findManyByGoalId(
-        activeGoal.id,
-        {
-          limit: RECENT_SNAPSHOT_LIMIT,
-        },
-      );
+      const snapshots =
+        await this.goalProgressSnapshotRepository.findManyByGoalId(
+          activeGoal.id,
+          {
+            limit: RECENT_SNAPSHOT_LIMIT,
+          },
+        );
 
       const orderedSnapshots = [...snapshots].sort((left, right) =>
         left.date.localeCompare(right.date),
@@ -100,37 +101,38 @@ export class BuildGoalForecastUseCase {
           progressPercentage: snapshot.progressPercentage,
         })),
       );
-      const forecastResult = this.goalProgressCalculatorService.calculateForecast(
-        currentProgress,
-        trend,
-        previousSnapshots.map((snapshot) => ({
-          progressPercentage: snapshot.progressPercentage,
-        })),
-        {
-          goalType: activeGoal.type,
-          startValue: latestSnapshot?.currentValue,
-          currentValue: latestSnapshot?.currentValue,
-          targetValue: latestSnapshot?.targetValue,
-          adherenceScore: latestSnapshot
-            ? this.resolveFromSnapshotContext(
-                latestSnapshot.sourceContext,
-                'adherenceScore',
-              )
-            : undefined,
-          recoveryScore: latestSnapshot
-            ? this.resolveFromSnapshotContext(
-                latestSnapshot.sourceContext,
-                'recoveryScore',
-              )
-            : undefined,
-          consistencyScore: latestSnapshot
-            ? this.resolveFromSnapshotContext(
-                latestSnapshot.sourceContext,
-                'consistencyScore',
-              )
-            : undefined,
-        },
-      );
+      const forecastResult =
+        this.goalProgressCalculatorService.calculateForecast(
+          currentProgress,
+          trend,
+          previousSnapshots.map((snapshot) => ({
+            progressPercentage: snapshot.progressPercentage,
+          })),
+          {
+            goalType: activeGoal.type,
+            startValue: latestSnapshot?.currentValue,
+            currentValue: latestSnapshot?.currentValue,
+            targetValue: latestSnapshot?.targetValue,
+            adherenceScore: latestSnapshot
+              ? this.resolveFromSnapshotContext(
+                  latestSnapshot.sourceContext,
+                  'adherenceScore',
+                )
+              : undefined,
+            recoveryScore: latestSnapshot
+              ? this.resolveFromSnapshotContext(
+                  latestSnapshot.sourceContext,
+                  'recoveryScore',
+                )
+              : undefined,
+            consistencyScore: latestSnapshot
+              ? this.resolveFromSnapshotContext(
+                  latestSnapshot.sourceContext,
+                  'consistencyScore',
+                )
+              : undefined,
+          },
+        );
 
       const generatedAt = this.goalDateService.todayUtcDateString();
       const predictedCompletionDate = forecastResult.predictedCompletionDays
@@ -171,6 +173,8 @@ export class BuildGoalForecastUseCase {
   ): number | undefined {
     const value = sourceContext[key];
 
-    return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+    return typeof value === 'number' && Number.isFinite(value)
+      ? value
+      : undefined;
   }
 }

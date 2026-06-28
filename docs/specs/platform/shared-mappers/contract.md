@@ -15,4 +15,3 @@ Mapping logic is duplicated across:
 - mappers should live at the boundary that owns the output contract
 - application/domain layers should not know presentation DTO details
 - shared mapping helpers should only contain pure structural transforms
-

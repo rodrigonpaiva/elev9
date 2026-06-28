@@ -13,7 +13,9 @@ describe('GetBehavioralPatternsUseCase', () => {
     behavioralPatternRepository = { findManyByUserProfileId: jest.fn() };
     buildBehavioralPatternsUseCase = { execute: jest.fn() };
 
-    userProfileRepository.findByAuthUserId.mockResolvedValue({ id: 'profile_123' });
+    userProfileRepository.findByAuthUserId.mockResolvedValue({
+      id: 'profile_123',
+    });
     behavioralPatternRepository.findManyByUserProfileId.mockResolvedValue([]);
     buildBehavioralPatternsUseCase.execute.mockResolvedValue({
       behavioralPatterns: [buildPattern('responds_to_goals')],

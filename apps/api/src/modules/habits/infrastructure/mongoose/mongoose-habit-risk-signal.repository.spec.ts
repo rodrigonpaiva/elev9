@@ -107,7 +107,8 @@ function buildEntity() {
     type: 'dropout_risk',
     level: new HabitRiskLevelValueObject('high'),
     title: 'Dropout risk detected',
-    description: 'Low consistency combined with a declining trend indicates dropout risk.',
+    description:
+      'Low consistency combined with a declining trend indicates dropout risk.',
     generatedAt: new Date('2026-06-03T00:00:00.000Z'),
     formulaVersion: 'habit-engine-v1',
   });
@@ -122,7 +123,8 @@ function buildDocument() {
     type: 'dropout_risk',
     level: 'high',
     title: 'Dropout risk detected',
-    description: 'Low consistency combined with a declining trend indicates dropout risk.',
+    description:
+      'Low consistency combined with a declining trend indicates dropout risk.',
     generatedAt: new Date('2026-06-03T00:00:00.000Z'),
     formulaVersion: 'habit-engine-v1',
     createdAt: new Date('2026-06-03T00:00:00.000Z'),

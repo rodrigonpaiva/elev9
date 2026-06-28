@@ -144,9 +144,7 @@ describe('CoachConversationMemorySummarizer', () => {
       } as never,
     });
 
-    expect(result.summary).toContain(
-      'last_coach_decision=priority:recovery',
-    );
+    expect(result.summary).toContain('last_coach_decision=priority:recovery');
     expect(result.summary).toContain(
       'headline:Recovery_should_be_your_focus_today',
     );

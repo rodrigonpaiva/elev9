@@ -20,4 +20,3 @@ Not included:
 
 - repository implementation changes
 - persistence schema changes
-

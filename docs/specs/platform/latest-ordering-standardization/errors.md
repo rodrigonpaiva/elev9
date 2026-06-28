@@ -7,4 +7,3 @@ Expected failure modes:
 - replay drift when ordering is not deterministic
 
 These are platform consistency problems, not user-facing business errors.
-

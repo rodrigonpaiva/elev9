@@ -193,9 +193,7 @@ export class HabitReadModelMapper {
   }
 
   private static unwrap<T>(value: { toJSON: () => T } | T): T {
-    return typeof value === 'object' &&
-      value !== null &&
-      'toJSON' in value
+    return typeof value === 'object' && value !== null && 'toJSON' in value
       ? value.toJSON()
       : value;
   }

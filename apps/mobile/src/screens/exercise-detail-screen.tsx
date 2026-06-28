@@ -88,7 +88,10 @@ export function ExerciseDetailScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View accessibilityLabel={model.accessibilityLabel} style={styles.stack}>
+        <View
+          accessibilityLabel={model.accessibilityLabel}
+          style={styles.stack}
+        >
           <ExerciseHero model={model} />
           <MediaPlaceholder />
           {replacementContext ? (
@@ -273,7 +276,10 @@ function ExerciseDetailSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View accessibilityLabel="Loading exercise details" style={styles.stack}>
+        <View
+          accessibilityLabel="Loading exercise details"
+          style={styles.stack}
+        >
           <View style={styles.hero}>
             <View style={styles.skeletonCategory} />
             <View style={styles.skeletonTitle} />
@@ -308,10 +314,17 @@ function ExerciseDetailStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.stateButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.stateButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -346,9 +359,10 @@ function getExerciseProfile(
   exercise: Exercise,
   workoutContext: RootStackParamList['ExerciseDetail']['workoutContext'],
 ) {
-  const descriptor = `${exercise.name} ${workoutContext.focus} ${workoutContext.format}`
-    .toLowerCase()
-    .trim();
+  const descriptor =
+    `${exercise.name} ${workoutContext.focus} ${workoutContext.format}`
+      .toLowerCase()
+      .trim();
 
   if (descriptor.includes('squat')) {
     return {
@@ -414,10 +428,7 @@ function getExerciseProfile(
         'Shrugging the shoulders',
         'Losing control of the tempo',
       ],
-      tips: [
-        'Exhale as you press.',
-        'Keep your shoulders stable.',
-      ],
+      tips: ['Exhale as you press.', 'Keep your shoulders stable.'],
       alternatives: ['Push-Up', 'Dumbbell Press'],
     };
   }
@@ -517,10 +528,7 @@ function getExerciseProfile(
       'Using momentum',
       'Letting technique change across reps',
     ],
-    tips: [
-      'Choose quality over speed.',
-      'Keep your breathing steady.',
-    ],
+    tips: ['Choose quality over speed.', 'Keep your breathing steady.'],
     alternatives: ['Modified Variation', 'Bodyweight Variation'],
   };
 }
@@ -528,7 +536,8 @@ function getExerciseProfile(
 function getExerciseCategory(
   workoutContext: RootStackParamList['ExerciseDetail']['workoutContext'],
 ): string {
-  const descriptor = `${workoutContext.focus} ${workoutContext.format}`.toLowerCase();
+  const descriptor =
+    `${workoutContext.focus} ${workoutContext.format}`.toLowerCase();
 
   if (descriptor.includes('mobility')) {
     return 'Mobility';

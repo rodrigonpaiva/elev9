@@ -15,9 +15,7 @@ import {
 } from './engagement-event.schema';
 
 @Injectable()
-export class MongooseEngagementEventRepository
-  implements EngagementEventRepository
-{
+export class MongooseEngagementEventRepository implements EngagementEventRepository {
   constructor(
     @InjectModel(ENGAGEMENT_EVENT_MODEL_NAME)
     private readonly engagementEventModel: Model<EngagementEventSchemaClass>,

@@ -5,4 +5,3 @@
 - returns the same result on repeated reads
 - respects user isolation
 - handles empty history safely
-

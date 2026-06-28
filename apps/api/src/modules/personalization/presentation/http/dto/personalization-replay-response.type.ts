@@ -10,4 +10,5 @@ export type PersonalizationReplayComparisonResponse =
 export type PersonalizationReplayRecalculatedResponse =
   PersonalizationReplayRecalculatedSnapshotContract;
 
-export type PersonalizationReplayResponse = PersonalizationReplayResponseContract;
+export type PersonalizationReplayResponse =
+  PersonalizationReplayResponseContract;

@@ -19,7 +19,9 @@ export function createGoalsApi(httpClient: HttpClient) {
       });
     },
 
-    getGoalHistory(query?: GetGoalHistoryQuery): Promise<GetGoalHistoryResponse> {
+    getGoalHistory(
+      query?: GetGoalHistoryQuery,
+    ): Promise<GetGoalHistoryResponse> {
       const searchParams = new URLSearchParams();
 
       if (query?.limit !== undefined) {

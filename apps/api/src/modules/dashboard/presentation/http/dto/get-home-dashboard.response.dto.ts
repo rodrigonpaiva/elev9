@@ -78,7 +78,12 @@ export class GetHomeDashboardResponseDto {
       };
     };
     coachDecision?: {
-      priority: 'recovery' | 'nutrition' | 'training' | 'consistency' | 'motivation';
+      priority:
+        | 'recovery'
+        | 'nutrition'
+        | 'training'
+        | 'consistency'
+        | 'motivation';
       headline: string;
       summary: string;
       actionItems: string[];

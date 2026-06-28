@@ -1,10 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -70,11 +65,12 @@ export function ActiveWorkoutScreen() {
   const [replacementBanner, setReplacementBanner] = useState<string | null>(
     route.params.replacementBanner ?? null,
   );
-  const [progress, setProgress] = useState<ExerciseProgress[]>(() =>
-    route.params.initialProgress ??
-    route.params.workout.exercises.map((exercise) => ({
-      completedSets: Array.from({ length: exercise.sets }, () => false),
-    })),
+  const [progress, setProgress] = useState<ExerciseProgress[]>(
+    () =>
+      route.params.initialProgress ??
+      route.params.workout.exercises.map((exercise) => ({
+        completedSets: Array.from({ length: exercise.sets }, () => false),
+      })),
   );
 
   useEffect(() => {
@@ -129,7 +125,9 @@ export function ActiveWorkoutScreen() {
     const isWorkoutComplete =
       isExerciseComplete && exerciseIndex >= workout.exercises.length - 1;
     const nextExerciseIndex =
-      isExerciseComplete && !isWorkoutComplete ? exerciseIndex + 1 : exerciseIndex;
+      isExerciseComplete && !isWorkoutComplete
+        ? exerciseIndex + 1
+        : exerciseIndex;
     const nextExercise = workout.exercises[nextExerciseIndex] ?? model.exercise;
     const nextSetNumber = isExerciseComplete ? 1 : nextCompletedSetCount + 1;
     const nextProgress = progress.map((item, index) => {
@@ -313,7 +311,10 @@ export function ActiveWorkoutScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View accessibilityLabel={model.accessibilityLabel} style={styles.stack}>
+        <View
+          accessibilityLabel={model.accessibilityLabel}
+          style={styles.stack}
+        >
           <WorkoutHeader
             exerciseCount={model.exerciseCount}
             exerciseIndex={model.exerciseIndex}
@@ -561,10 +562,17 @@ function ActiveWorkoutStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.stateButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.stateButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -599,10 +607,7 @@ function buildActiveWorkoutModel({
       sum + item.completedSets.filter((isComplete) => isComplete).length,
     0,
   );
-  const currentSetNumber = Math.min(
-    exercise.sets,
-    completedSetCount + 1,
-  );
+  const currentSetNumber = Math.min(exercise.sets, completedSetCount + 1);
   const completionPercentage =
     totalSets > 0 ? Math.round((totalCompletedSets / totalSets) * 100) : 0;
   const reps = exercise.reps;
@@ -626,8 +631,8 @@ function buildCompletedExercises(
 ): CompletedExercise[] {
   return workout.exercises.map((exercise, index) => {
     const setsDone =
-      progress[index]?.completedSets.filter((isComplete) => isComplete).length ??
-      0;
+      progress[index]?.completedSets.filter((isComplete) => isComplete)
+        .length ?? 0;
 
     return {
       name: exercise.name,

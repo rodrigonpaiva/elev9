@@ -8,12 +8,8 @@ import {
   NotificationReadModelPayload,
   PersonalizationDashboardPayload,
 } from '../../../../../shared/mappers';
-import {
-  CoachDecisionInfluenceProps,
-} from '../../../../ai/domain/value-objects/coach-decision-influence.value-object';
-import {
-  CoachDecisionPriority,
-} from '../../../../ai/domain/value-objects/coach-decision-priority.value-object';
+import { CoachDecisionInfluenceProps } from '../../../../ai/domain/value-objects/coach-decision-influence.value-object';
+import { CoachDecisionPriority } from '../../../../ai/domain/value-objects/coach-decision-priority.value-object';
 import {
   TrainingPlanDay,
   TrainingPlanExercise,

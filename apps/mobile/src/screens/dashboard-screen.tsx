@@ -165,12 +165,7 @@ export function DashboardScreen({
   }
 
   if (dashboard.error) {
-    return (
-      <DashboardStateView
-        state="error"
-        message={dashboard.error}
-      />
-    );
+    return <DashboardStateView state="error" message={dashboard.error} />;
   }
 
   return (

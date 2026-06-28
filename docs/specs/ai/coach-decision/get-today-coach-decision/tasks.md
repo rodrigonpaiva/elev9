@@ -4,4 +4,3 @@
 2. Reuse the builder on cache miss.
 3. Add HTTP route if needed.
 4. Add tests.
-

@@ -6,4 +6,3 @@
 4. Look up today's recommendation.
 5. If present, return it.
 6. If absent, build it deterministically and return the persisted result.
-

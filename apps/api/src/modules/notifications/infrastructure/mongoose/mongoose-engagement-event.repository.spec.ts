@@ -53,11 +53,12 @@ describe('MongooseEngagementEventRepository', () => {
       find,
     } as never);
 
-    const result = await repository.findManyByNotificationDecisionId(
-      'notification_123',
-    );
+    const result =
+      await repository.findManyByNotificationDecisionId('notification_123');
 
-    expect(find).toHaveBeenCalledWith({ notificationDecisionId: 'notification_123' });
+    expect(find).toHaveBeenCalledWith({
+      notificationDecisionId: 'notification_123',
+    });
     expect(result[0].type).toBe('opened');
   });
 

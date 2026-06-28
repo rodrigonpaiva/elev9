@@ -17,8 +17,12 @@ describe('GetCurrentPersonalizationUseCase', () => {
     };
     buildPersonalizationSnapshotUseCase = { execute: jest.fn() };
 
-    userProfileRepository.findByAuthUserId.mockResolvedValue({ id: 'profile_123' });
-    personalizationSnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    userProfileRepository.findByAuthUserId.mockResolvedValue({
+      id: 'profile_123',
+    });
+    personalizationSnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     buildPersonalizationSnapshotUseCase.execute.mockResolvedValue({
       personalizationSnapshot: buildSnapshot('snapshot_built'),
     });
@@ -37,9 +41,7 @@ describe('GetCurrentPersonalizationUseCase', () => {
 
     const result = await useCase.execute({ authUserId: 'auth_123' });
 
-    expect(
-      buildPersonalizationSnapshotUseCase.execute,
-    ).not.toHaveBeenCalled();
+    expect(buildPersonalizationSnapshotUseCase.execute).not.toHaveBeenCalled();
     expect(result.personalizationSnapshot.id).toBe('snapshot_latest');
   });
 

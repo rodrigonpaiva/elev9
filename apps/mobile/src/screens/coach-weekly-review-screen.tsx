@@ -142,7 +142,9 @@ export function CoachWeeklyReviewScreen() {
         case 'focus':
           return <NextWeekFocus focus={item.focus} onPress={handleFocus} />;
         case 'actions':
-          return <QuickActions actions={item.actions} onAction={handleAction} />;
+          return (
+            <QuickActions actions={item.actions} onAction={handleAction} />
+          );
       }
     },
     [handleAction, handleFocus],
@@ -243,8 +245,15 @@ const WeekSummary = memo(function WeekSummary({
 }) {
   return (
     <Section title="Week Summary">
-      <View accessibilityLabel={`Week summary. ${model.weekSummary}`} style={styles.summaryCard}>
-        <Text maxFontSizeMultiplier={1.35} numberOfLines={3} style={styles.summaryText}>
+      <View
+        accessibilityLabel={`Week summary. ${model.weekSummary}`}
+        style={styles.summaryCard}
+      >
+        <Text
+          maxFontSizeMultiplier={1.35}
+          numberOfLines={3}
+          style={styles.summaryText}
+        >
           {model.weekSummary}
         </Text>
       </View>
@@ -271,7 +280,11 @@ const Wins = memo(function Wins({ wins }: { wins: WeeklyReviewWin[] }) {
               pressed ? styles.pressed : null,
             ]}
           >
-            <Ionicons name="checkmark-circle" size={20} color={weeklyTokens.green} />
+            <Ionicons
+              name="checkmark-circle"
+              size={20}
+              color={weeklyTokens.green}
+            />
             <View style={styles.cardCopy}>
               <Text maxFontSizeMultiplier={1.25} style={styles.cardTitle}>
                 {win.title}
@@ -301,7 +314,11 @@ const Opportunities = memo(function Opportunities({
             key={opportunity.id}
             style={styles.opportunityCard}
           >
-            <Ionicons name="leaf-outline" size={20} color={weeklyTokens.amber} />
+            <Ionicons
+              name="leaf-outline"
+              size={20}
+              color={weeklyTokens.amber}
+            />
             <View style={styles.cardCopy}>
               <Text maxFontSizeMultiplier={1.25} style={styles.cardTitle}>
                 {opportunity.title}

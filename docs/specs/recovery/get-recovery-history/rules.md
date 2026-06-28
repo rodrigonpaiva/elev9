@@ -5,4 +5,3 @@
 - History is read-only.
 - The caller sees only its own data.
 - The list should be stable across repeated reads.
-

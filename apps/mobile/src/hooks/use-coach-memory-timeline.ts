@@ -145,8 +145,7 @@ export function useCoachMemoryTimeline(): CoachMemoryTimelineResult {
     }
 
     setState({
-      chatMessages:
-        chatResult.status === 'fulfilled' ? chatResult.value : [],
+      chatMessages: chatResult.status === 'fulfilled' ? chatResult.value : [],
       personalizationHistory:
         personalizationResult.status === 'fulfilled'
           ? personalizationResult.value.personalizationSnapshots
@@ -168,7 +167,9 @@ export function useCoachMemoryTimeline(): CoachMemoryTimelineResult {
           ? goalResult.value.goalProgressSnapshots
           : [],
       progressSummary:
-        progressResult.status === 'fulfilled' ? progressResult.value.summary : null,
+        progressResult.status === 'fulfilled'
+          ? progressResult.value.summary
+          : null,
     });
     setIsLoading(false);
     setIsRefreshing(false);
@@ -203,7 +204,11 @@ function buildMemoryModel(state: MemoryState): CoachMemoryTimelineModel | null {
   const patterns = buildPatterns(state);
   const growthMoments = buildGrowthMoments(state);
 
-  if (memories.length === 0 && patterns.length === 0 && growthMoments.length === 0) {
+  if (
+    memories.length === 0 &&
+    patterns.length === 0 &&
+    growthMoments.length === 0
+  ) {
     return null;
   }
 
@@ -301,25 +306,30 @@ function buildMemories(state: MemoryState): CoachMemoryItem[] {
       id: `progress-${state.progressSummary.period}`,
       dateLabel: 'This week',
       title: 'Your training rhythm is visible.',
-      explanation: 'The coach is using your recent workout consistency to shape more useful guidance.',
+      explanation:
+        'The coach is using your recent workout consistency to shape more useful guidance.',
       icon: 'barbell',
       target: 'workout-history',
     });
   }
 
   return memories
-    .sort((a, b) => getDateSortValue(b.dateLabel) - getDateSortValue(a.dateLabel))
+    .sort(
+      (a, b) => getDateSortValue(b.dateLabel) - getDateSortValue(a.dateLabel),
+    )
     .slice(0, 12);
 }
 
 function buildPatterns(state: MemoryState): CoachMemoryPattern[] {
-  const learnedPatterns = state.behavioralPatterns.slice(0, 3).map((pattern) => ({
-    id: `pattern-${pattern.type}`,
-    pattern: getBehaviorPatternText(pattern),
-    confidence: formatConfidence(pattern.confidence),
-    whyItMatters: getBehaviorPatternWhy(pattern),
-    target: getPatternTarget(pattern),
-  }));
+  const learnedPatterns = state.behavioralPatterns
+    .slice(0, 3)
+    .map((pattern) => ({
+      id: `pattern-${pattern.type}`,
+      pattern: getBehaviorPatternText(pattern),
+      confidence: formatConfidence(pattern.confidence),
+      whyItMatters: getBehaviorPatternWhy(pattern),
+      target: getPatternTarget(pattern),
+    }));
 
   if (learnedPatterns.length > 0) {
     return learnedPatterns;
@@ -380,7 +390,9 @@ function buildGrowthMoments(state: MemoryState): CoachGrowthMoment[] {
     });
   }
 
-  const improvingGoal = state.goalHistory.find((goal) => goal.trend === 'improving');
+  const improvingGoal = state.goalHistory.find(
+    (goal) => goal.trend === 'improving',
+  );
 
   if (improvingGoal) {
     moments.push({

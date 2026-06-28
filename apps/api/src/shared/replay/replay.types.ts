@@ -1,7 +1,4 @@
-export type ReplayStatus =
-  | 'match'
-  | 'drift_detected'
-  | 'not_replayable';
+export type ReplayStatus = 'match' | 'drift_detected' | 'not_replayable';
 
 export type BackfillMode = 'dry_run' | 'apply';
 

@@ -27,17 +27,17 @@ export class HabitReadError extends Error {
   }
 }
 
-export async function resolveUserProfileOrThrow<TError extends HabitReadError>(
-  input: {
-    authUserId: string;
-    userProfileRepository: UserProfileRepository;
-    errorFactory: (
-      code: HabitReadErrorCode,
-      message: string,
-      details?: Record<string, unknown>,
-    ) => TError;
-  },
-): Promise<UserProfile> {
+export async function resolveUserProfileOrThrow<
+  TError extends HabitReadError,
+>(input: {
+  authUserId: string;
+  userProfileRepository: UserProfileRepository;
+  errorFactory: (
+    code: HabitReadErrorCode,
+    message: string,
+    details?: Record<string, unknown>,
+  ) => TError;
+}): Promise<UserProfile> {
   const authUserId =
     typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
@@ -48,9 +48,8 @@ export async function resolveUserProfileOrThrow<TError extends HabitReadError>(
     );
   }
 
-  const userProfile = await input.userProfileRepository.findByAuthUserId(
-    authUserId,
-  );
+  const userProfile =
+    await input.userProfileRepository.findByAuthUserId(authUserId);
 
   if (!userProfile) {
     throw input.errorFactory(

@@ -31,4 +31,3 @@ Not included:
 - rewriting persisted training plans
 - medical advice
 - automated workout scheduling changes
-

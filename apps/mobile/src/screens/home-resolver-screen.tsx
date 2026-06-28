@@ -85,7 +85,9 @@ export function HomeResolverScreen() {
       {isLoading ? (
         <View style={styles.loadingState}>
           <ActivityIndicator color={colors.primary} />
-          <Text style={styles.loadingText}>Setting up your training space...</Text>
+          <Text style={styles.loadingText}>
+            Setting up your training space...
+          </Text>
         </View>
       ) : (
         <Card style={styles.card}>
@@ -112,7 +114,9 @@ export function HomeResolverScreen() {
 
 async function shouldShowDailyBriefingToday(): Promise<boolean> {
   const todayKey = getLocalDateKey(new Date());
-  const lastShownDate = await AsyncStorage.getItem(DAILY_BRIEFING_LAST_SHOWN_KEY);
+  const lastShownDate = await AsyncStorage.getItem(
+    DAILY_BRIEFING_LAST_SHOWN_KEY,
+  );
 
   return lastShownDate !== todayKey;
 }

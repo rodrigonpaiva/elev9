@@ -29,4 +29,3 @@ Not included:
 - filtering by trend
 - LLM explanation
 - aggregation across users
-

@@ -74,7 +74,9 @@ describe('BuildUserHealthContextService', () => {
       upsertDailySnapshot: jest.fn(),
     } as unknown as jest.Mocked<RecoverySnapshotRepository>;
     getCurrentAdaptiveTrainingUseCase = {
-      execute: jest.fn().mockRejectedValue(new Error('adaptive recommendation unavailable')),
+      execute: jest
+        .fn()
+        .mockRejectedValue(new Error('adaptive recommendation unavailable')),
     };
     buildRecoverySnapshotUseCase = {
       execute: jest.fn().mockRejectedValue(new Error('snapshot not available')),
@@ -133,7 +135,7 @@ describe('BuildUserHealthContextService', () => {
       startDate: '2026-04-28',
       endDate: '2026-05-04',
     });
-      expect(result).toMatchObject({
+    expect(result).toMatchObject({
       authUserId: 'auth_user_123',
       userProfileId: 'profile_123',
       userName: 'Rodrigo Paiva',
@@ -170,8 +172,8 @@ describe('BuildUserHealthContextService', () => {
         dayIndex: 1,
         title: 'Upper Body Strength',
       },
-      });
-      expect(result.adaptiveTrainingRecommendation).toBeUndefined();
+    });
+    expect(result.adaptiveTrainingRecommendation).toBeUndefined();
     expect(result.recentWorkoutLogs).toHaveLength(3);
     expect(result.availableEquipment).toEqual([]);
   });

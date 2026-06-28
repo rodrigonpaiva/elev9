@@ -54,10 +54,7 @@ export class HabitConsistencyCalculatorService {
       this.resolveCount(input.longestStreak, streakDays),
     );
     const adherenceRate = this.calculateAdherenceRate(input);
-    const trend = this.calculateTrend(
-      consistencyScore,
-      input.previousScore,
-    );
+    const trend = this.calculateTrend(consistencyScore, input.previousScore);
     const riskLevel = this.calculateRiskLevel({
       consistencyScore,
       trend,
@@ -259,7 +256,10 @@ export class HabitConsistencyCalculatorService {
       },
     ];
 
-    const totalWeight = weightedInputs.reduce((sum, item) => sum + item.weight, 0);
+    const totalWeight = weightedInputs.reduce(
+      (sum, item) => sum + item.weight,
+      0,
+    );
     const total = weightedInputs.reduce((sum, item) => {
       return sum + this.resolveScore(item.value, 50) * item.weight;
     }, 0);

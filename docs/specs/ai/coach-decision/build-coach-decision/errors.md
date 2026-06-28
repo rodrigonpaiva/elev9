@@ -11,4 +11,3 @@
 - `invalid session` -> `401`
 - `user profile not found` -> `404`
 - `internal build failure` -> `500`
-

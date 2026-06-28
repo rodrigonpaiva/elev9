@@ -11,13 +11,22 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
-import type { Meal, NutritionRecommendation, TodayNutrition } from '@elev9/types';
+import type {
+  Meal,
+  NutritionRecommendation,
+  TodayNutrition,
+} from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import type { RootStackParamList } from '../navigation/app-navigator';
 
-type MealTimelineStatus = 'Completed' | 'Next' | 'Planned' | 'Partial' | 'Skipped';
+type MealTimelineStatus =
+  | 'Completed'
+  | 'Next'
+  | 'Planned'
+  | 'Partial'
+  | 'Skipped';
 type BadgeVariant = 'primary' | 'muted' | 'danger';
 
 type MealTimelineItem = {
@@ -186,11 +195,7 @@ export function TodaysMealsScreen() {
             tintColor={tokens.text}
           />
         }
-        ListHeaderComponent={
-          <MealsHeader
-            heroMessage={model.heroMessage}
-          />
-        }
+        ListHeaderComponent={<MealsHeader heroMessage={model.heroMessage} />}
         ListFooterComponent={
           <MealsFooter
             coachNote={model.coachNote}
@@ -299,7 +304,11 @@ const MealsFooter = memo(function MealsFooter({
         <View style={styles.metricGrid}>
           {macros.map((macro) => (
             <View key={macro.label} style={styles.metricCard}>
-              <Text numberOfLines={1} adjustsFontSizeToFit style={styles.metricValue}>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={styles.metricValue}
+              >
                 {macro.value}
               </Text>
               <Text style={styles.metricLabel}>{macro.label}</Text>
@@ -348,7 +357,10 @@ const MealsFooter = memo(function MealsFooter({
 function TodaysMealsSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="Loading today's meals" style={styles.skeletonContent}>
+      <View
+        accessibilityLabel="Loading today's meals"
+        style={styles.skeletonContent}
+      >
         <View style={styles.skeletonHero} />
         <View style={styles.skeletonMeal} />
         <View style={styles.skeletonMeal} />
@@ -377,10 +389,17 @@ function TodaysMealsStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.fullButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.fullButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -397,8 +416,8 @@ function buildTodaysMealsModel(input: {
   const completedMeals = meals.filter(
     (item) => item.status === 'Completed',
   ).length;
-  const remainingMeals = meals.filter((item) =>
-    item.status === 'Next' || item.status === 'Planned',
+  const remainingMeals = meals.filter(
+    (item) => item.status === 'Next' || item.status === 'Planned',
   ).length;
 
   return {

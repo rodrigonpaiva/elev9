@@ -192,12 +192,11 @@ export class BuildUserHealthContextService {
       await this.resolveAdaptiveTrainingRecommendation({
         authUserId,
       });
-    const recoverySnapshot =
-      await this.resolveRecoverySnapshot({
-        authUserId,
-        userProfileId: userProfile.id,
-        fitnessProfileId: fitnessProfile?.id,
-      });
+    const recoverySnapshot = await this.resolveRecoverySnapshot({
+      authUserId,
+      userProfileId: userProfile.id,
+      fitnessProfileId: fitnessProfile?.id,
+    });
 
     const contextWithoutTrainingPlan: UserHealthContext = {
       ...baseContext,
@@ -219,7 +218,7 @@ export class BuildUserHealthContextService {
             muscleSoreness: latestCheckIn.muscleSoreness,
             motivationLevel: latestCheckIn.motivationLevel,
             createdAt: latestCheckIn.createdAt,
-        }
+          }
         : undefined,
       recoverySnapshot: recoverySnapshot
         ? this.mapRecoverySnapshot(recoverySnapshot)
@@ -234,8 +233,7 @@ export class BuildUserHealthContextService {
             adaptiveVolumeAction: adaptiveTrainingRecommendation.volumeAction,
             adaptiveTrainingInfluences:
               adaptiveTrainingRecommendation.influences,
-            adaptiveTrainingReasoning:
-              adaptiveTrainingRecommendation.reasoning,
+            adaptiveTrainingReasoning: adaptiveTrainingRecommendation.reasoning,
           }
         : {}),
       readinessScore: recoverySnapshot?.readinessScore,

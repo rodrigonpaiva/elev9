@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { NotificationChannelValueObject } from '../../domain/value-objects/notification-channel.value-object';
-import {
-  NotificationInfluence,
-} from '../../domain/value-objects/notification-influence.value-object';
+import { NotificationInfluence } from '../../domain/value-objects/notification-influence.value-object';
 import { NotificationPriorityValueObject } from '../../domain/value-objects/notification-priority.value-object';
 import { NotificationStatusValueObject } from '../../domain/value-objects/notification-status.value-object';
 import { NotificationTypeValueObject } from '../../domain/value-objects/notification-type.value-object';
@@ -12,8 +10,7 @@ import type {
   NotificationSourceContext,
 } from '../../domain/notifications.types';
 
-export const NOTIFICATION_ENGINE_CALCULATOR_VERSION =
-  'notification-engine-v1';
+export const NOTIFICATION_ENGINE_CALCULATOR_VERSION = 'notification-engine-v1';
 
 export type NotificationDecisionSourceInput = {
   coachDecisionPriority?: NotificationCoachDecisionPriority;
@@ -141,7 +138,9 @@ export class NotificationDecisionCalculatorService {
     };
   }
 
-  private selectDecision(input: ResolvedInput): Omit<
+  private selectDecision(
+    input: ResolvedInput,
+  ): Omit<
     NotificationDecisionCalculatorOutput,
     'influences' | 'sourceContext' | 'formulaVersion' | 'generatedBy'
   > {
@@ -397,7 +396,9 @@ export class NotificationDecisionCalculatorService {
   private buildSourceContext(input: ResolvedInput): NotificationSourceContext {
     return {
       coachDecisionPriority: input.coachDecisionPriority,
-      readinessScore: input.hasReadinessScore ? input.readinessScore : undefined,
+      readinessScore: input.hasReadinessScore
+        ? input.readinessScore
+        : undefined,
       fatigueScore: input.hasFatigueScore ? input.fatigueScore : undefined,
       fatigueLevel: input.hasFatigueLevel ? input.fatigueLevel : undefined,
       adaptiveRecommendationType: input.adaptiveRecommendationType,
@@ -413,7 +414,9 @@ export class NotificationDecisionCalculatorService {
       nutritionAdherence: input.hasNutritionAdherence
         ? input.nutritionAdherence
         : undefined,
-      missedWorkouts: input.hasMissedWorkouts ? input.missedWorkouts : undefined,
+      missedWorkouts: input.hasMissedWorkouts
+        ? input.missedWorkouts
+        : undefined,
       noRecentActivity: input.hasNoRecentActivity
         ? input.noRecentActivity
         : undefined,
@@ -424,7 +427,11 @@ export class NotificationDecisionCalculatorService {
   private resolveFatigueLevel(
     input: NotificationDecisionSourceInput,
   ): 'low' | 'medium' | 'high' {
-    if (input.fatigueLevel === 'low' || input.fatigueLevel === 'medium' || input.fatigueLevel === 'high') {
+    if (
+      input.fatigueLevel === 'low' ||
+      input.fatigueLevel === 'medium' ||
+      input.fatigueLevel === 'high'
+    ) {
       return input.fatigueLevel;
     }
 

@@ -1,14 +1,10 @@
-import {
-  AdaptiveTrainingRecommendation,
-} from '../entities/adaptive-training-recommendation.entity';
+import { AdaptiveTrainingRecommendation } from '../entities/adaptive-training-recommendation.entity';
 import {
   AdaptiveRecommendedIntensity,
   AdaptiveRecommendationType,
   AdaptiveVolumeAction,
 } from '../value-objects/adaptive-recommendation-type.value-object';
-import {
-  AdaptiveTrainingInfluenceProps,
-} from '../value-objects/adaptive-training-influence.value-object';
+import { AdaptiveTrainingInfluenceProps } from '../value-objects/adaptive-training-influence.value-object';
 import type { AdaptiveTrainingSourceContext } from '../../../../shared/source-context';
 
 export interface AdaptiveTrainingRecommendationQueryOptions {

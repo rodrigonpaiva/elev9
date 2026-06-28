@@ -1,10 +1,6 @@
 import { CoachDecision } from '../../../domain/entities/coach-decision.entity';
-import {
-  CoachDecisionInfluenceProps,
-} from '../../../domain/value-objects/coach-decision-influence.value-object';
-import {
-  CoachDecisionPriority,
-} from '../../../domain/value-objects/coach-decision-priority.value-object';
+import { CoachDecisionInfluenceProps } from '../../../domain/value-objects/coach-decision-influence.value-object';
+import { CoachDecisionPriority } from '../../../domain/value-objects/coach-decision-priority.value-object';
 import {
   ReplayComparison,
   ReplayDifference,

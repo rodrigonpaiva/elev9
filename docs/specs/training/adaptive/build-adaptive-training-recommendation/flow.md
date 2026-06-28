@@ -21,4 +21,3 @@
 - If recovery is missing, use conservative fallback thresholds.
 - If nutrition context is missing, treat nutrition support as neutral.
 - If the same day is rebuilt, upsert the existing recommendation.
-

@@ -26,4 +26,3 @@
 ### Domain Contract
 
 The history must be ordered from newest to oldest and must only contain snapshots owned by the authenticated user.
-

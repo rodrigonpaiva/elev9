@@ -27,4 +27,3 @@ GET /ai/coach-decision/history?limit=
 
 - default: `14`
 - maximum: `90`
-

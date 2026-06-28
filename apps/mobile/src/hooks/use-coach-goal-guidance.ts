@@ -47,7 +47,12 @@ export type CoachGoalGuidanceMilestone = {
 export type CoachGoalGuidanceAction = {
   id: 'workout' | 'nutrition' | 'conversation' | 'weekly-review' | 'dashboard';
   label: string;
-  target: 'workout' | 'nutrition' | 'conversation' | 'weekly-review' | 'dashboard';
+  target:
+    | 'workout'
+    | 'nutrition'
+    | 'conversation'
+    | 'weekly-review'
+    | 'dashboard';
   isEnabled: boolean;
 };
 
@@ -261,15 +266,17 @@ export function useCoachGoalGuidance(): CoachGoalGuidanceResult {
   };
 }
 
-function buildGoalGuidanceModel(input: GoalGuidanceState & {
-  coachDecision: ReturnType<typeof useDashboard>['coach']['data'];
-  progressSummary: DashboardProgress;
-  recoverySnapshot: RecoverySnapshot | null;
-  workoutPlan: TrainingPlan | null;
-  todayWorkout: TrainingPlan['weeklySchedule'][number] | null;
-  nutritionProgress?: NutritionProgress;
-  nutritionFocus?: string;
-}): CoachGoalGuidanceModel | null {
+function buildGoalGuidanceModel(
+  input: GoalGuidanceState & {
+    coachDecision: ReturnType<typeof useDashboard>['coach']['data'];
+    progressSummary: DashboardProgress;
+    recoverySnapshot: RecoverySnapshot | null;
+    workoutPlan: TrainingPlan | null;
+    todayWorkout: TrainingPlan['weeklySchedule'][number] | null;
+    nutritionProgress?: NutritionProgress;
+    nutritionFocus?: string;
+  },
+): CoachGoalGuidanceModel | null {
   if (!input.currentGoal) {
     return null;
   }
@@ -354,7 +361,9 @@ function buildCurrentProgress(
   return 'You are still on track, with steady habits giving the coach a usable signal.';
 }
 
-function getGoalHistoryTrend(goalHistory: GoalProgressSnapshot[]): 'improving' | 'stable' | 'declining' {
+function getGoalHistoryTrend(
+  goalHistory: GoalProgressSnapshot[],
+): 'improving' | 'stable' | 'declining' {
   if (goalHistory.length < 2) {
     return 'stable';
   }
@@ -388,7 +397,8 @@ function buildHelpingCards(
     cards.push({
       id: 'streak',
       title: 'Training consistency',
-      detail: 'Your recent workout rhythm is giving the goal a stronger signal.',
+      detail:
+        'Your recent workout rhythm is giving the goal a stronger signal.',
     });
   }
 
@@ -419,11 +429,16 @@ function buildHelpingCards(
     });
   }
 
-  if (input.personalizationHistory.some((snapshot) => snapshot.trend === 'improving')) {
+  if (
+    input.personalizationHistory.some(
+      (snapshot) => snapshot.trend === 'improving',
+    )
+  ) {
     cards.push({
       id: 'engagement',
       title: 'Coach engagement',
-      detail: 'You are staying responsive to coaching, which improves guidance.',
+      detail:
+        'You are staying responsive to coaching, which improves guidance.',
     });
   }
 
@@ -453,7 +468,8 @@ function buildBarrierCards(
     cards.push({
       id: 'recovery',
       title: 'Recovery quality',
-      detail: 'Lower readiness suggests the goal should be progressed more carefully.',
+      detail:
+        'Lower readiness suggests the goal should be progressed more carefully.',
     });
   }
 
@@ -479,11 +495,15 @@ function buildBarrierCards(
     });
   }
 
-  if (cards.length === 0 && input.currentGoal.progressSnapshot.trend === 'stable') {
+  if (
+    cards.length === 0 &&
+    input.currentGoal.progressSnapshot.trend === 'stable'
+  ) {
     cards.push({
       id: 'consistency',
       title: 'Consistency gaps',
-      detail: 'The coach is looking for one more repeatable habit to strengthen progress.',
+      detail:
+        'The coach is looking for one more repeatable habit to strengthen progress.',
     });
   }
 
@@ -573,7 +593,8 @@ function buildMilestones(
       id: 'goal-progress',
       title: 'Goal progress',
       statusLabel: 'Upcoming',
-      detail: 'The coach will surface milestones once more goal activity is logged.',
+      detail:
+        'The coach will surface milestones once more goal activity is logged.',
       target: 'progress',
       isEnabled: true,
     });

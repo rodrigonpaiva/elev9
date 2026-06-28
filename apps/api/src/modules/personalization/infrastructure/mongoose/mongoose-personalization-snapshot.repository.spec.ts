@@ -156,7 +156,10 @@ describe('MongoosePersonalizationSnapshotRepository', () => {
       findOne,
     } as never);
 
-    await repository.findByUserProfileIdAndDate('another_profile', '2026-06-03');
+    await repository.findByUserProfileIdAndDate(
+      'another_profile',
+      '2026-06-03',
+    );
 
     expect(findOne).toHaveBeenCalledWith({
       userProfileId: 'another_profile',

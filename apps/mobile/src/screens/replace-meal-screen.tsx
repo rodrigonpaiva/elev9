@@ -188,7 +188,14 @@ export function ReplaceMealScreen() {
     } finally {
       setIsSaving(false);
     }
-  }, [isSaved, isSaving, model, navigation, selectedAlternative, selectedReason]);
+  }, [
+    isSaved,
+    isSaving,
+    model,
+    navigation,
+    selectedAlternative,
+    selectedReason,
+  ]);
 
   if (isLoading) {
     return <ReplaceMealSkeleton />;
@@ -259,7 +266,11 @@ export function ReplaceMealScreen() {
   );
 }
 
-const CurrentMealCard = memo(function CurrentMealCard({ meal }: { meal: Meal }) {
+const CurrentMealCard = memo(function CurrentMealCard({
+  meal,
+}: {
+  meal: Meal;
+}) {
   return (
     <View
       accessibilityLabel={`${meal.title}. ${Math.round(
@@ -271,14 +282,22 @@ const CurrentMealCard = memo(function CurrentMealCard({ meal }: { meal: Meal }) 
       <Text style={styles.heroTitle}>{meal.title}</Text>
       <Text style={styles.heroMessage}>{meal.description}</Text>
       <View style={styles.summaryRow}>
-        <MacroPill label={`${Math.round(meal.estimatedMacros.calories)} kcal`} />
+        <MacroPill
+          label={`${Math.round(meal.estimatedMacros.calories)} kcal`}
+        />
         <MacroPill
           label={`${Math.round(meal.estimatedMacros.proteinGrams)}g protein`}
         />
-        <MacroPill label={`${Math.round(meal.estimatedMacros.carbsGrams)}g carbs`} />
-        <MacroPill label={`${Math.round(meal.estimatedMacros.fatGrams)}g fat`} />
+        <MacroPill
+          label={`${Math.round(meal.estimatedMacros.carbsGrams)}g carbs`}
+        />
+        <MacroPill
+          label={`${Math.round(meal.estimatedMacros.fatGrams)}g fat`}
+        />
       </View>
-      <Text style={styles.statusText}>Status: {formatMealStatus(meal.status)}</Text>
+      <Text style={styles.statusText}>
+        Status: {formatMealStatus(meal.status)}
+      </Text>
     </View>
   );
 });
@@ -368,7 +387,9 @@ const AlternativesSection = memo(function AlternativesSection({
                     {alternative.option.reason}
                   </Text>
                 </View>
-                <Text style={styles.matchScore}>{Math.round(alternative.score)}%</Text>
+                <Text style={styles.matchScore}>
+                  {Math.round(alternative.score)}%
+                </Text>
               </View>
               <View style={styles.summaryRow}>
                 <MacroPill
@@ -400,10 +421,17 @@ const CoachExplanation = memo(function CoachExplanation({
   alternative: RankedAlternative;
   reason: ReplacementReason;
 }) {
-  const explanation = getCoachExplanation(currentMeal, alternative.option, reason);
+  const explanation = getCoachExplanation(
+    currentMeal,
+    alternative.option,
+    reason,
+  );
 
   return (
-    <View accessibilityLabel={`Coach explanation. ${explanation}`} style={styles.card}>
+    <View
+      accessibilityLabel={`Coach explanation. ${explanation}`}
+      style={styles.card}
+    >
       <Text style={styles.sectionLabel}>COACH EXPLANATION</Text>
       <Text style={styles.coachText}>{explanation}</Text>
     </View>
@@ -454,7 +482,10 @@ const Confirmation = memo(function Confirmation({
     <View style={styles.card}>
       <Text style={styles.sectionLabel}>CONFIRM</Text>
       {isSaved ? (
-        <View accessibilityLabel="Meal updated successfully." style={styles.successBox}>
+        <View
+          accessibilityLabel="Meal updated successfully."
+          style={styles.successBox}
+        >
           <Text style={styles.successText}>Meal updated successfully.</Text>
         </View>
       ) : null}
@@ -506,10 +537,22 @@ function ComparisonColumn({
         {title}
       </Text>
       <View style={styles.comparisonMetricGrid}>
-        <ComparisonMetric label="Calories" value={`${Math.round(macros.calories)} kcal`} />
-        <ComparisonMetric label="Protein" value={`${Math.round(macros.proteinGrams)}g`} />
-        <ComparisonMetric label="Carbs" value={`${Math.round(macros.carbsGrams)}g`} />
-        <ComparisonMetric label="Fat" value={`${Math.round(macros.fatGrams)}g`} />
+        <ComparisonMetric
+          label="Calories"
+          value={`${Math.round(macros.calories)} kcal`}
+        />
+        <ComparisonMetric
+          label="Protein"
+          value={`${Math.round(macros.proteinGrams)}g`}
+        />
+        <ComparisonMetric
+          label="Carbs"
+          value={`${Math.round(macros.carbsGrams)}g`}
+        />
+        <ComparisonMetric
+          label="Fat"
+          value={`${Math.round(macros.fatGrams)}g`}
+        />
       </View>
     </View>
   );
@@ -527,7 +570,10 @@ function ComparisonMetric({ label, value }: { label: string; value: string }) {
 function ReplaceMealSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="Loading meal alternatives" style={styles.skeletonContent}>
+      <View
+        accessibilityLabel="Loading meal alternatives"
+        style={styles.skeletonContent}
+      >
         <View style={styles.skeletonHero} />
         <View style={styles.skeletonCard} />
         <View style={styles.skeletonCard} />
@@ -550,10 +596,17 @@ function ReplaceMealStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.fullButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.fullButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -585,7 +638,8 @@ function rankAlternatives(
   return [...meal.alternatives]
     .map((option) => ({
       option,
-      score: getMacroSimilarityScore(meal, option) + getReasonScore(option, reason),
+      score:
+        getMacroSimilarityScore(meal, option) + getReasonScore(option, reason),
       prepTimeLabel: getPrepTimeLabel(option, reason),
     }))
     .sort((left, right) => {
@@ -607,7 +661,10 @@ function getMacroSimilarityScore(meal: Meal, option: MealOption): number {
   const fatScore = getSimilarity(current.fatGrams, next.fatGrams);
 
   return Math.round(
-    calorieScore * 0.35 + proteinScore * 0.35 + carbsScore * 0.15 + fatScore * 0.15,
+    calorieScore * 0.35 +
+      proteinScore * 0.35 +
+      carbsScore * 0.15 +
+      fatScore * 0.15,
   );
 }
 
@@ -629,11 +686,17 @@ function getReasonScore(option: MealOption, reason: ReplacementReason): number {
   switch (reason) {
     case 'No time':
     case 'Travel':
-      return descriptor.includes('quick') || descriptor.includes('simple') ? 8 : 0;
+      return descriptor.includes('quick') || descriptor.includes('simple')
+        ? 8
+        : 0;
     case 'Budget':
-      return descriptor.includes('budget') || descriptor.includes('simple') ? 8 : 0;
+      return descriptor.includes('budget') || descriptor.includes('simple')
+        ? 8
+        : 0;
     case 'Restaurant meal':
-      return descriptor.includes('restaurant') || descriptor.includes('wrap') ? 8 : 0;
+      return descriptor.includes('restaurant') || descriptor.includes('wrap')
+        ? 8
+        : 0;
     case 'Allergy':
       return descriptor.includes('allergy') ? 8 : 0;
     case 'Preference':
@@ -644,7 +707,10 @@ function getReasonScore(option: MealOption, reason: ReplacementReason): number {
   }
 }
 
-function getPrepTimeLabel(option: MealOption, reason: ReplacementReason): string {
+function getPrepTimeLabel(
+  option: MealOption,
+  reason: ReplacementReason,
+): string {
   if (reason === 'No time' || reason === 'Travel') {
     return '8 minutes';
   }

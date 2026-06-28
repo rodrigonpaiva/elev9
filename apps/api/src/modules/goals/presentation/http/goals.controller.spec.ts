@@ -19,7 +19,10 @@ import { GoalForecast } from '../../domain/entities/goal-forecast.entity';
 import { GoalMilestone } from '../../domain/entities/goal-milestone.entity';
 import { GoalProgressSnapshot } from '../../domain/entities/goal-progress-snapshot.entity';
 import { GoalsController } from './goals.controller';
-import { GOAL_READ_ERROR_CODES, GoalReadError } from '../../application/services/goal-seed.utils';
+import {
+  GOAL_READ_ERROR_CODES,
+  GoalReadError,
+} from '../../application/services/goal-seed.utils';
 
 describe('GoalsController', () => {
   let getCurrentGoalUseCase: jest.Mocked<GetCurrentGoalUseCase>;

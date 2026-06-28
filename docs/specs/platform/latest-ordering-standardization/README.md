@@ -21,4 +21,3 @@ Not included:
 - formula changes
 - persistence schema changes
 - backfill execution
-

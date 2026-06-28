@@ -180,11 +180,15 @@ export class BuildBehavioralPatternsUseCase {
   ): number {
     switch (type) {
       case 'responds_to_streaks':
-        return Number(sourceContext.consistencyScore !== undefined) +
-          Number(sourceContext.habitTrend === 'improving');
+        return (
+          Number(sourceContext.consistencyScore !== undefined) +
+          Number(sourceContext.habitTrend === 'improving')
+        );
       case 'responds_to_goals':
-        return Number(Boolean(sourceContext.goalMilestoneReached)) +
-          Number(Boolean(sourceContext.goalAchievementReached));
+        return (
+          Number(Boolean(sourceContext.goalMilestoneReached)) +
+          Number(Boolean(sourceContext.goalAchievementReached))
+        );
       case 'responds_to_recovery_guidance':
         return 1;
       case 'responds_to_notifications':

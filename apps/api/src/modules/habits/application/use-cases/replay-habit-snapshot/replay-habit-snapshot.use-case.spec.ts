@@ -99,9 +99,9 @@ describe('ReplayHabitSnapshotUseCase', () => {
     });
 
     expect(result.comparison.matches).toBe(false);
-    expect(result.comparison.differences.map((difference) => difference.field)).toContain(
-      field,
-    );
+    expect(
+      result.comparison.differences.map((difference) => difference.field),
+    ).toContain(field);
   });
 
   it('rejects missing user profiles', async () => {
@@ -245,7 +245,9 @@ describe('ReplayHabitSnapshotUseCase', () => {
       inactivityDays: sourceContext.inactivityDays,
       previousScore: sourceContext.previousScore,
     });
-    expect(habitSnapshotRepository.findManyByUserProfileId).not.toHaveBeenCalled();
+    expect(
+      habitSnapshotRepository.findManyByUserProfileId,
+    ).not.toHaveBeenCalled();
     expect(habitSnapshotRepository.upsertDailySnapshot).not.toHaveBeenCalled();
   });
 

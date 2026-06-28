@@ -146,4 +146,3 @@ The canonical adaptive training object is:
 - [get-current-adaptive-training](../specs/training/adaptive/get-current-adaptive-training/README.md)
 - [get-today-adaptive-training](../specs/training/adaptive/get-today-adaptive-training/README.md)
 - [get-adaptive-training-history](../specs/training/adaptive/get-adaptive-training-history/README.md)
-

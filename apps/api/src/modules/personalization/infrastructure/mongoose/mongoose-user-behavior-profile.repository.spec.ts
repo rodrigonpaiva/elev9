@@ -35,12 +35,8 @@ describe('MongooseUserBehaviorProfileRepository', () => {
 
     expect(result.id).toBe('behavior_profile_123');
     expect(result.preferredCoachingStyle.value).toBe('motivational');
-    expect(result.createdAt?.toISOString()).toBe(
-      '2026-06-03T00:00:00.000Z',
-    );
-    expect(result.updatedAt?.toISOString()).toBe(
-      '2026-06-04T00:00:00.000Z',
-    );
+    expect(result.createdAt?.toISOString()).toBe('2026-06-03T00:00:00.000Z');
+    expect(result.updatedAt?.toISOString()).toBe('2026-06-04T00:00:00.000Z');
   });
 
   it('returns the existing profile when the upsert hits a duplicate key', async () => {
@@ -98,12 +94,8 @@ describe('MongooseUserBehaviorProfileRepository', () => {
 
     const result = await repository.findByUserProfileId('profile_123');
 
-    expect(result?.createdAt?.toISOString()).toBe(
-      '2026-06-03T00:00:00.000Z',
-    );
-    expect(result?.updatedAt?.toISOString()).toBe(
-      '2026-06-04T00:00:00.000Z',
-    );
+    expect(result?.createdAt?.toISOString()).toBe('2026-06-03T00:00:00.000Z');
+    expect(result?.updatedAt?.toISOString()).toBe('2026-06-04T00:00:00.000Z');
   });
 });
 

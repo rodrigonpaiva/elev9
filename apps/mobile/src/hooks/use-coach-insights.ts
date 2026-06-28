@@ -21,9 +21,21 @@ export type CoachInsightSignal = {
 };
 
 export type CoachInsightAction = {
-  id: 'workout' | 'nutrition' | 'goals' | 'conversation' | 'memory' | 'dashboard';
+  id:
+    | 'workout'
+    | 'nutrition'
+    | 'goals'
+    | 'conversation'
+    | 'memory'
+    | 'dashboard';
   label: string;
-  target: 'workout' | 'nutrition' | 'goals' | 'conversation' | 'memory' | 'dashboard';
+  target:
+    | 'workout'
+    | 'nutrition'
+    | 'goals'
+    | 'conversation'
+    | 'memory'
+    | 'dashboard';
   isEnabled: boolean;
 };
 
@@ -52,7 +64,9 @@ export type CoachInsightsResult = {
 export function useCoachInsights(): CoachInsightsResult {
   const dashboard = useDashboard();
   const [currentGoal, setCurrentGoal] = useState<CurrentGoal | null>(null);
-  const [habitSnapshot, setHabitSnapshot] = useState<HabitSnapshot | null>(null);
+  const [habitSnapshot, setHabitSnapshot] = useState<HabitSnapshot | null>(
+    null,
+  );
   const [personalizationSnapshot, setPersonalizationSnapshot] =
     useState<PersonalizationSnapshot | null>(null);
   const [isLoadingExtras, setIsLoadingExtras] = useState(true);
@@ -271,11 +285,11 @@ function getExplanation(input: {
   }
 
   if (input.hasWorkout && input.nutritionFocus) {
-    return "Your workout is scheduled and nutrition has a clear focus today.\n\nThat makes follow-through the most useful coaching priority.";
+    return 'Your workout is scheduled and nutrition has a clear focus today.\n\nThat makes follow-through the most useful coaching priority.';
   }
 
   if (input.habitSnapshot?.trend === 'improving') {
-    return "Your consistency has been improving.\n\nThe coach is recommending a next step that keeps that momentum easy to repeat.";
+    return 'Your consistency has been improving.\n\nThe coach is recommending a next step that keeps that momentum easy to repeat.';
   }
 
   return "Today's recommendation is based on your latest training, recovery, nutrition, goal and habit signals.\n\nThe coach is choosing the next step most likely to help you stay consistent.";
@@ -347,13 +361,25 @@ function buildSignals(input: {
 function getBenefits(priority: CoachDecision['priority']): string[] {
   switch (priority) {
     case 'recovery':
-      return ['Better recovery', 'Improved workout quality', 'Reduced injury risk'];
+      return [
+        'Better recovery',
+        'Improved workout quality',
+        'Reduced injury risk',
+      ];
     case 'nutrition':
       return ['Steadier energy', 'Better recovery', 'Higher consistency'];
     case 'training':
-      return ['Improved workout quality', 'Stronger progress signal', 'Higher consistency'];
+      return [
+        'Improved workout quality',
+        'Stronger progress signal',
+        'Higher consistency',
+      ];
     case 'consistency':
-      return ['Higher consistency', 'Clearer momentum', 'Easier follow-through'];
+      return [
+        'Higher consistency',
+        'Clearer momentum',
+        'Easier follow-through',
+      ];
     case 'motivation':
     default:
       return ['Clearer next step', 'Higher consistency', 'Less friction today'];
@@ -458,11 +484,16 @@ function getPrioritySignal(priority: CoachDecision['priority']): string {
 }
 
 function stripRawMetricLanguage(value: string): string {
-  return value.replace(/\b\d+(\.\d+)?%?\b/g, '').replace(/\s{2,}/g, ' ').trim();
+  return value
+    .replace(/\b\d+(\.\d+)?%?\b/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 function limitText(value: string, maxLength: number): string {
-  return value.length > maxLength ? `${value.slice(0, maxLength - 3).trim()}...` : value;
+  return value.length > maxLength
+    ? `${value.slice(0, maxLength - 3).trim()}...`
+    : value;
 }
 
 function isOptionalEmptyState(error: unknown): boolean {

@@ -3,7 +3,9 @@ import {
   type DuplicateKeyErrorLike,
 } from './concurrency.types';
 
-export function isDuplicateKeyError(error: unknown): error is DuplicateKeyErrorLike {
+export function isDuplicateKeyError(
+  error: unknown,
+): error is DuplicateKeyErrorLike {
   return (
     typeof error === 'object' &&
     error !== null &&

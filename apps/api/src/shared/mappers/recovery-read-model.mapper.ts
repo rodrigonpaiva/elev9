@@ -15,14 +15,10 @@ export type RecoveryReadModelPayload = {
 
 type RecoveryReadModelSource = Pick<
   RecoverySnapshot,
-  | 'readinessScore'
-  | 'fatigueScore'
-  | 'influences'
+  'readinessScore' | 'fatigueScore' | 'influences'
 > & {
   recoveryTrend: RecoveryTrend | { value: RecoveryTrend };
-  recommendedIntensity:
-    | RecommendedIntensity
-    | { value: RecommendedIntensity };
+  recommendedIntensity: RecommendedIntensity | { value: RecommendedIntensity };
 };
 
 export class RecoveryReadModelMapper {
@@ -71,9 +67,7 @@ export class RecoveryReadModelMapper {
     }
   }
 
-  private static resolveValue<T extends string>(
-    input: T | { value: T },
-  ): T {
+  private static resolveValue<T extends string>(input: T | { value: T }): T {
     if (typeof input === 'object' && input !== null && 'value' in input) {
       return input.value;
     }
@@ -82,9 +76,13 @@ export class RecoveryReadModelMapper {
   }
 
   private static toInfluencePayload(
-    influence: RecoveryInfluenceProps | { toJSON: () => RecoveryInfluenceProps },
+    influence:
+      | RecoveryInfluenceProps
+      | { toJSON: () => RecoveryInfluenceProps },
   ): RecoveryInfluenceProps {
-    return typeof influence === 'object' && influence !== null && 'toJSON' in influence
+    return typeof influence === 'object' &&
+      influence !== null &&
+      'toJSON' in influence
       ? influence.toJSON()
       : influence;
   }

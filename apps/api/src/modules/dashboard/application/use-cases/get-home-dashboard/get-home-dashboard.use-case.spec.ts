@@ -263,7 +263,7 @@ describe('GetHomeDashboardUseCase', () => {
     );
   }
 
-function mockDailyCheckInHistory(
+  function mockDailyCheckInHistory(
     entries: Array<{
       id: string;
       energyLevel: number;
@@ -300,13 +300,14 @@ function mockDailyCheckInHistory(
       priority: overrides.priority ?? 'motivation',
       headline: overrides.headline ?? 'Keep building momentum',
       summary: overrides.summary ?? 'Signals are stable.',
-      actionItems:
-        overrides.actionItems ?? ['Continue the current plan', 'Stay consistent'],
+      actionItems: overrides.actionItems ?? [
+        'Continue the current plan',
+        'Stay consistent',
+      ],
       influences: overrides.influences ?? [],
-      sourceContext:
-        overrides.sourceContext ?? {
-          generatedAt: '2026-04-30T10:00:00.000Z',
-        },
+      sourceContext: overrides.sourceContext ?? {
+        generatedAt: '2026-04-30T10:00:00.000Z',
+      },
       formulaVersion: overrides.formulaVersion ?? 'coach-decision-v1',
       generatedBy: overrides.generatedBy ?? 'deterministic',
       llmMetadata: overrides.llmMetadata ?? { used: false },
@@ -608,8 +609,12 @@ function mockDailyCheckInHistory(
     getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
       coachDecision: buildCoachDecision(),
     } as never);
-    getCurrentGoalUseCase.execute.mockRejectedValue(new Error('goal unavailable'));
-    getGoalMilestonesUseCase.execute.mockRejectedValue(new Error('goal unavailable'));
+    getCurrentGoalUseCase.execute.mockRejectedValue(
+      new Error('goal unavailable'),
+    );
+    getGoalMilestonesUseCase.execute.mockRejectedValue(
+      new Error('goal unavailable'),
+    );
 
     const result = await useCase.execute({
       authUserId: 'auth_user_123',
@@ -683,16 +688,14 @@ function mockDailyCheckInHistory(
     mockUserProfile();
     mockFitnessProfile();
     mockTrainingPlan();
-    getCurrentCoachDecisionUseCase.execute.mockResolvedValue(
-      {
-        coachDecision: buildCoachDecision({
-          priority: 'motivation',
-          headline: 'Keep building momentum',
-          summary: 'Signals are stable.',
-          actionItems: ['Continue the current plan', 'Stay consistent'],
-        }),
-      } as Awaited<ReturnType<GetCurrentCoachDecisionUseCase['execute']>>,
-    );
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: buildCoachDecision({
+        priority: 'motivation',
+        headline: 'Keep building momentum',
+        summary: 'Signals are stable.',
+        actionItems: ['Continue the current plan', 'Stay consistent'],
+      }),
+    } as Awaited<ReturnType<GetCurrentCoachDecisionUseCase['execute']>>);
     workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
       new WorkoutLog({
         id: 'log_1',

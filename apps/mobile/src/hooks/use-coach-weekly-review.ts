@@ -174,7 +174,9 @@ export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
 
     setState({
       progressSummary:
-        progressResult.status === 'fulfilled' ? progressResult.value.summary : null,
+        progressResult.status === 'fulfilled'
+          ? progressResult.value.summary
+          : null,
       trainingPlan:
         trainingResult.status === 'fulfilled'
           ? trainingResult.value.trainingPlan
@@ -184,7 +186,9 @@ export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
           ? recoveryResult.value.recoverySnapshots
           : [],
       currentGoal:
-        currentGoalResult.status === 'fulfilled' ? currentGoalResult.value : null,
+        currentGoalResult.status === 'fulfilled'
+          ? currentGoalResult.value
+          : null,
       goalHistory:
         goalHistoryResult.status === 'fulfilled'
           ? goalHistoryResult.value.goalProgressSnapshots
@@ -357,7 +361,9 @@ function buildWins(state: WeeklyReviewState): WeeklyReviewWin[] {
 
   if (
     wins.length < 3 &&
-    state.personalizationHistory.some((snapshot) => snapshot.trend === 'improving')
+    state.personalizationHistory.some(
+      (snapshot) => snapshot.trend === 'improving',
+    )
   ) {
     wins.push({
       id: 'engagement',
@@ -369,7 +375,9 @@ function buildWins(state: WeeklyReviewState): WeeklyReviewWin[] {
   return wins.slice(0, 5);
 }
 
-function buildOpportunities(state: WeeklyReviewState): WeeklyReviewOpportunity[] {
+function buildOpportunities(
+  state: WeeklyReviewState,
+): WeeklyReviewOpportunity[] {
   const opportunities: WeeklyReviewOpportunity[] = [];
   const recoveryTrend = getRecoveryTrend(state.recoveryHistory);
 
@@ -377,7 +385,8 @@ function buildOpportunities(state: WeeklyReviewState): WeeklyReviewOpportunity[]
     opportunities.push({
       id: 'recovery',
       title: 'Recovery needs a little more protection.',
-      detail: 'A steadier sleep and recovery rhythm can improve training quality.',
+      detail:
+        'A steadier sleep and recovery rhythm can improve training quality.',
     });
   }
 
@@ -385,7 +394,8 @@ function buildOpportunities(state: WeeklyReviewState): WeeklyReviewOpportunity[]
     opportunities.push({
       id: 'consistency',
       title: 'Consistency can be easier next week.',
-      detail: 'Pick one repeatable action instead of trying to fix everything at once.',
+      detail:
+        'Pick one repeatable action instead of trying to fix everything at once.',
     });
   }
 
@@ -393,7 +403,8 @@ function buildOpportunities(state: WeeklyReviewState): WeeklyReviewOpportunity[]
     opportunities.push({
       id: 'goal',
       title: 'Goal progress needs attention.',
-      detail: 'Small adjustments to training or nutrition can bring the trend back.',
+      detail:
+        'Small adjustments to training or nutrition can bring the trend back.',
     });
   }
 
@@ -453,7 +464,8 @@ function buildTrends(state: WeeklyReviewState): WeeklyReviewTrend[] {
     trends.push({
       id: 'behavior',
       pattern: getBehaviorPatternLabel(pattern),
-      explanation: 'Your coaching history shows this pattern is becoming meaningful.',
+      explanation:
+        'Your coaching history shows this pattern is becoming meaningful.',
       whyItMatters: 'The coach can use this to personalize next week.',
     });
   }
@@ -470,7 +482,8 @@ function buildNextFocus(
   if (firstOpportunity?.id === 'recovery') {
     return {
       title: 'Recovery',
-      reason: 'This is the highest-leverage focus for better training quality next week.',
+      reason:
+        'This is the highest-leverage focus for better training quality next week.',
       ctaLabel: 'Continue Coaching',
       target: 'conversation',
     };
@@ -485,10 +498,14 @@ function buildNextFocus(
     };
   }
 
-  if (state.trainingPlan && (state.progressSummary?.workoutsCompleted ?? 0) > 0) {
+  if (
+    state.trainingPlan &&
+    (state.progressSummary?.workoutsCompleted ?? 0) > 0
+  ) {
     return {
       title: 'Progressive overload',
-      reason: 'You have enough training momentum to review the next step carefully.',
+      reason:
+        'You have enough training momentum to review the next step carefully.',
       ctaLabel: 'Review Training Plan',
       target: 'training',
     };
@@ -497,7 +514,8 @@ function buildNextFocus(
   if (state.currentGoal) {
     return {
       title: formatGoalType(state.currentGoal.goal.type),
-      reason: 'Keeping the next week tied to your goal will make the plan clearer.',
+      reason:
+        'Keeping the next week tied to your goal will make the plan clearer.',
       ctaLabel: 'Continue Coaching',
       target: 'conversation',
     };
@@ -546,7 +564,8 @@ function buildReflection(input: {
 }): string {
   const firstWin = input.wins[0]?.title ?? 'You kept building useful momentum.';
   const firstTrend =
-    input.trends[0]?.pattern ?? 'The week gave your coach a clearer view of your rhythm.';
+    input.trends[0]?.pattern ??
+    'The week gave your coach a clearer view of your rhythm.';
   const firstOpportunity =
     input.opportunities[0]?.title ?? 'The next step is staying consistent.';
 
@@ -564,13 +583,17 @@ function getTodayWorkout(
   const dayIndex = today === 0 ? 6 : today - 1;
 
   return (
-    trainingPlan.weeklySchedule.find((workout) => workout.dayIndex === dayIndex) ??
+    trainingPlan.weeklySchedule.find(
+      (workout) => workout.dayIndex === dayIndex,
+    ) ??
     trainingPlan.weeklySchedule[0] ??
     null
   );
 }
 
-function getRecoveryTrend(history: RecoverySnapshot[]): 'improving' | 'stable' | 'declining' {
+function getRecoveryTrend(
+  history: RecoverySnapshot[],
+): 'improving' | 'stable' | 'declining' {
   if (history.length === 0) {
     return 'stable';
   }

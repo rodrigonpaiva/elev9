@@ -15,9 +15,7 @@ import {
 } from './habit-risk-signal.schema';
 
 @Injectable()
-export class MongooseHabitRiskSignalRepository
-  implements HabitRiskSignalRepository
-{
+export class MongooseHabitRiskSignalRepository implements HabitRiskSignalRepository {
   constructor(
     @InjectModel(HABIT_RISK_SIGNAL_MODEL_NAME)
     private readonly habitRiskSignalModel: Model<HabitRiskSignalSchemaClass>,

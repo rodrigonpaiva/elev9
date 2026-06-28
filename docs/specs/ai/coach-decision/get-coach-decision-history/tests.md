@@ -5,4 +5,3 @@
 - applies maximum limit `90`
 - rejects invalid limit
 - isolated by user
-

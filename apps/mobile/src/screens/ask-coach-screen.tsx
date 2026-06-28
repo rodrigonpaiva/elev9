@@ -226,10 +226,18 @@ const CoachPrompt = memo(function CoachPrompt({
       <View style={styles.heroIcon}>
         <Ionicons name="sparkles" size={21} color={askCoachTokens.text} />
       </View>
-      <Text maxFontSizeMultiplier={1.25} numberOfLines={2} style={styles.heroTitle}>
+      <Text
+        maxFontSizeMultiplier={1.25}
+        numberOfLines={2}
+        style={styles.heroTitle}
+      >
         {model.heroTitle}
       </Text>
-      <Text maxFontSizeMultiplier={1.35} numberOfLines={2} style={styles.heroSubtitle}>
+      <Text
+        maxFontSizeMultiplier={1.35}
+        numberOfLines={2}
+        style={styles.heroSubtitle}
+      >
         {model.heroSubtitle}
       </Text>
     </View>
@@ -454,7 +462,9 @@ const Section = memo(function Section({
 function EmptyQuestionSet() {
   return (
     <View style={styles.emptyQuestions}>
-      <Text style={styles.emptyQuestionTitle}>No questions for this category yet.</Text>
+      <Text style={styles.emptyQuestionTitle}>
+        No questions for this category yet.
+      </Text>
       <Text style={styles.emptyQuestionCopy}>
         Choose another focus or continue the conversation with your coach.
       </Text>

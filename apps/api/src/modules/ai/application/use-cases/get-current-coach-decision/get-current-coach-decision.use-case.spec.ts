@@ -29,7 +29,9 @@ describe('GetCurrentCoachDecisionUseCase', () => {
   });
 
   it('returns the latest decision when available', async () => {
-    userProfileRepository.findByAuthUserId.mockResolvedValue(buildUserProfile());
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
     coachDecisionRepository.findLatestByUserProfileId.mockResolvedValue(
       buildDecision('decision_123'),
     );
@@ -43,7 +45,9 @@ describe('GetCurrentCoachDecisionUseCase', () => {
   });
 
   it('builds a decision when there is no latest one', async () => {
-    userProfileRepository.findByAuthUserId.mockResolvedValue(buildUserProfile());
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
     coachDecisionRepository.findLatestByUserProfileId.mockResolvedValue(null);
     buildCoachDecisionUseCase.execute.mockResolvedValue({
       coachDecision: buildDecision('decision_123'),

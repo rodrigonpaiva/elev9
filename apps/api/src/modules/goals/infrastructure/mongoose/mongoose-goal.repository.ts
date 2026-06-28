@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import {
-  Goal as GoalEntity,
-} from '../../domain/entities/goal.entity';
+import { Goal as GoalEntity } from '../../domain/entities/goal.entity';
 import {
   CreateGoalRepositoryInput,
   GoalRepository,
@@ -12,11 +10,7 @@ import {
   ReplaceActiveGoalRepositoryInput,
 } from '../../domain/repositories/goal.repository';
 import { GoalStatusValueObject } from '../../domain/value-objects/goal-status.value-object';
-import {
-  GOAL_MODEL_NAME,
-  GoalDocument,
-  GoalSchemaClass,
-} from './goal.schema';
+import { GOAL_MODEL_NAME, GoalDocument, GoalSchemaClass } from './goal.schema';
 
 @Injectable()
 export class MongooseGoalRepository implements GoalRepository {
@@ -148,7 +142,9 @@ export class MongooseGoalRepository implements GoalRepository {
       type: document.type,
       status: new GoalStatusValueObject(document.status),
       startDate: new Date(document.startDate),
-      targetDate: document.targetDate ? new Date(document.targetDate) : undefined,
+      targetDate: document.targetDate
+        ? new Date(document.targetDate)
+        : undefined,
       achievedAt: document.achievedAt
         ? new Date(document.achievedAt)
         : undefined,

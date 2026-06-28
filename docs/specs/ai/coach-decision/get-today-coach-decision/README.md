@@ -14,4 +14,3 @@ Canonical name: ai.coach-decision.get-today
 ## Goal
 
 Expose the day-scoped coaching decision as an idempotent read model.
-

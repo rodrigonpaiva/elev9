@@ -30,7 +30,9 @@ describe('GetGoalMilestonesUseCase', () => {
     goalProgressSnapshotRepository = buildGoalProgressSnapshotRepository();
     goalProgressCalculatorService = new GoalProgressCalculatorService();
     goalDateService = new GoalDateService();
-    goalMilestoneRepository.createMany.mockImplementation(async (input) => input);
+    goalMilestoneRepository.createMany.mockImplementation(
+      async (input) => input,
+    );
 
     useCase = new GetGoalMilestonesUseCase(
       userProfileRepository,
@@ -132,7 +134,8 @@ describe('GetGoalMilestonesUseCase', () => {
   function arrangeUserProfile(profileId = 'profile_123') {
     userProfileRepository.findByAuthUserId.mockResolvedValue({
       id: profileId,
-      authUserId: profileId === 'profile_123' ? 'auth_user_123' : 'auth_user_456',
+      authUserId:
+        profileId === 'profile_123' ? 'auth_user_123' : 'auth_user_456',
       name: 'Alex',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -172,7 +175,8 @@ describe('GetGoalMilestonesUseCase', () => {
       startDate: new Date('2026-06-01T00:00:00.000Z'),
       targetDate: undefined,
       achievedAt: undefined,
-      targetValue: type === 'lose_weight' ? 72 : type === 'gain_muscle' ? 88 : 80,
+      targetValue:
+        type === 'lose_weight' ? 72 : type === 'gain_muscle' ? 88 : 80,
       createdAt: new Date('2026-06-01T00:00:00.000Z'),
       updatedAt: new Date('2026-06-01T00:00:00.000Z'),
     });

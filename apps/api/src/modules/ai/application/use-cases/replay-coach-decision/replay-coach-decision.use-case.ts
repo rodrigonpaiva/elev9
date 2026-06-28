@@ -41,7 +41,9 @@ export class ReplayCoachDecisionUseCase {
     const authUserId =
       typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const coachDecisionId =
-      typeof input.coachDecisionId === 'string' ? input.coachDecisionId.trim() : '';
+      typeof input.coachDecisionId === 'string'
+        ? input.coachDecisionId.trim()
+        : '';
 
     if (!authUserId) {
       throw new ReplayCoachDecisionError(
@@ -68,9 +70,8 @@ export class ReplayCoachDecisionUseCase {
         );
       }
 
-      const coachDecision = await this.coachDecisionRepository.findById(
-        coachDecisionId,
-      );
+      const coachDecision =
+        await this.coachDecisionRepository.findById(coachDecisionId);
 
       if (!coachDecision || coachDecision.userProfileId !== userProfile.id) {
         throw new ReplayCoachDecisionError(
@@ -79,10 +80,9 @@ export class ReplayCoachDecisionUseCase {
         );
       }
 
-      const recalculated =
-        this.coachDecisionCalculatorService.calculate(
-          this.mapSourceContextToCalculatorInput(coachDecision.sourceContext),
-        );
+      const recalculated = this.coachDecisionCalculatorService.calculate(
+        this.mapSourceContextToCalculatorInput(coachDecision.sourceContext),
+      );
 
       const recalculatedResult: CoachDecisionRecalculatedResult = {
         priority: recalculated.priority,
@@ -129,11 +129,16 @@ export class ReplayCoachDecisionUseCase {
       readinessScore: this.resolveNumber(sourceContext.readinessScore),
       fatigueScore: this.resolveNumber(sourceContext.fatigueScore),
       nutritionAdherence: this.resolveNumber(sourceContext.nutritionAdherence),
-      adaptiveRecommendationType:
-        this.resolveString(sourceContext.adaptiveRecommendationType),
+      adaptiveRecommendationType: this.resolveString(
+        sourceContext.adaptiveRecommendationType,
+      ),
       adaptiveIntensity: this.resolveString(sourceContext.adaptiveIntensity),
-      currentStreak: this.resolveNonNegativeInteger(sourceContext.currentStreak),
-      missedWorkouts: this.resolveNonNegativeInteger(sourceContext.missedWorkouts),
+      currentStreak: this.resolveNonNegativeInteger(
+        sourceContext.currentStreak,
+      ),
+      missedWorkouts: this.resolveNonNegativeInteger(
+        sourceContext.missedWorkouts,
+      ),
       goalProgressPercentage: this.resolveNumber(
         sourceContext.goalProgressPercentage,
       ),
@@ -216,7 +221,11 @@ export class ReplayCoachDecisionUseCase {
       'toJSON' in influence &&
       typeof (influence as { toJSON?: () => unknown }).toJSON === 'function'
     ) {
-      return (influence as { toJSON: () => CoachDecisionRecalculatedResult['influences'][number] }).toJSON();
+      return (
+        influence as {
+          toJSON: () => CoachDecisionRecalculatedResult['influences'][number];
+        }
+      ).toJSON();
     }
 
     return influence as CoachDecisionRecalculatedResult['influences'][number];

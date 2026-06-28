@@ -68,19 +68,22 @@ export class BuildHabitRiskSignalsUseCase {
         );
       }
 
-      const habitSnapshots = await this.habitSnapshotRepository.findManyByUserProfileId(
-        userProfile.id,
-        {
-          limit: HISTORY_LIMIT,
-        },
-      );
+      const habitSnapshots =
+        await this.habitSnapshotRepository.findManyByUserProfileId(
+          userProfile.id,
+          {
+            limit: HISTORY_LIMIT,
+          },
+        );
       const latestSnapshot = habitSnapshots[0] ?? null;
       const consistencySummary =
         (await this.consistencySummaryRepository.findByUserProfileId(
           userProfile.id,
         )) ?? null;
 
-      await this.habitRiskSignalRepository.deleteByUserProfileId(userProfile.id);
+      await this.habitRiskSignalRepository.deleteByUserProfileId(
+        userProfile.id,
+      );
 
       if (!latestSnapshot && !consistencySummary) {
         return { habitRiskSignals: [] };
@@ -105,16 +108,15 @@ export class BuildHabitRiskSignalsUseCase {
           )
         : 0;
 
-      const riskSignals = this.habitConsistencyCalculatorService.buildRiskSignals(
-        {
+      const riskSignals =
+        this.habitConsistencyCalculatorService.buildRiskSignals({
           userProfileId: userProfile.id,
           generatedAt: new Date().toISOString(),
           consistencyScore: summary.score,
           trend: summary.trend,
           streakDays: summary.currentStreak,
           inactivityDays,
-        },
-      );
+        });
 
       if (riskSignals.length === 0) {
         return { habitRiskSignals: [] };
@@ -151,17 +153,15 @@ export class BuildHabitRiskSignalsUseCase {
   }
 
   private resolveSummaryFromSnapshot(
-    latestSnapshot:
-      | {
-          consistencyScore: number;
-          streakDays: number;
-          trend: { value: 'improving' | 'stable' | 'declining' };
-          sourceContext?: {
-            previousScore?: number;
-          };
-          date: string;
-        }
-      | null,
+    latestSnapshot: {
+      consistencyScore: number;
+      streakDays: number;
+      trend: { value: 'improving' | 'stable' | 'declining' };
+      sourceContext?: {
+        previousScore?: number;
+      };
+      date: string;
+    } | null,
     snapshots: Array<{
       streakDays: number;
     }>,

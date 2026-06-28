@@ -57,10 +57,7 @@ export const BehavioralPatternSchema = new Schema<BehavioralPatternSchemaClass>(
   },
 );
 
-BehavioralPatternSchema.index(
-  { userProfileId: 1, type: 1 },
-  { unique: true },
-);
+BehavioralPatternSchema.index({ userProfileId: 1, type: 1 }, { unique: true });
 BehavioralPatternSchema.index({
   userProfileId: 1,
   lastObservedAt: -1,

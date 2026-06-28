@@ -134,7 +134,8 @@ export class MongooseHabitSnapshotRepository implements HabitSnapshotRepository 
       streakDays: document.streakDays,
       adherenceScore: document.adherenceScore,
       trend: new ConsistencyTrendValueObject(document.trend),
-      sourceContext: (document.sourceContext ?? {}) as unknown as HabitSourceContext,
+      sourceContext: (document.sourceContext ??
+        {}) as unknown as HabitSourceContext,
       formulaVersion: document.formulaVersion,
       generatedAt: document.generatedAt,
     });

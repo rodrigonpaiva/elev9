@@ -1,3 +1,1 @@
-export {
-  CoachConversationScreen as CoachChatScreen,
-} from './coach-conversation-screen';
+export { CoachConversationScreen as CoachChatScreen } from './coach-conversation-screen';

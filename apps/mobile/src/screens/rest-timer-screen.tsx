@@ -41,8 +41,8 @@ export function RestTimerScreen() {
   } = route.params;
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-  const [targetEndAt, setTargetEndAt] = useState(() =>
-    Date.now() + restSeconds * 1000,
+  const [targetEndAt, setTargetEndAt] = useState(
+    () => Date.now() + restSeconds * 1000,
   );
   const [remainingSeconds, setRemainingSeconds] = useState(restSeconds);
   const tenSecondHapticFired = useRef(false);
@@ -184,13 +184,17 @@ export function RestTimerScreen() {
         <View style={styles.header}>
           <Text style={styles.label}>RECOVERY</Text>
           <Pressable
-            accessibilityLabel={isPaused ? 'Resume rest timer' : 'Pause rest timer'}
+            accessibilityLabel={
+              isPaused ? 'Resume rest timer' : 'Pause rest timer'
+            }
             accessibilityRole="button"
             hitSlop={10}
             onPress={handleTogglePause}
             style={styles.pauseButton}
           >
-            <Text style={styles.pauseText}>{isPaused ? 'Resume' : 'Pause'}</Text>
+            <Text style={styles.pauseText}>
+              {isPaused ? 'Resume' : 'Pause'}
+            </Text>
           </Pressable>
         </View>
 
@@ -311,7 +315,8 @@ function getCoachTip(
   nextExerciseName: string,
   nextSetNumber: number,
 ): string {
-  const descriptor = `${completedExerciseName} ${nextExerciseName}`.toLowerCase();
+  const descriptor =
+    `${completedExerciseName} ${nextExerciseName}`.toLowerCase();
   const tips = [
     'Control your breathing.',
     'Stay focused on technique.',

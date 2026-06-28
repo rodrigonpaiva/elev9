@@ -48,7 +48,9 @@ describe('GetCurrentAdaptiveTrainingUseCase', () => {
     expect(
       adaptiveTrainingRecommendationRepository.findLatestByUserProfileId,
     ).toHaveBeenCalledWith('profile_123');
-    expect(buildAdaptiveTrainingRecommendationUseCase.execute).not.toHaveBeenCalled();
+    expect(
+      buildAdaptiveTrainingRecommendationUseCase.execute,
+    ).not.toHaveBeenCalled();
     expect(result.adaptiveTrainingRecommendation.date).toBe('2026-06-02');
   });
 
@@ -65,11 +67,11 @@ describe('GetCurrentAdaptiveTrainingUseCase', () => {
 
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(buildAdaptiveTrainingRecommendationUseCase.execute).toHaveBeenCalledWith(
-      {
-        authUserId: 'auth_user_123',
-      },
-    );
+    expect(
+      buildAdaptiveTrainingRecommendationUseCase.execute,
+    ).toHaveBeenCalledWith({
+      authUserId: 'auth_user_123',
+    });
     expect(result.adaptiveTrainingRecommendation.id).toBe('adaptive_123');
   });
 

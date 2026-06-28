@@ -47,7 +47,10 @@ export class ReplayComparator {
     };
   }
 
-  private static isEqual(left: ReplayFieldValue, right: ReplayFieldValue): boolean {
+  private static isEqual(
+    left: ReplayFieldValue,
+    right: ReplayFieldValue,
+  ): boolean {
     return this.normalize(left) === this.normalize(right);
   }
 
@@ -73,16 +76,21 @@ export class ReplayComparator {
         ([leftKey], [rightKey]) => leftKey.localeCompare(rightKey),
       );
 
-      return entries.reduce<Record<string, unknown>>((accumulator, [key, item]) => {
-        accumulator[key] = this.toStableValue(item);
-        return accumulator;
-      }, {});
+      return entries.reduce<Record<string, unknown>>(
+        (accumulator, [key, item]) => {
+          accumulator[key] = this.toStableValue(item);
+          return accumulator;
+        },
+        {},
+      );
     }
 
     return value;
   }
 
-  private static isPlainObject(value: ReplayFieldValue): value is Record<string, unknown> {
+  private static isPlainObject(
+    value: ReplayFieldValue,
+  ): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 }

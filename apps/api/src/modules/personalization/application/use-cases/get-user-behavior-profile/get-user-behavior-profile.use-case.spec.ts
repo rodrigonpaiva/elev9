@@ -13,7 +13,9 @@ describe('GetUserBehaviorProfileUseCase', () => {
     userBehaviorProfileRepository = { findByUserProfileId: jest.fn() };
     buildUserBehaviorProfileUseCase = { execute: jest.fn() };
 
-    userProfileRepository.findByAuthUserId.mockResolvedValue({ id: 'profile_123' });
+    userProfileRepository.findByAuthUserId.mockResolvedValue({
+      id: 'profile_123',
+    });
     userBehaviorProfileRepository.findByUserProfileId.mockResolvedValue(null);
     buildUserBehaviorProfileUseCase.execute.mockResolvedValue({
       userBehaviorProfile: buildProfile('profile_123'),

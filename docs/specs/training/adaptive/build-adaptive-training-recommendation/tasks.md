@@ -8,4 +8,3 @@
 6. Wire internal MVP endpoint if required.
 7. Add dashboard and AI consumers.
 8. Audit and version the formula.
-

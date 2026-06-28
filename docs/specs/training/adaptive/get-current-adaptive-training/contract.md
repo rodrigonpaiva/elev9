@@ -23,4 +23,3 @@ GET /training/adaptive/current
 - authenticated only
 - isolated by `userProfileId`
 - if no current recommendation exists, the system may build one deterministically
-

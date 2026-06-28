@@ -77,15 +77,16 @@ describe('GetGoalAchievementHistoryUseCase', () => {
       authUserId: 'auth_user_456',
     });
 
-    expect(goalAchievementRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_456',
-    );
+    expect(
+      goalAchievementRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_456');
   });
 
   function arrangeUserProfile(profileId = 'profile_123') {
     userProfileRepository.findByAuthUserId.mockResolvedValue({
       id: profileId,
-      authUserId: profileId === 'profile_123' ? 'auth_user_123' : 'auth_user_456',
+      authUserId:
+        profileId === 'profile_123' ? 'auth_user_123' : 'auth_user_456',
       name: 'Alex',
       createdAt: new Date(),
       updatedAt: new Date(),

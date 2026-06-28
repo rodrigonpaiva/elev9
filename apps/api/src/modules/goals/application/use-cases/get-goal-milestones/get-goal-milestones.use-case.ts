@@ -82,7 +82,9 @@ export class GetGoalMilestonesUseCase {
       const progressPercentage = latestSnapshot?.progressPercentage ?? 0;
       const achievedAt = latestSnapshot
         ? new Date(`${latestSnapshot.date}T00:00:00.000Z`)
-        : new Date(`${this.goalDateService.todayUtcDateString()}T00:00:00.000Z`);
+        : new Date(
+            `${this.goalDateService.todayUtcDateString()}T00:00:00.000Z`,
+          );
 
       const milestoneBlueprints =
         this.goalProgressCalculatorService.buildMilestones(

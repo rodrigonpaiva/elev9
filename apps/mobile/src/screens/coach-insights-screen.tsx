@@ -143,7 +143,10 @@ export function CoachInsightsScreen() {
           <Benefits benefits={insights.model.benefits} />
           <Alternative alternative={insights.model.alternative} />
           <Confidence confidence={insights.model.confidence} />
-          <QuickActions actions={insights.model.actions} onAction={handleAction} />
+          <QuickActions
+            actions={insights.model.actions}
+            onAction={handleAction}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -163,7 +166,11 @@ const RecommendationHero = memo(function RecommendationHero({
       <View style={styles.heroIcon}>
         <Ionicons name="bulb-outline" size={21} color={insightTokens.text} />
       </View>
-      <Text maxFontSizeMultiplier={1.25} numberOfLines={2} style={styles.heroText}>
+      <Text
+        maxFontSizeMultiplier={1.25}
+        numberOfLines={2}
+        style={styles.heroText}
+      >
         {model.recommendation}
       </Text>
     </View>
@@ -227,7 +234,11 @@ const Benefits = memo(function Benefits({ benefits }: { benefits: string[] }) {
       <View style={styles.benefitGrid}>
         {benefits.map((benefit) => (
           <View key={benefit} style={styles.benefitCard}>
-            <Ionicons name="checkmark-circle" size={18} color={insightTokens.green} />
+            <Ionicons
+              name="checkmark-circle"
+              size={18}
+              color={insightTokens.green}
+            />
             <Text maxFontSizeMultiplier={1.25} style={styles.benefitText}>
               {benefit}
             </Text>
@@ -254,7 +265,9 @@ const Alternative = memo(function Alternative({
           pressed ? styles.pressed : null,
         ]}
       >
-        <Text style={styles.alternativeLabel}>If today doesn't go as planned...</Text>
+        <Text style={styles.alternativeLabel}>
+          If today doesn't go as planned...
+        </Text>
         <Text maxFontSizeMultiplier={1.35} style={styles.alternativeText}>
           {alternative}
         </Text>

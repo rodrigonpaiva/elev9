@@ -25,7 +25,13 @@ import { ProgressSummaryScreen } from './progress-summary-screen';
 import { WorkoutHistoryScreen } from './workout-history-screen';
 import type { RootStackParamList } from '../navigation/app-navigator';
 
-type MainTabKey = 'home' | 'coach' | 'workout' | 'history' | 'progress' | 'profile';
+type MainTabKey =
+  | 'home'
+  | 'coach'
+  | 'workout'
+  | 'history'
+  | 'progress'
+  | 'profile';
 
 type TabConfig = {
   key: MainTabKey;
@@ -227,7 +233,9 @@ function renderTab(
         />
       );
     case 'coach':
-      return <CoachHomeScreen onOpenWorkoutTab={() => setActiveTab('workout')} />;
+      return (
+        <CoachHomeScreen onOpenWorkoutTab={() => setActiveTab('workout')} />
+      );
     case 'workout':
       return <CurrentWorkoutScreen />;
     case 'history':

@@ -6,4 +6,3 @@ Expected failure modes:
 - partially written daily records
 - retry loops that generate inconsistent state
 - non-idempotent builders
-

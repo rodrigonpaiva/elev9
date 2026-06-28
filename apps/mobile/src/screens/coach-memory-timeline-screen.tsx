@@ -163,7 +163,10 @@ const MemoryListHeader = memo(function MemoryListHeader({
   onTarget: (target?: CoachMemoryTarget) => void;
 }) {
   return (
-    <View accessibilityLabel={model.accessibilityLabel} style={styles.headerStack}>
+    <View
+      accessibilityLabel={model.accessibilityLabel}
+      style={styles.headerStack}
+    >
       <MemoryHero subtitle={model.subtitle} />
       <SectionTitle title="Recent Memories" />
     </View>
@@ -187,7 +190,11 @@ const MemoryListFooter = memo(function MemoryListFooter({
   );
 });
 
-const MemoryHero = memo(function MemoryHero({ subtitle }: { subtitle: string }) {
+const MemoryHero = memo(function MemoryHero({
+  subtitle,
+}: {
+  subtitle: string;
+}) {
   return (
     <View style={styles.hero}>
       <View style={styles.heroIcon}>
@@ -196,7 +203,11 @@ const MemoryHero = memo(function MemoryHero({ subtitle }: { subtitle: string }) 
       <Text maxFontSizeMultiplier={1.25} style={styles.heroTitle}>
         Coach Memory
       </Text>
-      <Text maxFontSizeMultiplier={1.35} numberOfLines={2} style={styles.heroSubtitle}>
+      <Text
+        maxFontSizeMultiplier={1.35}
+        numberOfLines={2}
+        style={styles.heroSubtitle}
+      >
         {subtitle}
       </Text>
     </View>
@@ -331,7 +342,11 @@ const CoachReflection = memo(function CoachReflection({
       onLayout={() => trackCoachMemoryEvent('coach_memory_reflection_read')}
     >
       <Text style={styles.reflectionLabel}>COACH REFLECTION</Text>
-      <Text maxFontSizeMultiplier={1.35} numberOfLines={4} style={styles.reflectionText}>
+      <Text
+        maxFontSizeMultiplier={1.35}
+        numberOfLines={4}
+        style={styles.reflectionText}
+      >
         {reflection}
       </Text>
     </View>

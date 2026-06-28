@@ -304,7 +304,8 @@ export class BuildGoalProgressSnapshotUseCase {
             input.activeGoal.targetValue ?? 0,
             'down',
           ),
-          currentValue: input.fitnessProfileWeightKg ?? input.activeGoal.targetValue ?? 0,
+          currentValue:
+            input.fitnessProfileWeightKg ?? input.activeGoal.targetValue ?? 0,
           targetValue: input.activeGoal.targetValue ?? 0,
           adherenceScore,
           recoveryScore,
@@ -319,7 +320,8 @@ export class BuildGoalProgressSnapshotUseCase {
             input.activeGoal.targetValue ?? 0,
             'up',
           ),
-          currentValue: input.fitnessProfileWeightKg ?? input.activeGoal.targetValue ?? 0,
+          currentValue:
+            input.fitnessProfileWeightKg ?? input.activeGoal.targetValue ?? 0,
           targetValue: input.activeGoal.targetValue ?? 0,
           adherenceScore,
           recoveryScore,
@@ -330,7 +332,8 @@ export class BuildGoalProgressSnapshotUseCase {
         return {
           startValue: input.fitnessProfileWeightKg ?? 0,
           currentValue: input.fitnessProfileWeightKg ?? 0,
-          targetValue: input.activeGoal.targetValue ?? input.fitnessProfileWeightKg ?? 0,
+          targetValue:
+            input.activeGoal.targetValue ?? input.fitnessProfileWeightKg ?? 0,
           adherenceScore,
           recoveryScore,
           consistencyScore,
@@ -383,9 +386,7 @@ export class BuildGoalProgressSnapshotUseCase {
       100,
       Math.max(
         0,
-        Math.round(
-          (workoutScore + checkInScore + nutritionScore) / 3,
-        ),
+        Math.round((workoutScore + checkInScore + nutritionScore) / 3),
       ),
     );
   }
@@ -406,10 +407,7 @@ export class BuildGoalProgressSnapshotUseCase {
 
     return Math.min(
       100,
-      Math.max(
-        0,
-        Math.round((streakScore + workoutScore + checkInScore) / 3),
-      ),
+      Math.max(0, Math.round((streakScore + workoutScore + checkInScore) / 3)),
     );
   }
 

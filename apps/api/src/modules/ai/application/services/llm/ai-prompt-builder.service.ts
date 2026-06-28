@@ -96,7 +96,9 @@ export class AiPromptBuilder {
       });
     }
 
-    const coachDecisionBlock = this.buildCoachDecisionBlock(input.coachDecision);
+    const coachDecisionBlock = this.buildCoachDecisionBlock(
+      input.coachDecision,
+    );
 
     if (coachDecisionBlock) {
       messages.push({
@@ -349,7 +351,9 @@ export class AiPromptBuilder {
       personalization.topBehavioralPatterns.length > 0
         ? [
             '- top behavioral patterns:',
-            ...personalization.topBehavioralPatterns.slice(0, 5).map((pattern) => `  - ${pattern}`),
+            ...personalization.topBehavioralPatterns
+              .slice(0, 5)
+              .map((pattern) => `  - ${pattern}`),
           ].join('\n')
         : '- top behavioral patterns: none',
       '- instruction: do not recalculate personalization. Treat Personalization Engine outputs as canonical.',

@@ -10,7 +10,11 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -99,7 +103,11 @@ export function CoachConversationScreen() {
 
     lastAutoPromptRef.current = promptId;
     void conversation.sendMessage(initialPrompt);
-  }, [conversation.sendMessage, route.params?.initialPrompt, route.params?.promptId]);
+  }, [
+    conversation.sendMessage,
+    route.params?.initialPrompt,
+    route.params?.promptId,
+  ]);
 
   const handleSend = useCallback(
     (message?: string) => {
@@ -169,7 +177,11 @@ export function CoachConversationScreen() {
             )
           }
           ListFooterComponent={
-            conversation.isSending ? <TypingIndicator /> : <View style={styles.footerSpace} />
+            conversation.isSending ? (
+              <TypingIndicator />
+            ) : (
+              <View style={styles.footerSpace} />
+            )
           }
           initialNumToRender={14}
           maxToRenderPerBatch={12}
@@ -295,7 +307,11 @@ const ContextBanner = memo(function ContextBanner({
           pressed ? styles.pressed : null,
         ]}
       >
-        <Ionicons name="close" size={18} color={conversationTokens.secondaryText} />
+        <Ionicons
+          name="close"
+          size={18}
+          color={conversationTokens.secondaryText}
+        />
       </Pressable>
     </View>
   );
@@ -327,10 +343,7 @@ const MessageBubble = memo(function MessageBubble({
             getKindBubbleStyle(message.kind),
           ]}
         >
-          <MessageParts
-            isUser={isUser}
-            parts={message.displayParts}
-          />
+          <MessageParts isUser={isUser} parts={message.displayParts} />
         </View>
         <Text
           style={[
@@ -508,7 +521,10 @@ function InlineError({
 
 function ConversationEmptyState() {
   return (
-    <View accessibilityLabel="Welcome to your AI Coach." style={styles.emptyState}>
+    <View
+      accessibilityLabel="Welcome to your AI Coach."
+      style={styles.emptyState}
+    >
       <Text style={styles.emptyTitle}>Welcome to your AI Coach.</Text>
       <Text style={styles.emptyText}>
         Ask anything about training, nutrition or recovery.

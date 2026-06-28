@@ -252,7 +252,9 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
     arrangeUserProfile();
     arrangeFitnessProfile();
     arrangeTrainingPlan();
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     arrangeWorkoutLogs();
     arrangeNutritionPlanAndLogs();
     arrangeNutritionRecommendation();
@@ -280,7 +282,9 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
     arrangeFitnessProfile();
     arrangeTrainingPlan();
     arrangeRecoverySnapshot();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(null);
     nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
@@ -316,7 +320,9 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
     arrangeFitnessProfile();
     arrangeTrainingPlan();
     arrangeRecoverySnapshot();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     arrangeNutritionRecommendation();
     arrangeCalculatorResult();
@@ -403,7 +409,9 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
         'trainingPlanId',
       ].sort(),
     );
-    expect((sourceContext as Record<string, unknown>).recoverySnapshotId).toBeUndefined();
+    expect(
+      (sourceContext as Record<string, unknown>).recoverySnapshotId,
+    ).toBeUndefined();
   });
 
   it('throws when user profile is missing', async () => {
@@ -498,22 +506,24 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
     } as never);
   }
 
-  function arrangeFitnessProfile(value: unknown = {
-    id: 'fitness_123',
-    userProfileId: 'profile_123',
-    heightCm: 180,
-    weightKg: 82.5,
-    goal: 'gain_muscle',
-    activityLevel: 'medium',
-    trainingAvailability: {
-      daysPerWeek: 4,
-      minutesPerSession: 60,
+  function arrangeFitnessProfile(
+    value: unknown = {
+      id: 'fitness_123',
+      userProfileId: 'profile_123',
+      heightCm: 180,
+      weightKg: 82.5,
+      goal: 'gain_muscle',
+      activityLevel: 'medium',
+      trainingAvailability: {
+        daysPerWeek: 4,
+        minutesPerSession: 60,
+      },
+      limitations: [],
+      status: 'active',
+      createdAt: new Date('2026-06-01T10:00:00.000Z'),
+      updatedAt: new Date('2026-06-01T10:00:00.000Z'),
     },
-    limitations: [],
-    status: 'active',
-    createdAt: new Date('2026-06-01T10:00:00.000Z'),
-    updatedAt: new Date('2026-06-01T10:00:00.000Z'),
-  }): void {
+  ): void {
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(
       value as never,
     );
@@ -526,10 +536,38 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
       goal: 'gain_muscle',
       activityLevel: 'medium',
       weeklySchedule: [
-        { dayIndex: 1, title: 'Day 1', focus: 'upper', format: 'strength', intensity: 'high', exercises: [] },
-        { dayIndex: 2, title: 'Day 2', focus: 'lower', format: 'strength', intensity: 'high', exercises: [] },
-        { dayIndex: 3, title: 'Day 3', focus: 'circuit', format: 'circuit', intensity: 'moderate', exercises: [] },
-        { dayIndex: 4, title: 'Day 4', focus: 'full', format: 'strength', intensity: 'moderate', exercises: [] },
+        {
+          dayIndex: 1,
+          title: 'Day 1',
+          focus: 'upper',
+          format: 'strength',
+          intensity: 'high',
+          exercises: [],
+        },
+        {
+          dayIndex: 2,
+          title: 'Day 2',
+          focus: 'lower',
+          format: 'strength',
+          intensity: 'high',
+          exercises: [],
+        },
+        {
+          dayIndex: 3,
+          title: 'Day 3',
+          focus: 'circuit',
+          format: 'circuit',
+          intensity: 'moderate',
+          exercises: [],
+        },
+        {
+          dayIndex: 4,
+          title: 'Day 4',
+          focus: 'full',
+          format: 'strength',
+          intensity: 'moderate',
+          exercises: [],
+        },
       ],
       status: 'active',
       createdAt: new Date('2026-06-01T10:00:00.000Z'),
@@ -692,7 +730,9 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
     };
   }
 
-  function buildAdaptiveRecommendation(overrides: { trainingPlanId?: string } = {}) {
+  function buildAdaptiveRecommendation(
+    overrides: { trainingPlanId?: string } = {},
+  ) {
     return {
       id: 'adaptive_recommendation_123',
       userProfileId: 'profile_123',

@@ -16,11 +16,15 @@ describe('ReplayPersonalizationSnapshotUseCase', () => {
     personalizationSnapshotRepository = { findById: jest.fn() };
     personalizationCalculatorService = { calculate: jest.fn() };
 
-    userProfileRepository.findByAuthUserId.mockResolvedValue({ id: 'profile_123' });
+    userProfileRepository.findByAuthUserId.mockResolvedValue({
+      id: 'profile_123',
+    });
     personalizationSnapshotRepository.findById.mockResolvedValue(
       buildSnapshot('snapshot_123'),
     );
-    personalizationCalculatorService.calculate.mockReturnValue(buildRecalculated());
+    personalizationCalculatorService.calculate.mockReturnValue(
+      buildRecalculated(),
+    );
 
     useCase = new ReplayPersonalizationSnapshotUseCase(
       userProfileRepository as never,
@@ -66,26 +70,21 @@ describe('ReplayPersonalizationSnapshotUseCase', () => {
     ['riskOfDisengagement', { riskOfDisengagement: 'high' }],
     ['trend', { trend: 'declining' }],
     ['formulaVersion', { formulaVersion: 'personalization-engine-v0' }],
-  ] as const)(
-    'detects %s drift',
-    async (field, recalculatedPatch) => {
-      personalizationCalculatorService.calculate.mockReturnValue(
-        buildRecalculated(recalculatedPatch),
-      );
+  ] as const)('detects %s drift', async (field, recalculatedPatch) => {
+    personalizationCalculatorService.calculate.mockReturnValue(
+      buildRecalculated(recalculatedPatch),
+    );
 
-      const result = await useCase.execute({
-        authUserId: 'auth_123',
-        personalizationSnapshotId: 'snapshot_123',
-      });
+    const result = await useCase.execute({
+      authUserId: 'auth_123',
+      personalizationSnapshotId: 'snapshot_123',
+    });
 
-      expect(result.comparison.matches).toBe(false);
-      expect(result.comparison.differences).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ field }),
-        ]),
-      );
-    },
-  );
+    expect(result.comparison.matches).toBe(false);
+    expect(result.comparison.differences).toEqual(
+      expect.arrayContaining([expect.objectContaining({ field })]),
+    );
+  });
 
   it('throws when the user profile is missing', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);

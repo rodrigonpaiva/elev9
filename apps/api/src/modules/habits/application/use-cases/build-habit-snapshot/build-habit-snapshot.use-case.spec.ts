@@ -91,12 +91,18 @@ describe('BuildHabitSnapshotUseCase', () => {
     };
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     dailyCheckInRepository.findManyByUserProfileId.mockResolvedValue([]);
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     goalRepository.findActiveByUserProfileId.mockResolvedValue(null);
     goalProgressSnapshotRepository.findLatestByGoalId.mockResolvedValue(null);
-    notificationDecisionRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    notificationDecisionRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     getEngagementSummaryUseCase.execute.mockResolvedValue({
       engagementSummary: {
         engagementScore: 50,
@@ -227,13 +233,13 @@ describe('BuildHabitSnapshotUseCase', () => {
     });
 
     expect(platformDateService.getTodayDateString).toHaveBeenCalled();
-    expect(workoutLogRepository.findByTrainingPlanIdsAndDateRange).toHaveBeenCalledWith(
-      {
-        trainingPlanIds: ['training_plan_123'],
-        startDate: '2026-05-28',
-        endDate: '2026-06-03',
-      },
-    );
+    expect(
+      workoutLogRepository.findByTrainingPlanIdsAndDateRange,
+    ).toHaveBeenCalledWith({
+      trainingPlanIds: ['training_plan_123'],
+      startDate: '2026-05-28',
+      endDate: '2026-06-03',
+    });
     expect(getEngagementSummaryUseCase.execute).toHaveBeenCalledWith({
       authUserId: 'auth_123',
     });
@@ -281,10 +287,14 @@ describe('BuildHabitSnapshotUseCase', () => {
       id: 'user_profile_123',
     });
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     goalRepository.findActiveByUserProfileId.mockResolvedValue(null);
     goalProgressSnapshotRepository.findLatestByGoalId.mockResolvedValue(null);
-    notificationDecisionRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    notificationDecisionRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     getEngagementSummaryUseCase.execute.mockResolvedValue({
       engagementSummary: {
         engagementScore: 50,
@@ -357,10 +367,14 @@ describe('BuildHabitSnapshotUseCase', () => {
       id: 'user_profile_123',
     });
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     goalRepository.findActiveByUserProfileId.mockResolvedValue(null);
     goalProgressSnapshotRepository.findLatestByGoalId.mockResolvedValue(null);
-    notificationDecisionRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    notificationDecisionRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     getEngagementSummaryUseCase.execute.mockResolvedValue({
       engagementSummary: {
         engagementScore: 50,
@@ -400,7 +414,8 @@ describe('BuildHabitSnapshotUseCase', () => {
     });
 
     const sourceContext =
-      habitSnapshotRepository.upsertDailySnapshot.mock.calls[0][0].sourceContext;
+      habitSnapshotRepository.upsertDailySnapshot.mock.calls[0][0]
+        .sourceContext;
 
     expect(platformDateService.getTodayDateString).toHaveBeenCalled();
     expect(sourceContext).toMatchObject({

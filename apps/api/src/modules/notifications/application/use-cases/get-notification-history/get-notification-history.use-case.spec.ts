@@ -37,10 +37,9 @@ describe('GetNotificationHistoryUseCase', () => {
 
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(notificationDecisionRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 14 },
-    );
+    expect(
+      notificationDecisionRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 14 });
     expect(result.limit).toBe(14);
   });
 
@@ -55,10 +54,9 @@ describe('GetNotificationHistoryUseCase', () => {
       limit: 90,
     });
 
-    expect(notificationDecisionRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 90 },
-    );
+    expect(
+      notificationDecisionRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 90 });
     expect(result.limit).toBe(90);
   });
 
@@ -80,14 +78,12 @@ describe('GetNotificationHistoryUseCase', () => {
 
     await useCase.execute({ authUserId: 'auth_user_123', limit: 14 });
 
-    expect(notificationDecisionRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 14 },
-    );
-    expect(notificationDecisionRepository.findManyByUserProfileId).not.toHaveBeenCalledWith(
-      'auth_user_123',
-      expect.anything(),
-    );
+    expect(
+      notificationDecisionRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 14 });
+    expect(
+      notificationDecisionRepository.findManyByUserProfileId,
+    ).not.toHaveBeenCalledWith('auth_user_123', expect.anything());
   });
 
   it('errors when the user profile is missing', async () => {

@@ -171,11 +171,13 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
       ).size;
       const missedWorkouts =
         activeTrainingPlan && recentWorkoutLogsCount > 0
-          ? Math.max(0, activeTrainingPlan.weeklySchedule.length - uniqueWorkoutDates)
+          ? Math.max(
+              0,
+              activeTrainingPlan.weeklySchedule.length - uniqueWorkoutDates,
+            )
           : 0;
-      const recentWorkoutLoad = this.calculateRecentWorkoutLoad(
-        recentWorkoutLogs,
-      );
+      const recentWorkoutLoad =
+        this.calculateRecentWorkoutLoad(recentWorkoutLogs);
       const adherenceScore = this.calculateAdherenceScore({
         hasTrainingPlan: Boolean(activeTrainingPlan),
         trainingPlanDays: activeTrainingPlan?.weeklySchedule.length ?? 0,
@@ -188,7 +190,8 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
         latestNutritionRecommendation[0]?.id ?? undefined;
 
       const calculatorInput: AdaptiveTrainingRecommendationCalculatorInput = {
-        readinessScore: recoverySnapshot?.readinessScore ?? DEFAULT_NEUTRAL_SCORE,
+        readinessScore:
+          recoverySnapshot?.readinessScore ?? DEFAULT_NEUTRAL_SCORE,
         fatigueScore: recoverySnapshot?.fatigueScore ?? DEFAULT_NEUTRAL_SCORE,
         recoveryTrend: recoverySnapshot?.recoveryTrend ?? 'stable',
         recoveryRecommendedIntensity:
@@ -232,17 +235,17 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
         await this.adaptiveTrainingRecommendationRepository.upsertDailyRecommendation(
           {
             userProfileId: userProfile.id,
-          trainingPlanId,
-          date: todayDate,
-          recommendationType: calculatedResult.recommendationType,
-          recommendedIntensity: calculatedResult.recommendedIntensity,
-          volumeAction: calculatedResult.volumeAction,
-          reasoning: calculatedResult.reasoning,
-          influences: calculatedResult.influences.map((influence) =>
-            typeof influence.toJSON === 'function'
-              ? influence.toJSON()
-              : influence,
-          ),
+            trainingPlanId,
+            date: todayDate,
+            recommendationType: calculatedResult.recommendationType,
+            recommendedIntensity: calculatedResult.recommendedIntensity,
+            volumeAction: calculatedResult.volumeAction,
+            reasoning: calculatedResult.reasoning,
+            influences: calculatedResult.influences.map((influence) =>
+              typeof influence.toJSON === 'function'
+                ? influence.toJSON()
+                : influence,
+            ),
             sourceContext,
             formulaVersion: ADAPTIVE_TRAINING_RECOMMENDATION_CALCULATOR_VERSION,
             generatedBy: 'deterministic',
@@ -282,9 +285,7 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
       0,
       Math.min(
         100,
-        Math.round(
-          (input.uniqueWorkoutDates / input.trainingPlanDays) * 100,
-        ),
+        Math.round((input.uniqueWorkoutDates / input.trainingPlanDays) * 100),
       ),
     );
   }
@@ -317,24 +318,20 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
   }
 
   private resolveNutritionAdherence(input: {
-    nutritionPlan:
-      | {
-          weekStartDate: string;
-          weekEndDate: string;
-          days: Array<{
-            date: string;
-            dailyMacroTargets: MacroTargetsProps;
-          }>;
-        }
-      | null;
+    nutritionPlan: {
+      weekStartDate: string;
+      weekEndDate: string;
+      days: Array<{
+        date: string;
+        dailyMacroTargets: MacroTargetsProps;
+      }>;
+    } | null;
     todayNutritionLogs: NutritionLog[];
-    nutritionRecommendation:
-      | {
-          contextSnapshot: {
-            adherenceScore?: number;
-          };
-        }
-      | null;
+    nutritionRecommendation: {
+      contextSnapshot: {
+        adherenceScore?: number;
+      };
+    } | null;
     date: string;
   }): number {
     if (input.nutritionPlan) {
@@ -344,8 +341,7 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
 
       if (todayNutritionDay && input.todayNutritionLogs.length > 0) {
         const consumedCalories = input.todayNutritionLogs.reduce(
-          (total, log) =>
-            total + (log.actualMacros?.calories ?? 0),
+          (total, log) => total + (log.actualMacros?.calories ?? 0),
           0,
         );
 

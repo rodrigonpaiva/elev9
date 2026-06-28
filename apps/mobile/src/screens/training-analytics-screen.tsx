@@ -1,10 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -88,7 +83,9 @@ export function TrainingAnalyticsScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
   const [summary, setSummary] = useState<ProgressSummary | null>(null);
-  const [coachDecision, setCoachDecision] = useState<CoachDecision | null>(null);
+  const [coachDecision, setCoachDecision] = useState<CoachDecision | null>(
+    null,
+  );
   const [currentGoal, setCurrentGoal] = useState<CurrentGoal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -185,7 +182,10 @@ export function TrainingAnalyticsScreen() {
       switch (item) {
         case 'consistency':
           return (
-            <MetricSection title="CONSISTENCY" metrics={model.consistencyMetrics} />
+            <MetricSection
+              title="CONSISTENCY"
+              metrics={model.consistencyMetrics}
+            />
           );
         case 'volume':
           return (
@@ -195,11 +195,15 @@ export function TrainingAnalyticsScreen() {
             />
           );
         case 'focus':
-          return <TrainingFocusSection distribution={model.focusDistribution} />;
+          return (
+            <TrainingFocusSection distribution={model.focusDistribution} />
+          );
         case 'coach':
           return <CoachInsight insight={model.coachInsight} />;
         case 'trend':
-          return model.trendValues ? <RecentTrend values={model.trendValues} /> : null;
+          return model.trendValues ? (
+            <RecentTrend values={model.trendValues} />
+          ) : null;
         case 'action':
           return <RecommendedAction action={model.recommendedAction} />;
         default:
@@ -335,7 +339,11 @@ const CoachInsight = memo(function CoachInsight({
   );
 });
 
-const RecentTrend = memo(function RecentTrend({ values }: { values: number[] }) {
+const RecentTrend = memo(function RecentTrend({
+  values,
+}: {
+  values: number[];
+}) {
   const points = useMemo(() => buildSparklinePoints(values), [values]);
 
   if (points.length < 2) {
@@ -424,10 +432,17 @@ function TrainingAnalyticsStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.stateButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.stateButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -452,7 +467,10 @@ function buildAnalyticsModel({
   onOpenCoach: () => void;
   onViewHistory: () => void;
 }): AnalyticsModel | null {
-  if (workoutLogs.length === 0 && (!summary || summary.workoutsCompleted === 0)) {
+  if (
+    workoutLogs.length === 0 &&
+    (!summary || summary.workoutsCompleted === 0)
+  ) {
     return null;
   }
 
@@ -466,7 +484,8 @@ function buildAnalyticsModel({
     (weekLogs.length > 0
       ? Math.round(totalDurationMinutes / weekLogs.length)
       : 0);
-  const currentStreak = summary?.currentStreak ?? calculateWorkoutStreak(workoutLogs);
+  const currentStreak =
+    summary?.currentStreak ?? calculateWorkoutStreak(workoutLogs);
   const plannedWorkouts = getPlannedWorkoutTarget(currentGoal);
   const adherence = Math.min(
     100,
@@ -514,7 +533,10 @@ function buildAnalyticsModel({
   };
 }
 
-function getLogsWithinDays(workoutLogs: WorkoutLog[], days: number): WorkoutLog[] {
+function getLogsWithinDays(
+  workoutLogs: WorkoutLog[],
+  days: number,
+): WorkoutLog[] {
   const cutoff = new Date();
   cutoff.setUTCHours(0, 0, 0, 0);
   cutoff.setUTCDate(cutoff.getUTCDate() - (days - 1));
@@ -573,7 +595,9 @@ function getScoreMessage(scoreLabel: AnalyticsModel['scoreLabel']): string {
   }
 }
 
-function getTrainingFocusDistribution(workoutLogs: WorkoutLog[]): TrainingFocus[] {
+function getTrainingFocusDistribution(
+  workoutLogs: WorkoutLog[],
+): TrainingFocus[] {
   const totals = {
     Strength: 0,
     Conditioning: 0,
@@ -601,7 +625,8 @@ function getTrainingFocusDistribution(workoutLogs: WorkoutLog[]): TrainingFocus[
     }
   });
 
-  const total = Object.values(totals).reduce((sum, value) => sum + value, 0) || 1;
+  const total =
+    Object.values(totals).reduce((sum, value) => sum + value, 0) || 1;
 
   return Object.entries(totals).map(([label, value]) => ({
     label,
@@ -694,9 +719,7 @@ function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
 
-  return remainingMinutes > 0
-    ? `${hours}h ${remainingMinutes}m`
-    : `${hours}h`;
+  return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
 }
 
 function buildSparklinePoints(values: number[]) {

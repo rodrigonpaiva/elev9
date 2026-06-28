@@ -71,8 +71,8 @@ describe('BuildHabitRiskSignalsUseCase', () => {
       adherenceRate: 30,
       riskLevel: { value: 'high' },
     });
-    habitRiskSignalRepository.createMany.mockImplementation(async (signals) =>
-      signals,
+    habitRiskSignalRepository.createMany.mockImplementation(
+      async (signals) => signals,
     );
 
     const result = await useCase.execute({
@@ -80,9 +80,9 @@ describe('BuildHabitRiskSignalsUseCase', () => {
     });
 
     expect(platformDateService.getTodayDateString).toHaveBeenCalled();
-    expect(habitRiskSignalRepository.deleteByUserProfileId).toHaveBeenCalledWith(
-      'user_profile_123',
-    );
+    expect(
+      habitRiskSignalRepository.deleteByUserProfileId,
+    ).toHaveBeenCalledWith('user_profile_123');
     expect(habitRiskSignalRepository.createMany).toHaveBeenCalled();
     expect(result.habitRiskSignals.map((signal) => signal.type)).toEqual(
       expect.arrayContaining([
@@ -120,9 +120,9 @@ describe('BuildHabitRiskSignalsUseCase', () => {
       authUserId: 'auth_123',
     });
 
-    expect(habitRiskSignalRepository.deleteByUserProfileId).toHaveBeenCalledWith(
-      'user_profile_123',
-    );
+    expect(
+      habitRiskSignalRepository.deleteByUserProfileId,
+    ).toHaveBeenCalledWith('user_profile_123');
     expect(habitRiskSignalRepository.createMany).not.toHaveBeenCalled();
     expect(result.habitRiskSignals).toEqual([]);
   });
@@ -138,9 +138,9 @@ describe('BuildHabitRiskSignalsUseCase', () => {
       authUserId: 'auth_123',
     });
 
-    expect(habitRiskSignalRepository.deleteByUserProfileId).toHaveBeenCalledWith(
-      'user_profile_123',
-    );
+    expect(
+      habitRiskSignalRepository.deleteByUserProfileId,
+    ).toHaveBeenCalledWith('user_profile_123');
     expect(habitRiskSignalRepository.createMany).not.toHaveBeenCalled();
     expect(result.habitRiskSignals).toEqual([]);
   });
@@ -168,9 +168,8 @@ describe('BuildHabitRiskSignalsUseCase', () => {
       authUserId: 'auth_123',
     });
 
-    expect(habitSnapshotRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'user_profile_123',
-      { limit: 30 },
-    );
+    expect(
+      habitSnapshotRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('user_profile_123', { limit: 30 });
   });
 });

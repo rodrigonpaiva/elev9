@@ -131,18 +131,24 @@ export class CoachDecisionCalculatorService {
       readinessScore: this.resolveScore(input.readinessScore, 50),
       fatigueScore: this.resolveScore(input.fatigueScore, 50),
       nutritionAdherence: this.resolveScore(input.nutritionAdherence, 50),
-      adaptiveRecommendationType: input.adaptiveRecommendationType?.trim() || undefined,
+      adaptiveRecommendationType:
+        input.adaptiveRecommendationType?.trim() || undefined,
       adaptiveIntensity: input.adaptiveIntensity?.trim() || undefined,
       currentStreak: this.resolveNonNegativeInteger(input.currentStreak),
       missedWorkouts: this.resolveNonNegativeInteger(input.missedWorkouts),
-      goalProgressPercentage: this.resolveScore(input.goalProgressPercentage, 0),
+      goalProgressPercentage: this.resolveScore(
+        input.goalProgressPercentage,
+        0,
+      ),
       goalTrend: input.goalTrend,
       goalForecastConfidence: input.goalForecastConfidence,
       goalMilestoneClose: Boolean(input.goalMilestoneClose),
       goalAchievementReached: Boolean(input.goalAchievementReached),
       notificationSuppressed: Boolean(input.notificationSuppressed),
       notificationFatigueHigh: Boolean(input.notificationFatigueHigh),
-      notificationDismissedFrequently: Boolean(input.notificationDismissedFrequently),
+      notificationDismissedFrequently: Boolean(
+        input.notificationDismissedFrequently,
+      ),
       notificationHighEngagement: Boolean(input.notificationHighEngagement),
       personalizationHighDisengagementRisk: Boolean(
         input.personalizationHighDisengagementRisk,
@@ -164,7 +170,9 @@ export class CoachDecisionCalculatorService {
       ),
       habitConsistencyScore: this.resolveScore(input.habitConsistencyScore, 50),
       habitTrend: input.habitTrend,
-      habitCurrentStreak: this.resolveNonNegativeInteger(input.habitCurrentStreak),
+      habitCurrentStreak: this.resolveNonNegativeInteger(
+        input.habitCurrentStreak,
+      ),
       habitRiskLevel: input.habitRiskLevel ?? 'low',
       habitConsistencyImproving: Boolean(input.habitConsistencyImproving),
       habitConsistencyDeclining: Boolean(input.habitConsistencyDeclining),
@@ -389,7 +397,9 @@ export class CoachDecisionCalculatorService {
     priority: CoachDecisionPriority,
   ): CoachDecisionActionItem[] {
     const templates = this.getActionItemTemplates(priority);
-    return templates.slice(0, 3).map((item) => new CoachDecisionActionItem(item));
+    return templates
+      .slice(0, 3)
+      .map((item) => new CoachDecisionActionItem(item));
   }
 
   private getActionItemTemplates(priority: CoachDecisionPriority): string[] {
@@ -414,7 +424,7 @@ export class CoachDecisionCalculatorService {
         ];
       case 'consistency':
         return [
-          'Complete today\'s session',
+          "Complete today's session",
           'Avoid skipping workouts',
           'Maintain your routine',
         ];
@@ -628,7 +638,10 @@ export class CoachDecisionCalculatorService {
       );
     }
 
-    if (input.hasGoalForecastConfidence && input.goalForecastConfidence === 'low') {
+    if (
+      input.hasGoalForecastConfidence &&
+      input.goalForecastConfidence === 'low'
+    ) {
       influences.push(
         this.createInfluence(
           'GOAL_FORECAST_LOW_CONFIDENCE',
@@ -935,9 +948,7 @@ export class CoachDecisionCalculatorService {
     return Math.max(0, Math.round(value));
   }
 
-  private isTrainingSignal(
-    value: string | undefined,
-  ): boolean {
+  private isTrainingSignal(value: string | undefined): boolean {
     return (
       value === 'increase_intensity' ||
       value === 'decrease_intensity' ||

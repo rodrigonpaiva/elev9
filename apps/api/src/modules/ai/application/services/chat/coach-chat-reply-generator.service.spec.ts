@@ -118,7 +118,9 @@ describe('CoachChatReplyGenerator', () => {
       },
     });
 
-    expect(reply).toContain("Your recovery signals suggest keeping today's session lighter.");
+    expect(reply).toContain(
+      "Your recovery signals suggest keeping today's session lighter.",
+    );
   });
 
   it('uses notification context when coach decision is absent', () => {

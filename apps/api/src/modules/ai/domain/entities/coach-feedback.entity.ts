@@ -50,7 +50,12 @@ export type CoachFeedbackProps = {
       mealsPerDay: number;
     };
     coachDecisionId?: string;
-    coachDecisionPriority?: 'recovery' | 'nutrition' | 'training' | 'consistency' | 'motivation';
+    coachDecisionPriority?:
+      | 'recovery'
+      | 'nutrition'
+      | 'training'
+      | 'consistency'
+      | 'motivation';
     coachDecisionHeadline?: string;
     coachDecisionSummary?: string;
     coachDecisionActionItems?: string[];
@@ -71,7 +76,11 @@ export type CoachFeedbackProps = {
       value?: number;
     }>;
     personalization?: {
-      preferredCoachingStyle?: 'motivational' | 'direct' | 'educational' | 'balanced';
+      preferredCoachingStyle?:
+        | 'motivational'
+        | 'direct'
+        | 'educational'
+        | 'balanced';
       engagementProfile?: 'low' | 'medium' | 'high';
       notificationResponsiveness?: 'low' | 'medium' | 'high';
       goalResponsiveness?: 'low' | 'medium' | 'high';

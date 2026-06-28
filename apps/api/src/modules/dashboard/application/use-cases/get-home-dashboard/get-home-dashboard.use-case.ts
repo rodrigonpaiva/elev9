@@ -122,10 +122,10 @@ export class GetHomeDashboardUseCase {
         );
       const dashboardCoachDecision =
         this.dashboardAdaptiveSignalsService.buildCoachDecision(coachDecision);
-      const dashboardGoal = this.dashboardAdaptiveSignalsService.buildGoal(goal);
-      const dashboardHabits = this.dashboardAdaptiveSignalsService.buildHabits(
-        habits,
-      );
+      const dashboardGoal =
+        this.dashboardAdaptiveSignalsService.buildGoal(goal);
+      const dashboardHabits =
+        this.dashboardAdaptiveSignalsService.buildHabits(habits);
       const dashboardNotification =
         this.dashboardAdaptiveSignalsService.buildNotification(notification);
       const recovery = this.buildRecoverySummary(
@@ -233,7 +233,9 @@ export class GetHomeDashboardUseCase {
           recovery,
           ...(dashboardGoal ? { goal: dashboardGoal } : {}),
           ...(dashboardHabits ? { habits: dashboardHabits } : {}),
-          ...(dashboardNotification ? { notification: dashboardNotification } : {}),
+          ...(dashboardNotification
+            ? { notification: dashboardNotification }
+            : {}),
           ...(personalization ? { personalization } : {}),
           ...(dashboardCoachDecision
             ? { coachDecision: dashboardCoachDecision }
@@ -328,10 +330,13 @@ export class GetHomeDashboardUseCase {
     }
   }
 
-  private async resolveNotification(authUserId: string): Promise<{
-    current?: NotificationReadModelPayload['current'];
-    engagementSummary?: NotificationReadModelPayload['engagementSummary'];
-  } | undefined> {
+  private async resolveNotification(authUserId: string): Promise<
+    | {
+        current?: NotificationReadModelPayload['current'];
+        engagementSummary?: NotificationReadModelPayload['engagementSummary'];
+      }
+    | undefined
+  > {
     const [currentResult, engagementSummaryResult] = await Promise.allSettled([
       this.getCurrentNotificationUseCase.execute({ authUserId }),
       this.getEngagementSummaryUseCase.execute({ authUserId }),
@@ -457,8 +462,9 @@ export class GetHomeDashboardUseCase {
         authUserId,
       });
 
-      const milestones =
-        await this.getGoalMilestonesUseCase.execute({ authUserId });
+      const milestones = await this.getGoalMilestonesUseCase.execute({
+        authUserId,
+      });
 
       return {
         goal: currentGoal.goal,

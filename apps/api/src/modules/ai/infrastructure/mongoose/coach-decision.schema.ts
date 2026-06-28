@@ -5,9 +5,7 @@ import {
   CoachDecisionInfluenceImpact,
   CoachDecisionInfluenceSource,
 } from '../../domain/value-objects/coach-decision-influence.value-object';
-import {
-  CoachDecisionPriority,
-} from '../../domain/value-objects/coach-decision-priority.value-object';
+import { CoachDecisionPriority } from '../../domain/value-objects/coach-decision-priority.value-object';
 
 export type CoachDecisionDocument = HydratedDocument<CoachDecisionSchemaClass>;
 

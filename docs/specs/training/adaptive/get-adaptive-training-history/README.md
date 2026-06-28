@@ -28,4 +28,3 @@ Not included:
 - trend scoring
 - graphing logic
 - plan rewriting
-

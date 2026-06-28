@@ -76,4 +76,3 @@ export type GetCurrentRecoveryResponse = {
 export type GetRecoveryHistoryResponse = {
   recoverySnapshots: RecoverySnapshot[];
 };
-

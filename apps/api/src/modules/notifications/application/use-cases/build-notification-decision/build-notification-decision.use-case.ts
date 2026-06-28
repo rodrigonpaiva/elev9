@@ -68,9 +68,7 @@ import {
   type NotificationFatiguePolicyInput,
 } from '../../services/notification-fatigue-policy.service';
 import { PlatformDateService } from '../../../../../shared/date/platform-date.service';
-import type {
-  NotificationSourceContext,
-} from '../../../domain/notifications.types';
+import type { NotificationSourceContext } from '../../../domain/notifications.types';
 import {
   BUILD_NOTIFICATION_DECISION_ERROR_CODES,
   BuildNotificationDecisionError,
@@ -238,8 +236,8 @@ export class BuildNotificationDecisionUseCase {
       const goalProgressTrend = goalProgressSnapshot?.trend.value;
       const goalAchievementReached = Boolean(
         activeGoal &&
-          (activeGoal.status.value === 'achieved' ||
-            (goalProgressSnapshot?.progressPercentage ?? 0) >= 100),
+        (activeGoal.status.value === 'achieved' ||
+          (goalProgressSnapshot?.progressPercentage ?? 0) >= 100),
       );
       const goalMilestoneClose = this.resolveGoalMilestoneClose(
         goalProgressSnapshot?.progressPercentage ?? 0,
@@ -265,10 +263,13 @@ export class BuildNotificationDecisionUseCase {
         coachDecisionHeadline:
           latestCoachDecision?.headline?.trim() || undefined,
         coachDecisionInfluences:
-          latestCoachDecision?.influences.map((influence) => influence.toJSON()) ??
-          [],
-        readinessScore: latestRecoverySnapshot?.readinessScore ?? DEFAULT_NEUTRAL_SCORE,
-        fatigueScore: latestRecoverySnapshot?.fatigueScore ?? DEFAULT_NEUTRAL_SCORE,
+          latestCoachDecision?.influences.map((influence) =>
+            influence.toJSON(),
+          ) ?? [],
+        readinessScore:
+          latestRecoverySnapshot?.readinessScore ?? DEFAULT_NEUTRAL_SCORE,
+        fatigueScore:
+          latestRecoverySnapshot?.fatigueScore ?? DEFAULT_NEUTRAL_SCORE,
         adaptiveRecommendationType:
           latestAdaptiveTrainingRecommendation?.recommendationType,
         goalProgressTrend,
@@ -373,9 +374,8 @@ export class BuildNotificationDecisionUseCase {
     startDate: string,
     endDate: string,
   ): Promise<RecentCheckIn[]> {
-    const checkIns = await this.dailyCheckInRepository.findManyByUserProfileId(
-      userProfileId,
-    );
+    const checkIns =
+      await this.dailyCheckInRepository.findManyByUserProfileId(userProfileId);
 
     return checkIns.filter((checkIn) => {
       const dateString = this.platformDateService.getDateString(
@@ -520,7 +520,8 @@ export class BuildNotificationDecisionUseCase {
     );
 
     return {
-      candidateType: input.candidateType as NotificationFatiguePolicyInput['candidateType'],
+      candidateType:
+        input.candidateType as NotificationFatiguePolicyInput['candidateType'],
       candidatePriority: input.candidatePriority,
       recentNotificationsCount: input.recentNotifications.length,
       recentSameTypeCount: input.recentNotifications.filter(
@@ -545,10 +546,7 @@ export class BuildNotificationDecisionUseCase {
 
   private async resolvePersonalization(
     authUserId: string,
-  ): Promise<
-    | PersonalizationReadModelSource
-    | undefined
-  > {
+  ): Promise<PersonalizationReadModelSource | undefined> {
     try {
       const result = await this.getCurrentPersonalizationUseCase.execute({
         authUserId,

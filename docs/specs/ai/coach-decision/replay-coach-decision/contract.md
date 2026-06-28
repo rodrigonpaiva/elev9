@@ -22,7 +22,7 @@ Recompute a stored `CoachDecision` and compare the result with the persisted one
     actionItemsChanged: boolean;
     influencesChanged: boolean;
     formulaVersionChanged: boolean;
-  };
+  }
 }
 ```
 
@@ -37,4 +37,3 @@ Optional internal build route:
 ```txt
 POST /ai/coach-decision/build
 ```
-

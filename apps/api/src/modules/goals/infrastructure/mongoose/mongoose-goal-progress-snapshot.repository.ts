@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import {
-  GoalProgressSnapshot as GoalProgressSnapshotEntity,
-} from '../../domain/entities/goal-progress-snapshot.entity';
+import { GoalProgressSnapshot as GoalProgressSnapshotEntity } from '../../domain/entities/goal-progress-snapshot.entity';
 import {
   GoalProgressSnapshotQueryOptions,
   GoalProgressSnapshotRepository,
@@ -20,9 +18,7 @@ import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
 import type { GoalSourceContext } from '../../../../shared/source-context';
 
 @Injectable()
-export class MongooseGoalProgressSnapshotRepository
-  implements GoalProgressSnapshotRepository
-{
+export class MongooseGoalProgressSnapshotRepository implements GoalProgressSnapshotRepository {
   constructor(
     @InjectModel(GOAL_PROGRESS_SNAPSHOT_MODEL_NAME)
     private readonly goalProgressSnapshotModel: Model<GoalProgressSnapshotSchemaClass>,
@@ -35,7 +31,9 @@ export class MongooseGoalProgressSnapshotRepository
     const document = await this.goalProgressSnapshotModel
       .findOne({ goalId, date })
       .exec();
-    return document ? this.toEntity(document as GoalProgressSnapshotDocument) : null;
+    return document
+      ? this.toEntity(document as GoalProgressSnapshotDocument)
+      : null;
   }
 
   async findLatestByGoalId(
@@ -45,7 +43,9 @@ export class MongooseGoalProgressSnapshotRepository
       .findOne({ goalId })
       .sort({ date: -1, createdAt: -1, _id: -1 })
       .exec();
-    return document ? this.toEntity(document as GoalProgressSnapshotDocument) : null;
+    return document
+      ? this.toEntity(document as GoalProgressSnapshotDocument)
+      : null;
   }
 
   async findManyByGoalId(

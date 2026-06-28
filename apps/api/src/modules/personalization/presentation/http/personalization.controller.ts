@@ -135,9 +135,7 @@ export class PersonalizationController {
       });
 
       return {
-        behavioralPatterns: result.behavioralPatterns.map(
-          mapBehavioralPattern,
-        ),
+        behavioralPatterns: result.behavioralPatterns.map(mapBehavioralPattern),
       };
     } catch (error) {
       this.handleError(error);
@@ -156,9 +154,7 @@ export class PersonalizationController {
       });
 
       return {
-        userBehaviorProfile: mapUserBehaviorProfile(
-          result.userBehaviorProfile,
-        ),
+        userBehaviorProfile: mapUserBehaviorProfile(result.userBehaviorProfile),
       };
     } catch (error) {
       this.handleError(error);

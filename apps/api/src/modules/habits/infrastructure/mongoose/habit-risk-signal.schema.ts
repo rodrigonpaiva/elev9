@@ -58,5 +58,10 @@ export const HabitRiskSignalSchema = new Schema<HabitRiskSignalSchemaClass>(
   },
 );
 
-HabitRiskSignalSchema.index({ userProfileId: 1, generatedAt: -1, createdAt: -1, _id: -1 });
+HabitRiskSignalSchema.index({
+  userProfileId: 1,
+  generatedAt: -1,
+  createdAt: -1,
+  _id: -1,
+});
 HabitRiskSignalSchema.index({ userProfileId: 1, type: 1 });

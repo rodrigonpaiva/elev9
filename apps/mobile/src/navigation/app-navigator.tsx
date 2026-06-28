@@ -52,7 +52,13 @@ export type RootStackParamList = {
   };
   MainTabs:
     | {
-        initialTab?: 'home' | 'coach' | 'workout' | 'history' | 'progress' | 'profile';
+        initialTab?:
+          | 'home'
+          | 'coach'
+          | 'workout'
+          | 'history'
+          | 'progress'
+          | 'profile';
       }
     | undefined;
   CoachHome: undefined;

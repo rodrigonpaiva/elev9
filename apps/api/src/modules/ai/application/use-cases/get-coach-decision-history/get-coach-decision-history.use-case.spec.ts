@@ -23,7 +23,9 @@ describe('GetCoachDecisionHistoryUseCase', () => {
   });
 
   it('returns the history in order', async () => {
-    userProfileRepository.findByAuthUserId.mockResolvedValue(buildUserProfile());
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
     coachDecisionRepository.findManyByUserProfileId.mockResolvedValue([
       buildDecision('decision_1'),
       buildDecision('decision_2'),
@@ -34,24 +36,24 @@ describe('GetCoachDecisionHistoryUseCase', () => {
     });
 
     expect(result.coachDecisions).toHaveLength(2);
-    expect(coachDecisionRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 14 },
-    );
+    expect(
+      coachDecisionRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 14 });
   });
 
   it('applies the default limit of 14', async () => {
-    userProfileRepository.findByAuthUserId.mockResolvedValue(buildUserProfile());
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
     coachDecisionRepository.findManyByUserProfileId.mockResolvedValue([]);
 
     await useCase.execute({
       authUserId: 'auth_123',
     });
 
-    expect(coachDecisionRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 14 },
-    );
+    expect(
+      coachDecisionRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 14 });
   });
 
   it('rejects invalid limits', async () => {
@@ -66,7 +68,9 @@ describe('GetCoachDecisionHistoryUseCase', () => {
   });
 
   it('isolates history by user', async () => {
-    userProfileRepository.findByAuthUserId.mockResolvedValue(buildUserProfile());
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
     coachDecisionRepository.findManyByUserProfileId.mockResolvedValue([]);
 
     await useCase.execute({
@@ -74,10 +78,9 @@ describe('GetCoachDecisionHistoryUseCase', () => {
       limit: 2,
     });
 
-    expect(coachDecisionRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 2 },
-    );
+    expect(
+      coachDecisionRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 2 });
   });
 
   it('throws when user profile is missing', async () => {

@@ -245,7 +245,8 @@ function buildAskCoachModel(input: {
 
   return {
     heroTitle: 'What would you like help with today?',
-    heroSubtitle: 'I already know today\'s context. Choose a question below or ask anything.',
+    heroSubtitle:
+      "I already know today's context. Choose a question below or ask anything.",
     selectedCategory: input.selectedCategory,
     categories: CATEGORIES,
     questions: questions.slice(0, 8),
@@ -511,7 +512,9 @@ function buildRecentConversations(
   messages: CoachChatHistoryMessage[],
 ): AskCoachRecentConversation[] {
   return messages
-    .filter((message) => message.role === 'user' && message.content.trim().length > 0)
+    .filter(
+      (message) => message.role === 'user' && message.content.trim().length > 0,
+    )
     .slice(-6)
     .reverse()
     .map((message, index) => ({
@@ -522,7 +525,9 @@ function buildRecentConversations(
     .slice(0, 3);
 }
 
-function getDefaultCategory(priority: CoachDecision['priority']): AskCoachCategoryId {
+function getDefaultCategory(
+  priority: CoachDecision['priority'],
+): AskCoachCategoryId {
   switch (priority) {
     case 'training':
       return 'training';
@@ -561,7 +566,9 @@ function cleanMessageTitle(value: string): string {
 }
 
 function limitText(value: string, maxLength: number): string {
-  return value.length > maxLength ? `${value.slice(0, maxLength - 3).trim()}...` : value;
+  return value.length > maxLength
+    ? `${value.slice(0, maxLength - 3).trim()}...`
+    : value;
 }
 
 function formatRelativeTime(value: string): string {

@@ -29,4 +29,3 @@ If no decision exists yet, the implementation may build the current daily decisi
 - resolve `UserProfile`
 - load latest decision
 - if missing, build the decision safely
-

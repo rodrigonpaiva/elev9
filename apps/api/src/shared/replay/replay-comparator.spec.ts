@@ -40,13 +40,7 @@ describe('ReplayComparator', () => {
     const result = ReplayComparator.compare({
       persisted,
       recalculated,
-      fields: [
-        'priority',
-        'headline',
-        'summary',
-        'actionItems',
-        'influences',
-      ],
+      fields: ['priority', 'headline', 'summary', 'actionItems', 'influences'],
     });
 
     expect(result.matches).toBe(true);

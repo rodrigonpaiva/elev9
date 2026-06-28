@@ -21,9 +21,7 @@ import {
 import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
 
 @Injectable()
-export class MongooseNotificationDecisionRepository
-  implements NotificationDecisionRepository
-{
+export class MongooseNotificationDecisionRepository implements NotificationDecisionRepository {
   constructor(
     @InjectModel(NOTIFICATION_DECISION_MODEL_NAME)
     private readonly notificationDecisionModel: Model<NotificationDecisionSchemaClass>,
@@ -37,7 +35,9 @@ export class MongooseNotificationDecisionRepository
       .findOne({ userProfileId, date })
       .exec();
 
-    return document ? this.toEntity(document as NotificationDecisionDocument) : null;
+    return document
+      ? this.toEntity(document as NotificationDecisionDocument)
+      : null;
   }
 
   async findLatestByUserProfileId(
@@ -48,7 +48,9 @@ export class MongooseNotificationDecisionRepository
       .sort({ date: -1, createdAt: -1, _id: -1 })
       .exec();
 
-    return document ? this.toEntity(document as NotificationDecisionDocument) : null;
+    return document
+      ? this.toEntity(document as NotificationDecisionDocument)
+      : null;
   }
 
   async findManyByUserProfileId(
@@ -72,7 +74,9 @@ export class MongooseNotificationDecisionRepository
   async findById(id: string): Promise<NotificationDecision | null> {
     const document = await this.notificationDecisionModel.findById(id).exec();
 
-    return document ? this.toEntity(document as NotificationDecisionDocument) : null;
+    return document
+      ? this.toEntity(document as NotificationDecisionDocument)
+      : null;
   }
 
   async updateStatus(
@@ -94,7 +98,9 @@ export class MongooseNotificationDecisionRepository
       )
       .exec();
 
-    return document ? this.toEntity(document as NotificationDecisionDocument) : null;
+    return document
+      ? this.toEntity(document as NotificationDecisionDocument)
+      : null;
   }
 
   async upsertDailyDecision(
@@ -158,7 +164,9 @@ export class MongooseNotificationDecisionRepository
     }
   }
 
-  private toEntity(document: NotificationDecisionDocument): NotificationDecision {
+  private toEntity(
+    document: NotificationDecisionDocument,
+  ): NotificationDecision {
     return new NotificationDecision({
       id: document._id.toString(),
       userProfileId: document.userProfileId,
@@ -182,7 +190,8 @@ export class MongooseNotificationDecisionRepository
             value: influence.value,
           }),
       ),
-      sourceContext: (document.sourceContext ?? {}) as NotificationSourceContext,
+      sourceContext: (document.sourceContext ??
+        {}) as NotificationSourceContext,
       suppressed: document.suppressed ?? false,
       suppressionReasons: document.suppressionReasons ?? [],
       fatigueLevel: document.fatigueLevel ?? 'low',

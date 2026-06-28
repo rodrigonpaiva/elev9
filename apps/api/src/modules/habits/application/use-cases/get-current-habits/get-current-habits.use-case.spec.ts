@@ -41,9 +41,9 @@ describe('GetCurrentHabitsUseCase', () => {
       authUserId: 'auth_123',
     });
 
-    expect(habitSnapshotRepository.findLatestByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-    );
+    expect(
+      habitSnapshotRepository.findLatestByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123');
     expect(buildHabitSnapshotUseCase.execute).not.toHaveBeenCalled();
     expect(result.habitSnapshot.date).toBe('2026-06-02');
   });

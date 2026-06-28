@@ -21,4 +21,3 @@ The platform should converge on:
 - `current` means the most relevant record for the active user state.
 - `latest` means the most recent persisted daily record under the canonical ordering.
 - history reads must preserve the same ordering contract.
-

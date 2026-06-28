@@ -31,4 +31,3 @@
 ### Domain Contract
 
 Return the latest persisted snapshot for the current user, ordered by date and creation time.
-

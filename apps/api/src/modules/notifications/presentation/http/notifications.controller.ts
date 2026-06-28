@@ -75,7 +75,9 @@ export class NotificationsController {
       });
 
       return {
-        notificationDecision: mapNotificationDecision(result.notificationDecision),
+        notificationDecision: mapNotificationDecision(
+          result.notificationDecision,
+        ),
       };
     } catch (error) {
       this.handleReadError(error);
@@ -94,7 +96,9 @@ export class NotificationsController {
       });
 
       return {
-        notificationDecision: mapNotificationDecision(result.notificationDecision),
+        notificationDecision: mapNotificationDecision(
+          result.notificationDecision,
+        ),
       };
     } catch (error) {
       this.handleReadError(error);
@@ -137,9 +141,7 @@ export class NotificationsController {
       });
 
       return {
-        engagementSummary: mapEngagementSummary(
-          result.engagementSummary,
-        ),
+        engagementSummary: mapEngagementSummary(result.engagementSummary),
       };
     } catch (error) {
       this.handleReadError(error);
@@ -164,7 +166,9 @@ export class NotificationsController {
 
       return {
         engagementEvent: mapEngagementEvent(result.engagementEvent),
-        notificationDecision: mapNotificationDecision(result.notificationDecision),
+        notificationDecision: mapNotificationDecision(
+          result.notificationDecision,
+        ),
         historyEntry: result.historyEntry
           ? mapNotificationHistoryEntry(result.historyEntry)
           : undefined,
@@ -238,7 +242,7 @@ export class NotificationsController {
         throw new BadRequestException(this.buildErrorPayload(error));
       case RECORD_ENGAGEMENT_EVENT_ERROR_CODES.INTERNAL_ERROR:
       default:
-      throw new InternalServerErrorException(this.buildErrorPayload(error));
+        throw new InternalServerErrorException(this.buildErrorPayload(error));
     }
   }
 
@@ -276,9 +280,9 @@ export class NotificationsController {
   }
 }
 
-function mapNotificationDecision(
-  decision: { toJSON(): NotificationDecisionJSON },
-): NotificationDecisionJSON {
+function mapNotificationDecision(decision: {
+  toJSON(): NotificationDecisionJSON;
+}): NotificationDecisionJSON {
   return decision.toJSON();
 }
 

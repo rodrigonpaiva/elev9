@@ -41,4 +41,3 @@ The builder must:
 - select a deterministic priority
 - generate a deterministic summary and action items
 - persist the decision with idempotent daily upsert
-

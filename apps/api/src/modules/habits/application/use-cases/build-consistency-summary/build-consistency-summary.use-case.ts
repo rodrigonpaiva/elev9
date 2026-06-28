@@ -62,17 +62,19 @@ export class BuildConsistencySummaryUseCase {
         );
       }
 
-      const habitSnapshots = await this.habitSnapshotRepository.findManyByUserProfileId(
-        userProfile.id,
-        {
-          limit: HISTORY_LIMIT,
-        },
-      );
+      const habitSnapshots =
+        await this.habitSnapshotRepository.findManyByUserProfileId(
+          userProfile.id,
+          {
+            limit: HISTORY_LIMIT,
+          },
+        );
 
       const latestSnapshot = habitSnapshots[0] ?? null;
       const previousSnapshot =
-        habitSnapshots.find((snapshot) => snapshot.date !== latestSnapshot?.date) ??
-        null;
+        habitSnapshots.find(
+          (snapshot) => snapshot.date !== latestSnapshot?.date,
+        ) ?? null;
 
       const snapshotSourceContext = latestSnapshot?.sourceContext ?? {};
       const todayDate = this.platformDateService.getTodayDateString();

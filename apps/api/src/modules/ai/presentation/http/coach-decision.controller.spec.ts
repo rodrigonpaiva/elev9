@@ -2,7 +2,10 @@ import { GetCurrentCoachDecisionUseCase } from '../../application/use-cases/get-
 import { GetCoachDecisionHistoryUseCase } from '../../application/use-cases/get-coach-decision-history/get-coach-decision-history.use-case';
 import { GetCoachDecisionHistoryError } from '../../application/use-cases/get-coach-decision-history/get-coach-decision-history.errors';
 import { GetTodayCoachDecisionUseCase } from '../../application/use-cases/get-today-coach-decision/get-today-coach-decision.use-case';
-import { REPLAY_COACH_DECISION_ERROR_CODES, ReplayCoachDecisionError } from '../../application/use-cases/replay-coach-decision/replay-coach-decision.errors';
+import {
+  REPLAY_COACH_DECISION_ERROR_CODES,
+  ReplayCoachDecisionError,
+} from '../../application/use-cases/replay-coach-decision/replay-coach-decision.errors';
 import { ReplayCoachDecisionUseCase } from '../../application/use-cases/replay-coach-decision/replay-coach-decision.use-case';
 import { CoachDecisionController } from './coach-decision.controller';
 import { CoachDecision } from '../../domain/entities/coach-decision.entity';

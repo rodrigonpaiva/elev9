@@ -25,53 +25,53 @@ export class UserBehaviorProfileSchemaClass {
 }
 
 export const USER_BEHAVIOR_PROFILE_MODEL_NAME = 'UserBehaviorProfile';
-export const USER_BEHAVIOR_PROFILE_COLLECTION_NAME =
-  'user_behavior_profiles';
+export const USER_BEHAVIOR_PROFILE_COLLECTION_NAME = 'user_behavior_profiles';
 
-export const UserBehaviorProfileSchema = new Schema<UserBehaviorProfileSchemaClass>(
-  {
-    userProfileId: {
-      type: String,
-      required: true,
+export const UserBehaviorProfileSchema =
+  new Schema<UserBehaviorProfileSchemaClass>(
+    {
+      userProfileId: {
+        type: String,
+        required: true,
+      },
+      preferredCoachingStyle: {
+        type: String,
+        required: true,
+      },
+      notificationResponsiveness: {
+        type: String,
+        required: true,
+      },
+      goalResponsiveness: {
+        type: String,
+        required: true,
+      },
+      recoveryResponsiveness: {
+        type: String,
+        required: true,
+      },
+      habitResponsiveness: {
+        type: String,
+        required: true,
+      },
+      engagementProfile: {
+        type: String,
+        required: true,
+      },
+      riskOfDisengagement: {
+        type: String,
+        required: true,
+      },
+      formulaVersion: {
+        type: String,
+        required: true,
+      },
     },
-    preferredCoachingStyle: {
-      type: String,
-      required: true,
+    {
+      collection: USER_BEHAVIOR_PROFILE_COLLECTION_NAME,
+      timestamps: true,
+      versionKey: false,
     },
-    notificationResponsiveness: {
-      type: String,
-      required: true,
-    },
-    goalResponsiveness: {
-      type: String,
-      required: true,
-    },
-    recoveryResponsiveness: {
-      type: String,
-      required: true,
-    },
-    habitResponsiveness: {
-      type: String,
-      required: true,
-    },
-    engagementProfile: {
-      type: String,
-      required: true,
-    },
-    riskOfDisengagement: {
-      type: String,
-      required: true,
-    },
-    formulaVersion: {
-      type: String,
-      required: true,
-    },
-  },
-  {
-    collection: USER_BEHAVIOR_PROFILE_COLLECTION_NAME,
-    timestamps: true,
-    versionKey: false,
-  },
-);
+  );
 
 UserBehaviorProfileSchema.index({ userProfileId: 1 }, { unique: true });

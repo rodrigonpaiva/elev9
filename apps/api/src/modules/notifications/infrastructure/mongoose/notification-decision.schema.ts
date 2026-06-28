@@ -69,95 +69,104 @@ const NotificationInfluenceSchema = {
   },
 } as const;
 
-export const NotificationDecisionSchema = new Schema<NotificationDecisionSchemaClass>(
-  {
-    userProfileId: {
-      type: String,
-      required: true,
+export const NotificationDecisionSchema =
+  new Schema<NotificationDecisionSchemaClass>(
+    {
+      userProfileId: {
+        type: String,
+        required: true,
+      },
+      date: {
+        type: String,
+        required: true,
+      },
+      type: {
+        type: String,
+        required: true,
+      },
+      priority: {
+        type: String,
+        required: true,
+      },
+      channel: {
+        type: String,
+        required: true,
+        default: 'in_app',
+      },
+      status: {
+        type: String,
+        required: true,
+        default: 'planned',
+      },
+      title: {
+        type: String,
+        required: true,
+      },
+      message: {
+        type: String,
+        required: true,
+      },
+      actionLabel: {
+        type: String,
+        required: false,
+        default: undefined,
+      },
+      actionTarget: {
+        type: String,
+        required: false,
+        default: undefined,
+      },
+      influences: {
+        type: [NotificationInfluenceSchema],
+        required: true,
+        default: [],
+      },
+      sourceContext: {
+        type: Schema.Types.Mixed,
+        required: true,
+        default: {},
+      },
+      suppressed: {
+        type: Boolean,
+        required: true,
+        default: false,
+      },
+      suppressionReasons: {
+        type: [String],
+        required: true,
+        default: [],
+      },
+      fatigueLevel: {
+        type: String,
+        required: true,
+        default: 'low',
+      },
+      formulaVersion: {
+        type: String,
+        required: true,
+      },
+      generatedBy: {
+        type: String,
+        required: true,
+        default: 'deterministic',
+      },
     },
-    date: {
-      type: String,
-      required: true,
+    {
+      collection: NOTIFICATION_DECISION_COLLECTION_NAME,
+      timestamps: true,
+      versionKey: false,
     },
-    type: {
-      type: String,
-      required: true,
-    },
-    priority: {
-      type: String,
-      required: true,
-    },
-    channel: {
-      type: String,
-      required: true,
-      default: 'in_app',
-    },
-    status: {
-      type: String,
-      required: true,
-      default: 'planned',
-    },
-    title: {
-      type: String,
-      required: true,
-    },
-    message: {
-      type: String,
-      required: true,
-    },
-    actionLabel: {
-      type: String,
-      required: false,
-      default: undefined,
-    },
-    actionTarget: {
-      type: String,
-      required: false,
-      default: undefined,
-    },
-    influences: {
-      type: [NotificationInfluenceSchema],
-      required: true,
-      default: [],
-    },
-    sourceContext: {
-      type: Schema.Types.Mixed,
-      required: true,
-      default: {},
-    },
-    suppressed: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    suppressionReasons: {
-      type: [String],
-      required: true,
-      default: [],
-    },
-    fatigueLevel: {
-      type: String,
-      required: true,
-      default: 'low',
-    },
-    formulaVersion: {
-      type: String,
-      required: true,
-    },
-    generatedBy: {
-      type: String,
-      required: true,
-      default: 'deterministic',
-    },
-  },
-  {
-    collection: NOTIFICATION_DECISION_COLLECTION_NAME,
-    timestamps: true,
-    versionKey: false,
-  },
-);
+  );
 
-NotificationDecisionSchema.index({ userProfileId: 1, date: 1 }, { unique: true });
-NotificationDecisionSchema.index({ userProfileId: 1, date: -1, createdAt: -1, _id: -1 });
+NotificationDecisionSchema.index(
+  { userProfileId: 1, date: 1 },
+  { unique: true },
+);
+NotificationDecisionSchema.index({
+  userProfileId: 1,
+  date: -1,
+  createdAt: -1,
+  _id: -1,
+});
 NotificationDecisionSchema.index({ userProfileId: 1, status: 1 });
 NotificationDecisionSchema.index({ userProfileId: 1, type: 1, date: -1 });

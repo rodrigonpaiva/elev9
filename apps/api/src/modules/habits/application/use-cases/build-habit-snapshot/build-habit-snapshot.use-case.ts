@@ -36,9 +36,7 @@ import {
   NOTIFICATION_DECISION_REPOSITORY,
   NotificationDecisionRepository,
 } from '../../../../notifications/domain/repositories/notification-decision.repository';
-import {
-  GetEngagementSummaryUseCase,
-} from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
+import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import { PlatformDateService } from '../../../../../shared/date/platform-date.service';
 import { HabitConsistencyCalculatorService } from '../../services/habit-consistency-calculator.service';
 import {
@@ -165,8 +163,7 @@ export class BuildHabitSnapshotUseCase {
       const workoutCompletionRate = this.resolveWorkoutCompletionRate({
         recentWorkoutLogs,
         hasActiveTrainingPlan: Boolean(activeTrainingPlan),
-        activeTrainingPlanDays:
-          activeTrainingPlan?.weeklySchedule.length ?? 0,
+        activeTrainingPlanDays: activeTrainingPlan?.weeklySchedule.length ?? 0,
       });
       const checkInCompletionRate = this.resolveCheckInCompletionRate(
         recentCheckInsInWindow.length,
@@ -186,16 +183,19 @@ export class BuildHabitSnapshotUseCase {
           todayDate,
         },
       );
-      const previousHabitSnapshot =
-        await this.resolvePreviousHabitSnapshot(userProfile.id, todayDate);
-      const previousScore = previousHabitSnapshot?.consistencyScore;
-      const currentSnapshots = await this.habitSnapshotRepository.findManyByUserProfileId(
+      const previousHabitSnapshot = await this.resolvePreviousHabitSnapshot(
         userProfile.id,
-        { limit: HISTORY_LOOKBACK_LIMIT },
+        todayDate,
       );
+      const previousScore = previousHabitSnapshot?.consistencyScore;
+      const currentSnapshots =
+        await this.habitSnapshotRepository.findManyByUserProfileId(
+          userProfile.id,
+          { limit: HISTORY_LOOKBACK_LIMIT },
+        );
 
-      const calculatorResult =
-        this.habitConsistencyCalculatorService.calculate({
+      const calculatorResult = this.habitConsistencyCalculatorService.calculate(
+        {
           userProfileId: userProfile.id,
           generatedAt: new Date().toISOString(),
           workoutCompletionRate,
@@ -209,7 +209,8 @@ export class BuildHabitSnapshotUseCase {
             ? this.resolveInactivityDays(todayDate, previousHabitSnapshot.date)
             : 0,
           previousScore,
-        });
+        },
+      );
 
       const sourceContext: HabitSourceContext = {
         workoutCompletionRate,
@@ -277,9 +278,7 @@ export class BuildHabitSnapshotUseCase {
       0,
       Math.min(
         100,
-        Math.round(
-          (uniqueWorkoutDays / input.activeTrainingPlanDays) * 100,
-        ),
+        Math.round((uniqueWorkoutDays / input.activeTrainingPlanDays) * 100),
       ),
     );
   }
@@ -351,8 +350,9 @@ export class BuildHabitSnapshotUseCase {
   ) {
     return this.habitSnapshotRepository
       .findManyByUserProfileId(userProfileId, { limit: HISTORY_LOOKBACK_LIMIT })
-      .then((snapshots) =>
-        snapshots.find((snapshot) => snapshot.date !== todayDate) ?? null,
+      .then(
+        (snapshots) =>
+          snapshots.find((snapshot) => snapshot.date !== todayDate) ?? null,
       );
   }
 

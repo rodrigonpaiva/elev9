@@ -23,4 +23,3 @@ GET /training/adaptive/today
 - authenticated only
 - daily idempotent read/write behavior
 - build when missing, then read the persisted snapshot
-

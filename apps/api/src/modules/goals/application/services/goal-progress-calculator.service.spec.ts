@@ -229,9 +229,7 @@ describe('GoalProgressCalculatorService', () => {
     it.each([25, 50, 75, 100])('marks %s milestone thresholds', (target) => {
       const result = service.buildMilestones('lose_weight', 80);
 
-      expect(result.map((item) => item.targetValue)).toEqual([
-        25, 50, 75, 100,
-      ]);
+      expect(result.map((item) => item.targetValue)).toEqual([25, 50, 75, 100]);
       expect(result.find((item) => item.targetValue === target)).toBeDefined();
     });
   });

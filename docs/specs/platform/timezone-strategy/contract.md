@@ -14,4 +14,3 @@ The platform may later support timezone-aware daily partitioning.
 - Adaptive Training
 - Coach Decision
 - Goals
-

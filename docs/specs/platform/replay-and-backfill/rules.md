@@ -5,4 +5,3 @@
 - formulaVersion is mandatory for deterministic engines
 - drift is expected to be visible, not hidden
 - historical rebuilds must preserve user isolation
-

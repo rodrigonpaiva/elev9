@@ -6,4 +6,3 @@
 4. Implement builder use case.
 5. Add unit tests for formulas and persistence.
 6. Wire read use cases to the builder.
-

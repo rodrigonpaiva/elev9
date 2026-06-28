@@ -23,7 +23,9 @@ export interface HabitSnapshotRepository {
     userProfileId: string,
     date: string,
   ): Promise<HabitSnapshot | null>;
-  findLatestByUserProfileId(userProfileId: string): Promise<HabitSnapshot | null>;
+  findLatestByUserProfileId(
+    userProfileId: string,
+  ): Promise<HabitSnapshot | null>;
   findManyByUserProfileId(
     userProfileId: string,
     options?: HabitSnapshotQueryOptions,

@@ -119,13 +119,12 @@ export class BuildCoachDecisionUseCase {
       const todayDate = this.coachDecisionDateService.todayUtcDateString();
       const recentWindow = this.getRecentWindowDateRange(todayDate);
 
-      const recoverySnapshot =
-        (await this.getCurrentRecoveryUseCase.execute({ authUserId }))
-          .recoverySnapshot;
+      const recoverySnapshot = (
+        await this.getCurrentRecoveryUseCase.execute({ authUserId })
+      ).recoverySnapshot;
       const goalContext = await this.resolveGoalContext(authUserId);
-      const notificationSignals = await this.resolveNotificationSignals(
-        authUserId,
-      );
+      const notificationSignals =
+        await this.resolveNotificationSignals(authUserId);
       const habitContext = await this.resolveHabitContext(authUserId);
       const personalizationContext =
         await this.resolvePersonalizationContext(authUserId);
@@ -135,12 +134,11 @@ export class BuildCoachDecisionUseCase {
           userProfile.id,
           RECENT_NUTRITION_RECOMMENDATION_LIMIT,
         );
-      const nutritionRecommendation =
-        latestNutritionRecommendation[0] ?? null;
+      const nutritionRecommendation = latestNutritionRecommendation[0] ?? null;
 
-      const adaptiveTrainingRecommendation =
-        (await this.getCurrentAdaptiveTrainingUseCase.execute({ authUserId }))
-          .adaptiveTrainingRecommendation;
+      const adaptiveTrainingRecommendation = (
+        await this.getCurrentAdaptiveTrainingUseCase.execute({ authUserId })
+      ).adaptiveTrainingRecommendation;
 
       const fitnessProfile =
         await this.fitnessProfileRepository.findActiveByUserProfileId(
@@ -177,16 +175,21 @@ export class BuildCoachDecisionUseCase {
       ).size;
       const missedWorkouts =
         trainingPlanId && recentWorkoutLogsCount > 0
-          ? Math.max(0, activeTrainingPlan.weeklySchedule.length - uniqueWorkoutDates)
+          ? Math.max(
+              0,
+              activeTrainingPlan.weeklySchedule.length - uniqueWorkoutDates,
+            )
           : 0;
-      const noRecentActivity = Boolean(trainingPlanId) && recentWorkoutLogsCount === 0;
+      const noRecentActivity =
+        Boolean(trainingPlanId) && recentWorkoutLogsCount === 0;
 
       const nutritionAdherence = this.resolveNutritionAdherence(
         nutritionRecommendation?.contextSnapshot?.adherenceScore,
       );
 
       const calculatorInput: CoachDecisionCalculatorInput = {
-        readinessScore: recoverySnapshot?.readinessScore ?? DEFAULT_NEUTRAL_SCORE,
+        readinessScore:
+          recoverySnapshot?.readinessScore ?? DEFAULT_NEUTRAL_SCORE,
         fatigueScore: recoverySnapshot?.fatigueScore ?? DEFAULT_NEUTRAL_SCORE,
         nutritionAdherence,
         adaptiveRecommendationType:
@@ -235,15 +238,16 @@ export class BuildCoachDecisionUseCase {
           : {}),
         ...(adaptiveTrainingRecommendation?.id
           ? {
-              adaptiveTrainingRecommendationId: adaptiveTrainingRecommendation.id,
+              adaptiveTrainingRecommendationId:
+                adaptiveTrainingRecommendation.id,
             }
           : {}),
         formulaVersion: COACH_DECISION_CALCULATOR_VERSION,
         generatedAt: new Date().toISOString(),
       };
 
-      const coachDecision = await this.coachDecisionRepository.upsertDailyDecision(
-        {
+      const coachDecision =
+        await this.coachDecisionRepository.upsertDailyDecision({
           userProfileId: userProfile.id,
           date: todayDate,
           nutritionRecommendationId: nutritionRecommendation?.id,
@@ -261,8 +265,7 @@ export class BuildCoachDecisionUseCase {
           llmMetadata: {
             used: false,
           },
-        },
-      );
+        });
 
       return {
         coachDecision,
@@ -301,9 +304,7 @@ export class BuildCoachDecisionUseCase {
     return Math.min(100, Math.max(0, Math.round(value)));
   }
 
-  private async resolveGoalContext(
-    authUserId: string,
-  ): Promise<
+  private async resolveGoalContext(authUserId: string): Promise<
     | (GoalCoachDecisionSignals & {
         goalMilestoneClose: boolean;
         goalAchievementReached: boolean;
@@ -345,14 +346,16 @@ export class BuildCoachDecisionUseCase {
     | 'notificationHighEngagement'
   > | null> {
     try {
-      const [currentResult, engagementSummaryResult] = await Promise.allSettled([
-        this.getCurrentNotificationUseCase.execute({
-          authUserId,
-        }),
-        this.getEngagementSummaryUseCase.execute({
-          authUserId,
-        }),
-      ]);
+      const [currentResult, engagementSummaryResult] = await Promise.allSettled(
+        [
+          this.getCurrentNotificationUseCase.execute({
+            authUserId,
+          }),
+          this.getEngagementSummaryUseCase.execute({
+            authUserId,
+          }),
+        ],
+      );
 
       const current =
         currentResult.status === 'fulfilled'
@@ -374,29 +377,24 @@ export class BuildCoachDecisionUseCase {
     }
   }
 
-  private async resolveHabitContext(
-    authUserId: string,
-  ): Promise<
-    | {
-        signals?: Pick<
-          CoachDecisionCalculatorInput,
-          | 'habitConsistencyImproving'
-          | 'habitConsistencyDeclining'
-          | 'habitRiskHigh'
-          | 'habitStreakStrong'
-          | 'habitDropoutRisk'
-        >;
-        sourceContext?: Pick<
-          CoachDecisionSourceContext,
-          | 'habitConsistencyScore'
-          | 'habitTrend'
-          | 'habitCurrentStreak'
-          | 'habitRiskLevel'
-          | 'habitRiskSignals'
-        >;
-      }
-    | null
-  > {
+  private async resolveHabitContext(authUserId: string): Promise<{
+    signals?: Pick<
+      CoachDecisionCalculatorInput,
+      | 'habitConsistencyImproving'
+      | 'habitConsistencyDeclining'
+      | 'habitRiskHigh'
+      | 'habitStreakStrong'
+      | 'habitDropoutRisk'
+    >;
+    sourceContext?: Pick<
+      CoachDecisionSourceContext,
+      | 'habitConsistencyScore'
+      | 'habitTrend'
+      | 'habitCurrentStreak'
+      | 'habitRiskLevel'
+      | 'habitRiskSignals'
+    >;
+  } | null> {
     try {
       const [currentResult, summaryResult, riskSignalsResult] =
         await Promise.allSettled([
@@ -417,9 +415,8 @@ export class BuildCoachDecisionUseCase {
           : {}),
       };
 
-      const signals = HabitReadModelMapper.toCoachDecisionSignals(
-        habitReadModel,
-      );
+      const signals =
+        HabitReadModelMapper.toCoachDecisionSignals(habitReadModel);
       const dashboardPayload =
         HabitReadModelMapper.toDashboardPayload(habitReadModel);
 
@@ -436,7 +433,8 @@ export class BuildCoachDecisionUseCase {
                   ? {
                       habitConsistencyScore: dashboardPayload.summary.score,
                       habitTrend: dashboardPayload.summary.trend,
-                      habitCurrentStreak: dashboardPayload.summary.currentStreak,
+                      habitCurrentStreak:
+                        dashboardPayload.summary.currentStreak,
                       habitRiskLevel: dashboardPayload.summary.riskLevel,
                     }
                   : dashboardPayload.current
@@ -464,33 +462,28 @@ export class BuildCoachDecisionUseCase {
     }
   }
 
-  private async resolvePersonalizationContext(
-    authUserId: string,
-  ): Promise<
-    | {
-        signals?: Pick<
-          CoachDecisionCalculatorInput,
-          | 'personalizationHighDisengagementRisk'
-          | 'personalizationRespondsToStreaks'
-          | 'personalizationRespondsToGoals'
-          | 'personalizationPrefersDirectCoaching'
-          | 'personalizationPrefersMotivationalCoaching'
-          | 'personalizationLowNotificationResponsiveness'
-        >;
-        sourceContext?: Pick<
-          CoachDecisionSourceContext,
-          | 'personalizationPreferredCoachingStyle'
-          | 'personalizationEngagementProfile'
-          | 'personalizationNotificationResponsiveness'
-          | 'personalizationGoalResponsiveness'
-          | 'personalizationRecoveryResponsiveness'
-          | 'personalizationHabitResponsiveness'
-          | 'personalizationRiskOfDisengagement'
-          | 'personalizationTopBehavioralPatterns'
-        >;
-      }
-    | null
-  > {
+  private async resolvePersonalizationContext(authUserId: string): Promise<{
+    signals?: Pick<
+      CoachDecisionCalculatorInput,
+      | 'personalizationHighDisengagementRisk'
+      | 'personalizationRespondsToStreaks'
+      | 'personalizationRespondsToGoals'
+      | 'personalizationPrefersDirectCoaching'
+      | 'personalizationPrefersMotivationalCoaching'
+      | 'personalizationLowNotificationResponsiveness'
+    >;
+    sourceContext?: Pick<
+      CoachDecisionSourceContext,
+      | 'personalizationPreferredCoachingStyle'
+      | 'personalizationEngagementProfile'
+      | 'personalizationNotificationResponsiveness'
+      | 'personalizationGoalResponsiveness'
+      | 'personalizationRecoveryResponsiveness'
+      | 'personalizationHabitResponsiveness'
+      | 'personalizationRiskOfDisengagement'
+      | 'personalizationTopBehavioralPatterns'
+    >;
+  } | null> {
     try {
       const [snapshotResult, profileResult, patternsResult] =
         await Promise.allSettled([
@@ -511,14 +504,12 @@ export class BuildCoachDecisionUseCase {
           : {}),
       };
 
-      const signals =
-        PersonalizationReadModelMapper.toCoachDecisionSignals(
-          personalizationReadModel,
-        );
-      const promptPayload =
-        PersonalizationReadModelMapper.toPromptPayload(
-          personalizationReadModel,
-        );
+      const signals = PersonalizationReadModelMapper.toCoachDecisionSignals(
+        personalizationReadModel,
+      );
+      const promptPayload = PersonalizationReadModelMapper.toPromptPayload(
+        personalizationReadModel,
+      );
 
       if (!signals && !promptPayload) {
         return null;

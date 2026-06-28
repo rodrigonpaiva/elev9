@@ -196,7 +196,11 @@ export class BuildUserBehaviorProfileUseCase {
     fallback: 'low' | 'medium' | 'high',
     patterns: Array<{
       type: { value: string } | string;
-      confidence: { value: 'low' | 'medium' | 'high' } | 'low' | 'medium' | 'high';
+      confidence:
+        | { value: 'low' | 'medium' | 'high' }
+        | 'low'
+        | 'medium'
+        | 'high';
     }>,
   ): 'low' | 'medium' | 'high' {
     const hasHighDismissalPattern = patterns.some((pattern) => {

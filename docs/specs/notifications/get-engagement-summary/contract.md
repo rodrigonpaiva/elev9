@@ -14,7 +14,7 @@ Return an engagement summary for the authenticated user.
 {
   engagementSummary: {
     engagementScore: number;
-  };
+  }
 }
 ```
 

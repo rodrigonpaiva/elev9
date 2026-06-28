@@ -27,17 +27,17 @@ export class PersonalizationReadError extends Error {
   }
 }
 
-export async function resolveUserProfileOrThrow<TError extends PersonalizationReadError>(
-  input: {
-    authUserId: string;
-    userProfileRepository: UserProfileRepository;
-    errorFactory: (
-      code: PersonalizationReadErrorCode,
-      message: string,
-      details?: Record<string, unknown>,
-    ) => TError;
-  },
-): Promise<UserProfile> {
+export async function resolveUserProfileOrThrow<
+  TError extends PersonalizationReadError,
+>(input: {
+  authUserId: string;
+  userProfileRepository: UserProfileRepository;
+  errorFactory: (
+    code: PersonalizationReadErrorCode,
+    message: string,
+    details?: Record<string, unknown>,
+  ) => TError;
+}): Promise<UserProfile> {
   const authUserId =
     typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
@@ -48,9 +48,8 @@ export async function resolveUserProfileOrThrow<TError extends PersonalizationRe
     );
   }
 
-  const userProfile = await input.userProfileRepository.findByAuthUserId(
-    authUserId,
-  );
+  const userProfile =
+    await input.userProfileRepository.findByAuthUserId(authUserId);
 
   if (!userProfile) {
     throw input.errorFactory(

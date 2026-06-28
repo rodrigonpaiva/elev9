@@ -210,7 +210,9 @@ describe('AiPromptBuilder', () => {
 
     expect(joined).toContain('Habits & Consistency (canonical):');
     expect(joined).toContain('- consistency score: 78');
-    expect(joined).toContain('- instruction: do not recalculate consistency; treat Habit Engine outputs as canonical.');
+    expect(joined).toContain(
+      '- instruction: do not recalculate consistency; treat Habit Engine outputs as canonical.',
+    );
     expect(prompt.messages).toHaveLength(4);
     expect(JSON.stringify(prompt)).not.toContain('sourceContext');
   });
@@ -258,7 +260,9 @@ describe('AiPromptBuilder', () => {
     expect(joined).toContain('Personalization (canonical):');
     expect(joined).toContain('- preferred coaching style: direct');
     expect(joined).toContain('- notification responsiveness: low');
-    expect(joined).toContain('do not recalculate personalization. Treat Personalization Engine outputs as canonical.');
+    expect(joined).toContain(
+      'do not recalculate personalization. Treat Personalization Engine outputs as canonical.',
+    );
     expect(JSON.stringify(prompt)).not.toContain('sourceContext');
   });
 
@@ -514,7 +518,11 @@ describe('AiPromptBuilder', () => {
 
     const joined = prompt.messages.map((message) => message.content).join('\n');
 
-    expect(prompt.messages.some((message) => message.content.includes('Coach decision (canonical):'))).toBe(true);
+    expect(
+      prompt.messages.some((message) =>
+        message.content.includes('Coach decision (canonical):'),
+      ),
+    ).toBe(true);
     expect(joined).toContain('Treat any coach decision as canonical context');
     expect(joined).toContain('priority: recovery');
     expect(joined).toContain('headline: Recovery should be your focus today');

@@ -51,7 +51,12 @@ export interface CreateCoachFeedbackRepositoryInput {
       mealsPerDay: number;
     };
     coachDecisionId?: string;
-    coachDecisionPriority?: 'recovery' | 'nutrition' | 'training' | 'consistency' | 'motivation';
+    coachDecisionPriority?:
+      | 'recovery'
+      | 'nutrition'
+      | 'training'
+      | 'consistency'
+      | 'motivation';
     coachDecisionHeadline?: string;
     coachDecisionSummary?: string;
     coachDecisionActionItems?: string[];

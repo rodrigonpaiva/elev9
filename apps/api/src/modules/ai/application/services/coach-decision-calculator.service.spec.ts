@@ -399,7 +399,9 @@ describe('CoachDecisionCalculatorService', () => {
       missedWorkouts: 0,
     });
 
-    expect(result.influences.some((influence) => influence.impact === 'positive')).toBe(true);
+    expect(
+      result.influences.some((influence) => influence.impact === 'positive'),
+    ).toBe(true);
     expect(result.influences.map((influence) => influence.code)).toContain(
       'HIGH_NUTRITION_ADHERENCE',
     );

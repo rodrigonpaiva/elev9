@@ -14,7 +14,9 @@ export interface UpsertConsistencySummaryRepositoryInput {
 }
 
 export interface ConsistencySummaryRepository {
-  findByUserProfileId(userProfileId: string): Promise<ConsistencySummary | null>;
+  findByUserProfileId(
+    userProfileId: string,
+  ): Promise<ConsistencySummary | null>;
   upsertSummary(
     input: UpsertConsistencySummaryRepositoryInput,
   ): Promise<ConsistencySummary>;

@@ -32,4 +32,3 @@ Not included:
 - plan rewriting
 - medical guidance
 - autonomous workout scheduling
-

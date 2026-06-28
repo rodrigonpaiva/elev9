@@ -13,4 +13,3 @@
 - backfill must be deterministic
 - historical rebuilds must be auditable
 - drift should be reportable, not hidden
-

@@ -33,4 +33,3 @@ This use case can be invoked internally by the read use cases or a future schedu
 ### Domain Contract
 
 The use case must be deterministic and idempotent for the same user and date.
-

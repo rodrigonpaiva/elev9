@@ -46,7 +46,10 @@ import {
   GOAL_PROGRESS_SNAPSHOT_MODEL_NAME,
   GoalProgressSnapshotSchema,
 } from './infrastructure/mongoose/goal-progress-snapshot.schema';
-import { GOAL_MODEL_NAME, GoalSchema } from './infrastructure/mongoose/goal.schema';
+import {
+  GOAL_MODEL_NAME,
+  GoalSchema,
+} from './infrastructure/mongoose/goal.schema';
 
 @Module({
   imports: [

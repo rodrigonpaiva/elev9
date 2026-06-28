@@ -1,6 +1,4 @@
-import {
-  GoalMilestoneResponse,
-} from './goal-response.type';
+import { GoalMilestoneResponse } from './goal-response.type';
 
 export class GetGoalMilestonesResponseDto {
   goalId!: string;

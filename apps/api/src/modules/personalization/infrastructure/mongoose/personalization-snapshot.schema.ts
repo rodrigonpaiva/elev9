@@ -33,68 +33,69 @@ export const PERSONALIZATION_SNAPSHOT_MODEL_NAME = 'PersonalizationSnapshot';
 export const PERSONALIZATION_SNAPSHOT_COLLECTION_NAME =
   'personalization_snapshots';
 
-export const PersonalizationSnapshotSchema = new Schema<PersonalizationSnapshotSchemaClass>(
-  {
-    userProfileId: {
-      type: String,
-      required: true,
+export const PersonalizationSnapshotSchema =
+  new Schema<PersonalizationSnapshotSchemaClass>(
+    {
+      userProfileId: {
+        type: String,
+        required: true,
+      },
+      date: {
+        type: String,
+        required: true,
+      },
+      preferredCoachingStyle: {
+        type: String,
+        required: true,
+      },
+      engagementProfile: {
+        type: String,
+        required: true,
+      },
+      notificationResponsiveness: {
+        type: String,
+        required: true,
+      },
+      goalResponsiveness: {
+        type: String,
+        required: true,
+      },
+      recoveryResponsiveness: {
+        type: String,
+        required: true,
+      },
+      habitResponsiveness: {
+        type: String,
+        required: true,
+      },
+      riskOfDisengagement: {
+        type: String,
+        required: true,
+      },
+      trend: {
+        type: String,
+        required: true,
+      },
+      sourceContext: {
+        type: Schema.Types.Mixed,
+        required: true,
+        default: {},
+      },
+      formulaVersion: {
+        type: String,
+        required: true,
+      },
+      generatedAt: {
+        type: String,
+        required: true,
+      },
     },
-    date: {
-      type: String,
-      required: true,
+    {
+      collection: PERSONALIZATION_SNAPSHOT_COLLECTION_NAME,
+      timestamps: true,
+      versionKey: false,
     },
-    preferredCoachingStyle: {
-      type: String,
-      required: true,
-    },
-    engagementProfile: {
-      type: String,
-      required: true,
-    },
-    notificationResponsiveness: {
-      type: String,
-      required: true,
-    },
-    goalResponsiveness: {
-      type: String,
-      required: true,
-    },
-    recoveryResponsiveness: {
-      type: String,
-      required: true,
-    },
-    habitResponsiveness: {
-      type: String,
-      required: true,
-    },
-    riskOfDisengagement: {
-      type: String,
-      required: true,
-    },
-    trend: {
-      type: String,
-      required: true,
-    },
-    sourceContext: {
-      type: Schema.Types.Mixed,
-      required: true,
-      default: {},
-    },
-    formulaVersion: {
-      type: String,
-      required: true,
-    },
-    generatedAt: {
-      type: String,
-      required: true,
-    },
-  },
-  {
-    collection: PERSONALIZATION_SNAPSHOT_COLLECTION_NAME,
-    timestamps: true,
-    versionKey: false,
-  },
-);
+  );
 
 PersonalizationSnapshotSchema.index(
   { userProfileId: 1, date: 1 },

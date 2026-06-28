@@ -6,4 +6,3 @@ Expected failure modes:
 - accidental raw payload persistence
 - prompt injection risk through unfiltered context reuse
 - replay drift caused by incomplete reduced context
-

@@ -172,7 +172,7 @@ export function WorkoutScreen() {
 
     try {
       await mobileApiClient.progress.logWorkout(payload);
-        setSuccessMessage('Session saved 🎉');
+      setSuccessMessage('Session saved 🎉');
       Animated.sequence([
         Animated.timing(successPulse, {
           toValue: 1,

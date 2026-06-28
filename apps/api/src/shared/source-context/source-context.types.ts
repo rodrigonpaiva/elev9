@@ -42,7 +42,12 @@ export type CoachDecisionSourceContext = SourceContextBase & {
   missedWorkouts?: number;
   noRecentActivity?: boolean;
   goalId?: string;
-  goalType?: 'lose_weight' | 'gain_muscle' | 'maintain_weight' | 'improve_consistency' | 'improve_recovery';
+  goalType?:
+    | 'lose_weight'
+    | 'gain_muscle'
+    | 'maintain_weight'
+    | 'improve_consistency'
+    | 'improve_recovery';
   goalProgressPercentage?: number;
   goalTrend?: 'improving' | 'stable' | 'declining';
   goalForecastConfidence?: 'low' | 'medium' | 'high';
@@ -54,9 +59,9 @@ export type CoachDecisionSourceContext = SourceContextBase & {
   habitRiskLevel?: 'low' | 'medium' | 'high';
   habitRiskSignals?: Array<
     | 'inactivity_pattern'
-      | 'streak_at_risk'
-      | 'declining_consistency'
-      | 'dropout_risk'
+    | 'streak_at_risk'
+    | 'declining_consistency'
+    | 'dropout_risk'
   >;
   personalizationPreferredCoachingStyle?:
     | 'motivational'
@@ -76,7 +81,12 @@ export type CoachDecisionSourceContext = SourceContextBase & {
 };
 
 export type GoalSourceContext = SourceContextBase & {
-  goalType: 'lose_weight' | 'gain_muscle' | 'maintain_weight' | 'improve_consistency' | 'improve_recovery';
+  goalType:
+    | 'lose_weight'
+    | 'gain_muscle'
+    | 'maintain_weight'
+    | 'improve_consistency'
+    | 'improve_recovery';
   startValue: number;
   currentValue: number;
   targetValue?: number;

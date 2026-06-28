@@ -95,9 +95,7 @@ function buildDocument(overrides: { achieved?: boolean } = {}) {
     title: '25% goal milestone',
     targetValue: 25,
     achieved: overrides.achieved ?? false,
-    achievedAt: overrides.achieved
-      ? '2026-06-10T00:00:00.000Z'
-      : undefined,
+    achievedAt: overrides.achieved ? '2026-06-10T00:00:00.000Z' : undefined,
     createdAt: new Date('2026-06-03T00:00:00.000Z'),
     updatedAt: new Date('2026-06-03T00:00:00.000Z'),
   };

@@ -85,9 +85,7 @@ export function formatRiskLevel(value: string): string {
 }
 
 export function formatTrainingRecommendation(value: string): string {
-  return (
-    TRAINING_RECOMMENDATION_LABELS[value] ?? formatGenericEnumLabel(value)
-  );
+  return TRAINING_RECOMMENDATION_LABELS[value] ?? formatGenericEnumLabel(value);
 }
 
 export function formatNotificationType(value: string): string {

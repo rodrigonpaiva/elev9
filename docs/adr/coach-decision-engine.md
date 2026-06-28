@@ -32,7 +32,7 @@ The product needs a single deterministic coaching decision that can be consumed 
 Introduce a central read model:
 
 ```ts
-CoachDecision
+CoachDecision;
 ```
 
 The MVP will persist one decision per user per day and expose current/today/history/replay reads.
@@ -162,4 +162,3 @@ If the LLM fails, the deterministic decision remains valid and readable.
 - [get-today-coach-decision](../specs/ai/coach-decision/get-today-coach-decision/README.md)
 - [get-coach-decision-history](../specs/ai/coach-decision/get-coach-decision-history/README.md)
 - [replay-coach-decision](../specs/ai/coach-decision/replay-coach-decision/README.md)
-

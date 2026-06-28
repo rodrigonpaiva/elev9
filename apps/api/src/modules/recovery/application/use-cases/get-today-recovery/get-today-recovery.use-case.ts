@@ -28,9 +28,7 @@ export class GetTodayRecoveryUseCase {
     private readonly recoveryDateService: RecoveryDateService,
   ) {}
 
-  async execute(
-    input: GetTodayRecoveryInput,
-  ): Promise<GetTodayRecoveryOutput> {
+  async execute(input: GetTodayRecoveryInput): Promise<GetTodayRecoveryOutput> {
     const authUserId =
       typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 

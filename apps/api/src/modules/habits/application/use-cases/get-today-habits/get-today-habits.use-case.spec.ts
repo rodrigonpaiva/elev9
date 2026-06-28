@@ -47,10 +47,9 @@ describe('GetTodayHabitsUseCase', () => {
     });
 
     expect(platformDateService.getTodayDateString).toHaveBeenCalled();
-    expect(habitSnapshotRepository.findByUserProfileIdAndDate).toHaveBeenCalledWith(
-      'profile_123',
-      '2026-06-03',
-    );
+    expect(
+      habitSnapshotRepository.findByUserProfileIdAndDate,
+    ).toHaveBeenCalledWith('profile_123', '2026-06-03');
     expect(buildHabitSnapshotUseCase.execute).not.toHaveBeenCalled();
     expect(result.habitSnapshot.date).toBe('2026-06-03');
   });

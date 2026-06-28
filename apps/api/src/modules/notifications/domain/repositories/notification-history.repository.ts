@@ -1,6 +1,4 @@
-import type {
-  NotificationStatus,
-} from '../notifications.types';
+import type { NotificationStatus } from '../notifications.types';
 
 export interface NotificationHistoryQueryOptions {
   limit?: number;

@@ -2,7 +2,8 @@ import { HydratedDocument, Schema, Types } from 'mongoose';
 
 import type { EngagementEventType } from '../../domain/notifications.types';
 
-export type EngagementEventDocument = HydratedDocument<EngagementEventSchemaClass>;
+export type EngagementEventDocument =
+  HydratedDocument<EngagementEventSchemaClass>;
 
 export class EngagementEventSchemaClass {
   _id!: Types.ObjectId;

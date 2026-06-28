@@ -14,4 +14,3 @@
 - low load can permit volume increase
 - nutrition support influences are reflected deterministically
 - upsert is idempotent for the same user and date
-

@@ -24,19 +24,20 @@ import type {
   ReplayNotificationDecisionRecalculated,
 } from './replay-notification-decision.output';
 
-const COMPARISON_FIELDS: readonly ReplayNotificationDecisionComparisonField[] = [
-  'type',
-  'priority',
-  'channel',
-  'status',
-  'title',
-  'message',
-  'actionLabel',
-  'actionTarget',
-  'influences',
-  'formulaVersion',
-  'generatedBy',
-] as const;
+const COMPARISON_FIELDS: readonly ReplayNotificationDecisionComparisonField[] =
+  [
+    'type',
+    'priority',
+    'channel',
+    'status',
+    'title',
+    'message',
+    'actionLabel',
+    'actionTarget',
+    'influences',
+    'formulaVersion',
+    'generatedBy',
+  ] as const;
 
 @Injectable()
 export class ReplayNotificationDecisionUseCase {
@@ -54,7 +55,9 @@ export class ReplayNotificationDecisionUseCase {
     const authUserId =
       typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const notificationId =
-      typeof input.notificationId === 'string' ? input.notificationId.trim() : '';
+      typeof input.notificationId === 'string'
+        ? input.notificationId.trim()
+        : '';
 
     if (!authUserId || !notificationId) {
       throw new ReplayNotificationDecisionError(

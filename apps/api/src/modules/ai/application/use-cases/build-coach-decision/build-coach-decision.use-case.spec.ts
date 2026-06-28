@@ -144,16 +144,16 @@ describe('BuildCoachDecisionUseCase', () => {
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
       buildTrainingPlan(),
     );
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
-      [buildWorkoutLog('2026-06-03')],
-    );
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([
+      buildWorkoutLog('2026-06-03'),
+    ]);
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([
       buildWorkoutLog('2026-06-03'),
       buildWorkoutLog('2026-06-02'),
     ]);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue([
-      buildNutritionRecommendation(),
-    ]);
+    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
+      [buildNutritionRecommendation()],
+    );
     getCurrentRecoveryUseCase.execute.mockResolvedValue({
       recoverySnapshot: buildRecoverySnapshot(),
     } as never);
@@ -174,28 +174,30 @@ describe('BuildCoachDecisionUseCase', () => {
         recentEventsCount: 6,
       },
     } as never);
-    coachDecisionRepository.upsertDailyDecision.mockImplementation(async (input) =>
-      new CoachDecision({
-        id: 'decision_123',
-        userProfileId: input.userProfileId,
-        date: input.date,
-        nutritionRecommendationId: input.nutritionRecommendationId,
-        adaptiveTrainingRecommendationId: input.adaptiveTrainingRecommendationId,
-        priority: input.priority,
-        headline: input.headline,
-        summary: input.summary,
-        actionItems: input.actionItems,
-        influences: input.influences.map((influence) => ({
-          ...influence,
-          toJSON: () => influence,
-        })) as never,
-        sourceContext: input.sourceContext,
-        formulaVersion: input.formulaVersion,
-        generatedBy: input.generatedBy,
-        llmMetadata: input.llmMetadata,
-        createdAt: new Date('2026-06-03T06:00:00.000Z'),
-        updatedAt: new Date('2026-06-03T06:00:00.000Z'),
-      }),
+    coachDecisionRepository.upsertDailyDecision.mockImplementation(
+      async (input) =>
+        new CoachDecision({
+          id: 'decision_123',
+          userProfileId: input.userProfileId,
+          date: input.date,
+          nutritionRecommendationId: input.nutritionRecommendationId,
+          adaptiveTrainingRecommendationId:
+            input.adaptiveTrainingRecommendationId,
+          priority: input.priority,
+          headline: input.headline,
+          summary: input.summary,
+          actionItems: input.actionItems,
+          influences: input.influences.map((influence) => ({
+            ...influence,
+            toJSON: () => influence,
+          })) as never,
+          sourceContext: input.sourceContext,
+          formulaVersion: input.formulaVersion,
+          generatedBy: input.generatedBy,
+          llmMetadata: input.llmMetadata,
+          createdAt: new Date('2026-06-03T06:00:00.000Z'),
+          updatedAt: new Date('2026-06-03T06:00:00.000Z'),
+        }),
     );
 
     const result = await useCase.execute({
@@ -224,8 +226,8 @@ describe('BuildCoachDecisionUseCase', () => {
         llmMetadata: { used: false },
       }),
     );
-    const persistedInput = coachDecisionRepository.upsertDailyDecision.mock
-      .calls[0][0];
+    const persistedInput =
+      coachDecisionRepository.upsertDailyDecision.mock.calls[0][0];
     expect(persistedInput.sourceContext).not.toHaveProperty('authUserId');
     expect(persistedInput.sourceContext).not.toHaveProperty('rawHealthContext');
     expect(persistedInput.sourceContext).not.toHaveProperty('prompt');
@@ -241,7 +243,9 @@ describe('BuildCoachDecisionUseCase', () => {
     nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
       [],
     );
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     getCurrentRecoveryUseCase.execute.mockResolvedValue({
       recoverySnapshot: undefined,
@@ -255,25 +259,26 @@ describe('BuildCoachDecisionUseCase', () => {
     getEngagementSummaryUseCase.execute.mockResolvedValue({
       engagementSummary: undefined,
     } as never);
-    coachDecisionRepository.upsertDailyDecision.mockImplementation(async (input) =>
-      new CoachDecision({
-        id: 'decision_123',
-        userProfileId: input.userProfileId,
-        date: input.date,
-        priority: input.priority,
-        headline: input.headline,
-        summary: input.summary,
-        actionItems: input.actionItems,
-        influences: input.influences.map((influence) => ({
-          ...influence,
-          toJSON: () => influence,
-        })) as never,
-        sourceContext: input.sourceContext,
-        formulaVersion: input.formulaVersion,
-        generatedBy: input.generatedBy,
-        createdAt: new Date('2026-06-03T06:00:00.000Z'),
-        updatedAt: new Date('2026-06-03T06:00:00.000Z'),
-      }),
+    coachDecisionRepository.upsertDailyDecision.mockImplementation(
+      async (input) =>
+        new CoachDecision({
+          id: 'decision_123',
+          userProfileId: input.userProfileId,
+          date: input.date,
+          priority: input.priority,
+          headline: input.headline,
+          summary: input.summary,
+          actionItems: input.actionItems,
+          influences: input.influences.map((influence) => ({
+            ...influence,
+            toJSON: () => influence,
+          })) as never,
+          sourceContext: input.sourceContext,
+          formulaVersion: input.formulaVersion,
+          generatedBy: input.generatedBy,
+          createdAt: new Date('2026-06-03T06:00:00.000Z'),
+          updatedAt: new Date('2026-06-03T06:00:00.000Z'),
+        }),
     );
 
     const result = await useCase.execute({
@@ -292,8 +297,8 @@ describe('BuildCoachDecisionUseCase', () => {
       formulaVersion: 'coach-decision-v1',
       generatedAt: expect.any(String),
     });
-    const persistedInput = coachDecisionRepository.upsertDailyDecision.mock
-      .calls[0][0];
+    const persistedInput =
+      coachDecisionRepository.upsertDailyDecision.mock.calls[0][0];
     expect(persistedInput.sourceContext).not.toHaveProperty('authUserId');
     expect(persistedInput.sourceContext).not.toHaveProperty('rawHealthContext');
     expect(persistedInput.sourceContext).not.toHaveProperty('prompt');
@@ -307,7 +312,9 @@ describe('BuildCoachDecisionUseCase', () => {
     nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
       [],
     );
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     getCurrentRecoveryUseCase.execute.mockResolvedValue({
       recoverySnapshot: undefined,
@@ -344,25 +351,26 @@ describe('BuildCoachDecisionUseCase', () => {
         }),
       ],
     } as never);
-    coachDecisionRepository.upsertDailyDecision.mockImplementation(async (input) =>
-      new CoachDecision({
-        id: 'decision_123',
-        userProfileId: input.userProfileId,
-        date: input.date,
-        priority: input.priority,
-        headline: input.headline,
-        summary: input.summary,
-        actionItems: input.actionItems,
-        influences: input.influences.map((influence) => ({
-          ...influence,
-          toJSON: () => influence,
-        })) as never,
-        sourceContext: input.sourceContext,
-        formulaVersion: input.formulaVersion,
-        generatedBy: input.generatedBy,
-        createdAt: new Date('2026-06-03T06:00:00.000Z'),
-        updatedAt: new Date('2026-06-03T06:00:00.000Z'),
-      }),
+    coachDecisionRepository.upsertDailyDecision.mockImplementation(
+      async (input) =>
+        new CoachDecision({
+          id: 'decision_123',
+          userProfileId: input.userProfileId,
+          date: input.date,
+          priority: input.priority,
+          headline: input.headline,
+          summary: input.summary,
+          actionItems: input.actionItems,
+          influences: input.influences.map((influence) => ({
+            ...influence,
+            toJSON: () => influence,
+          })) as never,
+          sourceContext: input.sourceContext,
+          formulaVersion: input.formulaVersion,
+          generatedBy: input.generatedBy,
+          createdAt: new Date('2026-06-03T06:00:00.000Z'),
+          updatedAt: new Date('2026-06-03T06:00:00.000Z'),
+        }),
     );
 
     const result = await useCase.execute({
@@ -370,7 +378,9 @@ describe('BuildCoachDecisionUseCase', () => {
     });
 
     expect(result.coachDecision.priority).toBe('consistency');
-    expect(result.coachDecision.influences.map((influence) => influence.code)).toEqual(
+    expect(
+      result.coachDecision.influences.map((influence) => influence.code),
+    ).toEqual(
       expect.arrayContaining([
         'HABIT_CONSISTENCY_DECLINING',
         'HABIT_RISK_HIGH',
@@ -396,7 +406,9 @@ describe('BuildCoachDecisionUseCase', () => {
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
       buildTrainingPlan(),
     );
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
       [],
@@ -432,7 +444,9 @@ describe('BuildCoachDecisionUseCase', () => {
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
       buildTrainingPlan(),
     );
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
       [],
@@ -505,7 +519,9 @@ describe('BuildCoachDecisionUseCase', () => {
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(
       buildTrainingPlan(),
     );
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
       [],
@@ -676,11 +692,13 @@ function buildDecision() {
   });
 }
 
-function buildHabitSnapshot(overrides: {
-  consistencyScore?: number;
-  streakDays?: number;
-  trend?: 'improving' | 'stable' | 'declining';
-} = {}) {
+function buildHabitSnapshot(
+  overrides: {
+    consistencyScore?: number;
+    streakDays?: number;
+    trend?: 'improving' | 'stable' | 'declining';
+  } = {},
+) {
   return {
     userProfileId: 'profile_123',
     date: '2026-06-03',
@@ -697,12 +715,14 @@ function buildHabitSnapshot(overrides: {
   } as never;
 }
 
-function buildConsistencySummary(overrides: {
-  score?: number;
-  trend?: 'improving' | 'stable' | 'declining';
-  currentStreak?: number;
-  riskLevel?: 'low' | 'medium' | 'high';
-} = {}) {
+function buildConsistencySummary(
+  overrides: {
+    score?: number;
+    trend?: 'improving' | 'stable' | 'declining';
+    currentStreak?: number;
+    riskLevel?: 'low' | 'medium' | 'high';
+  } = {},
+) {
   return {
     userProfileId: 'profile_123',
     score: overrides.score ?? 72,
@@ -716,10 +736,16 @@ function buildConsistencySummary(overrides: {
   } as never;
 }
 
-function buildHabitRiskSignal(overrides: {
-  type?: 'inactivity_pattern' | 'streak_at_risk' | 'declining_consistency' | 'dropout_risk';
-  level?: 'low' | 'medium' | 'high';
-} = {}) {
+function buildHabitRiskSignal(
+  overrides: {
+    type?:
+      | 'inactivity_pattern'
+      | 'streak_at_risk'
+      | 'declining_consistency'
+      | 'dropout_risk';
+    level?: 'low' | 'medium' | 'high';
+  } = {},
+) {
   return {
     userProfileId: 'profile_123',
     type: overrides.type ?? 'streak_at_risk',

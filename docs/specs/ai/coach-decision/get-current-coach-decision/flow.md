@@ -5,4 +5,3 @@
 3. Load the latest decision.
 4. If no decision exists, build the current one.
 5. Return the decision.
-

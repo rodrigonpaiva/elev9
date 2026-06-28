@@ -30,7 +30,9 @@ describe('createNotificationsApi', () => {
     const request = jest.fn().mockResolvedValue({});
     const httpClient = buildHttpClient(request);
 
-    await createNotificationsApi(httpClient).getNotificationHistory({ limit: 14 });
+    await createNotificationsApi(httpClient).getNotificationHistory({
+      limit: 14,
+    });
 
     expect(request).toHaveBeenCalledWith({
       method: 'GET',

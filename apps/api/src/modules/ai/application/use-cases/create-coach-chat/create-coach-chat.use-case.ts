@@ -193,7 +193,9 @@ export class CreateCoachChatUseCase {
         ...(conversationMemoryPayload
           ? { conversationMemory: conversationMemoryPayload }
           : {}),
-        ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
+        ...(coachDecisionPayload
+          ? { coachDecision: coachDecisionPayload }
+          : {}),
         ...(notification ? { notification } : {}),
         ...(habitPrompt ? { habit: habitPrompt } : {}),
         ...(personalizationPrompt
@@ -223,7 +225,9 @@ export class CreateCoachChatUseCase {
         const fallbackReply = this.coachChatReplyGenerator.generate({
           message,
           healthContext,
-          ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
+          ...(coachDecisionPayload
+            ? { coachDecision: coachDecisionPayload }
+            : {}),
           ...(notification ? { notification } : {}),
           ...(habitPrompt ? { habit: habitPrompt } : {}),
           ...(personalizationPrompt
@@ -246,7 +250,9 @@ export class CreateCoachChatUseCase {
           conversationHistory,
           userMessage: message,
           assistantReply: fallbackReply,
-          ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
+          ...(coachDecisionPayload
+            ? { coachDecision: coachDecisionPayload }
+            : {}),
           ...(notificationMemory ? { notification: notificationMemory } : {}),
           ...(habitMemory ? { habit: habitMemory } : {}),
           ...(personalizationMemory
@@ -272,19 +278,21 @@ export class CreateCoachChatUseCase {
         },
       });
 
-        await this.updateConversationMemory({
-          conversationId: conversation.id,
-          healthContext,
-          conversationHistory,
-          userMessage: message,
-          assistantReply: reply.content,
-          ...(coachDecisionPayload ? { coachDecision: coachDecisionPayload } : {}),
-          ...(notificationMemory ? { notification: notificationMemory } : {}),
-          ...(habitMemory ? { habit: habitMemory } : {}),
-          ...(personalizationMemory
-            ? { personalization: personalizationMemory }
-            : {}),
-        });
+      await this.updateConversationMemory({
+        conversationId: conversation.id,
+        healthContext,
+        conversationHistory,
+        userMessage: message,
+        assistantReply: reply.content,
+        ...(coachDecisionPayload
+          ? { coachDecision: coachDecisionPayload }
+          : {}),
+        ...(notificationMemory ? { notification: notificationMemory } : {}),
+        ...(habitMemory ? { habit: habitMemory } : {}),
+        ...(personalizationMemory
+          ? { personalization: personalizationMemory }
+          : {}),
+      });
 
       return {
         conversationId: conversation.id,
@@ -311,7 +319,9 @@ export class CreateCoachChatUseCase {
     coachDecision?: CoachDecisionReadModelPayload;
     notification?: NotificationMemoryPayload;
     habit?: HabitMemoryPayload;
-    personalization?: ReturnType<typeof PersonalizationReadModelMapper.toMemoryPayload>;
+    personalization?: ReturnType<
+      typeof PersonalizationReadModelMapper.toMemoryPayload
+    >;
   }): Promise<void> {
     const memory = this.coachConversationMemorySummarizer.summarize({
       healthContext: input.healthContext,
@@ -348,10 +358,7 @@ export class CreateCoachChatUseCase {
 
   private async resolvePersonalization(
     authUserId: string,
-  ): Promise<
-    | PersonalizationReadModelSource
-    | undefined
-  > {
+  ): Promise<PersonalizationReadModelSource | undefined> {
     try {
       const [snapshotResult, profileResult, patternsResult] =
         await Promise.allSettled([
@@ -391,19 +398,22 @@ export class CreateCoachChatUseCase {
     }
   }
 
-  private async resolveNotification(authUserId: string): Promise<
-    | ReturnType<typeof NotificationReadModelMapper.toPromptPayload>
-    | undefined
+  private async resolveNotification(
+    authUserId: string,
+  ): Promise<
+    ReturnType<typeof NotificationReadModelMapper.toPromptPayload> | undefined
   > {
     try {
-      const [currentResult, engagementSummaryResult] = await Promise.allSettled([
-        this.getCurrentNotificationUseCase.execute({
-          authUserId,
-        }),
-        this.getEngagementSummaryUseCase.execute({
-          authUserId,
-        }),
-      ]);
+      const [currentResult, engagementSummaryResult] = await Promise.allSettled(
+        [
+          this.getCurrentNotificationUseCase.execute({
+            authUserId,
+          }),
+          this.getEngagementSummaryUseCase.execute({
+            authUserId,
+          }),
+        ],
+      );
 
       return NotificationReadModelMapper.toPromptPayload(
         currentResult.status === 'fulfilled'

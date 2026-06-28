@@ -82,20 +82,25 @@ describe('GetGoalForecastUseCase', () => {
     goalRepository.findActiveByUserProfileId.mockResolvedValue(
       buildGoal('goal_456', 'profile_456'),
     );
-    goalForecastRepository.findByGoalId.mockResolvedValue(buildForecast('goal_456'));
+    goalForecastRepository.findByGoalId.mockResolvedValue(
+      buildForecast('goal_456'),
+    );
 
     await useCase.execute({ authUserId: 'auth_user_456' });
 
     expect(goalRepository.findActiveByUserProfileId).toHaveBeenCalledWith(
       'profile_456',
     );
-    expect(goalForecastRepository.findByGoalId).toHaveBeenCalledWith('goal_456');
+    expect(goalForecastRepository.findByGoalId).toHaveBeenCalledWith(
+      'goal_456',
+    );
   });
 
   function arrangeUserProfile(profileId = 'profile_123') {
     userProfileRepository.findByAuthUserId.mockResolvedValue({
       id: profileId,
-      authUserId: profileId === 'profile_123' ? 'auth_user_123' : 'auth_user_456',
+      authUserId:
+        profileId === 'profile_123' ? 'auth_user_123' : 'auth_user_456',
       name: 'Alex',
       createdAt: new Date(),
       updatedAt: new Date(),

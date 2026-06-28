@@ -63,7 +63,10 @@ type BehavioralPatternLike = {
 };
 
 export type PersonalizationReadModelSource = {
-  snapshot?: PersonalizationSnapshotLike | PersonalizationSnapshotContract | null;
+  snapshot?:
+    | PersonalizationSnapshotLike
+    | PersonalizationSnapshotContract
+    | null;
   profile?: UserBehaviorProfileLike | UserBehaviorProfileContract | null;
   patterns?: Array<BehavioralPatternLike | BehavioralPatternContract> | null;
 };
@@ -198,11 +201,7 @@ export class PersonalizationReadModelMapper {
     const riskOfDisengagement =
       profile?.riskOfDisengagement ?? snapshot?.riskOfDisengagement;
 
-    if (
-      !preferredCoachingStyle ||
-      !engagementProfile ||
-      !riskOfDisengagement
-    ) {
+    if (!preferredCoachingStyle || !engagementProfile || !riskOfDisengagement) {
       return undefined;
     }
 
@@ -240,9 +239,7 @@ export class PersonalizationReadModelMapper {
 
     return {
       preferredCoachingStyle: this.resolveValue(preferredCoachingStyle),
-      notificationResponsiveness: this.resolveValue(
-        notificationResponsiveness,
-      ),
+      notificationResponsiveness: this.resolveValue(notificationResponsiveness),
       riskOfDisengagement: this.resolveValue(riskOfDisengagement),
       topBehavioralPatterns: patterns
         .slice(0, 5)
@@ -283,8 +280,7 @@ export class PersonalizationReadModelMapper {
         'responds_to_streaks',
       ),
       personalizationRespondsToGoals: topPatterns.includes('responds_to_goals'),
-      personalizationPrefersDirectCoaching:
-        preferredCoachingStyle === 'direct',
+      personalizationPrefersDirectCoaching: preferredCoachingStyle === 'direct',
       personalizationPrefersMotivationalCoaching:
         preferredCoachingStyle === 'motivational',
       personalizationLowNotificationResponsiveness:
@@ -299,13 +295,17 @@ export class PersonalizationReadModelMapper {
       id: snapshot.id,
       userProfileId: snapshot.userProfileId,
       date: snapshot.date,
-      preferredCoachingStyle: this.resolveValue(snapshot.preferredCoachingStyle),
+      preferredCoachingStyle: this.resolveValue(
+        snapshot.preferredCoachingStyle,
+      ),
       engagementProfile: this.resolveValue(snapshot.engagementProfile),
       notificationResponsiveness: this.resolveValue(
         snapshot.notificationResponsiveness,
       ),
       goalResponsiveness: this.resolveValue(snapshot.goalResponsiveness),
-      recoveryResponsiveness: this.resolveValue(snapshot.recoveryResponsiveness),
+      recoveryResponsiveness: this.resolveValue(
+        snapshot.recoveryResponsiveness,
+      ),
       habitResponsiveness: this.resolveValue(snapshot.habitResponsiveness),
       riskOfDisengagement: this.resolveValue(snapshot.riskOfDisengagement),
       trend: this.resolveValue(snapshot.trend),
@@ -317,7 +317,10 @@ export class PersonalizationReadModelMapper {
   }
 
   private static hasPatterns(
-    patterns: Array<BehavioralPatternLike | BehavioralPatternContract> | null | undefined,
+    patterns:
+      | Array<BehavioralPatternLike | BehavioralPatternContract>
+      | null
+      | undefined,
   ): boolean {
     return Boolean(patterns && patterns.length > 0);
   }
@@ -338,8 +341,12 @@ export class PersonalizationReadModelMapper {
         return lastObservedDelta;
       }
 
-      const createdAtLeft = left.createdAt ? new Date(left.createdAt).getTime() : 0;
-      const createdAtRight = right.createdAt ? new Date(right.createdAt).getTime() : 0;
+      const createdAtLeft = left.createdAt
+        ? new Date(left.createdAt).getTime()
+        : 0;
+      const createdAtRight = right.createdAt
+        ? new Date(right.createdAt).getTime()
+        : 0;
 
       return createdAtRight - createdAtLeft;
     });
@@ -351,9 +358,7 @@ export class PersonalizationReadModelMapper {
     return {
       id: profile.id,
       userProfileId: profile.userProfileId,
-      preferredCoachingStyle: this.resolveValue(
-        profile.preferredCoachingStyle,
-      ),
+      preferredCoachingStyle: this.resolveValue(profile.preferredCoachingStyle),
       notificationResponsiveness: this.resolveValue(
         profile.notificationResponsiveness,
       ),

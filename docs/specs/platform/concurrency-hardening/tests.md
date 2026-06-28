@@ -6,4 +6,3 @@ Future validation should cover:
 - duplicate-key fallback returns the persisted record
 - retries do not create duplicate user/day rows
 - idempotency holds across recovery, training, goals, and coach decision engines
-

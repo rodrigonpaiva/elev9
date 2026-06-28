@@ -116,9 +116,8 @@ export class GenerateCoachFeedbackUseCase {
         adaptiveTrainingRecommendation:
           healthContext.adaptiveTrainingRecommendation,
         habit: HabitReadModelMapper.toPromptPayload(habit),
-        coachDecision: CoachDecisionReadModelMapper.toFeedbackPayload(
-          coachDecision,
-        ),
+        coachDecision:
+          CoachDecisionReadModelMapper.toFeedbackPayload(coachDecision),
         notification: NotificationReadModelMapper.toPromptPayload(
           notification?.current,
           notification?.engagementSummary,
@@ -177,7 +176,9 @@ export class GenerateCoachFeedbackUseCase {
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
     coachDecision?: CoachDecision,
     habit?: HabitMemoryPayload,
-    personalization?: PersonalizationPromptPayload | PersonalizationMemoryPayload,
+    personalization?:
+      | PersonalizationPromptPayload
+      | PersonalizationMemoryPayload,
   ): {
     goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
     activityLevel?: 'low' | 'medium' | 'high';
@@ -272,10 +273,15 @@ export class GenerateCoachFeedbackUseCase {
     }>;
     adaptiveTrainingReasoning?: string;
     coachDecisionId?: string;
-    coachDecisionPriority?: 'recovery' | 'nutrition' | 'training' | 'consistency' | 'motivation';
+    coachDecisionPriority?:
+      | 'recovery'
+      | 'nutrition'
+      | 'training'
+      | 'consistency'
+      | 'motivation';
     coachDecisionHeadline?: string;
-      coachDecisionSummary?: string;
-      coachDecisionActionItems?: string[];
+    coachDecisionSummary?: string;
+    coachDecisionActionItems?: string[];
     coachDecisionInfluences?: Array<{
       code: string;
       label: string;
@@ -296,7 +302,9 @@ export class GenerateCoachFeedbackUseCase {
     habitTrend?: 'improving' | 'stable' | 'declining';
     habitCurrentStreak?: number;
     habitRiskLevel?: 'low' | 'medium' | 'high';
-    personalization?: PersonalizationPromptPayload | PersonalizationMemoryPayload;
+    personalization?:
+      | PersonalizationPromptPayload
+      | PersonalizationMemoryPayload;
     weeklyFrequency?: number;
     currentStreak?: number;
     averageWorkoutDuration?: number;
@@ -349,18 +357,21 @@ export class GenerateCoachFeedbackUseCase {
         this.resolveRecoveryTrendFromFatigueLevel(healthContext.fatigueLevel),
       readinessScore: healthContext.readinessScore,
       fatigueScore: healthContext.fatigueScore,
-      recoveryInfluences: healthContext.recoveryInfluences?.map((influence) => ({
-        code: influence.code,
-        label: influence.label,
-        impact: influence.impact,
-        weight: influence.weight,
-        value: influence.value,
-      })),
+      recoveryInfluences: healthContext.recoveryInfluences?.map(
+        (influence) => ({
+          code: influence.code,
+          label: influence.label,
+          impact: influence.impact,
+          weight: influence.weight,
+          value: influence.value,
+        }),
+      ),
       recommendedIntensity: healthContext.recommendedIntensity,
       ...(adaptiveTrainingRecommendation
         ? {
             adaptiveTrainingRecommendation: {
-              recommendationType: adaptiveTrainingRecommendation.recommendationType,
+              recommendationType:
+                adaptiveTrainingRecommendation.recommendationType,
               recommendedIntensity:
                 adaptiveTrainingRecommendation.recommendedIntensity,
               volumeAction: adaptiveTrainingRecommendation.volumeAction,
@@ -388,7 +399,9 @@ export class GenerateCoachFeedbackUseCase {
         : {}),
       ...(coachDecision
         ? {
-            ...CoachDecisionReadModelMapper.toFeedbackContextSnapshot(coachDecision),
+            ...CoachDecisionReadModelMapper.toFeedbackContextSnapshot(
+              coachDecision,
+            ),
           }
         : {}),
       ...(habit
@@ -424,9 +437,9 @@ export class GenerateCoachFeedbackUseCase {
         : undefined,
       nutritionProfile: healthContext.nutritionProfile
         ? {
-          goal: healthContext.nutritionProfile.goal,
-          mealsPerDay: healthContext.nutritionProfile.mealsPerDay,
-        }
+            goal: healthContext.nutritionProfile.goal,
+            mealsPerDay: healthContext.nutritionProfile.mealsPerDay,
+          }
         : undefined,
     };
   }
@@ -460,10 +473,7 @@ export class GenerateCoachFeedbackUseCase {
 
   private async resolvePersonalization(
     authUserId: string,
-  ): Promise<
-    | PersonalizationReadModelSource
-    | undefined
-  > {
+  ): Promise<PersonalizationReadModelSource | undefined> {
     try {
       const [snapshotResult, profileResult, patternsResult] =
         await Promise.allSettled([
@@ -524,14 +534,16 @@ export class GenerateCoachFeedbackUseCase {
     >[1];
   } | null> {
     try {
-      const [currentResult, engagementSummaryResult] = await Promise.allSettled([
-        this.getCurrentNotificationUseCase.execute({
-          authUserId,
-        }),
-        this.getEngagementSummaryUseCase.execute({
-          authUserId,
-        }),
-      ]);
+      const [currentResult, engagementSummaryResult] = await Promise.allSettled(
+        [
+          this.getCurrentNotificationUseCase.execute({
+            authUserId,
+          }),
+          this.getEngagementSummaryUseCase.execute({
+            authUserId,
+          }),
+        ],
+      );
 
       return {
         current:

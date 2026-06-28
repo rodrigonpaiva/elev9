@@ -11,10 +11,12 @@ describe('GetPersonalizationHistoryUseCase', () => {
     userProfileRepository = { findByAuthUserId: jest.fn() };
     personalizationSnapshotRepository = { findManyByUserProfileId: jest.fn() };
 
-    userProfileRepository.findByAuthUserId.mockResolvedValue({ id: 'profile_123' });
-    personalizationSnapshotRepository.findManyByUserProfileId.mockResolvedValue([
-      buildSnapshot('snapshot_1'),
-    ]);
+    userProfileRepository.findByAuthUserId.mockResolvedValue({
+      id: 'profile_123',
+    });
+    personalizationSnapshotRepository.findManyByUserProfileId.mockResolvedValue(
+      [buildSnapshot('snapshot_1')],
+    );
 
     useCase = new GetPersonalizationHistoryUseCase(
       userProfileRepository as never,
@@ -25,20 +27,18 @@ describe('GetPersonalizationHistoryUseCase', () => {
   it('uses the default limit of 14', async () => {
     const result = await useCase.execute({ authUserId: 'auth_123' });
 
-    expect(personalizationSnapshotRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 14 },
-    );
+    expect(
+      personalizationSnapshotRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 14 });
     expect(result.limit).toBe(14);
   });
 
   it('accepts the maximum limit of 90', async () => {
     await useCase.execute({ authUserId: 'auth_123', limit: 90 });
 
-    expect(personalizationSnapshotRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 90 },
-    );
+    expect(
+      personalizationSnapshotRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 90 });
   });
 
   it('rejects invalid limits', async () => {
@@ -55,10 +55,9 @@ describe('GetPersonalizationHistoryUseCase', () => {
     expect(userProfileRepository.findByAuthUserId).toHaveBeenCalledWith(
       'auth_123',
     );
-    expect(personalizationSnapshotRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 14 },
-    );
+    expect(
+      personalizationSnapshotRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 14 });
   });
 
   it('throws when the user profile is missing', async () => {

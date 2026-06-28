@@ -21,4 +21,3 @@ Not included:
 - schema redesign
 - breaking API changes
 - payload expansion
-

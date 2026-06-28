@@ -6,4 +6,3 @@
 4. Load the decision for today.
 5. If missing, build and persist it.
 6. Return the decision.
-

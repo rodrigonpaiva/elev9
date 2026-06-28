@@ -37,7 +37,13 @@ export type NotificationDecisionProps = {
 
 export type NotificationDecisionJSON = Omit<
   NotificationDecisionProps,
-  'type' | 'priority' | 'channel' | 'status' | 'influences' | 'createdAt' | 'updatedAt'
+  | 'type'
+  | 'priority'
+  | 'channel'
+  | 'status'
+  | 'influences'
+  | 'createdAt'
+  | 'updatedAt'
 > & {
   type: NotificationTypeValueObject['value'];
   priority: NotificationPriorityValueObject['value'];

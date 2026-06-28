@@ -80,11 +80,7 @@ export class GetRecoveryHistoryUseCase {
       return DEFAULT_LIMIT;
     }
 
-    if (
-      !Number.isInteger(limit) ||
-      limit < 1 ||
-      limit > MAX_LIMIT
-    ) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > MAX_LIMIT) {
       throw new GetRecoveryHistoryError(
         GET_RECOVERY_HISTORY_ERROR_CODES.INVALID_LIMIT,
         'Invalid recovery history limit.',

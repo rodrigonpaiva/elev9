@@ -1,6 +1,9 @@
 import { HydratedDocument, Schema, Types } from 'mongoose';
 
-import type { HabitRiskLevel, ConsistencyTrend } from '../../domain/habits.types';
+import type {
+  HabitRiskLevel,
+  ConsistencyTrend,
+} from '../../domain/habits.types';
 
 export type ConsistencySummaryDocument =
   HydratedDocument<ConsistencySummarySchemaClass>;
@@ -22,46 +25,47 @@ export class ConsistencySummarySchemaClass {
 export const CONSISTENCY_SUMMARY_MODEL_NAME = 'ConsistencySummary';
 export const CONSISTENCY_SUMMARY_COLLECTION_NAME = 'consistency_summaries';
 
-export const ConsistencySummarySchema = new Schema<ConsistencySummarySchemaClass>(
-  {
-    userProfileId: {
-      type: String,
-      required: true,
+export const ConsistencySummarySchema =
+  new Schema<ConsistencySummarySchemaClass>(
+    {
+      userProfileId: {
+        type: String,
+        required: true,
+      },
+      score: {
+        type: Number,
+        required: true,
+      },
+      trend: {
+        type: String,
+        required: true,
+      },
+      currentStreak: {
+        type: Number,
+        required: true,
+      },
+      longestStreak: {
+        type: Number,
+        required: true,
+      },
+      adherenceRate: {
+        type: Number,
+        required: true,
+      },
+      riskLevel: {
+        type: String,
+        required: true,
+      },
+      formulaVersion: {
+        type: String,
+        required: true,
+      },
     },
-    score: {
-      type: Number,
-      required: true,
+    {
+      collection: CONSISTENCY_SUMMARY_COLLECTION_NAME,
+      timestamps: true,
+      versionKey: false,
     },
-    trend: {
-      type: String,
-      required: true,
-    },
-    currentStreak: {
-      type: Number,
-      required: true,
-    },
-    longestStreak: {
-      type: Number,
-      required: true,
-    },
-    adherenceRate: {
-      type: Number,
-      required: true,
-    },
-    riskLevel: {
-      type: String,
-      required: true,
-    },
-    formulaVersion: {
-      type: String,
-      required: true,
-    },
-  },
-  {
-    collection: CONSISTENCY_SUMMARY_COLLECTION_NAME,
-    timestamps: true,
-    versionKey: false,
-  },
-);
+  );
 
 ConsistencySummarySchema.index({ userProfileId: 1 }, { unique: true });

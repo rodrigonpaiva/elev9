@@ -63,9 +63,7 @@ describe('GetCurrentGoalUseCase', () => {
     expect(result.progressSnapshot.date).toBe('2026-06-03');
     expect(result.forecast.goalId).toBe('goal_123');
     expect(goalRepository.create).not.toHaveBeenCalled();
-    expect(
-      buildGoalProgressSnapshotUseCase.execute,
-    ).not.toHaveBeenCalled();
+    expect(buildGoalProgressSnapshotUseCase.execute).not.toHaveBeenCalled();
     expect(buildGoalForecastUseCase.execute).not.toHaveBeenCalled();
   });
 
@@ -165,24 +163,28 @@ describe('GetCurrentGoalUseCase', () => {
     } as never);
   }
 
-  function arrangeActiveGoal(overrides: Partial<{
-    type:
-      | 'lose_weight'
-      | 'gain_muscle'
-      | 'maintain_weight'
-      | 'improve_consistency'
-      | 'improve_recovery';
-    targetValue?: number;
-  }> = {}) {
+  function arrangeActiveGoal(
+    overrides: Partial<{
+      type:
+        | 'lose_weight'
+        | 'gain_muscle'
+        | 'maintain_weight'
+        | 'improve_consistency'
+        | 'improve_recovery';
+      targetValue?: number;
+    }> = {},
+  ) {
     goalRepository.findActiveByUserProfileId.mockResolvedValue(
       buildGoal(overrides),
     );
   }
 
-  function arrangeFitnessProfile(overrides: Partial<{
-    goal: 'lose_weight' | 'gain_muscle' | 'maintain';
-    weightKg: number;
-  }> = {}) {
+  function arrangeFitnessProfile(
+    overrides: Partial<{
+      goal: 'lose_weight' | 'gain_muscle' | 'maintain';
+      weightKg: number;
+    }> = {},
+  ) {
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue({
       id: 'fitness_123',
       userProfileId: 'profile_123',
@@ -201,7 +203,9 @@ describe('GetCurrentGoalUseCase', () => {
     } as never);
   }
 
-  function arrangeExistingSnapshot(snapshot: GoalProgressSnapshot | null = null) {
+  function arrangeExistingSnapshot(
+    snapshot: GoalProgressSnapshot | null = null,
+  ) {
     goalProgressSnapshotRepository.findByGoalIdAndDate.mockResolvedValue(
       snapshot ?? buildProgressSnapshot(),
     );

@@ -17,7 +17,12 @@ import type { RecoveryStatus } from '../components/dashboard/todays-workout-card
 
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
 type ProgressSummary = ProgressSummaryResponse['summary'];
-type DashboardDomain = 'coach' | 'recovery' | 'workout' | 'nutrition' | 'progress';
+type DashboardDomain =
+  | 'coach'
+  | 'recovery'
+  | 'workout'
+  | 'nutrition'
+  | 'progress';
 export type DashboardCoachActionTarget =
   | 'workout'
   | 'nutrition'
@@ -104,40 +109,43 @@ export function useDashboard(): UseDashboardResult {
     [],
   );
 
-  const loadDashboardData = useCallback(async (options?: { refresh?: boolean }) => {
-    if (options?.refresh) {
-      setIsRefreshing(true);
-    }
+  const loadDashboardData = useCallback(
+    async (options?: { refresh?: boolean }) => {
+      if (options?.refresh) {
+        setIsRefreshing(true);
+      }
 
-    setError(null);
-    clearDomainErrors();
+      setError(null);
+      clearDomainErrors();
 
-    const domains: DashboardDomain[] = [
-      'coach',
-      'recovery',
-      'workout',
-      'nutrition',
-      'progress',
-    ];
-    const [results] = await Promise.all([
-      Promise.allSettled(
-        domains.map((domain) => fetchDashboardDomain(domain)),
-      ),
-      options?.refresh ? wait(REFRESH_DURATION_MS) : Promise.resolve(),
-    ]);
+      const domains: DashboardDomain[] = [
+        'coach',
+        'recovery',
+        'workout',
+        'nutrition',
+        'progress',
+      ];
+      const [results] = await Promise.all([
+        Promise.allSettled(
+          domains.map((domain) => fetchDashboardDomain(domain)),
+        ),
+        options?.refresh ? wait(REFRESH_DURATION_MS) : Promise.resolve(),
+      ]);
 
-    results.forEach((result, index) => {
-      applyDomainResult(domains[index], result);
-    });
+      results.forEach((result, index) => {
+        applyDomainResult(domains[index], result);
+      });
 
-    if (results.every((result) => result.status === 'rejected')) {
-      setError('Unable to load dashboard.');
-    }
+      if (results.every((result) => result.status === 'rejected')) {
+        setError('Unable to load dashboard.');
+      }
 
-    if (options?.refresh) {
-      setIsRefreshing(false);
-    }
-  }, []);
+      if (options?.refresh) {
+        setIsRefreshing(false);
+      }
+    },
+    [],
+  );
 
   const refresh = useCallback(
     () => loadDashboardData({ refresh: true }),
@@ -165,26 +173,14 @@ export function useDashboard(): UseDashboardResult {
     [coach.data, todaysWorkout],
   );
 
-  const retryCoach = useCallback(
-    () => loadDomain('coach'),
-    [loadDomain],
-  );
-  const retryRecovery = useCallback(
-    () => loadDomain('recovery'),
-    [loadDomain],
-  );
-  const retryWorkout = useCallback(
-    () => loadDomain('workout'),
-    [loadDomain],
-  );
+  const retryCoach = useCallback(() => loadDomain('coach'), [loadDomain]);
+  const retryRecovery = useCallback(() => loadDomain('recovery'), [loadDomain]);
+  const retryWorkout = useCallback(() => loadDomain('workout'), [loadDomain]);
   const retryNutrition = useCallback(
     () => loadDomain('nutrition'),
     [loadDomain],
   );
-  const retryProgress = useCallback(
-    () => loadDomain('progress'),
-    [loadDomain],
-  );
+  const retryProgress = useCallback(() => loadDomain('progress'), [loadDomain]);
 
   return {
     isLoading,
@@ -224,7 +220,10 @@ export function useDashboard(): UseDashboardResult {
     }));
   }
 
-  function setDomainError(domain: DashboardDomain, errorMessage: string | null) {
+  function setDomainError(
+    domain: DashboardDomain,
+    errorMessage: string | null,
+  ) {
     updateDomainState(domain, (current) => ({
       ...current,
       errorMessage,
@@ -232,11 +231,11 @@ export function useDashboard(): UseDashboardResult {
   }
 
   function clearDomainErrors() {
-    (['coach', 'recovery', 'workout', 'nutrition', 'progress'] as const).forEach(
-      (domain) => {
-        setDomainError(domain, null);
-      },
-    );
+    (
+      ['coach', 'recovery', 'workout', 'nutrition', 'progress'] as const
+    ).forEach((domain) => {
+      setDomainError(domain, null);
+    });
   }
 
   function applyDomainResult(
@@ -265,19 +264,42 @@ export function useDashboard(): UseDashboardResult {
   ) {
     switch (domain) {
       case 'coach':
-        setCoach((current) => updater(current as DomainState<TData>) as DomainState<CoachDecision>);
+        setCoach(
+          (current) =>
+            updater(
+              current as DomainState<TData>,
+            ) as DomainState<CoachDecision>,
+        );
         return;
       case 'recovery':
-        setRecovery((current) => updater(current as DomainState<TData>) as DomainState<RecoverySnapshot>);
+        setRecovery(
+          (current) =>
+            updater(
+              current as DomainState<TData>,
+            ) as DomainState<RecoverySnapshot>,
+        );
         return;
       case 'workout':
-        setWorkout((current) => updater(current as DomainState<TData>) as DomainState<TrainingPlan>);
+        setWorkout(
+          (current) =>
+            updater(current as DomainState<TData>) as DomainState<TrainingPlan>,
+        );
         return;
       case 'nutrition':
-        setNutrition((current) => updater(current as DomainState<TData>) as DomainState<TodayNutrition>);
+        setNutrition(
+          (current) =>
+            updater(
+              current as DomainState<TData>,
+            ) as DomainState<TodayNutrition>,
+        );
         return;
       case 'progress':
-        setProgress((current) => updater(current as DomainState<TData>) as DomainState<ProgressSummary>);
+        setProgress(
+          (current) =>
+            updater(
+              current as DomainState<TData>,
+            ) as DomainState<ProgressSummary>,
+        );
         return;
     }
   }
@@ -464,9 +486,8 @@ function resolveWeeklyPlannedWorkoutCount(trainingPlan: TrainingPlan | null) {
     return 5;
   }
 
-  return trainingPlan.weeklySchedule.filter(
-    (day) => day.exercises.length > 0,
-  ).length;
+  return trainingPlan.weeklySchedule.filter((day) => day.exercises.length > 0)
+    .length;
 }
 
 function resolveCoachInsightDisplay(

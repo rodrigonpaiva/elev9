@@ -21,9 +21,7 @@ import {
 } from './personalization-snapshot.schema';
 
 @Injectable()
-export class MongoosePersonalizationSnapshotRepository
-  implements PersonalizationSnapshotRepository
-{
+export class MongoosePersonalizationSnapshotRepository implements PersonalizationSnapshotRepository {
   constructor(
     @InjectModel(PERSONALIZATION_SNAPSHOT_MODEL_NAME)
     private readonly personalizationSnapshotModel: Model<PersonalizationSnapshotSchemaClass>,
@@ -37,7 +35,9 @@ export class MongoosePersonalizationSnapshotRepository
       .findOne({ userProfileId, date })
       .exec();
 
-    return document ? this.toEntity(document as PersonalizationSnapshotDocument) : null;
+    return document
+      ? this.toEntity(document as PersonalizationSnapshotDocument)
+      : null;
   }
 
   async findLatestByUserProfileId(
@@ -48,7 +48,9 @@ export class MongoosePersonalizationSnapshotRepository
       .sort({ date: -1, createdAt: -1, _id: -1 })
       .exec();
 
-    return document ? this.toEntity(document as PersonalizationSnapshotDocument) : null;
+    return document
+      ? this.toEntity(document as PersonalizationSnapshotDocument)
+      : null;
   }
 
   async findManyByUserProfileId(
@@ -71,9 +73,13 @@ export class MongoosePersonalizationSnapshotRepository
   }
 
   async findById(id: string): Promise<PersonalizationSnapshot | null> {
-    const document = await this.personalizationSnapshotModel.findById(id).exec();
+    const document = await this.personalizationSnapshotModel
+      .findById(id)
+      .exec();
 
-    return document ? this.toEntity(document as PersonalizationSnapshotDocument) : null;
+    return document
+      ? this.toEntity(document as PersonalizationSnapshotDocument)
+      : null;
   }
 
   async upsertDailySnapshot(
@@ -162,7 +168,8 @@ export class MongoosePersonalizationSnapshotRepository
         document.riskOfDisengagement,
       ),
       trend: new PersonalizationTrendValueObject(document.trend),
-      sourceContext: (document.sourceContext ?? {}) as PersonalizationSourceContext,
+      sourceContext: (document.sourceContext ??
+        {}) as PersonalizationSourceContext,
       formulaVersion: document.formulaVersion,
       generatedAt: document.generatedAt,
       createdAt: document.createdAt,

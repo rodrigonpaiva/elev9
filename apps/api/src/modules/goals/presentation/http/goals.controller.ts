@@ -36,7 +36,13 @@ import { GetGoalForecastResponseDto } from './dto/get-goal-forecast.response.dto
 import { GetGoalsHistoryQueryDto } from './dto/get-goals-history.query.dto';
 import { GetGoalHistoryResponseDto } from './dto/get-goal-history.response.dto';
 import { GetGoalMilestonesResponseDto } from './dto/get-goal-milestones.response.dto';
-import { GoalAchievementResponse, GoalForecastResponse, GoalMilestoneResponse, GoalProgressSnapshotResponse, GoalResponse } from './dto/goal-response.type';
+import {
+  GoalAchievementResponse,
+  GoalForecastResponse,
+  GoalMilestoneResponse,
+  GoalProgressSnapshotResponse,
+  GoalResponse,
+} from './dto/goal-response.type';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -275,7 +281,9 @@ export class GoalsController {
     }
   }
 
-  private handleBuildGoalProgressSnapshotError(error: BuildGoalProgressSnapshotError): never {
+  private handleBuildGoalProgressSnapshotError(
+    error: BuildGoalProgressSnapshotError,
+  ): never {
     switch (error.code) {
       case 'AUTH_INVALID_SESSION':
         throw new UnauthorizedException(this.buildErrorPayload(error));
@@ -303,7 +311,11 @@ export class GoalsController {
     }
   }
 
-  private buildErrorPayload(error: { code: string; message: string; details?: Record<string, unknown> }) {
+  private buildErrorPayload(error: {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
+  }) {
     return {
       code: error.code,
       message: error.message,

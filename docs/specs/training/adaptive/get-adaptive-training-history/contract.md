@@ -23,4 +23,3 @@ GET /training/adaptive/history?limit=
 - default: `14`
 - maximum: `90`
 - invalid values must return a consistent validation error
-

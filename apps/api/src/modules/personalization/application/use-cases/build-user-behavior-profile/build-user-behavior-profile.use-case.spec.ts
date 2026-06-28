@@ -92,19 +92,19 @@ describe('BuildUserBehaviorProfileUseCase', () => {
 
     const result = await useCase.execute({ authUserId: 'auth_123' });
 
-    expect(userBehaviorProfileRepository.upsertByUserProfileId).toHaveBeenCalledWith(
-      {
-        userProfileId: 'profile_123',
-        preferredCoachingStyle: 'balanced',
-        engagementProfile: 'medium',
-        notificationResponsiveness: 'medium',
-        goalResponsiveness: 'medium',
-        recoveryResponsiveness: 'medium',
-        habitResponsiveness: 'medium',
-        riskOfDisengagement: 'high',
-        formulaVersion: 'personalization-engine-v1',
-      },
-    );
+    expect(
+      userBehaviorProfileRepository.upsertByUserProfileId,
+    ).toHaveBeenCalledWith({
+      userProfileId: 'profile_123',
+      preferredCoachingStyle: 'balanced',
+      engagementProfile: 'medium',
+      notificationResponsiveness: 'medium',
+      goalResponsiveness: 'medium',
+      recoveryResponsiveness: 'medium',
+      habitResponsiveness: 'medium',
+      riskOfDisengagement: 'high',
+      formulaVersion: 'personalization-engine-v1',
+    });
     expect(result.userBehaviorProfile).toEqual({
       userProfileId: 'profile_123',
       preferredCoachingStyle: 'balanced',
@@ -139,19 +139,19 @@ describe('BuildUserBehaviorProfileUseCase', () => {
 
     await useCase.execute({ authUserId: 'auth_123' });
 
-    expect(userBehaviorProfileRepository.upsertByUserProfileId).toHaveBeenCalledWith(
-      {
-        userProfileId: 'profile_123',
-        preferredCoachingStyle: 'motivational',
-        engagementProfile: 'high',
-        notificationResponsiveness: 'medium',
-        goalResponsiveness: 'medium',
-        recoveryResponsiveness: 'medium',
-        habitResponsiveness: 'medium',
-        riskOfDisengagement: 'medium',
-        formulaVersion: 'personalization-engine-v1',
-      },
-    );
+    expect(
+      userBehaviorProfileRepository.upsertByUserProfileId,
+    ).toHaveBeenCalledWith({
+      userProfileId: 'profile_123',
+      preferredCoachingStyle: 'motivational',
+      engagementProfile: 'high',
+      notificationResponsiveness: 'medium',
+      goalResponsiveness: 'medium',
+      recoveryResponsiveness: 'medium',
+      habitResponsiveness: 'medium',
+      riskOfDisengagement: 'medium',
+      formulaVersion: 'personalization-engine-v1',
+    });
   });
 
   it('uses the neutral fallback when snapshot and patterns are missing', async () => {
@@ -163,7 +163,9 @@ describe('BuildUserBehaviorProfileUseCase', () => {
     await useCase.execute({ authUserId: 'auth_123' });
 
     expect(personalizationCalculatorService.calculate).toHaveBeenCalledWith({});
-    expect(userBehaviorProfileRepository.upsertByUserProfileId).toHaveBeenCalledWith(
+    expect(
+      userBehaviorProfileRepository.upsertByUserProfileId,
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         preferredCoachingStyle: 'balanced',
         engagementProfile: 'medium',

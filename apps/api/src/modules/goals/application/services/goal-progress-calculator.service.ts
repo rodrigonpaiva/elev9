@@ -21,8 +21,7 @@ export interface GoalProgressHistoryPoint {
   progressPercentage: number;
 }
 
-export interface GoalProgressCalculationContext
-  extends GoalProgressCalculationInput {
+export interface GoalProgressCalculationContext extends GoalProgressCalculationInput {
   previousSnapshots?: GoalProgressHistoryPoint[];
 }
 
@@ -147,7 +146,10 @@ export class GoalProgressCalculatorService {
       };
     }
 
-    const history = [...previousSnapshots.map((snapshot) => snapshot.progressPercentage), currentProgress];
+    const history = [
+      ...previousSnapshots.map((snapshot) => snapshot.progressPercentage),
+      currentProgress,
+    ];
     const deltas = this.calculateDeltas(history);
     const averageDelta = this.average(deltas);
     const volatility = this.average(deltas.map((delta) => Math.abs(delta)));
@@ -213,7 +215,7 @@ export class GoalProgressCalculatorService {
       const consistency = this.resolveScore(input.consistencyScore, 50);
 
       return this.clampProgress(
-        (stability * 0.5 + adherence * 0.25 + consistency * 0.25),
+        stability * 0.5 + adherence * 0.25 + consistency * 0.25,
       );
     }
 

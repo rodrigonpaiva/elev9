@@ -45,7 +45,9 @@ describe('GetTodayAdaptiveTrainingUseCase', () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue({
       id: 'profile_123',
     } as never);
-    adaptiveTrainingDateService.todayUtcDateString.mockReturnValue('2026-06-02');
+    adaptiveTrainingDateService.todayUtcDateString.mockReturnValue(
+      '2026-06-02',
+    );
     adaptiveTrainingRecommendationRepository.findByUserProfileIdAndDate.mockResolvedValue(
       buildRecommendation({ date: '2026-06-02' }),
     );
@@ -65,7 +67,9 @@ describe('GetTodayAdaptiveTrainingUseCase', () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue({
       id: 'profile_123',
     } as never);
-    adaptiveTrainingDateService.todayUtcDateString.mockReturnValue('2026-06-02');
+    adaptiveTrainingDateService.todayUtcDateString.mockReturnValue(
+      '2026-06-02',
+    );
     adaptiveTrainingRecommendationRepository.findByUserProfileIdAndDate.mockResolvedValue(
       null,
     );
@@ -77,11 +81,11 @@ describe('GetTodayAdaptiveTrainingUseCase', () => {
 
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(buildAdaptiveTrainingRecommendationUseCase.execute).toHaveBeenCalledWith(
-      {
-        authUserId: 'auth_user_123',
-      },
-    );
+    expect(
+      buildAdaptiveTrainingRecommendationUseCase.execute,
+    ).toHaveBeenCalledWith({
+      authUserId: 'auth_user_123',
+    });
     expect(result.adaptiveTrainingRecommendation.date).toBe('2026-06-02');
   });
 
@@ -89,7 +93,9 @@ describe('GetTodayAdaptiveTrainingUseCase', () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue({
       id: 'profile_123',
     } as never);
-    adaptiveTrainingDateService.todayUtcDateString.mockReturnValue('2026-06-02');
+    adaptiveTrainingDateService.todayUtcDateString.mockReturnValue(
+      '2026-06-02',
+    );
     adaptiveTrainingRecommendationRepository.findByUserProfileIdAndDate.mockResolvedValue(
       null,
     );
@@ -105,9 +111,9 @@ describe('GetTodayAdaptiveTrainingUseCase', () => {
     expect(
       adaptiveTrainingRecommendationRepository.findByUserProfileIdAndDate,
     ).toHaveBeenCalledTimes(2);
-    expect(buildAdaptiveTrainingRecommendationUseCase.execute).toHaveBeenCalledTimes(
-      2,
-    );
+    expect(
+      buildAdaptiveTrainingRecommendationUseCase.execute,
+    ).toHaveBeenCalledTimes(2);
   });
 
   it('throws when the user profile is missing', async () => {

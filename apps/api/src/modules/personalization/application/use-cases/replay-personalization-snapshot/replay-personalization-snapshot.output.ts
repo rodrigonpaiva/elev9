@@ -15,8 +15,7 @@ export type ReplayPersonalizationSnapshotComparisonField =
   | 'trend'
   | 'formulaVersion';
 
-export interface ReplayPersonalizationSnapshotRecalculated
-  extends PersonalizationReplayRecalculatedSnapshotContract {}
+export interface ReplayPersonalizationSnapshotRecalculated extends PersonalizationReplayRecalculatedSnapshotContract {}
 
 export interface ReplayPersonalizationSnapshotOutput {
   persisted: PersonalizationSnapshot;

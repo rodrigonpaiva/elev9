@@ -15,9 +15,7 @@ import {
 import { RecoverySnapshotRepository } from '../../../domain/repositories/recovery-snapshot.repository';
 import { RecoveryDateService } from '../../services/recovery-date.service';
 import { RecoveryScoreCalculatorService } from '../../services/recovery-score-calculator.service';
-import {
-  BUILD_RECOVERY_SNAPSHOT_ERROR_CODES,
-} from './build-recovery-snapshot.errors';
+import { BUILD_RECOVERY_SNAPSHOT_ERROR_CODES } from './build-recovery-snapshot.errors';
 import { BuildRecoverySnapshotUseCase } from './build-recovery-snapshot.use-case';
 
 describe('BuildRecoverySnapshotUseCase', () => {
@@ -77,15 +75,13 @@ describe('BuildRecoverySnapshotUseCase', () => {
     expect(userProfileRepository.findByAuthUserId).toHaveBeenCalledWith(
       'auth_user_123',
     );
-    expect(fitnessProfileRepository.findActiveByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-    );
-    expect(trainingPlanRepository.findActiveByFitnessProfileId).toHaveBeenCalledWith(
-      'fitness_123',
-    );
     expect(
-      recoveryScoreCalculatorService.calculate,
-    ).toHaveBeenCalledWith(
+      fitnessProfileRepository.findActiveByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123');
+    expect(
+      trainingPlanRepository.findActiveByFitnessProfileId,
+    ).toHaveBeenCalledWith('fitness_123');
+    expect(recoveryScoreCalculatorService.calculate).toHaveBeenCalledWith(
       expect.objectContaining({
         sleepQuality: 4,
         energyLevel: 5,
@@ -122,8 +118,8 @@ describe('BuildRecoverySnapshotUseCase', () => {
         ]),
       }),
     );
-    const persistedInput = recoverySnapshotRepository.upsertDailySnapshot.mock
-      .calls[0][0];
+    const persistedInput =
+      recoverySnapshotRepository.upsertDailySnapshot.mock.calls[0][0];
     expect(persistedInput.sourceContext).not.toHaveProperty('authUserId');
     expect(persistedInput.sourceContext).not.toHaveProperty('rawHealthContext');
     expect(persistedInput.sourceContext).not.toHaveProperty('prompt');
@@ -135,7 +131,9 @@ describe('BuildRecoverySnapshotUseCase', () => {
     arrangeFitnessProfile();
     arrangeTrainingPlan();
     dailyCheckInRepository.findManyByUserProfileId.mockResolvedValue([]);
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     arrangeCalculatorResult();
     recoverySnapshotRepository.upsertDailySnapshot.mockResolvedValue(
@@ -167,7 +165,9 @@ describe('BuildRecoverySnapshotUseCase', () => {
     arrangeFitnessProfile();
     arrangeTrainingPlan();
     arrangeDailyCheckIns();
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     arrangeCalculatorResult();
     recoverySnapshotRepository.upsertDailySnapshot.mockResolvedValue(
@@ -258,9 +258,9 @@ describe('BuildRecoverySnapshotUseCase', () => {
     await useCase.execute({ authUserId: 'auth_user_123' });
     await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(recoverySnapshotRepository.upsertDailySnapshot).toHaveBeenCalledTimes(
-      2,
-    );
+    expect(
+      recoverySnapshotRepository.upsertDailySnapshot,
+    ).toHaveBeenCalledTimes(2);
     expect(
       recoverySnapshotRepository.upsertDailySnapshot.mock.calls[0][0].date,
     ).toBe('2026-06-02');
@@ -274,9 +274,7 @@ describe('BuildRecoverySnapshotUseCase', () => {
       recoveryDateService.todayUtcDateString(
         new Date('2026-06-02T10:00:00.000Z'),
       ),
-    ).toBe(
-      '2026-06-02',
-    );
+    ).toBe('2026-06-02');
   });
 
   it('returns invalid session when auth user id is missing', async () => {
@@ -466,17 +464,15 @@ describe('BuildRecoverySnapshotUseCase', () => {
       fatigueScore: 22,
       recoveryTrend: 'improving',
       recommendedIntensity: 'hard',
-      influences:
-        overrides.influences ??
-        [
-          new RecoveryInfluence({
-            code: 'HIGH_ADHERENCE',
-            label: 'Recent adherence is strong.',
-            impact: 'positive',
-            weight: 0.15,
-            value: 100,
-          }),
-        ],
+      influences: overrides.influences ?? [
+        new RecoveryInfluence({
+          code: 'HIGH_ADHERENCE',
+          label: 'Recent adherence is strong.',
+          impact: 'positive',
+          weight: 0.15,
+          value: 100,
+        }),
+      ],
     });
   }
 

@@ -187,14 +187,22 @@ const SummaryHero = memo(function SummaryHero({
       <View style={styles.heroIcon}>
         <Ionicons name="sunny-outline" size={20} color={briefingTokens.text} />
       </View>
-      <Text maxFontSizeMultiplier={1.25} numberOfLines={2} style={styles.heroText}>
+      <Text
+        maxFontSizeMultiplier={1.25}
+        numberOfLines={2}
+        style={styles.heroText}
+      >
         {model.summary}
       </Text>
     </View>
   );
 });
 
-const WhyButton = memo(function WhyButton({ onPress }: { onPress: () => void }) {
+const WhyButton = memo(function WhyButton({
+  onPress,
+}: {
+  onPress: () => void;
+}) {
   return (
     <Pressable
       accessibilityLabel="Why this recommendation"
@@ -361,7 +369,9 @@ const TodaySchedule = memo(function TodaySchedule({
           <View key={item.id} style={styles.timelineRow}>
             <View style={styles.timelineMarker}>
               <View style={styles.timelineDot} />
-              {index < schedule.length - 1 ? <View style={styles.timelineLine} /> : null}
+              {index < schedule.length - 1 ? (
+                <View style={styles.timelineLine} />
+              ) : null}
             </View>
             <View style={styles.timelineCopy}>
               <Text style={styles.timelineLabel}>{item.label}</Text>
@@ -378,7 +388,10 @@ const TodaySchedule = memo(function TodaySchedule({
 
 const Motivation = memo(function Motivation({ message }: { message: string }) {
   return (
-    <View accessibilityLabel={`Motivation. ${message}`} style={styles.motivation}>
+    <View
+      accessibilityLabel={`Motivation. ${message}`}
+      style={styles.motivation}
+    >
       <Text maxFontSizeMultiplier={1.35} style={styles.motivationText}>
         {message}
       </Text>
@@ -412,13 +425,7 @@ const PrimaryAction = memo(function PrimaryAction({
   );
 });
 
-function Section({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: string;
-}) {
+function Section({ children, title }: { children: ReactNode; title: string }) {
   return (
     <View style={styles.section}>
       <Text accessibilityRole="header" style={styles.sectionTitle}>

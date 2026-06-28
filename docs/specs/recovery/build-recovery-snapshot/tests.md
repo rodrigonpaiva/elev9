@@ -10,4 +10,3 @@
 - maps all intensity thresholds
 - persists one snapshot per day
 - records formula version and source context
-

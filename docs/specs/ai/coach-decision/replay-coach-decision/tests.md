@@ -8,4 +8,3 @@
 - replay detects influence drift
 - replay detects formula version drift
 - replay is isolated by user
-

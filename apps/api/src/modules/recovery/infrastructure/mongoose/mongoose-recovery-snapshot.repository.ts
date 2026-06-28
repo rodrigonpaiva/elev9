@@ -20,9 +20,7 @@ import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
 import type { RecoverySourceContext } from '../../../../shared/source-context';
 
 @Injectable()
-export class MongooseRecoverySnapshotRepository
-  implements RecoverySnapshotRepository
-{
+export class MongooseRecoverySnapshotRepository implements RecoverySnapshotRepository {
   constructor(
     @InjectModel(RECOVERY_SNAPSHOT_MODEL_NAME)
     private readonly recoverySnapshotModel: Model<RecoverySnapshotSchemaClass>,
@@ -151,9 +149,7 @@ export class MongooseRecoverySnapshotRepository
     }
   }
 
-  private toEntity(
-    document: RecoverySnapshotDocument,
-  ): RecoverySnapshotEntity {
+  private toEntity(document: RecoverySnapshotDocument): RecoverySnapshotEntity {
     return new RecoverySnapshotEntity({
       userProfileId: document.userProfileId,
       date: document.date,

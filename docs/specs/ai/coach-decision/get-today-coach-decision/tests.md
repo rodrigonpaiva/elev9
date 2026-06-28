@@ -5,4 +5,3 @@
 - idempotent same-day reads
 - isolated by user
 - invalid session returns unauthorized
-

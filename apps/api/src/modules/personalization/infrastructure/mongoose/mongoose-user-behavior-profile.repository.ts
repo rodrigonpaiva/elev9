@@ -18,9 +18,7 @@ import {
 } from './user-behavior-profile.schema';
 
 @Injectable()
-export class MongooseUserBehaviorProfileRepository
-  implements UserBehaviorProfileRepository
-{
+export class MongooseUserBehaviorProfileRepository implements UserBehaviorProfileRepository {
   constructor(
     @InjectModel(USER_BEHAVIOR_PROFILE_MODEL_NAME)
     private readonly userBehaviorProfileModel: Model<UserBehaviorProfileSchemaClass>,
@@ -33,7 +31,9 @@ export class MongooseUserBehaviorProfileRepository
       .findOne({ userProfileId })
       .exec();
 
-    return document ? this.toEntity(document as UserBehaviorProfileDocument) : null;
+    return document
+      ? this.toEntity(document as UserBehaviorProfileDocument)
+      : null;
   }
 
   async upsertByUserProfileId(

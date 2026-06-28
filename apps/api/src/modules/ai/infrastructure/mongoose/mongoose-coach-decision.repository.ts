@@ -8,9 +8,7 @@ import {
   CoachDecisionQueryOptions,
   UpsertCoachDecisionRepositoryInput,
 } from '../../domain/repositories/coach-decision.repository';
-import {
-  CoachDecisionInfluence as CoachDecisionInfluenceValueObject,
-} from '../../domain/value-objects/coach-decision-influence.value-object';
+import { CoachDecisionInfluence as CoachDecisionInfluenceValueObject } from '../../domain/value-objects/coach-decision-influence.value-object';
 import {
   COACH_DECISION_MODEL_NAME,
   CoachDecisionDocument,
@@ -20,9 +18,7 @@ import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
 import type { CoachDecisionSourceContext } from '../../../../shared/source-context';
 
 @Injectable()
-export class MongooseCoachDecisionRepository
-  implements CoachDecisionRepository
-{
+export class MongooseCoachDecisionRepository implements CoachDecisionRepository {
   constructor(
     @InjectModel(COACH_DECISION_MODEL_NAME)
     private readonly coachDecisionModel: Model<CoachDecisionSchemaClass>,
@@ -190,7 +186,8 @@ export class MongooseCoachDecisionRepository
             value: influence.value,
           }),
       ),
-      sourceContext: (document.sourceContext ?? {}) as CoachDecisionSourceContext,
+      sourceContext: (document.sourceContext ??
+        {}) as CoachDecisionSourceContext,
       formulaVersion: document.formulaVersion,
       generatedBy: document.generatedBy,
       llmMetadata: document.llmMetadata

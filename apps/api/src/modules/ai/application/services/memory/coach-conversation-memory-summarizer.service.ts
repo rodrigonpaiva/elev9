@@ -52,7 +52,9 @@ export class CoachConversationMemorySummarizer {
     const notificationSummary = input.notification
       ? this.buildNotificationSummary(input.notification)
       : null;
-    const habitSummary = input.habit ? this.buildHabitSummary(input.habit) : null;
+    const habitSummary = input.habit
+      ? this.buildHabitSummary(input.habit)
+      : null;
     const personalizationSummary = input.personalization
       ? this.buildPersonalizationSummary(input.personalization)
       : null;

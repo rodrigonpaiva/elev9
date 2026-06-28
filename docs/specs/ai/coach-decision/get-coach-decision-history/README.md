@@ -14,4 +14,3 @@ Canonical name: ai.coach-decision.history
 ## Goal
 
 Expose recent coaching decisions for review, trend analysis, and debug.
-

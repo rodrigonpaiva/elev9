@@ -6,4 +6,3 @@ Future validation should cover:
 - replay on the same record after midnight
 - historical rebuild under a different timezone policy
 - consistent date keys across engines
-

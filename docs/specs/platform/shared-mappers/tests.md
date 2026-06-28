@@ -6,4 +6,3 @@ Future validation should cover:
 - no raw source context leaked by mappers
 - domain-to-DTO transforms remain pure
 - shared helpers do not encode business decisions
-

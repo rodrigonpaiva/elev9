@@ -6,4 +6,3 @@ Expected failure modes:
 - circular module dependencies
 - hidden implementation coupling
 - local token drift between modules
-

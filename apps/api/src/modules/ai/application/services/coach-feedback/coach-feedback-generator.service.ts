@@ -5,9 +5,7 @@ import {
   FitnessGoal,
 } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
-import type {
-  AdaptiveTrainingInfluenceProps,
-} from '../../../../training/domain/value-objects/adaptive-training-influence.value-object';
+import type { AdaptiveTrainingInfluenceProps } from '../../../../training/domain/value-objects/adaptive-training-influence.value-object';
 import type {
   AdaptiveRecommendedIntensity,
   AdaptiveRecommendationType,
@@ -326,10 +324,7 @@ export class CoachFeedbackGenerator {
 
     if (input.isInconsistent) {
       return this.limitMessage(
-        [
-          'You have room to rebuild your rhythm this week.',
-          personalizationTail,
-        ]
+        ['You have room to rebuild your rhythm this week.', personalizationTail]
           .filter(Boolean)
           .join(' '),
       );
@@ -374,7 +369,9 @@ export class CoachFeedbackGenerator {
       this.summarizeText(coachDecision.summary, 120),
     );
 
-    for (const actionItem of [...coachDecision.actionItems].slice(0, 3).reverse()) {
+    for (const actionItem of [...coachDecision.actionItems]
+      .slice(0, 3)
+      .reverse()) {
       this.prependRecommendation(input.recommendations, actionItem);
     }
 
@@ -546,15 +543,17 @@ export class CoachFeedbackGenerator {
       return;
     }
 
-    const summary = habit.summary ?? habit.current
-      ? {
-          score: habit.summary?.score ?? habit.current?.consistencyScore ?? 50,
-          trend: habit.summary?.trend ?? habit.current?.trend ?? 'stable',
-          currentStreak:
-            habit.summary?.currentStreak ?? habit.current?.streakDays ?? 0,
-          riskLevel: habit.summary?.riskLevel ?? 'low',
-        }
-      : null;
+    const summary =
+      (habit.summary ?? habit.current)
+        ? {
+            score:
+              habit.summary?.score ?? habit.current?.consistencyScore ?? 50,
+            trend: habit.summary?.trend ?? habit.current?.trend ?? 'stable',
+            currentStreak:
+              habit.summary?.currentStreak ?? habit.current?.streakDays ?? 0,
+            riskLevel: habit.summary?.riskLevel ?? 'low',
+          }
+        : null;
     const riskSignals = habit.riskSignals ?? [];
 
     if (!summary) {
@@ -575,10 +574,7 @@ export class CoachFeedbackGenerator {
 
     if (summary.trend === 'improving') {
       input.influences.add('habit:improving');
-      this.upsertInsight(
-        input.insights,
-        'Habit consistency is improving',
-      );
+      this.upsertInsight(input.insights, 'Habit consistency is improving');
     }
 
     if (summary.currentStreak >= 5) {
@@ -812,10 +808,10 @@ export class CoachFeedbackGenerator {
         return;
       case 'maintenance':
       default:
-      this.prependRecommendation(
-        input.recommendations,
-        'Keep your meal routine steady so training and recovery stay predictable',
-      );
+        this.prependRecommendation(
+          input.recommendations,
+          'Keep your meal routine steady so training and recovery stay predictable',
+        );
     }
   }
 
@@ -896,7 +892,9 @@ export class CoachFeedbackGenerator {
     }
 
     input.influences.add(`adaptive:${recommendation.recommendationType}`);
-    input.influences.add(`adaptive:intensity:${recommendation.recommendedIntensity}`);
+    input.influences.add(
+      `adaptive:intensity:${recommendation.recommendedIntensity}`,
+    );
     input.influences.add(`adaptive:volume:${recommendation.volumeAction}`);
 
     for (const influence of recommendation.influences) {

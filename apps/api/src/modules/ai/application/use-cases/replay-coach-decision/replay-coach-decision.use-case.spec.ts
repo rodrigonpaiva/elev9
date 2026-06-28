@@ -91,7 +91,7 @@ describe('ReplayCoachDecisionUseCase', () => {
       priority: 'consistency',
       headline: 'Focus on consistency',
       summary: 'Goal progress is slowing.',
-      actionItems: ['Complete today\'s session', 'Avoid skipping workouts'],
+      actionItems: ["Complete today's session", 'Avoid skipping workouts'],
       influences: [
         {
           code: 'GOAL_PROGRESS_DECLINING',
@@ -306,16 +306,16 @@ function buildCoachDecision(
     priority: overrides.priority ?? 'motivation',
     headline: overrides.headline ?? 'Keep building momentum',
     summary: overrides.summary ?? 'Signals are stable.',
-    actionItems:
-      overrides.actionItems ?? ['Continue the current plan', 'Stay consistent'],
-    influences:
-      overrides.influences ?? [],
-    sourceContext:
-      overrides.sourceContext ?? {
-        readinessScore: 50,
-        fatigueScore: 50,
-        generatedAt: '2026-06-02T06:00:00.000Z',
-      },
+    actionItems: overrides.actionItems ?? [
+      'Continue the current plan',
+      'Stay consistent',
+    ],
+    influences: overrides.influences ?? [],
+    sourceContext: overrides.sourceContext ?? {
+      readinessScore: 50,
+      fatigueScore: 50,
+      generatedAt: '2026-06-02T06:00:00.000Z',
+    },
     formulaVersion: overrides.formulaVersion ?? 'coach-decision-v1',
     generatedBy: overrides.generatedBy ?? 'deterministic',
     llmMetadata: overrides.llmMetadata ?? { used: false },

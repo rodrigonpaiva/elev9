@@ -59,7 +59,9 @@ describe('ReplayNotificationDecisionUseCase', () => {
       id: 'profile_123',
     });
     notificationDecisionRepository.findById.mockResolvedValue(persisted);
-    notificationDecisionCalculatorService.calculate.mockReturnValue(calculatorOutput);
+    notificationDecisionCalculatorService.calculate.mockReturnValue(
+      calculatorOutput,
+    );
 
     const before = persisted.toJSON();
     const result = await useCase.execute({
@@ -73,10 +75,14 @@ describe('ReplayNotificationDecisionUseCase', () => {
     expect(result.persisted.id).toBe('notification_123');
     expect(result.recalculated.type).toBe(calculatorOutput.type);
     expect(result.replayedAt).toBeTruthy();
-    expect(notificationDecisionCalculatorService.calculate).toHaveBeenCalledWith(
+    expect(
+      notificationDecisionCalculatorService.calculate,
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
-        coachDecisionPriority: calculatorOutput.sourceContext.coachDecisionPriority,
-        coachDecisionHeadline: calculatorOutput.sourceContext.coachDecisionHeadline,
+        coachDecisionPriority:
+          calculatorOutput.sourceContext.coachDecisionPriority,
+        coachDecisionHeadline:
+          calculatorOutput.sourceContext.coachDecisionHeadline,
         readinessScore: calculatorOutput.sourceContext.readinessScore,
         fatigueScore: calculatorOutput.sourceContext.fatigueScore,
         fatigueLevel: calculatorOutput.sourceContext.fatigueLevel,
@@ -99,45 +105,46 @@ describe('ReplayNotificationDecisionUseCase', () => {
     ['priority', { priority: 'high' }],
     ['title', { title: 'Different title' }],
     ['message', { message: 'Different message' }],
-    ['influences', { influences: [new NotificationInfluence({
-      code: 'LOW_ENGAGEMENT',
-      label: 'Different influence',
-      impact: 'neutral',
-      source: 'coach',
-    })] }],
+    [
+      'influences',
+      {
+        influences: [
+          new NotificationInfluence({
+            code: 'LOW_ENGAGEMENT',
+            label: 'Different influence',
+            impact: 'neutral',
+            source: 'coach',
+          }),
+        ],
+      },
+    ],
     ['formulaVersion', { formulaVersion: 'notification-engine-v2' }],
-  ] as const)(
-    'detects %s drift',
-    async (
-      field,
-      override,
-    ) => {
-      const calculatorOutput = buildCalculatorOutput();
-      const persisted = buildDecision({
-        id: 'notification_123',
-        ...calculatorOutput,
-        ...override,
-      });
+  ] as const)('detects %s drift', async (field, override) => {
+    const calculatorOutput = buildCalculatorOutput();
+    const persisted = buildDecision({
+      id: 'notification_123',
+      ...calculatorOutput,
+      ...override,
+    });
 
-      userProfileRepository.findByAuthUserId.mockResolvedValue({
-        id: 'profile_123',
-      });
-      notificationDecisionRepository.findById.mockResolvedValue(persisted);
-      notificationDecisionCalculatorService.calculate.mockReturnValue(
-        calculatorOutput,
-      );
+    userProfileRepository.findByAuthUserId.mockResolvedValue({
+      id: 'profile_123',
+    });
+    notificationDecisionRepository.findById.mockResolvedValue(persisted);
+    notificationDecisionCalculatorService.calculate.mockReturnValue(
+      calculatorOutput,
+    );
 
-      const result = await useCase.execute({
-        authUserId: 'auth_user_123',
-        notificationId: 'notification_123',
-      });
+    const result = await useCase.execute({
+      authUserId: 'auth_user_123',
+      notificationId: 'notification_123',
+    });
 
-      expect(result.comparison.matches).toBe(false);
-      expect(result.comparison.differences.map((difference) => difference.field)).toContain(
-        field,
-      );
-    },
-  );
+    expect(result.comparison.matches).toBe(false);
+    expect(
+      result.comparison.differences.map((difference) => difference.field),
+    ).toContain(field);
+  });
 
   it('rejects missing user profiles', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);
@@ -209,7 +216,9 @@ describe('ReplayNotificationDecisionUseCase', () => {
       id: 'profile_123',
     });
     notificationDecisionRepository.findById.mockResolvedValue(persisted);
-    notificationDecisionCalculatorService.calculate.mockReturnValue(calculatorOutput);
+    notificationDecisionCalculatorService.calculate.mockReturnValue(
+      calculatorOutput,
+    );
 
     const before = persisted.toJSON();
     await useCase.execute({
@@ -238,17 +247,23 @@ describe('ReplayNotificationDecisionUseCase', () => {
       id: 'profile_123',
     });
     notificationDecisionRepository.findById.mockResolvedValue(persisted);
-    notificationDecisionCalculatorService.calculate.mockReturnValue(calculatorOutput);
+    notificationDecisionCalculatorService.calculate.mockReturnValue(
+      calculatorOutput,
+    );
 
     await useCase.execute({
       authUserId: 'auth_user_123',
       notificationId: 'notification_123',
     });
 
-    expect(notificationDecisionCalculatorService.calculate).toHaveBeenCalledWith(
+    expect(
+      notificationDecisionCalculatorService.calculate,
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
-        coachDecisionPriority: calculatorOutput.sourceContext.coachDecisionPriority,
-        coachDecisionHeadline: calculatorOutput.sourceContext.coachDecisionHeadline,
+        coachDecisionPriority:
+          calculatorOutput.sourceContext.coachDecisionPriority,
+        coachDecisionHeadline:
+          calculatorOutput.sourceContext.coachDecisionHeadline,
         readinessScore: calculatorOutput.sourceContext.readinessScore,
         fatigueScore: calculatorOutput.sourceContext.fatigueScore,
         fatigueLevel: calculatorOutput.sourceContext.fatigueLevel,

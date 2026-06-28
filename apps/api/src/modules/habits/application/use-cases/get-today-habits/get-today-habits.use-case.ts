@@ -1,9 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
 import { PlatformDateService } from '../../../../../shared/date/platform-date.service';
-import {
-  BuildHabitSnapshotError,
-} from '../build-habit-snapshot/build-habit-snapshot.errors';
+import { BuildHabitSnapshotError } from '../build-habit-snapshot/build-habit-snapshot.errors';
 import { BuildHabitSnapshotUseCase } from '../build-habit-snapshot/build-habit-snapshot.use-case';
 import {
   HABIT_SNAPSHOT_REPOSITORY,

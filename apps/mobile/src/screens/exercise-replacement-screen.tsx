@@ -84,8 +84,9 @@ export function ExerciseReplacementScreen() {
   const [hasError, setHasError] = useState(false);
   const [selectedReason, setSelectedReason] =
     useState<ReplacementReason | null>(null);
-  const [selectedAlternativeName, setSelectedAlternativeName] =
-    useState<string | null>(null);
+  const [selectedAlternativeName, setSelectedAlternativeName] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -298,9 +299,7 @@ const ReasonSelector = memo(function ReasonSelector({
               ]}
             >
               <Text style={styles.reasonTitle}>{reason.label}</Text>
-              <Text style={styles.reasonDescription}>
-                {reason.description}
-              </Text>
+              <Text style={styles.reasonDescription}>{reason.description}</Text>
             </Pressable>
           );
         })}
@@ -342,9 +341,7 @@ const AlternativesList = memo(function AlternativesList({
                 <Text style={styles.alternativeTitle}>
                   {alternative.exercise.name}
                 </Text>
-                <Text style={styles.matchText}>
-                  {alternative.muscleMatch}%
-                </Text>
+                <Text style={styles.matchText}>{alternative.muscleMatch}%</Text>
               </View>
               <Text style={styles.alternativeMeta}>
                 Difficulty: {alternative.difficulty}
@@ -409,10 +406,17 @@ function ExerciseReplacementStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.stateButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.stateButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -449,7 +453,12 @@ function getAlternativeTemplates(
     return [
       template('Lat Pulldown', exercise, 'Moderate', 'Cable Machine'),
       template('Assisted Pull Up', exercise, 'Easy', 'Assisted Machine'),
-      template('Resistance Band Pull Down', exercise, 'Easy', 'Resistance Band'),
+      template(
+        'Resistance Band Pull Down',
+        exercise,
+        'Easy',
+        'Resistance Band',
+      ),
     ];
   }
 

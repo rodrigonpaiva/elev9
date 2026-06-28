@@ -2,9 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import {
-  GoalMilestone as GoalMilestoneEntity,
-} from '../../domain/entities/goal-milestone.entity';
+import { GoalMilestone as GoalMilestoneEntity } from '../../domain/entities/goal-milestone.entity';
 import { GoalMilestoneRepository } from '../../domain/repositories/goal-milestone.repository';
 import { GoalMilestoneTypeValueObject } from '../../domain/value-objects/goal-milestone-type.value-object';
 import {
@@ -26,10 +24,14 @@ export class MongooseGoalMilestoneRepository implements GoalMilestoneRepository 
       .sort({ targetValue: 1, createdAt: 1, _id: 1 })
       .exec();
 
-    return documents.map((document) => this.toEntity(document as GoalMilestoneDocument));
+    return documents.map((document) =>
+      this.toEntity(document as GoalMilestoneDocument),
+    );
   }
 
-  async createMany(input: GoalMilestoneEntity[]): Promise<GoalMilestoneEntity[]> {
+  async createMany(
+    input: GoalMilestoneEntity[],
+  ): Promise<GoalMilestoneEntity[]> {
     if (input.length === 0) {
       return [];
     }
@@ -46,7 +48,9 @@ export class MongooseGoalMilestoneRepository implements GoalMilestoneRepository 
       { ordered: true },
     );
 
-    return documents.map((document) => this.toEntity(document as GoalMilestoneDocument));
+    return documents.map((document) =>
+      this.toEntity(document as GoalMilestoneDocument),
+    );
   }
 
   async markAchieved(
@@ -81,7 +85,9 @@ export class MongooseGoalMilestoneRepository implements GoalMilestoneRepository 
       title: document.title,
       targetValue: document.targetValue,
       achieved: document.achieved,
-      achievedAt: document.achievedAt ? new Date(document.achievedAt) : undefined,
+      achievedAt: document.achievedAt
+        ? new Date(document.achievedAt)
+        : undefined,
     });
   }
 }

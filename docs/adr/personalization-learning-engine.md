@@ -24,7 +24,7 @@ This capability must not become machine learning, autonomous AI, or a second own
 Create a new bounded context:
 
 ```ts
-personalization
+personalization;
 ```
 
 This engine will own:

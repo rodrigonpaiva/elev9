@@ -102,10 +102,13 @@ export function useCoachConversation(): CoachConversationResult {
     conversationStore.scrollOffset,
   );
 
-  const persistMessages = useCallback((nextMessages: CoachConversationMessage[]) => {
-    conversationStore.messages = nextMessages;
-    setMessages(nextMessages);
-  }, []);
+  const persistMessages = useCallback(
+    (nextMessages: CoachConversationMessage[]) => {
+      conversationStore.messages = nextMessages;
+      setMessages(nextMessages);
+    },
+    [],
+  );
 
   const loadHistory = useCallback(
     async (options?: { refresh?: boolean }) => {
@@ -263,7 +266,9 @@ export function useCoachConversation(): CoachConversationResult {
   };
 
   function setOfflineFromError(error: unknown) {
-    setIsOffline(error instanceof ApiClientError && error.code === 'NETWORK_ERROR');
+    setIsOffline(
+      error instanceof ApiClientError && error.code === 'NETWORK_ERROR',
+    );
   }
 }
 
@@ -332,7 +337,9 @@ function formatCoachMessage(content: string): CoachMessagePart[] {
     .filter(Boolean);
 
   if (lines.length === 0) {
-    return [{ id: 'paragraph-0', type: 'paragraph', text: 'I am here with you.' }];
+    return [
+      { id: 'paragraph-0', type: 'paragraph', text: 'I am here with you.' },
+    ];
   }
 
   return lines.flatMap((line, index) => {

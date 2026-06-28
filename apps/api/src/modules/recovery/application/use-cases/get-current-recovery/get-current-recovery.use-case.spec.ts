@@ -50,7 +50,9 @@ describe('GetCurrentRecoveryUseCase', () => {
 
   it('builds a snapshot when there is no current snapshot', async () => {
     arrangeUserProfile();
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     const snapshot = buildSnapshot({ date: '2026-06-02' });
     buildRecoverySnapshotUseCase.execute.mockResolvedValue({
       recoverySnapshot: snapshot,

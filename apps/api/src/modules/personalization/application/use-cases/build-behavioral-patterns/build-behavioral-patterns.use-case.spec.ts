@@ -155,75 +155,74 @@ describe('BuildBehavioralPatternsUseCase', () => {
         previousSnapshotScore: 70,
       }),
     );
-    expect(behavioralPatternRepository.replaceManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      [
-        {
-          userProfileId: 'profile_123',
-          type: 'responds_to_streaks',
-          confidence: 'high',
-          evidenceCount: 2,
-          lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
-          formulaVersion: 'personalization-engine-v1',
-        },
-        {
-          userProfileId: 'profile_123',
-          type: 'responds_to_goals',
-          confidence: 'high',
-          evidenceCount: 1,
-          lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
-          formulaVersion: 'personalization-engine-v1',
-        },
-        {
-          userProfileId: 'profile_123',
-          type: 'responds_to_recovery_guidance',
-          confidence: 'high',
-          evidenceCount: 1,
-          lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
-          formulaVersion: 'personalization-engine-v1',
-        },
-        {
-          userProfileId: 'profile_123',
-          type: 'responds_to_notifications',
-          confidence: 'high',
-          evidenceCount: 2,
-          lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
-          formulaVersion: 'personalization-engine-v1',
-        },
-        {
-          userProfileId: 'profile_123',
-          type: 'ignores_low_priority_reminders',
-          confidence: 'high',
-          evidenceCount: 1,
-          lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
-          formulaVersion: 'personalization-engine-v1',
-        },
-        {
-          userProfileId: 'profile_123',
-          type: 'morning_engagement',
-          confidence: 'high',
-          evidenceCount: 1,
-          lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
-          formulaVersion: 'personalization-engine-v1',
-        },
-        {
-          userProfileId: 'profile_123',
-          type: 'high_dismissal_behavior',
-          confidence: 'high',
-          evidenceCount: 1,
-          lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
-          formulaVersion: 'personalization-engine-v1',
-        },
-        {
-          userProfileId: 'profile_123',
-          type: 'consistent_check_in_behavior',
-          confidence: 'high',
-          evidenceCount: 1,
-          lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
-          formulaVersion: 'personalization-engine-v1',
-        },
-      ],
-    );
+    expect(
+      behavioralPatternRepository.replaceManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', [
+      {
+        userProfileId: 'profile_123',
+        type: 'responds_to_streaks',
+        confidence: 'high',
+        evidenceCount: 2,
+        lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
+        formulaVersion: 'personalization-engine-v1',
+      },
+      {
+        userProfileId: 'profile_123',
+        type: 'responds_to_goals',
+        confidence: 'high',
+        evidenceCount: 1,
+        lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
+        formulaVersion: 'personalization-engine-v1',
+      },
+      {
+        userProfileId: 'profile_123',
+        type: 'responds_to_recovery_guidance',
+        confidence: 'high',
+        evidenceCount: 1,
+        lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
+        formulaVersion: 'personalization-engine-v1',
+      },
+      {
+        userProfileId: 'profile_123',
+        type: 'responds_to_notifications',
+        confidence: 'high',
+        evidenceCount: 2,
+        lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
+        formulaVersion: 'personalization-engine-v1',
+      },
+      {
+        userProfileId: 'profile_123',
+        type: 'ignores_low_priority_reminders',
+        confidence: 'high',
+        evidenceCount: 1,
+        lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
+        formulaVersion: 'personalization-engine-v1',
+      },
+      {
+        userProfileId: 'profile_123',
+        type: 'morning_engagement',
+        confidence: 'high',
+        evidenceCount: 1,
+        lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
+        formulaVersion: 'personalization-engine-v1',
+      },
+      {
+        userProfileId: 'profile_123',
+        type: 'high_dismissal_behavior',
+        confidence: 'high',
+        evidenceCount: 1,
+        lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
+        formulaVersion: 'personalization-engine-v1',
+      },
+      {
+        userProfileId: 'profile_123',
+        type: 'consistent_check_in_behavior',
+        confidence: 'high',
+        evidenceCount: 1,
+        lastObservedAt: new Date('2026-06-02T09:30:00.000Z'),
+        formulaVersion: 'personalization-engine-v1',
+      },
+    ]);
     expect(result.behavioralPatterns).toHaveLength(8);
     expect(result.behavioralPatterns[0].type).toBe('responds_to_streaks');
   });
@@ -262,10 +261,9 @@ describe('BuildBehavioralPatternsUseCase', () => {
         previousSnapshotScore: 50,
       }),
     );
-    expect(behavioralPatternRepository.replaceManyByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      [],
-    );
+    expect(
+      behavioralPatternRepository.replaceManyByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', []);
     expect(result.behavioralPatterns).toEqual([]);
   });
 

@@ -91,50 +91,58 @@ export function NutritionPlanScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const load = useCallback(async (options?: { refresh?: boolean }) => {
-    if (options?.refresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
+  const load = useCallback(
+    async (options?: { refresh?: boolean }) => {
+      if (options?.refresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
 
-    setErrorMessage(null);
+      setErrorMessage(null);
 
-    const [planResult, todayResult, recommendationsResult] =
-      await Promise.allSettled([
-        apiClient.nutrition.getCurrentNutritionPlan(),
-        apiClient.nutrition.getTodayNutrition(),
-        apiClient.nutrition.getNutritionRecommendations({ limit: 3 }),
-      ]);
+      const [planResult, todayResult, recommendationsResult] =
+        await Promise.allSettled([
+          apiClient.nutrition.getCurrentNutritionPlan(),
+          apiClient.nutrition.getTodayNutrition(),
+          apiClient.nutrition.getNutritionRecommendations({ limit: 3 }),
+        ]);
 
-    const nutritionPlan =
-      planResult.status === 'fulfilled'
-        ? planResult.value.nutritionPlan
-        : null;
-    const todayNutrition =
-      todayResult.status === 'fulfilled' ? todayResult.value.todayNutrition : null;
-    const recommendations =
-      recommendationsResult.status === 'fulfilled'
-        ? recommendationsResult.value.recommendations
-        : [];
+      const nutritionPlan =
+        planResult.status === 'fulfilled'
+          ? planResult.value.nutritionPlan
+          : null;
+      const todayNutrition =
+        todayResult.status === 'fulfilled'
+          ? todayResult.value.todayNutrition
+          : null;
+      const recommendations =
+        recommendationsResult.status === 'fulfilled'
+          ? recommendationsResult.value.recommendations
+          : [];
 
-    if (planResult.status === 'rejected' && !isNutritionEmptyState(planResult.reason)) {
-      setErrorMessage(getPlanErrorMessage(planResult.reason));
-    }
+      if (
+        planResult.status === 'rejected' &&
+        !isNutritionEmptyState(planResult.reason)
+      ) {
+        setErrorMessage(getPlanErrorMessage(planResult.reason));
+      }
 
-    setState({
-      nutritionPlan,
-      recommendations,
-      todayNutrition,
-    });
+      setState({
+        nutritionPlan,
+        recommendations,
+        todayNutrition,
+      });
 
-    if (!selectedDate && nutritionPlan) {
-      setSelectedDate(getInitialSelectedDate(nutritionPlan, todayNutrition));
-    }
+      if (!selectedDate && nutritionPlan) {
+        setSelectedDate(getInitialSelectedDate(nutritionPlan, todayNutrition));
+      }
 
-    setIsLoading(false);
-    setIsRefreshing(false);
-  }, [selectedDate]);
+      setIsLoading(false);
+      setIsRefreshing(false);
+    },
+    [selectedDate],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -152,7 +160,12 @@ export function NutritionPlanScreen() {
             todayNutrition: state.todayNutrition,
           })
         : null,
-    [selectedDate, state.nutritionPlan, state.recommendations, state.todayNutrition],
+    [
+      selectedDate,
+      state.nutritionPlan,
+      state.recommendations,
+      state.todayNutrition,
+    ],
   );
 
   const handleSelectDay = useCallback((date: string) => {
@@ -262,9 +275,16 @@ export function NutritionPlanScreen() {
   );
 }
 
-const WeeklyHero = memo(function WeeklyHero({ subtitle }: { subtitle: string }) {
+const WeeklyHero = memo(function WeeklyHero({
+  subtitle,
+}: {
+  subtitle: string;
+}) {
   return (
-    <View accessibilityLabel={`Nutrition Plan. ${subtitle}`} style={styles.hero}>
+    <View
+      accessibilityLabel={`Nutrition Plan. ${subtitle}`}
+      style={styles.hero}
+    >
       <Text style={styles.heroTitle}>Nutrition Plan</Text>
       <Text style={styles.heroMessage}>{subtitle}</Text>
     </View>
@@ -322,10 +342,14 @@ const DayButton = memo(function DayButton({
         pressed ? styles.pressed : null,
       ]}
     >
-      <Text style={[styles.dayLabel, isSelected ? styles.dayLabelSelected : null]}>
+      <Text
+        style={[styles.dayLabel, isSelected ? styles.dayLabelSelected : null]}
+      >
         {item.label}
       </Text>
-      <Text style={[styles.dayMeals, isSelected ? styles.dayLabelSelected : null]}>
+      <Text
+        style={[styles.dayMeals, isSelected ? styles.dayLabelSelected : null]}
+      >
         {item.day.meals.length}
       </Text>
       <View
@@ -374,7 +398,10 @@ const MealCard = memo(function MealCard({
       )} calories. ${Math.round(item.meal.estimatedMacros.proteinGrams)} grams protein.`}
       accessibilityRole="button"
       onPress={() => onOpenMeal(item.meal.id)}
-      style={({ pressed }) => [styles.mealCard, pressed ? styles.pressed : null]}
+      style={({ pressed }) => [
+        styles.mealCard,
+        pressed ? styles.pressed : null,
+      ]}
     >
       <View style={styles.mealHeader}>
         <View style={styles.mealTitleGroup}>
@@ -387,7 +414,9 @@ const MealCard = memo(function MealCard({
         {item.meal.description}
       </Text>
       <View style={styles.summaryRow}>
-        <MacroPill label={`${Math.round(item.meal.estimatedMacros.calories)} kcal`} />
+        <MacroPill
+          label={`${Math.round(item.meal.estimatedMacros.calories)} kcal`}
+        />
         <MacroPill
           label={`${Math.round(item.meal.estimatedMacros.proteinGrams)}g protein`}
         />
@@ -407,7 +436,11 @@ const DailyTargets = memo(function DailyTargets({
       <View style={styles.metricGrid}>
         {targets.map((target) => (
           <View key={target.label} style={styles.metricCard}>
-            <Text numberOfLines={1} adjustsFontSizeToFit style={styles.metricValue}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              style={styles.metricValue}
+            >
               {target.value}
             </Text>
             <Text style={styles.metricLabel}>{target.label}</Text>
@@ -450,7 +483,11 @@ const QuickActions = memo(function QuickActions({
     <View style={styles.card}>
       <Text style={styles.sectionLabel}>QUICK ACTIONS</Text>
       <View style={styles.actions}>
-        <Button label="Today's Meals" onPress={onOpenTodaysMeals} variant="ghost" />
+        <Button
+          label="Today's Meals"
+          onPress={onOpenTodaysMeals}
+          variant="ghost"
+        />
         <Button
           label="History"
           onPress={onNutritionHistory}
@@ -483,7 +520,10 @@ function MacroPill({ label }: { label: string }) {
 function NutritionPlanSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="Loading nutrition plan" style={styles.skeletonContent}>
+      <View
+        accessibilityLabel="Loading nutrition plan"
+        style={styles.skeletonContent}
+      >
         <View style={styles.skeletonHero} />
         <View style={styles.skeletonCalendar} />
         <View style={styles.skeletonCard} />
@@ -507,10 +547,17 @@ function NutritionPlanStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.fullButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.fullButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -524,7 +571,9 @@ function buildPlanModel(input: {
 }): PlanModel | null {
   const selectedDay =
     input.nutritionPlan.days.find((day) => day.date === input.selectedDate) ??
-    input.nutritionPlan.days.find((day) => day.date === input.todayNutrition?.date) ??
+    input.nutritionPlan.days.find(
+      (day) => day.date === input.todayNutrition?.date,
+    ) ??
     input.nutritionPlan.days[0];
 
   if (!selectedDay) {
@@ -563,7 +612,11 @@ function buildPlanModel(input: {
       },
     ],
     weeklyFocus: getWeeklyFocus(input.recommendations, input.todayNutrition),
-    coachGuidance: getCoachGuidance(input.nutritionPlan, selectedDay, input.todayNutrition),
+    coachGuidance: getCoachGuidance(
+      input.nutritionPlan,
+      selectedDay,
+      input.todayNutrition,
+    ),
   };
 }
 
@@ -619,7 +672,8 @@ function getMealStatus(
     return 'Replaced';
   }
 
-  const todayDate = todayNutrition?.date ?? new Date().toISOString().slice(0, 10);
+  const todayDate =
+    todayNutrition?.date ?? new Date().toISOString().slice(0, 10);
 
   if (dayDate !== todayDate) {
     return dayDate < todayDate ? 'Completed' : 'Planned';
@@ -630,7 +684,9 @@ function getMealStatus(
   }
 
   const nextMealIndex = todayNutrition?.nextMeal
-    ? todayNutrition.meals.findIndex((item) => item.id === todayNutrition.nextMeal?.id)
+    ? todayNutrition.meals.findIndex(
+        (item) => item.id === todayNutrition.nextMeal?.id,
+      )
     : -1;
   const mealIndex =
     todayNutrition?.meals.findIndex((item) => item.id === meal.id) ?? -1;
@@ -668,8 +724,9 @@ function getHeroSubtitle(
   nutritionPlan: NutritionPlan,
   recommendations: NutritionRecommendation[],
 ): string {
-  const recommendationMessage = recommendations.find((item) => item.message.trim())
-    ?.message;
+  const recommendationMessage = recommendations.find((item) =>
+    item.message.trim(),
+  )?.message;
 
   if (recommendationMessage) {
     return recommendationMessage.trim();

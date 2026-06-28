@@ -17,9 +17,7 @@ import {
 import { IdempotentUpsertHelper } from '../../../../shared/concurrency';
 
 @Injectable()
-export class MongooseConsistencySummaryRepository
-  implements ConsistencySummaryRepository
-{
+export class MongooseConsistencySummaryRepository implements ConsistencySummaryRepository {
   constructor(
     @InjectModel(CONSISTENCY_SUMMARY_MODEL_NAME)
     private readonly consistencySummaryModel: Model<ConsistencySummarySchemaClass>,
@@ -32,7 +30,9 @@ export class MongooseConsistencySummaryRepository
       .findOne({ userProfileId })
       .exec();
 
-    return document ? this.toEntity(document as ConsistencySummaryDocument) : null;
+    return document
+      ? this.toEntity(document as ConsistencySummaryDocument)
+      : null;
   }
 
   async upsertSummary(

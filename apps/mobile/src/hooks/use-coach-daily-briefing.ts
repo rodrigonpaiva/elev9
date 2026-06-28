@@ -68,7 +68,9 @@ const USER_NAME = 'Rodrigo';
 export function useCoachDailyBriefing(): CoachDailyBriefingResult {
   const dashboard = useDashboard();
   const [currentGoal, setCurrentGoal] = useState<CurrentGoal | null>(null);
-  const [habitSnapshot, setHabitSnapshot] = useState<HabitSnapshot | null>(null);
+  const [habitSnapshot, setHabitSnapshot] = useState<HabitSnapshot | null>(
+    null,
+  );
   const [personalizationSnapshot, setPersonalizationSnapshot] =
     useState<PersonalizationSnapshot | null>(null);
   const [isLoadingExtras, setIsLoadingExtras] = useState(true);
@@ -211,7 +213,9 @@ function buildDailyBriefingModel(input: {
   };
 }
 
-function buildPriorities(coachDecision: CoachDecision): DailyBriefingPriority[] {
+function buildPriorities(
+  coachDecision: CoachDecision,
+): DailyBriefingPriority[] {
   const items =
     coachDecision.actionItems.length > 0
       ? coachDecision.actionItems
@@ -251,7 +255,8 @@ function buildReadiness(input: {
     {
       id: 'nutrition',
       label: 'Nutrition',
-      value: input.nextMealTitle || input.nutritionFocus ? 'On track' : 'Plan ready',
+      value:
+        input.nextMealTitle || input.nutritionFocus ? 'On track' : 'Plan ready',
     },
     {
       id: 'habits',
@@ -416,10 +421,18 @@ function getMotivation(input: {
   return 'Consistency beats perfection.';
 }
 
-function getPriorityReason(coachDecision: CoachDecision, index: number): string {
-  const influence = coachDecision.influences[index] ?? coachDecision.influences[0];
+function getPriorityReason(
+  coachDecision: CoachDecision,
+  index: number,
+): string {
+  const influence =
+    coachDecision.influences[index] ?? coachDecision.influences[0];
 
-  return influence?.label || coachDecision.summary || "This supports today's coaching focus.";
+  return (
+    influence?.label ||
+    coachDecision.summary ||
+    "This supports today's coaching focus."
+  );
 }
 
 function getExpectedBenefit(priority: CoachDecision['priority']): string {
@@ -509,7 +522,10 @@ function normalizeSentence(value: string): string {
 }
 
 function stripRawMetricLanguage(value: string): string {
-  return value.replace(/\b\d+(\.\d+)?%?\b/g, '').replace(/\s{2,}/g, ' ').trim();
+  return value
+    .replace(/\b\d+(\.\d+)?%?\b/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
 function limitLines(value: string): string {

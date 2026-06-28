@@ -6,7 +6,11 @@ import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
-import type { CoachDecision, RecoverySnapshot, TodayNutrition } from '@elev9/types';
+import type {
+  CoachDecision,
+  RecoverySnapshot,
+  TodayNutrition,
+} from '@elev9/types';
 import { Button, Text } from '@elev9/ui';
 
 import { apiClient, mobileApiClient } from '../api/client';
@@ -118,7 +122,8 @@ export function WorkoutCompletionScreen() {
 
     const workoutSaved =
       logResult.status === 'fulfilled' ||
-      (logResult.status === 'rejected' && isAlreadyLoggedError(logResult.reason));
+      (logResult.status === 'rejected' &&
+        isAlreadyLoggedError(logResult.reason));
 
     setState({
       coachDecision:
@@ -218,7 +223,10 @@ export function WorkoutCompletionScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View accessibilityLabel={model.accessibilityLabel} style={styles.stack}>
+        <View
+          accessibilityLabel={model.accessibilityLabel}
+          style={styles.stack}
+        >
           <AchievementHero />
           <SummaryGrid metrics={model.metrics} />
           <Highlights highlights={model.highlights} />
@@ -341,7 +349,10 @@ function WorkoutCompletionSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View accessibilityLabel="Loading workout completion" style={styles.stack}>
+        <View
+          accessibilityLabel="Loading workout completion"
+          style={styles.stack}
+        >
           <View style={styles.hero}>
             <View style={styles.skeletonIcon} />
             <View style={styles.skeletonHeroTitle} />
@@ -377,10 +388,17 @@ function WorkoutCompletionStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.stateButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.stateButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -569,7 +587,8 @@ function getFeedbackDifficulty(
 function isAlreadyLoggedError(error: unknown): boolean {
   return (
     error instanceof ApiClientError &&
-    (error.code === 'ALREADY_EXISTS' || error.message.includes('already exists'))
+    (error.code === 'ALREADY_EXISTS' ||
+      error.message.includes('already exists'))
   );
 }
 

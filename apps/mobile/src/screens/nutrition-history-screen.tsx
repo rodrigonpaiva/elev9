@@ -96,17 +96,20 @@ export function NutritionHistoryScreen() {
       ]);
 
     const nutritionPlan =
-      planResult.status === 'fulfilled'
-        ? planResult.value.nutritionPlan
-        : null;
+      planResult.status === 'fulfilled' ? planResult.value.nutritionPlan : null;
     const todayNutrition =
-      todayResult.status === 'fulfilled' ? todayResult.value.todayNutrition : null;
+      todayResult.status === 'fulfilled'
+        ? todayResult.value.todayNutrition
+        : null;
     const recommendations =
       recommendationsResult.status === 'fulfilled'
         ? recommendationsResult.value.recommendations
         : [];
 
-    if (planResult.status === 'rejected' && !isNutritionEmptyState(planResult.reason)) {
+    if (
+      planResult.status === 'rejected' &&
+      !isNutritionEmptyState(planResult.reason)
+    ) {
       setErrorMessage(getHistoryErrorMessage(planResult.reason));
     }
 
@@ -205,11 +208,7 @@ export function NutritionHistoryScreen() {
             tintColor={tokens.text}
           />
         }
-        ListHeaderComponent={
-          <HistoryHeader
-            model={model}
-          />
-        }
+        ListHeaderComponent={<HistoryHeader model={model} />}
         ListFooterComponent={
           <HistoryFooter
             monthlyInsight={model.monthlyInsight}
@@ -219,7 +218,9 @@ export function NutritionHistoryScreen() {
             onTodaysMeals={handleTodaysMeals}
           />
         }
-        onEndReached={() => trackNutritionHistoryEvent('nutrition_timeline_scrolled')}
+        onEndReached={() =>
+          trackNutritionHistoryEvent('nutrition_timeline_scrolled')
+        }
         removeClippedSubviews
       />
     </SafeAreaView>
@@ -245,7 +246,11 @@ const HistoryHeader = memo(function HistoryHeader({
       <View style={styles.metricGrid}>
         {model.summary.map((metric) => (
           <View key={metric.label} style={styles.metricCard}>
-            <Text numberOfLines={1} adjustsFontSizeToFit style={styles.metricValue}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              style={styles.metricValue}
+            >
               {metric.value}
             </Text>
             <Text style={styles.metricLabel}>{metric.label}</Text>
@@ -270,7 +275,10 @@ const TimelineCard = memo(function TimelineCard({
       accessibilityLabel={item.accessibilityLabel}
       accessibilityRole="button"
       onPress={() => onPress(item.meal.id)}
-      style={({ pressed }) => [styles.timelineCard, pressed ? styles.pressed : null]}
+      style={({ pressed }) => [
+        styles.timelineCard,
+        pressed ? styles.pressed : null,
+      ]}
     >
       <View style={styles.timelineTopRow}>
         <Text style={styles.timelineDate}>{item.dateLabel}</Text>
@@ -311,7 +319,11 @@ const HistoryFooter = memo(function HistoryFooter({
       <View style={styles.card}>
         <Text style={styles.sectionLabel}>QUICK ACTIONS</Text>
         <View style={styles.actions}>
-          <Button label="Today's Meals" onPress={onTodaysMeals} variant="ghost" />
+          <Button
+            label="Today's Meals"
+            onPress={onTodaysMeals}
+            variant="ghost"
+          />
           <Button
             label="Nutrition Plan"
             onPress={onNutritionPlan}
@@ -332,7 +344,10 @@ const HistoryFooter = memo(function HistoryFooter({
 function NutritionHistorySkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="Loading nutrition history" style={styles.skeletonContent}>
+      <View
+        accessibilityLabel="Loading nutrition history"
+        style={styles.skeletonContent}
+      >
         <View style={styles.skeletonHero} />
         <View style={styles.metricGrid}>
           <View style={styles.skeletonMetric} />
@@ -361,10 +376,17 @@ function NutritionHistoryStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.fullButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.fullButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -372,11 +394,17 @@ function NutritionHistoryStateView({
 
 function buildHistoryModel(state: NutritionHistoryState): HistoryModel {
   const timeline = buildTimeline(state);
-  const completedCount = timeline.filter((item) => item.status === 'Completed').length;
+  const completedCount = timeline.filter(
+    (item) => item.status === 'Completed',
+  ).length;
   const skippedCount = 0;
   const completionRate =
-    timeline.length > 0 ? Math.round((completedCount / timeline.length) * 100) : 0;
-  const adherence = Math.round(state.todayNutrition?.progress.adherencePercentage ?? completionRate);
+    timeline.length > 0
+      ? Math.round((completedCount / timeline.length) * 100)
+      : 0;
+  const adherence = Math.round(
+    state.todayNutrition?.progress.adherencePercentage ?? completionRate,
+  );
 
   return {
     streakTitle:

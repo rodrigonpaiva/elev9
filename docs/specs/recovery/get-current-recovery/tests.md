@@ -5,4 +5,3 @@
 - returns not found when user profile is missing
 - ignores snapshots from other users
 - returns the newest snapshot by date and createdAt
-

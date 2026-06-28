@@ -50,10 +50,9 @@ describe('GetGoalHistoryUseCase', () => {
 
     expect(result.limit).toBe(14);
     expect(result.goalProgressSnapshots).toHaveLength(2);
-    expect(goalProgressSnapshotRepository.findManyByGoalId).toHaveBeenCalledWith(
-      'goal_123',
-      { limit: 14 },
-    );
+    expect(
+      goalProgressSnapshotRepository.findManyByGoalId,
+    ).toHaveBeenCalledWith('goal_123', { limit: 14 });
   });
 
   it('applies the default limit of 14', async () => {
@@ -113,16 +112,16 @@ describe('GetGoalHistoryUseCase', () => {
     expect(goalRepository.findActiveByUserProfileId).toHaveBeenCalledWith(
       'profile_456',
     );
-    expect(goalProgressSnapshotRepository.findManyByGoalId).toHaveBeenCalledWith(
-      'goal_456',
-      { limit: 14 },
-    );
+    expect(
+      goalProgressSnapshotRepository.findManyByGoalId,
+    ).toHaveBeenCalledWith('goal_456', { limit: 14 });
   });
 
   function arrangeUserProfile(profileId = 'profile_123') {
     userProfileRepository.findByAuthUserId.mockResolvedValue({
       id: profileId,
-      authUserId: profileId === 'profile_123' ? 'auth_user_123' : 'auth_user_456',
+      authUserId:
+        profileId === 'profile_123' ? 'auth_user_123' : 'auth_user_456',
       name: 'Alex',
       createdAt: new Date(),
       updatedAt: new Date(),

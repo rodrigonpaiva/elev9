@@ -8,4 +8,3 @@
 6. If it does not exist, build it deterministically.
 7. Persist the result if required.
 8. Return the snapshot for today.
-

@@ -1,17 +1,21 @@
 import { memo, useCallback, useMemo, useState } from 'react';
-import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
-import type { FoodItem, Meal, NutritionRecommendation, TodayNutrition } from '@elev9/types';
+import type {
+  FoodItem,
+  Meal,
+  NutritionRecommendation,
+  TodayNutrition,
+} from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
@@ -175,11 +179,7 @@ export function MealDetailScreen() {
   );
 }
 
-const MealHero = memo(function MealHero({
-  model,
-}: {
-  model: MealDetailModel;
-}) {
+const MealHero = memo(function MealHero({ model }: { model: MealDetailModel }) {
   return (
     <View accessibilityLabel={model.accessibilityLabel} style={styles.hero}>
       <View style={styles.heroTopRow}>
@@ -207,7 +207,11 @@ const MacroSummary = memo(function MacroSummary({
       <View style={styles.metricGrid}>
         {macros.map((macro) => (
           <View key={macro.label} style={styles.metricCard}>
-            <Text numberOfLines={1} adjustsFontSizeToFit style={styles.metricValue}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              style={styles.metricValue}
+            >
               {macro.value}
             </Text>
             <Text style={styles.metricLabel}>{macro.label}</Text>
@@ -255,10 +259,10 @@ const FoodItemRow = memo(function FoodItemRow({ food }: { food: FoodItem }) {
       </View>
       {macros ? (
         <View style={styles.foodMacroGroup}>
-          <Text style={styles.foodMacro}>{Math.round(macros.calories)} kcal</Text>
           <Text style={styles.foodMacro}>
-            {getDominantMacroLabel(macros)}
+            {Math.round(macros.calories)} kcal
           </Text>
+          <Text style={styles.foodMacro}>{getDominantMacroLabel(macros)}</Text>
         </View>
       ) : null}
     </View>
@@ -325,7 +329,10 @@ const MealActions = memo(function MealActions({
 function MealDetailSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="Loading meal details" style={styles.skeletonContent}>
+      <View
+        accessibilityLabel="Loading meal details"
+        style={styles.skeletonContent}
+      >
         <View style={styles.skeletonHero} />
         <View style={styles.metricGrid}>
           <View style={styles.skeletonMetric} />
@@ -353,10 +360,17 @@ function MealDetailStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.fullButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.fullButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -409,10 +423,7 @@ function buildMealDetailModel(input: {
   };
 }
 
-function getMealStatus(
-  meal: Meal,
-  nutrition: TodayNutrition,
-): MealStatusLabel {
+function getMealStatus(meal: Meal, nutrition: TodayNutrition): MealStatusLabel {
   if (nutrition.nextMeal?.id === meal.id) {
     return 'Next';
   }
@@ -490,10 +501,18 @@ function getPreparationGuidance(meal: Meal, nutrition: TodayNutrition): string {
   return 'Eat this meal when it fits your normal rhythm today.';
 }
 
-function getDominantMacroLabel(macros: NonNullable<FoodItem['estimatedMacros']>): string {
+function getDominantMacroLabel(
+  macros: NonNullable<FoodItem['estimatedMacros']>,
+): string {
   const values = [
-    { label: `${Math.round(macros.proteinGrams)}g protein`, value: macros.proteinGrams },
-    { label: `${Math.round(macros.carbsGrams)}g carbs`, value: macros.carbsGrams },
+    {
+      label: `${Math.round(macros.proteinGrams)}g protein`,
+      value: macros.proteinGrams,
+    },
+    {
+      label: `${Math.round(macros.carbsGrams)}g carbs`,
+      value: macros.carbsGrams,
+    },
     { label: `${Math.round(macros.fatGrams)}g fat`, value: macros.fatGrams },
   ];
   const dominant = values.reduce((current, candidate) =>

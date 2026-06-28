@@ -5,4 +5,3 @@
 - does not duplicate the same day
 - isolates by authenticated user
 - handles missing user profile
-

@@ -97,7 +97,12 @@ export interface CoachDecision {
 
 export interface CoachDecisionSourceContext {
   goalId?: string;
-  goalType?: 'lose_weight' | 'gain_muscle' | 'maintain_weight' | 'improve_consistency' | 'improve_recovery';
+  goalType?:
+    | 'lose_weight'
+    | 'gain_muscle'
+    | 'maintain_weight'
+    | 'improve_consistency'
+    | 'improve_recovery';
   readinessScore?: number;
   fatigueScore?: number;
   nutritionAdherence?: number;
@@ -115,7 +120,10 @@ export interface CoachDecisionSourceContext {
   habitCurrentStreak?: number;
   habitRiskLevel?: 'low' | 'medium' | 'high';
   habitRiskSignals?: Array<
-    'inactivity_pattern' | 'streak_at_risk' | 'declining_consistency' | 'dropout_risk'
+    | 'inactivity_pattern'
+    | 'streak_at_risk'
+    | 'declining_consistency'
+    | 'dropout_risk'
   >;
   generatedAt: string;
 }

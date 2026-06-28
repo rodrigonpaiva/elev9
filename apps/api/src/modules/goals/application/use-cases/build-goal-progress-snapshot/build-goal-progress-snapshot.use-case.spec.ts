@@ -16,9 +16,7 @@ import { GoalProgressSnapshotRepository } from '../../../domain/repositories/goa
 import { GoalRepository } from '../../../domain/repositories/goal.repository';
 import { GoalProgressCalculatorService } from '../../services/goal-progress-calculator.service';
 import { GoalDateService } from '../../services/goal-date.service';
-import {
-  BUILD_GOAL_PROGRESS_SNAPSHOT_ERROR_CODES,
-} from './build-goal-progress-snapshot.errors';
+import { BUILD_GOAL_PROGRESS_SNAPSHOT_ERROR_CODES } from './build-goal-progress-snapshot.errors';
 import { BuildGoalProgressSnapshotUseCase } from './build-goal-progress-snapshot.use-case';
 
 describe('BuildGoalProgressSnapshotUseCase', () => {
@@ -106,10 +104,9 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     expect(goalRepository.findActiveByUserProfileId).toHaveBeenCalledWith(
       'profile_123',
     );
-    expect(goalProgressSnapshotRepository.findManyByGoalId).toHaveBeenCalledWith(
-      'goal_123',
-      { limit: 9 },
-    );
+    expect(
+      goalProgressSnapshotRepository.findManyByGoalId,
+    ).toHaveBeenCalledWith('goal_123', { limit: 9 });
     expect(goalProgressCalculatorService.calculate).toHaveBeenCalledWith(
       expect.objectContaining({
         goalType: 'lose_weight',
@@ -122,7 +119,9 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
         ],
       }),
     );
-    expect(goalProgressSnapshotRepository.upsertDailySnapshot).toHaveBeenCalledWith(
+    expect(
+      goalProgressSnapshotRepository.upsertDailySnapshot,
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         goalId: 'goal_123',
         userProfileId: 'profile_123',
@@ -151,12 +150,18 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     arrangeGoal({ type: 'improve_consistency' });
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     dailyCheckInRepository.findManyByUserProfileId.mockResolvedValue([]);
     nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(null);
-    nutritionLogRepository.findByUserProfileIdAndDateRange.mockResolvedValue([]);
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    nutritionLogRepository.findByUserProfileIdAndDateRange.mockResolvedValue(
+      [],
+    );
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     adaptiveTrainingRecommendationRepository.findLatestByUserProfileId.mockResolvedValue(
       null,
     );
@@ -164,12 +169,18 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     goalProgressCalculatorService.calculate.mockReturnValue(
       buildCalculatorResult(),
     );
-    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue([]);
+    workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
+      [],
+    );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     dailyCheckInRepository.findManyByUserProfileId.mockResolvedValue([]);
     nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(null);
-    nutritionLogRepository.findByUserProfileIdAndDateRange.mockResolvedValue([]);
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    nutritionLogRepository.findByUserProfileIdAndDateRange.mockResolvedValue(
+      [],
+    );
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     adaptiveTrainingRecommendationRepository.findLatestByUserProfileId.mockResolvedValue(
       null,
     );
@@ -232,7 +243,9 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(todaySpy).toHaveBeenCalled();
-    expect(goalProgressSnapshotRepository.upsertDailySnapshot).toHaveBeenCalledWith(
+    expect(
+      goalProgressSnapshotRepository.upsertDailySnapshot,
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         userProfileId: 'profile_123',
       }),
@@ -252,9 +265,9 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     await useCase.execute({ authUserId: 'auth_user_123' });
     await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(goalProgressSnapshotRepository.upsertDailySnapshot).toHaveBeenCalledTimes(
-      2,
-    );
+    expect(
+      goalProgressSnapshotRepository.upsertDailySnapshot,
+    ).toHaveBeenCalledTimes(2);
   });
 
   function arrangeUserProfile() {
@@ -267,7 +280,17 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     } as never);
   }
 
-  function arrangeGoal(overrides: Partial<{ type: 'lose_weight' | 'gain_muscle' | 'maintain_weight' | 'improve_consistency' | 'improve_recovery'; targetValue?: number }> = {}) {
+  function arrangeGoal(
+    overrides: Partial<{
+      type:
+        | 'lose_weight'
+        | 'gain_muscle'
+        | 'maintain_weight'
+        | 'improve_consistency'
+        | 'improve_recovery';
+      targetValue?: number;
+    }> = {},
+  ) {
     goalRepository.findActiveByUserProfileId.mockResolvedValue(
       new Goal({
         id: 'goal_123',
@@ -355,7 +378,19 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
         carbsGrams: 280,
         fatGrams: 70,
       },
-      days: [{ meals: [{}, {}] as never[], dayIndex: 1, date: '2026-06-01', dailyMacroTargets: { calories: 2400, proteinGrams: 160, carbsGrams: 280, fatGrams: 70 } }],
+      days: [
+        {
+          meals: [{}, {}] as never[],
+          dayIndex: 1,
+          date: '2026-06-01',
+          dailyMacroTargets: {
+            calories: 2400,
+            proteinGrams: 160,
+            carbsGrams: 280,
+            fatGrams: 70,
+          },
+        },
+      ],
       generatedBy: 'deterministic',
       createdAt: new Date('2026-06-01T00:00:00.000Z'),
       sourceContext: undefined,

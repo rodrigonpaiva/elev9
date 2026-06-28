@@ -253,11 +253,11 @@ export function ProfileScreen() {
             <Card style={styles.card}>
               <SectionHeader
                 title="Training Plan"
-                subtitle="Your current plan and today&apos;s readiness."
+                subtitle="Your current plan and today's readiness."
               />
               <InfoRow label="Plan status" value={trainingPlanStatus.status} />
               <InfoRow
-                label="Today&apos;s session"
+                label="Today's session"
                 value={trainingPlanStatus.todayWorkout}
               />
               <InfoRow
@@ -281,7 +281,7 @@ export function ProfileScreen() {
             <Card style={styles.card}>
               <SectionHeader
                 title="Nutrition"
-                subtitle="Review today&apos;s nutrition plan and coaching focus."
+                subtitle="Review today's nutrition plan and coaching focus."
               />
               <Button
                 label="Nutrition Overview"

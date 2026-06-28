@@ -54,7 +54,10 @@ import { HabitsController } from './presentation/http/habits.controller';
     TrainingModule,
     MongooseModule.forFeature([
       { name: HABIT_SNAPSHOT_MODEL_NAME, schema: HabitSnapshotSchema },
-      { name: CONSISTENCY_SUMMARY_MODEL_NAME, schema: ConsistencySummarySchema },
+      {
+        name: CONSISTENCY_SUMMARY_MODEL_NAME,
+        schema: ConsistencySummarySchema,
+      },
       { name: HABIT_RISK_SIGNAL_MODEL_NAME, schema: HabitRiskSignalSchema },
     ]),
   ],

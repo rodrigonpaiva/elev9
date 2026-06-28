@@ -115,7 +115,9 @@ describe('BuildPersonalizationSnapshotUseCase', () => {
     goalProgressSnapshotRepository.findLatestByGoalId.mockResolvedValue(null);
     goalMilestoneRepository.findManyByGoalId.mockResolvedValue([]);
     goalAchievementRepository.findManyByUserProfileId.mockResolvedValue([]);
-    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(null);
+    recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
     coachDecisionRepository.findRecentByUserProfileId.mockResolvedValue([]);
     getEngagementSummaryUseCase.execute.mockResolvedValue({
       engagementSummary: {
@@ -361,7 +363,9 @@ describe('BuildPersonalizationSnapshotUseCase', () => {
       }),
     );
 
-    expect(personalizationSnapshotRepository.upsertDailySnapshot).toHaveBeenCalledWith(
+    expect(
+      personalizationSnapshotRepository.upsertDailySnapshot,
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
         userProfileId: 'profile_123',
         date: '2026-06-03',
@@ -387,7 +391,11 @@ describe('BuildPersonalizationSnapshotUseCase', () => {
           goalAchievementReached: true,
           recoveryTrend: 'improving',
           recoveryAlertEngagement: 75,
-          coachDecisionPriorityHistory: ['recovery', 'consistency', 'motivation'],
+          coachDecisionPriorityHistory: [
+            'recovery',
+            'consistency',
+            'motivation',
+          ],
           activityHourDistribution: {
             morning: 1,
             afternoon: 1,
@@ -400,8 +408,16 @@ describe('BuildPersonalizationSnapshotUseCase', () => {
       }),
     );
     expect(result.personalizationSnapshot.id).toBe('snapshot_123');
-    expect(Object.keys(result.personalizationSnapshot.sourceContext)).not.toEqual(
-      expect.arrayContaining(['goal', 'habitSnapshot', 'recoverySnapshot', 'coachDecision', 'notificationHistory']),
+    expect(
+      Object.keys(result.personalizationSnapshot.sourceContext),
+    ).not.toEqual(
+      expect.arrayContaining([
+        'goal',
+        'habitSnapshot',
+        'recoverySnapshot',
+        'coachDecision',
+        'notificationHistory',
+      ]),
     );
   });
 
@@ -419,7 +435,9 @@ describe('BuildPersonalizationSnapshotUseCase', () => {
       compositeScore: 50,
       formulaVersion: 'personalization-engine-v1',
     };
-    personalizationCalculatorService.calculate.mockReturnValue(calculatorResult);
+    personalizationCalculatorService.calculate.mockReturnValue(
+      calculatorResult,
+    );
 
     const result = await useCase.execute({ authUserId: 'auth_123' });
 
@@ -446,7 +464,8 @@ describe('BuildPersonalizationSnapshotUseCase', () => {
       }),
     );
     expect(
-      personalizationSnapshotRepository.upsertDailySnapshot.mock.calls[0][0].sourceContext,
+      personalizationSnapshotRepository.upsertDailySnapshot.mock.calls[0][0]
+        .sourceContext,
     ).toMatchObject({
       engagementScore: 50,
       notificationDismissalRate: 0,

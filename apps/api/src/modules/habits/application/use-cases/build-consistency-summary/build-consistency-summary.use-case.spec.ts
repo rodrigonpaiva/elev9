@@ -86,10 +86,9 @@ describe('BuildConsistencySummaryUseCase', () => {
     });
 
     expect(platformDateService.getTodayDateString).toHaveBeenCalled();
-    expect(habitSnapshotRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'user_profile_123',
-      { limit: 30 },
-    );
+    expect(
+      habitSnapshotRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('user_profile_123', { limit: 30 });
     expect(consistencySummaryRepository.upsertSummary).toHaveBeenCalledWith(
       expect.objectContaining({
         userProfileId: 'user_profile_123',
@@ -186,9 +185,8 @@ describe('BuildConsistencySummaryUseCase', () => {
       authUserId: 'auth_123',
     });
 
-    expect(habitSnapshotRepository.findManyByUserProfileId).toHaveBeenCalledWith(
-      'user_profile_123',
-      { limit: 30 },
-    );
+    expect(
+      habitSnapshotRepository.findManyByUserProfileId,
+    ).toHaveBeenCalledWith('user_profile_123', { limit: 30 });
   });
 });

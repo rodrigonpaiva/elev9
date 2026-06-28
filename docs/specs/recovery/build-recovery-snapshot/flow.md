@@ -21,4 +21,3 @@
 - If check-in data is missing, compute from training and adherence signals only.
 - If training data is missing, fall back to check-in and adherence signals.
 - If no previous snapshot exists, default the trend to `stable`.
-

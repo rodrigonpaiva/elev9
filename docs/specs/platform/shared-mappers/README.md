@@ -20,4 +20,3 @@ Not included:
 
 - business rule changes
 - new DTO contracts
-

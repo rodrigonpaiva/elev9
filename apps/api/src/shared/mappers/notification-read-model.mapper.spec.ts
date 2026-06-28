@@ -3,7 +3,9 @@ import { NotificationInfluence } from '../../modules/notifications/domain/value-
 import { NotificationReadModelMapper } from './notification-read-model.mapper';
 
 describe('NotificationReadModelMapper', () => {
-  function buildDecision(overrides: Partial<NotificationDecision> = {}): NotificationDecision {
+  function buildDecision(
+    overrides: Partial<NotificationDecision> = {},
+  ): NotificationDecision {
     return new NotificationDecision({
       id: overrides.id ?? 'notification_123',
       userProfileId: overrides.userProfileId ?? 'profile_123',
@@ -16,16 +18,14 @@ describe('NotificationReadModelMapper', () => {
       message: overrides.message ?? 'Keep the next step simple and consistent.',
       actionLabel: overrides.actionLabel,
       actionTarget: overrides.actionTarget,
-      influences:
-        overrides.influences ??
-        [
-          new NotificationInfluence({
-            code: 'COACH_CONSISTENCY_NUDGE',
-            label: 'Coach consistency nudge',
-            impact: 'neutral',
-            source: 'coach',
-          }),
-        ],
+      influences: overrides.influences ?? [
+        new NotificationInfluence({
+          code: 'COACH_CONSISTENCY_NUDGE',
+          label: 'Coach consistency nudge',
+          impact: 'neutral',
+          source: 'coach',
+        }),
+      ],
       sourceContext:
         overrides.sourceContext ??
         ({
@@ -47,7 +47,9 @@ describe('NotificationReadModelMapper', () => {
           generatedAt: '2026-04-30T10:00:00.000Z',
         } as never),
       suppressed: overrides.suppressed ?? true,
-      suppressionReasons: overrides.suppressionReasons ?? ['same_type_cooldown'],
+      suppressionReasons: overrides.suppressionReasons ?? [
+        'same_type_cooldown',
+      ],
       fatigueLevel: overrides.fatigueLevel ?? 'high',
       formulaVersion: overrides.formulaVersion ?? 'notification-engine-v1',
       generatedBy: 'deterministic',

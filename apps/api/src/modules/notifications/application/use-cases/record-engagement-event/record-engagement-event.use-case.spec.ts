@@ -39,7 +39,9 @@ describe('RecordEngagementEventUseCase', () => {
       findRecentByUserProfileId: jest.fn(),
     } as unknown as jest.Mocked<EngagementEventRepository>;
 
-    userProfileRepository.findByAuthUserId.mockResolvedValue(buildUserProfile());
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
     notificationDecisionRepository.findById.mockResolvedValue(
       buildDecision('notification_123', 'planned'),
     );

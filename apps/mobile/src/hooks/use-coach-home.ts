@@ -184,7 +184,8 @@ function buildCoachHomeModel(input: {
 }): CoachHomeModel {
   const contextItems = buildContextItems(input);
   const priorities = buildPriorities(input.coachDecision);
-  const updatedAt = input.coachDecision.updatedAt || input.coachDecision.createdAt;
+  const updatedAt =
+    input.coachDecision.updatedAt || input.coachDecision.createdAt;
   const generatedAt = getGeneratedAt(input.coachDecision);
 
   return {
@@ -306,7 +307,7 @@ function buildContextItems(input: {
       label: 'Nutrition',
       value:
         input.mealsRemaining === undefined
-          ? input.nutritionFocus ?? 'Plan ready'
+          ? (input.nutritionFocus ?? 'Plan ready')
           : `${input.mealsRemaining} meals remaining`,
     },
     {
@@ -339,7 +340,10 @@ function buildPriorities(coachDecision: CoachDecision): CoachHomePriority[] {
 function resolveLatestAssistantMessage(
   messages: CoachChatHistoryMessage[],
 ): CoachChatHistoryMessage | null {
-  return [...messages].reverse().find((message) => message.role === 'assistant') ?? null;
+  return (
+    [...messages].reverse().find((message) => message.role === 'assistant') ??
+    null
+  );
 }
 
 function getMealsRemaining(mealCount?: number): number | undefined {
@@ -366,8 +370,12 @@ function getRecoveryLabel(score?: number): string {
   return 'Recover';
 }
 
-function getPriorityReason(coachDecision: CoachDecision, index: number): string {
-  const influence = coachDecision.influences[index] ?? coachDecision.influences[0];
+function getPriorityReason(
+  coachDecision: CoachDecision,
+  index: number,
+): string {
+  const influence =
+    coachDecision.influences[index] ?? coachDecision.influences[0];
 
   if (influence?.label) {
     return influence.label;

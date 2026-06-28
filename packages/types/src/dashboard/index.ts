@@ -1,18 +1,11 @@
-import {
-  FitnessProfileActivityLevel,
-  FitnessProfileGoal,
-} from '../fitness';
+import { FitnessProfileActivityLevel, FitnessProfileGoal } from '../fitness';
 import {
   Goal,
   GoalForecast,
   GoalMilestone,
   GoalProgressSnapshot,
 } from '../goals';
-import {
-  ConsistencySummary,
-  HabitRiskSignal,
-  HabitSnapshot,
-} from '../habits';
+import { ConsistencySummary, HabitRiskSignal, HabitSnapshot } from '../habits';
 import {
   NotificationDecision,
   NotificationEngagementSummary,

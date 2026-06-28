@@ -23,4 +23,3 @@ GET /ai/coach-decision/today
 ```
 
 If the decision for today is missing, the implementation may build it internally and return the persisted result.
-

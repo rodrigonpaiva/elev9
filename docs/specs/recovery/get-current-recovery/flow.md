@@ -5,4 +5,3 @@
 3. Look up the latest `RecoverySnapshot` for the user.
 4. Return the snapshot if found.
 5. Return a not-found error if the user has no snapshot yet.
-

@@ -32,7 +32,7 @@ The product needs a bounded context that can:
 Introduce a dedicated bounded context:
 
 ```ts
-notifications
+notifications;
 ```
 
 The engine will be read-model-first and deterministic-first.

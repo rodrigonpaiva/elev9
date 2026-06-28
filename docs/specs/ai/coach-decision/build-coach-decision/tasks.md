@@ -6,4 +6,3 @@
 4. Implement the builder use case.
 5. Add builder tests.
 6. Add optional LLM wording layer.
-

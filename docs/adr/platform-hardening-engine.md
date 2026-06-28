@@ -85,4 +85,3 @@ The platform should converge on a single set of rules for:
 - [shared-mappers](../specs/platform/shared-mappers/README.md)
 - [replay-and-backfill](../specs/platform/replay-and-backfill/README.md)
 - [concurrency-hardening](../specs/platform/concurrency-hardening/README.md)
-

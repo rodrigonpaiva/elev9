@@ -38,10 +38,9 @@ describe('GetHabitRiskSignalsUseCase', () => {
       authUserId: 'auth_123',
     });
 
-    expect(habitRiskSignalRepository.findRecentByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 30 },
-    );
+    expect(
+      habitRiskSignalRepository.findRecentByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 30 });
     expect(buildHabitRiskSignalsUseCase.execute).not.toHaveBeenCalled();
     expect(result.habitRiskSignals).toHaveLength(1);
   });

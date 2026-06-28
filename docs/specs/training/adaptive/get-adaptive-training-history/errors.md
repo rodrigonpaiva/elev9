@@ -4,4 +4,3 @@
 - user profile not found -> 404
 - invalid limit -> 400
 - internal error -> 500
-

@@ -40,4 +40,3 @@ The builder must:
 - read the latest nutrition signals
 - compute a deterministic recommendation
 - persist it with idempotent daily upsert
-

@@ -44,7 +44,11 @@ const goalTokens = {
 type GoalSection =
   | { id: 'summary'; type: 'summary'; model: CoachGoalGuidanceModel }
   | { id: 'helping'; type: 'helping'; helping: CoachGoalGuidanceHelpingCard[] }
-  | { id: 'barriers'; type: 'barriers'; barriers: CoachGoalGuidanceBarrierCard[] }
+  | {
+      id: 'barriers';
+      type: 'barriers';
+      barriers: CoachGoalGuidanceBarrierCard[];
+    }
   | { id: 'strategy'; type: 'strategy'; model: CoachGoalGuidanceModel }
   | { id: 'forecast'; type: 'forecast'; model: CoachGoalGuidanceModel }
   | { id: 'actions'; type: 'actions'; model: CoachGoalGuidanceModel };
@@ -198,13 +202,18 @@ export function CoachGoalGuidanceScreen() {
           />
         }
         ListHeaderComponent={
-          <View accessibilityLabel={guidance.model.accessibilityLabel} style={styles.content}>
+          <View
+            accessibilityLabel={guidance.model.accessibilityLabel}
+            style={styles.content}
+          >
             <GoalHero model={guidance.model} />
             {sections.map((section) => renderSection({ item: section }))}
             <SectionTitle title="Milestones" />
           </View>
         }
-        ListFooterComponent={<GoalFooter model={guidance.model} onAction={handleAction} />}
+        ListFooterComponent={
+          <GoalFooter model={guidance.model} onAction={handleAction} />
+        }
         initialNumToRender={8}
         maxToRenderPerBatch={8}
         updateCellsBatchingPeriod={80}
@@ -252,8 +261,15 @@ const CurrentProgress = memo(function CurrentProgress({
 }) {
   return (
     <Section title="Current Progress">
-      <View accessibilityLabel={`Current progress. ${model.currentProgress}`} style={styles.summaryCard}>
-        <Text maxFontSizeMultiplier={1.35} numberOfLines={3} style={styles.summaryText}>
+      <View
+        accessibilityLabel={`Current progress. ${model.currentProgress}`}
+        style={styles.summaryCard}
+      >
+        <Text
+          maxFontSizeMultiplier={1.35}
+          numberOfLines={3}
+          style={styles.summaryText}
+        >
           {model.currentProgress}
         </Text>
       </View>
@@ -275,7 +291,11 @@ const HelpingCards = memo(function HelpingCards({
             key={item.id}
             style={styles.helpingCard}
           >
-            <Ionicons name="trending-up-outline" size={18} color={goalTokens.green} />
+            <Ionicons
+              name="trending-up-outline"
+              size={18}
+              color={goalTokens.green}
+            />
             <View style={styles.cardCopy}>
               <Text style={styles.cardTitle}>{item.title}</Text>
               <Text style={styles.cardDetail}>{item.detail}</Text>
@@ -301,7 +321,11 @@ const BarrierCards = memo(function BarrierCards({
             key={item.id}
             style={styles.barrierCard}
           >
-            <Ionicons name="warning-outline" size={18} color={goalTokens.amber} />
+            <Ionicons
+              name="warning-outline"
+              size={18}
+              color={goalTokens.amber}
+            />
             <View style={styles.cardCopy}>
               <Text style={styles.cardTitle}>{item.title}</Text>
               <Text style={styles.cardDetail}>{item.detail}</Text>
@@ -325,7 +349,11 @@ const CoachStrategy = memo(function CoachStrategy({
         style={styles.strategyCard}
       >
         {model.strategy.split(/\n+/).map((line) => (
-          <Text key={line} maxFontSizeMultiplier={1.35} style={styles.strategyText}>
+          <Text
+            key={line}
+            maxFontSizeMultiplier={1.35}
+            style={styles.strategyText}
+          >
             {line}
           </Text>
         ))}
@@ -341,7 +369,10 @@ const Forecast = memo(function Forecast({
 }) {
   return (
     <Section title="Forecast">
-      <View accessibilityLabel={`Forecast. ${model.forecast}`} style={styles.forecastCard}>
+      <View
+        accessibilityLabel={`Forecast. ${model.forecast}`}
+        style={styles.forecastCard}
+      >
         <Ionicons name="analytics-outline" size={18} color={goalTokens.text} />
         <Text maxFontSizeMultiplier={1.35} style={styles.forecastText}>
           {model.forecast}
@@ -375,7 +406,11 @@ const MilestoneRow = memo(function MilestoneRow({
         <Text style={styles.cardTitle}>{item.title}</Text>
         <Text style={styles.cardDetail}>{item.detail}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={goalTokens.tertiaryText} />
+      <Ionicons
+        name="chevron-forward"
+        size={18}
+        color={goalTokens.tertiaryText}
+      />
     </Pressable>
   );
 });

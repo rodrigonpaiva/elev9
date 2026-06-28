@@ -472,7 +472,9 @@ export class AdaptiveTrainingRecommendationCalculatorService {
       });
     }
 
-    return influences.map((influence) => new AdaptiveTrainingInfluence(influence));
+    return influences.map(
+      (influence) => new AdaptiveTrainingInfluence(influence),
+    );
   }
 
   private buildReasoning(input: {

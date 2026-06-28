@@ -246,7 +246,6 @@ export function CreateFitnessProfileScreen() {
   );
 }
 
-
 const styles = StyleSheet.create({
   content: {
     paddingTop: 32,

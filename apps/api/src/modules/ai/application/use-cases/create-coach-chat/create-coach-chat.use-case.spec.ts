@@ -176,19 +176,14 @@ describe('CreateCoachChatUseCase', () => {
       null,
     );
     buildUserHealthContextService.build.mockResolvedValue(buildHealthContext());
-    getCurrentCoachDecisionUseCase.execute.mockResolvedValue(
-      {
-        coachDecision: buildCoachDecision({
-          priority: 'training',
-          headline: 'Training adaptation recommended',
-          summary: 'Signals are stable and ready for progression.',
-          actionItems: [
-            'Follow the adaptive recommendation',
-            'Monitor fatigue',
-          ],
-        }),
-      } as never,
-    );
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: buildCoachDecision({
+        priority: 'training',
+        headline: 'Training adaptation recommended',
+        summary: 'Signals are stable and ready for progression.',
+        actionItems: ['Follow the adaptive recommendation', 'Monitor fatigue'],
+      }),
+    } as never);
     aiPromptBuilder.build.mockReturnValue({
       promptVersion: 'coach-chat-prompt-v1',
       messages: [{ role: 'system', content: 'prompt' }],
@@ -313,15 +308,13 @@ describe('CreateCoachChatUseCase', () => {
       null,
     );
     buildUserHealthContextService.build.mockResolvedValue(buildHealthContext());
-    getCurrentCoachDecisionUseCase.execute.mockResolvedValue(
-      {
-        coachDecision: buildCoachDecision({
-          priority: 'consistency',
-          headline: 'Focus on consistency',
-          summary: 'Signals are stable.',
-        }),
-      } as never,
-    );
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: buildCoachDecision({
+        priority: 'consistency',
+        headline: 'Focus on consistency',
+        summary: 'Signals are stable.',
+      }),
+    } as never);
     getCurrentNotificationUseCase.execute.mockResolvedValue({
       notificationDecision: buildNotificationDecision(),
     } as never);
@@ -860,27 +853,25 @@ describe('CreateCoachChatUseCase', () => {
         },
       }),
     );
-    getCurrentCoachDecisionUseCase.execute.mockResolvedValue(
-      {
-        coachDecision: buildCoachDecision({
-          priority: 'recovery',
-          headline: 'Recovery should be your focus today',
-          summary: 'Reduce load and recover before pushing again.',
-          actionItems: [
-            'Reduce training intensity today',
-            'Prioritize sleep tonight',
-          ],
-          influences: [
-            new CoachDecisionInfluence({
-              code: 'LOW_READINESS',
-              label: 'Low readiness',
-              impact: 'negative',
-              source: 'recovery',
-            }),
-          ],
-        }),
-      } as never,
-    );
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: buildCoachDecision({
+        priority: 'recovery',
+        headline: 'Recovery should be your focus today',
+        summary: 'Reduce load and recover before pushing again.',
+        actionItems: [
+          'Reduce training intensity today',
+          'Prioritize sleep tonight',
+        ],
+        influences: [
+          new CoachDecisionInfluence({
+            code: 'LOW_READINESS',
+            label: 'Low readiness',
+            impact: 'negative',
+            source: 'recovery',
+          }),
+        ],
+      }),
+    } as never);
     aiPromptBuilder.build.mockReturnValue({
       promptVersion: 'coach-chat-prompt-v1',
       messages: [{ role: 'system', content: 'prompt' }],

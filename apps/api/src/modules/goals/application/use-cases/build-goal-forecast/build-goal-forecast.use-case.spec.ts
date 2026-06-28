@@ -7,9 +7,7 @@ import { GoalRepository } from '../../../domain/repositories/goal.repository';
 import { GoalProgressCalculatorService } from '../../services/goal-progress-calculator.service';
 import { GoalDateService } from '../../services/goal-date.service';
 import { UserProfileRepository } from '../../../../users/domain/repositories/user-profile.repository';
-import {
-  BUILD_GOAL_FORECAST_ERROR_CODES,
-} from './build-goal-forecast.errors';
+import { BUILD_GOAL_FORECAST_ERROR_CODES } from './build-goal-forecast.errors';
 import { BuildGoalForecastUseCase } from './build-goal-forecast.use-case';
 
 describe('BuildGoalForecastUseCase', () => {
@@ -68,17 +66,15 @@ describe('BuildGoalForecastUseCase', () => {
     expect(goalRepository.findActiveByUserProfileId).toHaveBeenCalledWith(
       'profile_123',
     );
-    expect(goalProgressSnapshotRepository.findManyByGoalId).toHaveBeenCalledWith(
-      'goal_123',
-      { limit: 7 },
-    );
-    expect(goalProgressCalculatorService.calculateForecast).toHaveBeenCalledWith(
+    expect(
+      goalProgressSnapshotRepository.findManyByGoalId,
+    ).toHaveBeenCalledWith('goal_123', { limit: 7 });
+    expect(
+      goalProgressCalculatorService.calculateForecast,
+    ).toHaveBeenCalledWith(
       50,
       'improving',
-      [
-        { progressPercentage: 38 },
-        { progressPercentage: 42 },
-      ],
+      [{ progressPercentage: 38 }, { progressPercentage: 42 }],
       expect.objectContaining({
         goalType: 'lose_weight',
       }),
@@ -110,7 +106,9 @@ describe('BuildGoalForecastUseCase', () => {
 
     await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(goalProgressCalculatorService.calculateForecast).toHaveBeenCalledWith(
+    expect(
+      goalProgressCalculatorService.calculateForecast,
+    ).toHaveBeenCalledWith(
       18,
       'stable',
       [],

@@ -29,4 +29,3 @@ Not included:
 - user-editable recovery state
 - wearable ingestion
 - LLM generation
-

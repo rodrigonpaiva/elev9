@@ -120,7 +120,9 @@ export function NutritionRecommendationsScreen() {
       recommendationsResult.status === 'rejected' &&
       !isEmptyStateError(recommendationsResult.reason)
     ) {
-      setErrorMessage(getRecommendationsErrorMessage(recommendationsResult.reason));
+      setErrorMessage(
+        getRecommendationsErrorMessage(recommendationsResult.reason),
+      );
     }
 
     setState({
@@ -133,7 +135,9 @@ export function NutritionRecommendationsScreen() {
           ? todayResult.value.todayNutrition
           : null,
       nutritionPlan:
-        planResult.status === 'fulfilled' ? planResult.value.nutritionPlan : null,
+        planResult.status === 'fulfilled'
+          ? planResult.value.nutritionPlan
+          : null,
       recoverySnapshot:
         recoveryResult.status === 'fulfilled'
           ? recoveryResult.value.recoverySnapshot
@@ -147,7 +151,9 @@ export function NutritionRecommendationsScreen() {
           ? progressResult.value.summary
           : null,
       coachDecision:
-        coachResult.status === 'fulfilled' ? coachResult.value.coachDecision : null,
+        coachResult.status === 'fulfilled'
+          ? coachResult.value.coachDecision
+          : null,
     });
     setIsLoading(false);
     setIsRefreshing(false);
@@ -163,30 +169,42 @@ export function NutritionRecommendationsScreen() {
   const model = useMemo(() => buildRecommendationsModel(state), [state]);
 
   const handleTodaysMeals = useCallback(() => {
-    trackNutritionRecommendationsEvent('nutrition_recommendation_action_selected', {
-      action: 'todays_meals',
-    });
+    trackNutritionRecommendationsEvent(
+      'nutrition_recommendation_action_selected',
+      {
+        action: 'todays_meals',
+      },
+    );
     navigation.navigate('TodaysMeals');
   }, [navigation]);
 
   const handleNutritionPlan = useCallback(() => {
-    trackNutritionRecommendationsEvent('nutrition_recommendation_action_selected', {
-      action: 'nutrition_plan',
-    });
+    trackNutritionRecommendationsEvent(
+      'nutrition_recommendation_action_selected',
+      {
+        action: 'nutrition_plan',
+      },
+    );
     navigation.navigate('NutritionPlan');
   }, [navigation]);
 
   const handleHistory = useCallback(() => {
-    trackNutritionRecommendationsEvent('nutrition_recommendation_action_selected', {
-      action: 'history',
-    });
+    trackNutritionRecommendationsEvent(
+      'nutrition_recommendation_action_selected',
+      {
+        action: 'history',
+      },
+    );
     navigation.navigate('NutritionHistory');
   }, [navigation]);
 
   const handleCoach = useCallback(() => {
-    trackNutritionRecommendationsEvent('nutrition_recommendation_action_selected', {
-      action: 'coach',
-    });
+    trackNutritionRecommendationsEvent(
+      'nutrition_recommendation_action_selected',
+      {
+        action: 'coach',
+      },
+    );
     navigation.navigate('AskCoach');
   }, [navigation]);
 
@@ -383,7 +401,11 @@ const QuickActions = memo(function QuickActions({
       <Text style={styles.sectionLabel}>QUICK ACTIONS</Text>
       <View style={styles.actions}>
         <Button label="Today's Meals" onPress={onTodaysMeals} variant="ghost" />
-        <Button label="Nutrition Plan" onPress={onNutritionPlan} variant="ghost" />
+        <Button
+          label="Nutrition Plan"
+          onPress={onNutritionPlan}
+          variant="ghost"
+        />
         <Button label="History" onPress={onHistory} variant="ghost" />
         <Button label="Coach" onPress={onCoach} variant="ghost" />
       </View>
@@ -424,10 +446,17 @@ function RecommendationsStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.fullButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.fullButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -444,7 +473,8 @@ function buildRecommendationsModel(
   const mealsRemaining = getMealsRemaining(state.todayNutrition);
   const workout = resolveTodaysWorkout(state.trainingPlan);
   const heroTitle = getHeroTitle(state, primaryMessage);
-  const priorityTitle = firstAction ?? getFallbackPriority(state, mealsRemaining);
+  const priorityTitle =
+    firstAction ?? getFallbackPriority(state, mealsRemaining);
 
   return {
     heroTitle,
@@ -633,7 +663,9 @@ function getCoachNotes(state: RecommendationsState): string[] {
   return notes.slice(0, 3);
 }
 
-function resolveTodaysWorkout(trainingPlan: TrainingPlan | null): TodayWorkout | null {
+function resolveTodaysWorkout(
+  trainingPlan: TrainingPlan | null,
+): TodayWorkout | null {
   if (!trainingPlan) {
     return null;
   }

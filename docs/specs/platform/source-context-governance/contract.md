@@ -22,4 +22,3 @@
 - Adaptive Training
 - Coach Decision
 - Goals
-

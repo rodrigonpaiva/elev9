@@ -146,8 +146,9 @@ export class BuildRecoverySnapshotUseCase {
         : [];
       const recentWorkoutLogsCount = recentWorkoutLogs.length;
       const currentStreak = calculateStreak(streakWorkoutLogs as WorkoutLog[]);
-      const uniqueWorkoutDates = new Set(recentWorkoutLogs.map((log) => log.date))
-        .size;
+      const uniqueWorkoutDates = new Set(
+        recentWorkoutLogs.map((log) => log.date),
+      ).size;
       const missedWorkouts =
         trainingPlanId && recentWorkoutLogsCount > 0
           ? Math.max(0, activeTrainingPlanDays - uniqueWorkoutDates)
@@ -158,17 +159,20 @@ export class BuildRecoverySnapshotUseCase {
         recentWorkoutLogsCount,
         hasTrainingPlan: Boolean(trainingPlanId),
       });
-      const recentWorkoutLoad = this.calculateRecentWorkoutLoad(
-        recentWorkoutLogs,
-      );
+      const recentWorkoutLoad =
+        this.calculateRecentWorkoutLoad(recentWorkoutLogs);
 
-      const previousReadinessScores =
-        await this.getPreviousReadinessScores(userProfile.id, todayDate);
+      const previousReadinessScores = await this.getPreviousReadinessScores(
+        userProfile.id,
+        todayDate,
+      );
 
       const calculatorInput: RecoveryScoreCalculatorInput = {
         sleepQuality: latestCheckIn ? latestCheckIn.sleepQuality : undefined,
         energyLevel: latestCheckIn ? latestCheckIn.energyLevel : undefined,
-        muscleSoreness: latestCheckIn ? latestCheckIn.muscleSoreness : undefined,
+        muscleSoreness: latestCheckIn
+          ? latestCheckIn.muscleSoreness
+          : undefined,
         adherenceScore:
           trainingPlanId || recentWorkoutLogsCount > 0
             ? adherenceScore
@@ -249,9 +253,7 @@ export class BuildRecoverySnapshotUseCase {
     );
   }
 
-  private calculateRecentWorkoutLoad(
-    workoutLogs: WorkoutLog[],
-  ): number {
+  private calculateRecentWorkoutLoad(workoutLogs: WorkoutLog[]): number {
     if (workoutLogs.length === 0) {
       return SCORE_NEUTRAL_VALUE;
     }
@@ -321,11 +323,13 @@ export class BuildRecoverySnapshotUseCase {
       return null;
     }
 
-    return checkIns.slice(1).reduce(
-      (latest, current) =>
-        current.createdAt > latest.createdAt ? current : latest,
-      checkIns[0],
-    );
+    return checkIns
+      .slice(1)
+      .reduce(
+        (latest, current) =>
+          current.createdAt > latest.createdAt ? current : latest,
+        checkIns[0],
+      );
   }
 
   private resolveDateString(date?: string): string {

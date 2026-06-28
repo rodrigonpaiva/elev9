@@ -16,12 +16,12 @@
   userProfileId: string;
   items: Array<{
     type:
-      | "weight_target"
-      | "workout_count"
-      | "streak"
-      | "adherence"
-      | "recovery"
-      | "custom";
+      | 'weight_target'
+      | 'workout_count'
+      | 'streak'
+      | 'adherence'
+      | 'recovery'
+      | 'custom';
     title: string;
     targetValue: number;
     achieved: boolean;

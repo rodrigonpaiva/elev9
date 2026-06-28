@@ -15,9 +15,7 @@ import {
 } from './notification-history.schema';
 
 @Injectable()
-export class MongooseNotificationHistoryRepository
-  implements NotificationHistoryRepository
-{
+export class MongooseNotificationHistoryRepository implements NotificationHistoryRepository {
   constructor(
     @InjectModel(NOTIFICATION_HISTORY_MODEL_NAME)
     private readonly notificationHistoryModel: Model<NotificationHistorySchemaClass>,
@@ -75,7 +73,9 @@ export class MongooseNotificationHistoryRepository
     );
   }
 
-  private toRecord(document: NotificationHistoryDocument): NotificationHistoryRecord {
+  private toRecord(
+    document: NotificationHistoryDocument,
+  ): NotificationHistoryRecord {
     return {
       id: document._id.toString(),
       userProfileId: document.userProfileId,

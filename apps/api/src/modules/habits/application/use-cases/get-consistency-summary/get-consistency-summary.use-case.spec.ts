@@ -39,9 +39,9 @@ describe('GetConsistencySummaryUseCase', () => {
       authUserId: 'auth_123',
     });
 
-    expect(consistencySummaryRepository.findByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-    );
+    expect(
+      consistencySummaryRepository.findByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123');
     expect(buildConsistencySummaryUseCase.execute).not.toHaveBeenCalled();
     expect(result.consistencySummary.score).toBe(72);
   });

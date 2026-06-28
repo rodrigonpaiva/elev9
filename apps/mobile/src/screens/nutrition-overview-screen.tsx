@@ -1,10 +1,5 @@
 import { memo, useCallback, useMemo, useState } from 'react';
-import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -207,10 +202,7 @@ export function NutritionOverviewScreen() {
         <NutritionHero model={model} />
         <MetricGrid label="DAILY TARGETS" metrics={model.targets} />
         <MetricGrid label="TODAY'S PROGRESS" metrics={model.progress} />
-        <NextMealCard
-          nextMeal={model.nextMeal}
-          onOpenMeal={handleOpenMeal}
-        />
+        <NextMealCard nextMeal={model.nextMeal} onOpenMeal={handleOpenMeal} />
         <CoachInsightCard insight={model.coachInsight} />
         <QuickActions
           onOpenCoach={handleOpenCoach}
@@ -250,7 +242,11 @@ const MetricGrid = memo(function MetricGrid({
       <View style={styles.metricGrid}>
         {metrics.map((metric) => (
           <View key={metric.label} style={styles.metricCard}>
-            <Text numberOfLines={1} adjustsFontSizeToFit style={styles.metricValue}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              style={styles.metricValue}
+            >
               {metric.value}
             </Text>
             <Text style={styles.metricLabel}>{metric.label}</Text>
@@ -281,7 +277,9 @@ const NextMealCard = memo(function NextMealCard({
               ) : null}
             </View>
             <View style={styles.nextMealTargets}>
-              <Text style={styles.nextMealTarget}>{nextMeal.caloriesLabel}</Text>
+              <Text style={styles.nextMealTarget}>
+                {nextMeal.caloriesLabel}
+              </Text>
               <Text style={styles.nextMealTarget}>{nextMeal.proteinLabel}</Text>
             </View>
           </View>
@@ -298,7 +296,9 @@ const NextMealCard = memo(function NextMealCard({
         </>
       ) : (
         <>
-          <Text style={styles.emptySectionTitle}>No meals remaining today.</Text>
+          <Text style={styles.emptySectionTitle}>
+            No meals remaining today.
+          </Text>
           <Text style={styles.emptySectionMessage}>
             Your next planned meal will appear here.
           </Text>
@@ -314,7 +314,10 @@ const CoachInsightCard = memo(function CoachInsightCard({
   insight: string;
 }) {
   return (
-    <View accessibilityLabel={`Coach nutrition insight. ${insight}`} style={styles.card}>
+    <View
+      accessibilityLabel={`Coach nutrition insight. ${insight}`}
+      style={styles.card}
+    >
       <Text style={styles.sectionLabel}>COACH NUTRITION INSIGHT</Text>
       <Text style={styles.insightText}>{insight}</Text>
     </View>
@@ -370,7 +373,10 @@ const QuickActions = memo(function QuickActions({
 function NutritionOverviewSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel="Loading nutrition overview" style={styles.skeletonContent}>
+      <View
+        accessibilityLabel="Loading nutrition overview"
+        style={styles.skeletonContent}
+      >
         <View style={styles.skeletonHero} />
         <View style={styles.metricGrid}>
           <View style={styles.skeletonMetric} />
@@ -398,10 +404,17 @@ function NutritionOverviewStateView({
 }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={`${title} ${message ?? ''}`} style={styles.state}>
+      <View
+        accessibilityLabel={`${title} ${message ?? ''}`}
+        style={styles.state}
+      >
         <Text style={styles.stateTitle}>{title}</Text>
         {message ? <Text style={styles.stateMessage}>{message}</Text> : null}
-        <Button label={actionLabel} onPress={onAction} style={styles.fullButton} />
+        <Button
+          label={actionLabel}
+          onPress={onAction}
+          style={styles.fullButton}
+        />
       </View>
     </SafeAreaView>
   );
@@ -414,7 +427,10 @@ function buildNutritionOverviewModel(input: {
   const { todayNutrition, recommendations } = input;
   const targets = todayNutrition.macroTargets;
   const mealsRemaining = getMealsRemaining(todayNutrition);
-  const mealsCompleted = Math.max(0, todayNutrition.meals.length - mealsRemaining);
+  const mealsCompleted = Math.max(
+    0,
+    todayNutrition.meals.length - mealsRemaining,
+  );
   const adherence = Math.round(todayNutrition.progress.adherencePercentage);
   const recommendation = recommendations.find(
     (item) => item.message.trim().length > 0,
@@ -528,7 +544,10 @@ function getCoachInsight(
     return firstRecommendation.trim();
   }
 
-  if (nutrition.progress.consumedProteinGrams < nutrition.progress.targetProteinGrams) {
+  if (
+    nutrition.progress.consumedProteinGrams <
+    nutrition.progress.targetProteinGrams
+  ) {
     return 'Spread protein across your remaining meals today.';
   }
 
@@ -539,7 +558,9 @@ function getCoachInsight(
   return 'Protein distribution is improving.';
 }
 
-function getMealTimeLabel(type: TodayNutrition['meals'][number]['type']): string | null {
+function getMealTimeLabel(
+  type: TodayNutrition['meals'][number]['type'],
+): string | null {
   switch (type) {
     case 'breakfast':
       return 'Morning';

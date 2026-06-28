@@ -5,4 +5,3 @@
 3. Validate the optional limit.
 4. Load the history ordered from newest to oldest.
 5. Return the capped list.
-

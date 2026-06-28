@@ -6,4 +6,3 @@ Future validation should cover:
 - no duplicated token definitions
 - dependency injection works without local workaround providers
 - module imports stay acyclic
-

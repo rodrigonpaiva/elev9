@@ -52,7 +52,9 @@ const WEIGHTS = {
 
 @Injectable()
 export class RecoveryScoreCalculatorService {
-  calculate(input: RecoveryScoreCalculatorInput): RecoveryScoreCalculatorOutput {
+  calculate(
+    input: RecoveryScoreCalculatorInput,
+  ): RecoveryScoreCalculatorOutput {
     const hasSleepQuality = typeof input.sleepQuality === 'number';
     const hasEnergyLevel = typeof input.energyLevel === 'number';
     const hasMuscleSoreness = typeof input.muscleSoreness === 'number';
@@ -132,12 +134,16 @@ export class RecoveryScoreCalculatorService {
     const readiness =
       input.sleepQuality * WEIGHTS.readiness.sleepQuality +
       input.energyLevel * WEIGHTS.readiness.energyLevel +
-      this.invertScore(input.muscleSoreness) * WEIGHTS.readiness.muscleSoreness +
+      this.invertScore(input.muscleSoreness) *
+        WEIGHTS.readiness.muscleSoreness +
       input.adherenceScore * WEIGHTS.readiness.adherenceScore +
       this.invertScore(input.recentWorkoutLoad) *
         WEIGHTS.readiness.recentWorkoutLoad +
       Math.min(10, input.currentStreak * WEIGHTS.readiness.longStreakBonus) -
-      Math.min(15, input.missedWorkouts * WEIGHTS.readiness.missedWorkoutsPenalty);
+      Math.min(
+        15,
+        input.missedWorkouts * WEIGHTS.readiness.missedWorkoutsPenalty,
+      );
 
     return this.clampScore(readiness);
   }
@@ -155,8 +161,15 @@ export class RecoveryScoreCalculatorService {
       input.muscleSoreness * WEIGHTS.fatigue.muscleSoreness +
       this.invertScore(input.energyLevel) * WEIGHTS.fatigue.energyLevel +
       this.invertScore(input.sleepQuality) * WEIGHTS.fatigue.sleepQuality +
-      Math.min(15, input.missedWorkouts * WEIGHTS.fatigue.missedWorkoutsPenalty) +
-      Math.min(10, Math.max(0, input.currentStreak - 4) * WEIGHTS.fatigue.longStreakPenalty);
+      Math.min(
+        15,
+        input.missedWorkouts * WEIGHTS.fatigue.missedWorkoutsPenalty,
+      ) +
+      Math.min(
+        10,
+        Math.max(0, input.currentStreak - 4) *
+          WEIGHTS.fatigue.longStreakPenalty,
+      );
 
     return this.clampScore(fatigue);
   }
@@ -341,11 +354,7 @@ export class RecoveryScoreCalculatorService {
   }
 
   private resolveNonNegativeInteger(value: number | undefined): number {
-    if (
-      typeof value !== 'number' ||
-      !Number.isFinite(value) ||
-      value < 0
-    ) {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
       return 0;
     }
 
@@ -358,7 +367,10 @@ export class RecoveryScoreCalculatorService {
     }
 
     return values
-      .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+      .filter(
+        (value): value is number =>
+          typeof value === 'number' && Number.isFinite(value),
+      )
       .map((value) => this.clampScore(value));
   }
 

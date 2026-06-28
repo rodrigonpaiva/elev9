@@ -39,4 +39,3 @@ low adherence + no high fatigue -> reschedule_workout
 ## Influence Rules
 
 Generate deterministic influences from the same signal set.
-

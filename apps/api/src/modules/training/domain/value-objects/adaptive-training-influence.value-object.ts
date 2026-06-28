@@ -14,7 +14,10 @@ export type AdaptiveTrainingInfluenceCode =
   | 'RECENT_WORKOUT_LOAD_HIGH'
   | 'RECENT_WORKOUT_LOAD_LOW';
 
-export type AdaptiveTrainingInfluenceImpact = 'positive' | 'negative' | 'neutral';
+export type AdaptiveTrainingInfluenceImpact =
+  | 'positive'
+  | 'negative'
+  | 'neutral';
 
 export type AdaptiveTrainingInfluenceProps = {
   code: AdaptiveTrainingInfluenceCode;
@@ -49,4 +52,3 @@ export class AdaptiveTrainingInfluence {
     };
   }
 }
-

@@ -6,4 +6,3 @@
 4. Fetch recovery snapshots for the user.
 5. Sort descending by `date` and `createdAt`.
 6. Return the first `limit` entries.
-

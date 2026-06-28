@@ -93,9 +93,11 @@ describe('MongooseNotificationDecisionRepository', () => {
     const result = await repository.findLatestByUserProfileId('profile_123');
 
     expect(findOne).toHaveBeenCalledWith({ userProfileId: 'profile_123' });
-    expect(
-      findOne.mock.results[0].value.sort,
-    ).toHaveBeenCalledWith({ date: -1, createdAt: -1, _id: -1 });
+    expect(findOne.mock.results[0].value.sort).toHaveBeenCalledWith({
+      date: -1,
+      createdAt: -1,
+      _id: -1,
+    });
     expect(result?.priority.value).toBe('urgent');
   });
 

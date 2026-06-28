@@ -40,10 +40,9 @@ describe('GetEngagementSummaryUseCase', () => {
       completedCount: 0,
       recentEventsCount: 0,
     });
-    expect(engagementEventRepository.findRecentByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 20 },
-    );
+    expect(
+      engagementEventRepository.findRecentByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 20 });
   });
 
   it('raises the score with positive engagement events', async () => {
@@ -143,7 +142,9 @@ describe('GetEngagementSummaryUseCase', () => {
   }
 });
 
-function buildEvent(type: 'impression' | 'opened' | 'clicked' | 'dismissed' | 'completed') {
+function buildEvent(
+  type: 'impression' | 'opened' | 'clicked' | 'dismissed' | 'completed',
+) {
   return {
     id: `${type}_123`,
     userProfileId: 'profile_123',

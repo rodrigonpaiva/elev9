@@ -45,10 +45,7 @@ export const CoachInsightCard = memo(function CoachInsightCard({
   onRetry,
   recommendedAction,
 }: CoachInsightCardProps) {
-  const badgeVariant = useMemo(
-    () => getBadgeVariant(badgeLabel),
-    [badgeLabel],
-  );
+  const badgeVariant = useMemo(() => getBadgeVariant(badgeLabel), [badgeLabel]);
   const accessibilityLabel = useMemo(() => {
     if (!coachDecision) {
       return undefined;
@@ -102,11 +99,7 @@ export const CoachInsightCard = memo(function CoachInsightCard({
     <View accessibilityLabel={accessibilityLabel} style={styles.card}>
       <View style={styles.headerRow}>
         <Text style={styles.label}>AI COACH</Text>
-        <Badge
-          label={badgeLabel}
-          variant={badgeVariant}
-          style={styles.badge}
-        />
+        <Badge label={badgeLabel} variant={badgeVariant} style={styles.badge} />
       </View>
 
       <View style={styles.messageGroup}>

@@ -931,10 +931,7 @@ describe('CoachFeedbackGenerator', () => {
     });
 
     expect(result.influences).toEqual(
-      expect.arrayContaining([
-        'habit:high_risk',
-        'habit:dropout_risk',
-      ]),
+      expect.arrayContaining(['habit:high_risk', 'habit:dropout_risk']),
     );
     expect(result.recommendations).toContain(
       'Use one small habit that is easy to complete today',

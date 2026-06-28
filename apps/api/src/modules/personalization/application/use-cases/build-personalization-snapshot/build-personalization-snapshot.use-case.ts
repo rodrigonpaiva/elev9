@@ -153,10 +153,9 @@ export class BuildPersonalizationSnapshotUseCase {
           userProfile.id,
           { limit: RECENT_NOTIFICATION_LIMIT },
         ),
-        this.coachDecisionRepository.findRecentByUserProfileId(
-          userProfile.id,
-          { limit: RECENT_COACH_DECISION_LIMIT },
-        ),
+        this.coachDecisionRepository.findRecentByUserProfileId(userProfile.id, {
+          limit: RECENT_COACH_DECISION_LIMIT,
+        }),
         this.personalizationSnapshotRepository.findLatestByUserProfileId(
           userProfile.id,
         ),
@@ -191,8 +190,7 @@ export class BuildPersonalizationSnapshotUseCase {
         habitRiskLevel:
           consistencySummary?.riskLevel.value ??
           this.resolveHabitRiskLevelFromSignals(habitRiskSignals),
-        goalTrend:
-          latestGoalProgressSnapshot?.trend.value ?? 'stable',
+        goalTrend: latestGoalProgressSnapshot?.trend.value ?? 'stable',
         goalMilestoneReached:
           goalMilestones.some((milestone) => milestone.achieved) ||
           goalAchievements.length > 0,
@@ -200,8 +198,9 @@ export class BuildPersonalizationSnapshotUseCase {
           Boolean(activeGoal && activeGoal.status.value === 'achieved') ||
           goalAchievements.length > 0,
         recoveryTrend: recoverySnapshot?.recoveryTrend ?? 'stable',
-        recoveryAlertEngagement: recoverySnapshot?.sourceContext
-          ?.adherenceScore ?? DEFAULT_NEUTRAL_SCORE,
+        recoveryAlertEngagement:
+          recoverySnapshot?.sourceContext?.adherenceScore ??
+          DEFAULT_NEUTRAL_SCORE,
         coachDecisionPriorityHistory: this.resolveCoachDecisionPriorityHistory(
           latestCoachDecisionHistory,
         ),
@@ -268,17 +267,21 @@ export class BuildPersonalizationSnapshotUseCase {
   }
 
   private async resolveLatestGoalProgressSnapshot(userProfileId: string) {
-    const activeGoal = await this.goalRepository.findActiveByUserProfileId(userProfileId);
+    const activeGoal =
+      await this.goalRepository.findActiveByUserProfileId(userProfileId);
 
     if (!activeGoal) {
       return null;
     }
 
-    return this.goalProgressSnapshotRepository.findLatestByGoalId(activeGoal.id);
+    return this.goalProgressSnapshotRepository.findLatestByGoalId(
+      activeGoal.id,
+    );
   }
 
   private async resolveGoalMilestones(userProfileId: string) {
-    const activeGoal = await this.goalRepository.findActiveByUserProfileId(userProfileId);
+    const activeGoal =
+      await this.goalRepository.findActiveByUserProfileId(userProfileId);
 
     if (!activeGoal) {
       return [];
@@ -296,7 +299,9 @@ export class BuildPersonalizationSnapshotUseCase {
   }
 
   private resolveHabitRiskLevelFromSignals(
-    signals: Array<{ level: { value?: 'low' | 'medium' | 'high' } | 'low' | 'medium' | 'high' }>,
+    signals: Array<{
+      level: { value?: 'low' | 'medium' | 'high' } | 'low' | 'medium' | 'high';
+    }>,
   ): 'low' | 'medium' | 'high' {
     const levels = signals.map((signal) =>
       typeof signal.level === 'string' ? signal.level : signal.level.value,

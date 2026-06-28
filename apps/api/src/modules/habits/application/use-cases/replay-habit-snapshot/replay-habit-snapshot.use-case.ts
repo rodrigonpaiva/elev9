@@ -150,8 +150,7 @@ export class ReplayHabitSnapshotUseCase {
       goalProgressScore: input.sourceContext.goalProgressScore,
       notificationEngagementScore:
         input.sourceContext.notificationEngagementScore,
-      consecutiveSuccessfulDays:
-        input.sourceContext.consecutiveSuccessfulDays,
+      consecutiveSuccessfulDays: input.sourceContext.consecutiveSuccessfulDays,
       longestStreak: input.sourceContext.longestStreak,
       inactivityDays: input.sourceContext.inactivityDays,
       previousScore: input.sourceContext.previousScore,

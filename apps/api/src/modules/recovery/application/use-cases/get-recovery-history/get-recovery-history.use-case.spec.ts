@@ -31,17 +31,19 @@ describe('GetRecoveryHistoryUseCase', () => {
 
   it('returns ordered history with the default limit of 14', async () => {
     arrangeUserProfile();
-    const snapshots = [buildSnapshot('2026-06-02'), buildSnapshot('2026-06-01')];
+    const snapshots = [
+      buildSnapshot('2026-06-02'),
+      buildSnapshot('2026-06-01'),
+    ];
     recoverySnapshotRepository.findRecentByUserProfileId.mockResolvedValue(
       snapshots,
     );
 
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(recoverySnapshotRepository.findRecentByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 14 },
-    );
+    expect(
+      recoverySnapshotRepository.findRecentByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 14 });
     expect(result.recoverySnapshots).toEqual(snapshots);
   });
 
@@ -51,10 +53,9 @@ describe('GetRecoveryHistoryUseCase', () => {
 
     await useCase.execute({ authUserId: 'auth_user_123', limit: 90 });
 
-    expect(recoverySnapshotRepository.findRecentByUserProfileId).toHaveBeenCalledWith(
-      'profile_123',
-      { limit: 90 },
-    );
+    expect(
+      recoverySnapshotRepository.findRecentByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123', { limit: 90 });
   });
 
   it('rejects limit values above 90', async () => {
@@ -83,10 +84,9 @@ describe('GetRecoveryHistoryUseCase', () => {
 
     await useCase.execute({ authUserId: 'auth_user_real' });
 
-    expect(recoverySnapshotRepository.findRecentByUserProfileId).toHaveBeenCalledWith(
-      'profile_real',
-      { limit: 14 },
-    );
+    expect(
+      recoverySnapshotRepository.findRecentByUserProfileId,
+    ).toHaveBeenCalledWith('profile_real', { limit: 14 });
   });
 
   it('fails when user profile does not exist', async () => {

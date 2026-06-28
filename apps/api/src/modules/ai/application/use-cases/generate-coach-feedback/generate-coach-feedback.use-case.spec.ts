@@ -633,7 +633,10 @@ describe('GenerateCoachFeedbackUseCase', () => {
         priority: 'recovery',
         headline: 'Recovery should be your focus today',
         summary: 'Recovery is the main priority because readiness is low.',
-        actionItems: ['Reduce training intensity today', 'Prioritize sleep tonight'],
+        actionItems: [
+          'Reduce training intensity today',
+          'Prioritize sleep tonight',
+        ],
         influences: [
           {
             code: 'LOW_READINESS',

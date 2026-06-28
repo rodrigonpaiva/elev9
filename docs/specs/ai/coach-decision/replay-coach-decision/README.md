@@ -14,4 +14,3 @@ Canonical name: ai.coach-decision.replay
 ## Goal
 
 Provide explainability and auditability for the coaching decision engine.
-

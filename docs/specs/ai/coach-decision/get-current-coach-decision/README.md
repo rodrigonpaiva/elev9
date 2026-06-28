@@ -14,4 +14,3 @@ Canonical name: ai.coach-decision.get-current
 ## Goal
 
 Expose the latest decision as the current canonical coaching state.
-

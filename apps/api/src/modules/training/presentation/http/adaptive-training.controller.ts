@@ -33,9 +33,7 @@ import { GetAdaptiveTrainingHistoryQueryDto } from './dto/get-adaptive-training-
 import { GetAdaptiveTrainingHistoryResponseDto } from './dto/get-adaptive-training-history.response.dto';
 import { GetCurrentAdaptiveTrainingResponseDto } from './dto/get-current-adaptive-training.response.dto';
 import { GetTodayAdaptiveTrainingResponseDto } from './dto/get-today-adaptive-training.response.dto';
-import type {
-  AdaptiveTrainingRecommendationResponse,
-} from './dto/adaptive-training-response.type';
+import type { AdaptiveTrainingRecommendationResponse } from './dto/adaptive-training-response.type';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -218,7 +216,9 @@ function mapAdaptiveTrainingRecommendation(
     recommendedIntensity: recommendation.recommendedIntensity,
     volumeAction: recommendation.volumeAction,
     reasoning: recommendation.reasoning,
-    influences: recommendation.influences.map((influence) => influence.toJSON()),
+    influences: recommendation.influences.map((influence) =>
+      influence.toJSON(),
+    ),
     sourceContext: recommendation.sourceContext,
     formulaVersion: recommendation.formulaVersion,
     generatedBy: recommendation.generatedBy,

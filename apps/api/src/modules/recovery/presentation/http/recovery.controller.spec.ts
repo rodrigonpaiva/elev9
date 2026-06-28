@@ -23,7 +23,10 @@ import {
   GetTodayRecoveryError,
 } from '../../application/use-cases/get-today-recovery/get-today-recovery.errors';
 import { GetTodayRecoveryUseCase } from '../../application/use-cases/get-today-recovery/get-today-recovery.use-case';
-import { RecoveryInfluence, RecoverySnapshot } from '../../domain/entities/recovery-snapshot.entity';
+import {
+  RecoveryInfluence,
+  RecoverySnapshot,
+} from '../../domain/entities/recovery-snapshot.entity';
 import { RecoveryController } from './recovery.controller';
 
 describe('RecoveryController', () => {

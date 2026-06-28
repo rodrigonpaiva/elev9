@@ -25,16 +25,14 @@ describe('CoachDecisionReadModelMapper', () => {
   } as never;
 
   it('maps a coach decision to safe dashboard/feedback/chat/prompt payloads without sourceContext', () => {
-    const result = CoachDecisionReadModelMapper.toDashboardPayload(coachDecision);
+    const result =
+      CoachDecisionReadModelMapper.toDashboardPayload(coachDecision);
 
     expect(result).toEqual({
       priority: 'consistency',
       headline: 'Focus on consistency today',
       summary: 'Keep the routine simple and complete the planned work.',
-      actionItems: [
-        'Complete the planned session',
-        'Keep the routine simple',
-      ],
+      actionItems: ['Complete the planned session', 'Keep the routine simple'],
       influences: [
         {
           code: 'LOW_TRAINING_ADHERENCE',
@@ -54,9 +52,9 @@ describe('CoachDecisionReadModelMapper', () => {
     expect(CoachDecisionReadModelMapper.toChatPayload(coachDecision)).toEqual(
       result,
     );
-    expect(CoachDecisionReadModelMapper.toFeedbackPayload(coachDecision)).toEqual(
-      result,
-    );
+    expect(
+      CoachDecisionReadModelMapper.toFeedbackPayload(coachDecision),
+    ).toEqual(result);
   });
 
   it('builds a reduced feedback context snapshot with coachDecision-prefixed fields', () => {
@@ -68,7 +66,8 @@ describe('CoachDecisionReadModelMapper', () => {
       coachDecisionId: 'decision_1',
       coachDecisionPriority: 'consistency',
       coachDecisionHeadline: 'Focus on consistency today',
-      coachDecisionSummary: 'Keep the routine simple and complete the planned work.',
+      coachDecisionSummary:
+        'Keep the routine simple and complete the planned work.',
       coachDecisionActionItems: [
         'Complete the planned session',
         'Keep the routine simple',

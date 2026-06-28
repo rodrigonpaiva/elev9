@@ -32,4 +32,3 @@ Not included:
 - biometric devices
 - medical advice
 - adaptive training plan mutation
-

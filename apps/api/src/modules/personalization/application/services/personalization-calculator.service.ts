@@ -145,10 +145,7 @@ export class PersonalizationCalculatorService {
     notificationCompletionRate: number;
     recoveryAlertEngagement: number;
   }): CoachingStyle {
-    if (
-      input.engagementScore >= 70 &&
-      input.notificationCompletionRate >= 70
-    ) {
+    if (input.engagementScore >= 70 && input.notificationCompletionRate >= 70) {
       return 'motivational';
     }
 
@@ -319,9 +316,7 @@ export class PersonalizationCalculatorService {
     return this.clampScore(50 + this.resolveTrendBonus(input.habitTrend));
   }
 
-  resolveTrendBonus(
-    trend?: 'improving' | 'stable' | 'declining',
-  ): number {
+  resolveTrendBonus(trend?: 'improving' | 'stable' | 'declining'): number {
     if (trend === 'improving') {
       return 10;
     }
@@ -346,7 +341,10 @@ export class PersonalizationCalculatorService {
       return 50;
     }
 
-    const total = values.reduce((sum, value) => sum + this.clampScore(value), 0);
+    const total = values.reduce(
+      (sum, value) => sum + this.clampScore(value),
+      0,
+    );
 
     return this.clampScore(Math.round(total / values.length));
   }

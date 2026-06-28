@@ -17,4 +17,3 @@
 - If one signal is missing, continue with the signals that are available.
 - If all optional signals are missing, produce a safe consistency or motivation decision.
 - If LLM wording fails, return the deterministic wording.
-

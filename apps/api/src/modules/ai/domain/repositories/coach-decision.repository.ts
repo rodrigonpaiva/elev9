@@ -1,10 +1,6 @@
 import { CoachDecision } from '../entities/coach-decision.entity';
-import {
-  CoachDecisionInfluenceProps,
-} from '../value-objects/coach-decision-influence.value-object';
-import {
-  CoachDecisionPriority,
-} from '../value-objects/coach-decision-priority.value-object';
+import { CoachDecisionInfluenceProps } from '../value-objects/coach-decision-influence.value-object';
+import { CoachDecisionPriority } from '../value-objects/coach-decision-priority.value-object';
 import type { CoachDecisionSourceContext } from '../../../../shared/source-context';
 
 export interface CoachDecisionQueryOptions {
@@ -55,6 +51,4 @@ export interface CoachDecisionRepository {
   ): Promise<CoachDecision>;
 }
 
-export const COACH_DECISION_REPOSITORY = Symbol(
-  'COACH_DECISION_REPOSITORY',
-);
+export const COACH_DECISION_REPOSITORY = Symbol('COACH_DECISION_REPOSITORY');

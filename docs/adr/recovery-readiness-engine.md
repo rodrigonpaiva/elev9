@@ -158,4 +158,3 @@ The new engine will be consumed progressively:
 - [ADR-002 — Recovery & Adaptive Coaching System](./adr-002-recovery-system.md)
 - [ADR-003 — Coach Feedback Explainability & Replay System](./adr-003-coach-feedback-explainability.md)
 - [ADR-004 — Conversational Coach Architecture](./adr-004-conversational-coach-architecture.md)
-

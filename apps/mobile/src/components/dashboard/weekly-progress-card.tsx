@@ -361,10 +361,7 @@ function getTrend({
   return { label: 'Needs Focus', badgeVariant: 'danger' };
 }
 
-function getHeroInsight(
-  trend: TrendLabel,
-  currentStreak: number,
-): string {
+function getHeroInsight(trend: TrendLabel, currentStreak: number): string {
   if (currentStreak >= 3) {
     return "You're building strong consistency.";
   }

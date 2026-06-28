@@ -1,8 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import {
-  BuildNotificationDecisionError,
-} from '../build-notification-decision/build-notification-decision.errors';
+import { BuildNotificationDecisionError } from '../build-notification-decision/build-notification-decision.errors';
 import { BuildNotificationDecisionUseCase } from '../build-notification-decision/build-notification-decision.use-case';
 import {
   NOTIFICATION_READ_ERROR_CODES,

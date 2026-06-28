@@ -22,7 +22,9 @@ export function createRecoveryApi(httpClient: HttpClient) {
       });
     },
 
-    getRecoveryHistory(input?: { limit?: number }): Promise<GetRecoveryHistoryResponse> {
+    getRecoveryHistory(input?: {
+      limit?: number;
+    }): Promise<GetRecoveryHistoryResponse> {
       const query =
         input?.limit === undefined
           ? ''

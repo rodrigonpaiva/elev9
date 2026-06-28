@@ -35,7 +35,9 @@ describe('GetTodayCoachDecisionUseCase', () => {
   });
 
   it('returns an existing decision for today', async () => {
-    userProfileRepository.findByAuthUserId.mockResolvedValue(buildUserProfile());
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
     coachDecisionRepository.findByUserProfileIdAndDate.mockResolvedValue(
       buildDecision(),
     );
@@ -49,7 +51,9 @@ describe('GetTodayCoachDecisionUseCase', () => {
   });
 
   it('builds a decision when none exists for today', async () => {
-    userProfileRepository.findByAuthUserId.mockResolvedValue(buildUserProfile());
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
     coachDecisionRepository.findByUserProfileIdAndDate.mockResolvedValue(null);
     buildCoachDecisionUseCase.execute.mockResolvedValue({
       coachDecision: buildDecision(),
@@ -67,7 +71,9 @@ describe('GetTodayCoachDecisionUseCase', () => {
   });
 
   it('keeps today idempotent across repeated calls', async () => {
-    userProfileRepository.findByAuthUserId.mockResolvedValue(buildUserProfile());
+    userProfileRepository.findByAuthUserId.mockResolvedValue(
+      buildUserProfile(),
+    );
     coachDecisionRepository.findByUserProfileIdAndDate
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce(buildDecision());
@@ -83,7 +89,9 @@ describe('GetTodayCoachDecisionUseCase', () => {
     });
 
     expect(buildCoachDecisionUseCase.execute).toHaveBeenCalledTimes(1);
-    expect(coachDecisionRepository.findByUserProfileIdAndDate).toHaveBeenCalledTimes(2);
+    expect(
+      coachDecisionRepository.findByUserProfileIdAndDate,
+    ).toHaveBeenCalledTimes(2);
   });
 
   it('throws when user profile is missing', async () => {

@@ -54,9 +54,7 @@ describe('GetTodayNotificationUseCase', () => {
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.notificationDecision.id).toBe('notification_123');
-    expect(
-      buildNotificationDecisionUseCase.execute,
-    ).not.toHaveBeenCalled();
+    expect(buildNotificationDecisionUseCase.execute).not.toHaveBeenCalled();
   });
 
   it('builds the today notification when missing', async () => {

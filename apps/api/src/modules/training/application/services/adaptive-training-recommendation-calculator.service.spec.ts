@@ -20,9 +20,9 @@ describe('AdaptiveTrainingRecommendationCalculatorService', () => {
       nutritionAdherence: 82,
     });
 
-    expect(
-      ['increase_intensity', 'increase_volume'] as const,
-    ).toContain(result.recommendationType);
+    expect(['increase_intensity', 'increase_volume'] as const).toContain(
+      result.recommendationType,
+    );
     expect(result.recommendedIntensity).toBe('hard');
     expect(result.volumeAction).toBe('increase');
     expect(result.reasoning).not.toBe('');
@@ -100,9 +100,11 @@ describe('AdaptiveTrainingRecommendationCalculatorService', () => {
       nutritionAdherence: 56,
     });
 
-    expect(['recovery_workout', 'decrease_intensity', 'decrease_volume']).toContain(
-      result.recommendationType,
-    );
+    expect([
+      'recovery_workout',
+      'decrease_intensity',
+      'decrease_volume',
+    ]).toContain(result.recommendationType);
     expect(['recovery', 'light', 'moderate']).toContain(
       result.recommendedIntensity,
     );

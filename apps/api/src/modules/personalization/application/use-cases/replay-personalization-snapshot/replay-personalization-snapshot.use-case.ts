@@ -83,10 +83,9 @@ export class ReplayPersonalizationSnapshotUseCase {
         );
       }
 
-      const persisted =
-        await this.personalizationSnapshotRepository.findById(
-          personalizationSnapshotId,
-        );
+      const persisted = await this.personalizationSnapshotRepository.findById(
+        personalizationSnapshotId,
+      );
 
       if (!persisted || persisted.userProfileId !== userProfile.id) {
         throw new ReplayPersonalizationSnapshotError(
