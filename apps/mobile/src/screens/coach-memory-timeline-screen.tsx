@@ -13,6 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Text } from '@elev9/ui';
 
+import {
+  CoachActionGrid,
+  CoachCenteredState,
+  CoachHeroCard,
+  CoachSection,
+} from '../components/coach';
 import type {
   CoachGrowthMoment,
   CoachMemoryItem,
@@ -196,21 +202,18 @@ const MemoryHero = memo(function MemoryHero({
   subtitle: string;
 }) {
   return (
-    <View style={styles.hero}>
-      <View style={styles.heroIcon}>
-        <Ionicons name="sparkles" size={20} color={memoryTokens.text} />
-      </View>
-      <Text maxFontSizeMultiplier={1.25} style={styles.heroTitle}>
-        Coach Memory
-      </Text>
-      <Text
-        maxFontSizeMultiplier={1.35}
-        numberOfLines={2}
-        style={styles.heroSubtitle}
-      >
-        {subtitle}
-      </Text>
-    </View>
+    <CoachHeroCard
+      containerStyle={styles.hero}
+      iconColor={memoryTokens.text}
+      iconContainerStyle={styles.heroIcon}
+      iconName="sparkles"
+      subtitle={subtitle}
+      subtitleTextProps={{ maxFontSizeMultiplier: 1.35, numberOfLines: 2 }}
+      subtitleStyle={styles.heroSubtitle}
+      title="Coach Memory"
+      titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
+      titleStyle={styles.heroTitle}
+    />
   );
 });
 
@@ -265,8 +268,7 @@ const BehavioralPatterns = memo(function BehavioralPatterns({
   }
 
   return (
-    <View style={styles.section}>
-      <SectionTitle title="Behavioral Patterns" />
+    <CoachSection title="Behavioral Patterns" style={styles.section}>
       <View style={styles.patternStack}>
         {patterns.map((pattern) => (
           <Pressable
@@ -294,7 +296,7 @@ const BehavioralPatterns = memo(function BehavioralPatterns({
           </Pressable>
         ))}
       </View>
-    </View>
+    </CoachSection>
   );
 });
 
@@ -308,8 +310,7 @@ const GrowthMoments = memo(function GrowthMoments({
   }
 
   return (
-    <View style={styles.section}>
-      <SectionTitle title="Growth Moments" />
+    <CoachSection title="Growth Moments" style={styles.section}>
       <View style={styles.growthStack}>
         {moments.map((moment) => (
           <View
@@ -326,7 +327,7 @@ const GrowthMoments = memo(function GrowthMoments({
           </View>
         ))}
       </View>
-    </View>
+    </CoachSection>
   );
 });
 
@@ -361,28 +362,16 @@ const QuickActions = memo(function QuickActions({
   onTarget: (target?: CoachMemoryTarget) => void;
 }) {
   return (
-    <View style={styles.section}>
-      <SectionTitle title="Quick Actions" />
-      <View style={styles.actionGrid}>
-        {actions.map((action) => (
-          <Pressable
-            accessibilityLabel={action.label}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !action.isEnabled }}
-            disabled={!action.isEnabled}
-            key={action.id}
-            onPress={() => onTarget(action.target)}
-            style={({ pressed }) => [
-              styles.actionPill,
-              !action.isEnabled ? styles.disabled : null,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <Text style={styles.actionText}>{action.label}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
+    <CoachSection title="Quick Actions" style={styles.section}>
+      <CoachActionGrid
+        actions={actions}
+        actionStyle={styles.actionPill}
+        containerStyle={styles.actionGridContainer}
+        disabledActionStyle={styles.disabled}
+        onAction={(action) => onTarget(action.target)}
+        textStyle={styles.actionText}
+      />
+    </CoachSection>
   );
 });
 
@@ -424,12 +413,8 @@ function MemoryState({
   secondaryText?: string;
 }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={message} style={styles.stateContent}>
-        <Text style={styles.stateTitle}>{message}</Text>
-        {secondaryText ? (
-          <Text style={styles.stateSecondary}>{secondaryText}</Text>
-        ) : null}
+    <CoachCenteredState
+      action={
         <Pressable
           accessibilityLabel={buttonLabel}
           accessibilityRole="button"
@@ -441,8 +426,15 @@ function MemoryState({
         >
           <Text style={styles.primaryActionText}>{buttonLabel}</Text>
         </Pressable>
-      </View>
-    </SafeAreaView>
+      }
+      contentStyle={styles.stateContent}
+      message={message}
+      safeAreaStyle={styles.safeArea}
+      secondaryText={secondaryText}
+      secondaryTextProps={{ maxFontSizeMultiplier: 1.35 }}
+      secondaryTextStyle={styles.stateSecondary}
+      titleStyle={styles.stateTitle}
+    />
   );
 }
 
@@ -652,7 +644,7 @@ const styles = StyleSheet.create({
     lineHeight: 29,
     fontWeight: '800',
   },
-  actionGrid: {
+  actionGridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,

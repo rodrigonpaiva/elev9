@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import type { ReactNode } from 'react';
 import {
   FlatList,
   Pressable,
@@ -14,6 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Text } from '@elev9/ui';
 
+import {
+  CoachActionGrid,
+  CoachCenteredState,
+  CoachHeroCard,
+  CoachSection,
+} from '../components/coach';
 import type {
   CoachGoalGuidanceAction,
   CoachGoalGuidanceBarrierCard,
@@ -240,17 +245,19 @@ const GoalHero = memo(function GoalHero({
   model: CoachGoalGuidanceModel;
 }) {
   return (
-    <View accessibilityLabel={model.accessibilityLabel} style={styles.hero}>
-      <View style={styles.heroIcon}>
-        <Ionicons name="flag-outline" size={22} color={goalTokens.text} />
-      </View>
-      <Text maxFontSizeMultiplier={1.25} style={styles.heroTitle}>
-        {model.goalTitle}
-      </Text>
-      <Text maxFontSizeMultiplier={1.35} style={styles.heroSubtitle}>
-        {model.subtitle}
-      </Text>
-    </View>
+    <CoachHeroCard
+      accessibilityLabel={model.accessibilityLabel}
+      containerStyle={styles.hero}
+      iconColor={goalTokens.text}
+      iconContainerStyle={styles.heroIcon}
+      iconName="flag-outline"
+      subtitle={model.subtitle}
+      subtitleTextProps={{ maxFontSizeMultiplier: 1.35 }}
+      subtitleStyle={styles.heroSubtitle}
+      title={model.goalTitle}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
+      titleStyle={styles.heroTitle}
+    />
   );
 });
 
@@ -260,7 +267,7 @@ const CurrentProgress = memo(function CurrentProgress({
   model: CoachGoalGuidanceModel;
 }) {
   return (
-    <Section title="Current Progress">
+    <CoachSection title="Current Progress" style={styles.section}>
       <View
         accessibilityLabel={`Current progress. ${model.currentProgress}`}
         style={styles.summaryCard}
@@ -273,7 +280,7 @@ const CurrentProgress = memo(function CurrentProgress({
           {model.currentProgress}
         </Text>
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -283,7 +290,7 @@ const HelpingCards = memo(function HelpingCards({
   helping: CoachGoalGuidanceHelpingCard[];
 }) {
   return (
-    <Section title="What's Helping">
+    <CoachSection title="What's Helping" style={styles.section}>
       <View style={styles.stack}>
         {helping.map((item) => (
           <View
@@ -303,7 +310,7 @@ const HelpingCards = memo(function HelpingCards({
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -313,7 +320,7 @@ const BarrierCards = memo(function BarrierCards({
   barriers: CoachGoalGuidanceBarrierCard[];
 }) {
   return (
-    <Section title="What's Holding You Back">
+    <CoachSection title="What's Holding You Back" style={styles.section}>
       <View style={styles.stack}>
         {barriers.map((item) => (
           <View
@@ -333,7 +340,7 @@ const BarrierCards = memo(function BarrierCards({
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -343,7 +350,7 @@ const CoachStrategy = memo(function CoachStrategy({
   model: CoachGoalGuidanceModel;
 }) {
   return (
-    <Section title="Coach Strategy">
+    <CoachSection title="Coach Strategy" style={styles.section}>
       <View
         accessibilityLabel={`Coach strategy. ${model.strategy}`}
         style={styles.strategyCard}
@@ -358,7 +365,7 @@ const CoachStrategy = memo(function CoachStrategy({
           </Text>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -368,7 +375,7 @@ const Forecast = memo(function Forecast({
   model: CoachGoalGuidanceModel;
 }) {
   return (
-    <Section title="Forecast">
+    <CoachSection title="Forecast" style={styles.section}>
       <View
         accessibilityLabel={`Forecast. ${model.forecast}`}
         style={styles.forecastCard}
@@ -378,7 +385,7 @@ const Forecast = memo(function Forecast({
           {model.forecast}
         </Text>
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -424,42 +431,16 @@ const GoalFooter = memo(function GoalFooter({
 }) {
   return (
     <View style={styles.footer}>
-      <Section title="Quick Actions">
-        <View style={styles.actionGrid}>
-          {model.quickActions.map((action) => (
-            <Pressable
-              accessibilityLabel={action.label}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: !action.isEnabled }}
-              disabled={!action.isEnabled}
-              key={action.id}
-              onPress={() => onAction(action)}
-              style={({ pressed }) => [
-                styles.actionButton,
-                !action.isEnabled ? styles.disabled : null,
-                pressed ? styles.pressed : null,
-              ]}
-            >
-              <Text style={styles.actionText}>{action.label}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </Section>
-    </View>
-  );
-});
-
-const Section = memo(function Section({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: string;
-}) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {children}
+      <CoachSection title="Quick Actions" style={styles.section}>
+        <CoachActionGrid
+          actions={model.quickActions}
+          actionStyle={styles.actionButton}
+          containerStyle={styles.actionGridContainer}
+          disabledActionStyle={styles.disabled}
+          onAction={onAction}
+          textStyle={styles.actionText}
+        />
+      </CoachSection>
     </View>
   );
 });
@@ -496,16 +477,8 @@ function GoalGuidanceState({
   secondaryText?: string;
 }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.stateContent}>
-        <Text maxFontSizeMultiplier={1.25} style={styles.stateTitle}>
-          {message}
-        </Text>
-        {secondaryText ? (
-          <Text maxFontSizeMultiplier={1.35} style={styles.stateCopy}>
-            {secondaryText}
-          </Text>
-        ) : null}
+    <CoachCenteredState
+      action={
         <Pressable
           accessibilityRole="button"
           onPress={onPress}
@@ -516,8 +489,16 @@ function GoalGuidanceState({
         >
           <Text style={styles.stateButtonText}>{buttonLabel}</Text>
         </Pressable>
-      </View>
-    </SafeAreaView>
+      }
+      contentStyle={styles.stateContent}
+      message={message}
+      safeAreaStyle={styles.safeArea}
+      secondaryText={secondaryText}
+      secondaryTextProps={{ maxFontSizeMultiplier: 1.35 }}
+      secondaryTextStyle={styles.stateCopy}
+      titleStyle={styles.stateTitle}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
+    />
   );
 }
 
@@ -684,7 +665,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingTop: 22,
   },
-  actionGrid: {
+  actionGridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,

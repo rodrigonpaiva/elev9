@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import type { ReactNode } from 'react';
 import {
   FlatList,
   Pressable,
@@ -15,6 +14,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Text } from '@elev9/ui';
 
+import {
+  CoachActionGrid,
+  CoachCenteredState,
+  CoachHeroCard,
+  CoachSection,
+} from '../components/coach';
 import type {
   AskCoachCategory,
   AskCoachCategoryId,
@@ -222,25 +227,19 @@ const CoachPrompt = memo(function CoachPrompt({
   model: AskCoachModel;
 }) {
   return (
-    <View style={styles.hero}>
-      <View style={styles.heroIcon}>
-        <Ionicons name="sparkles" size={21} color={askCoachTokens.text} />
-      </View>
-      <Text
-        maxFontSizeMultiplier={1.25}
-        numberOfLines={2}
-        style={styles.heroTitle}
-      >
-        {model.heroTitle}
-      </Text>
-      <Text
-        maxFontSizeMultiplier={1.35}
-        numberOfLines={2}
-        style={styles.heroSubtitle}
-      >
-        {model.heroSubtitle}
-      </Text>
-    </View>
+    <CoachHeroCard
+      accessibilityLabel={model.accessibilityLabel}
+      containerStyle={styles.hero}
+      iconColor={askCoachTokens.text}
+      iconContainerStyle={styles.heroIcon}
+      iconName="sparkles"
+      subtitle={model.heroSubtitle}
+      subtitleTextProps={{ maxFontSizeMultiplier: 1.35, numberOfLines: 2 }}
+      subtitleStyle={styles.heroSubtitle}
+      title={model.heroTitle}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25, numberOfLines: 2 }}
+      titleStyle={styles.heroTitle}
+    />
   );
 });
 
@@ -254,7 +253,7 @@ const CategoryChips = memo(function CategoryChips({
   onSelect: (category: AskCoachCategoryId) => void;
 }) {
   return (
-    <Section title="Smart Categories">
+    <CoachSection title="Smart Categories" style={styles.section}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -288,7 +287,7 @@ const CategoryChips = memo(function CategoryChips({
           );
         })}
       </ScrollView>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -333,7 +332,7 @@ const PersonalizedSuggestions = memo(function PersonalizedSuggestions({
   }
 
   return (
-    <Section title="Personalized Suggestions">
+    <CoachSection title="Personalized Suggestions" style={styles.section}>
       <View style={styles.stack}>
         {suggestions.map((suggestion) => (
           <Pressable
@@ -363,7 +362,7 @@ const PersonalizedSuggestions = memo(function PersonalizedSuggestions({
           </Pressable>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -379,7 +378,7 @@ const RecentConversations = memo(function RecentConversations({
   }
 
   return (
-    <Section title="Recent Conversations">
+    <CoachSection title="Recent Conversations" style={styles.section}>
       <View style={styles.stack}>
         {conversations.map((conversation) => (
           <Pressable
@@ -408,7 +407,7 @@ const RecentConversations = memo(function RecentConversations({
           </Pressable>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -420,42 +419,16 @@ const QuickActions = memo(function QuickActions({
   onAction: (action: AskCoachQuickAction) => void;
 }) {
   return (
-    <Section title="Quick Actions">
-      <View style={styles.actionGrid}>
-        {actions.map((action) => (
-          <Pressable
-            accessibilityLabel={action.label}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !action.isEnabled }}
-            disabled={!action.isEnabled}
-            key={action.id}
-            onPress={() => onAction(action)}
-            style={({ pressed }) => [
-              styles.actionButton,
-              !action.isEnabled ? styles.disabled : null,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <Text style={styles.actionText}>{action.label}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </Section>
-  );
-});
-
-const Section = memo(function Section({
-  children,
-  title,
-}: {
-  children?: ReactNode;
-  title: string;
-}) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {children}
-    </View>
+    <CoachSection title="Quick Actions" style={styles.section}>
+      <CoachActionGrid
+        actions={actions}
+        actionStyle={styles.actionButton}
+        containerStyle={styles.actionGridContainer}
+        disabledActionStyle={styles.disabled}
+        onAction={onAction}
+        textStyle={styles.actionText}
+      />
+    </CoachSection>
   );
 });
 
@@ -504,16 +477,8 @@ function AskCoachState({
   secondaryText?: string;
 }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.stateContent}>
-        <Text maxFontSizeMultiplier={1.25} style={styles.stateTitle}>
-          {message}
-        </Text>
-        {secondaryText ? (
-          <Text maxFontSizeMultiplier={1.35} style={styles.stateCopy}>
-            {secondaryText}
-          </Text>
-        ) : null}
+    <CoachCenteredState
+      action={
         <Pressable
           accessibilityRole="button"
           onPress={onPress}
@@ -524,8 +489,16 @@ function AskCoachState({
         >
           <Text style={styles.stateButtonText}>{buttonLabel}</Text>
         </Pressable>
-      </View>
-    </SafeAreaView>
+      }
+      contentStyle={styles.stateContent}
+      message={message}
+      safeAreaStyle={styles.safeArea}
+      secondaryText={secondaryText}
+      secondaryTextProps={{ maxFontSizeMultiplier: 1.35 }}
+      secondaryTextStyle={styles.stateCopy}
+      titleStyle={styles.stateTitle}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
+    />
   );
 }
 
@@ -702,7 +675,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
-  actionGrid: {
+  actionGridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,

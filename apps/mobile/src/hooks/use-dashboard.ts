@@ -50,6 +50,7 @@ export type UseDashboardResult = {
   isLoading: boolean;
   isRefreshing: boolean;
   error: string | null;
+  userName: string | null;
   coach: DashboardDomainResult<CoachDecision> & CoachDisplay;
   recovery: DashboardDomainResult<RecoverySnapshot> & {
     status: RecoveryStatus | null;
@@ -70,6 +71,7 @@ export function useDashboard(): UseDashboardResult {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [coach, setCoach] = useState<DomainState<CoachDecision>>(
     createInitialDomainState(),
   );
@@ -125,12 +127,22 @@ export function useDashboard(): UseDashboardResult {
         'nutrition',
         'progress',
       ];
-      const [results] = await Promise.all([
+      const [results, dashboardResult] = await Promise.all([
         Promise.allSettled(
           domains.map((domain) => fetchDashboardDomain(domain)),
         ),
+        apiClient.dashboard
+          .getHome()
+          .then((response) => response.dashboard.user.name)
+          .catch(() => null),
         options?.refresh ? wait(REFRESH_DURATION_MS) : Promise.resolve(),
       ]);
+
+      setUserName(
+        typeof dashboardResult === 'string'
+          ? dashboardResult.trim() || null
+          : null,
+      );
 
       results.forEach((result, index) => {
         applyDomainResult(domains[index], result);
@@ -186,6 +198,7 @@ export function useDashboard(): UseDashboardResult {
     isLoading,
     isRefreshing,
     error,
+    userName,
     coach: {
       ...coach,
       ...coachDisplay,

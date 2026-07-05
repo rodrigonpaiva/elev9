@@ -2,9 +2,9 @@
 
 ## 1. Overview
 
-O use-case `create-coach-chat` inicia a camada conversacional do Elev9 Coach com uma resposta determinística baseada em contexto.
+O use-case `create-coach-chat` inicia a camada conversacional do Elev9 Coach com uma resposta contextual baseada em dados do usuário.
 
-No MVP, o fluxo não usa LLM externo. Ele persiste uma conversa e mensagens do usuário/assistant, injeta `UserHealthContext` e gera uma resposta heurística simples baseada em recuperação, treino e nutrição.
+O fluxo atual preserva o fallback determinístico, mas já pode consultar um LLM externo de forma opcional através da camada de confiabilidade. Antes disso, a mensagem passa por uma safety layer que faz detecção de injection, redaction de PII e validação de saída. A integração OpenAI usa o Responses API com structured outputs e um parser centralizado para normalizar a resposta antes de persistir. O prompt usado pelo chat é resolvido por um registry interno com versão ativa, versão anterior e canary rollout determinístico. O fluxo persiste uma conversa e mensagens do usuário/assistant, injeta `UserHealthContext` e gera a resposta mais adequada com base em recuperação, treino e nutrição. A mesma base interna também suporta um transporte de streaming aditivo sem alterar o contrato síncrono público.
 
 ---
 
@@ -42,7 +42,13 @@ Incluído:
 - resolver `UserProfile`
 - criar `CoachConversation` automaticamente quando necessário
 - persistir mensagem do usuário
-- gerar resposta heurística determinística
+- sanitizar e minimizar o prompt antes da chamada OpenAI
+- gerar resposta por fallback heurístico determinístico quando o LLM não estiver disponível
+- consultar LLM externo de forma opcional via camada de confiabilidade
+- resolver a versão do prompt via registry interno e rollout determinístico
+- usar o Responses API com structured outputs e parser centralizado para o provider OpenAI
+- registrar trace de requisição, contagem de tokens, custo estimado e guardrails de custo via camada de observabilidade
+- validar a saída do modelo antes de persistir
 - persistir resposta do assistant
 - retornar `conversationId` e `reply`
 - reutilizar `BuildUserHealthContextService`
@@ -50,8 +56,7 @@ Incluído:
 
 Não incluído:
 
-- OpenAI
-- streaming
+- alterar o contrato síncrono público
 - memória longa
 - semantic memory
 - RAG
@@ -112,7 +117,7 @@ Se a persistência falhar:
 
 ## 9. Business Value
 
-Este use-case adiciona a primeira interface conversacional do produto sem depender de LLM externo.
+Este use-case adiciona a primeira interface conversacional do produto com fallback determinístico preservado e LLM opcional para melhorar a resposta quando a infraestrutura estiver disponível.
 
 Ele transforma dados já existentes em interação direta com o coach:
 
@@ -120,7 +125,7 @@ Ele transforma dados já existentes em interação direta com o coach:
 - awareness de nutrição
 - leitura do momento atual do usuário
 
-Isso prepara a base para evolução futura com LLM, sem comprometer o MVP determinístico.
+Isso mantém o produto previsível e permite evolução gradual sem comprometer o fallback determinístico.
 
 ---
 
@@ -128,15 +133,19 @@ Isso prepara a base para evolução futura com LLM, sem comprometer o MVP determ
 
 Decisões fechadas para o MVP:
 
-- o endpoint é `POST /ai/chat`
+- o endpoint síncrono é `POST /ai/chat`
+- o transporte de streaming é aditivo e reusa o mesmo use-case
 - o endpoint é protegido por sessão/JWT
 - o body aceita apenas `message`
 - a conversa é criada automaticamente se não existir
-- a resposta é determinística e baseada em contexto atual
+- a resposta é contextual e cai para fallback determinístico quando o LLM não responder
 - `UserHealthContext` é resolvido no fluxo
 - `CoachMessage` do usuário e do assistant são persistidos
 - o cliente recebe somente `conversationId` e `reply`
-- nenhuma IA externa é usada no MVP
+- o uso de IA externa é opcional e protegido por uma camada de confiabilidade
+- a execução do LLM passa por camadas de segurança, confiabilidade e observabilidade antes do provider
+- a seleção de prompt e provider pode ser ajustada por canary rollout e rollback por configuração
+- as respostas inválidas retornam ao fallback determinístico sem alterar a UX pública
 
 ---
 

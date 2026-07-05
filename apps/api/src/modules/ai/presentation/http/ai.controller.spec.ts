@@ -74,6 +74,7 @@ describe('AiController', () => {
     } as unknown as jest.Mocked<GenerateCoachFeedbackUseCase>;
     createCoachChatUseCase = {
       execute: jest.fn(),
+      executeStream: jest.fn(),
     } as unknown as jest.Mocked<CreateCoachChatUseCase>;
     getCoachChatHistoryUseCase = {
       execute: jest.fn(),
@@ -146,6 +147,58 @@ describe('AiController', () => {
       conversationId: 'conversation_123',
       reply: "Your recovery signals suggest keeping today's session lighter.",
     });
+  });
+
+  it('streams chat deltas and completes the response', async () => {
+    createCoachChatUseCase.executeStream.mockImplementation(
+      async (_input, options) => {
+        options?.onDelta?.('Keep it light today.');
+
+        return {
+          conversationId: 'conversation_123',
+          reply: 'Keep it light today.',
+        };
+      },
+    );
+
+    const response = {
+      setHeader: jest.fn(),
+      flushHeaders: jest.fn(),
+      write: jest.fn(),
+      end: jest.fn(),
+      writableEnded: false,
+    } as never;
+
+    await controller.createCoachChatStream(
+      {
+        authUser: {
+          id: 'auth_user_123',
+          email: 'user@email.com',
+        },
+        on: jest.fn(),
+        removeListener: jest.fn(),
+      } as never,
+      response,
+      { message: 'Should I train today?' },
+    );
+
+    expect(createCoachChatUseCase.executeStream).toHaveBeenCalledWith(
+      {
+        authUserId: 'auth_user_123',
+        message: 'Should I train today?',
+        signal: expect.any(AbortSignal),
+      },
+      expect.objectContaining({
+        onDelta: expect.any(Function),
+      }),
+    );
+    expect(response.write).toHaveBeenCalledWith(
+      expect.stringContaining('event: delta'),
+    );
+    expect(response.write).toHaveBeenCalledWith(
+      expect.stringContaining('event: completed'),
+    );
+    expect(response.end).toHaveBeenCalled();
   });
 
   it('rejects invalid chat payloads with HTTP 400', async () => {

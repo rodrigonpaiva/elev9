@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   CoachDecision,
   GetCurrentGoalResponse,
@@ -11,6 +10,11 @@ import { formatGoalType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
+import {
+  isCoachOptionalEmptyState,
+  limitCoachText,
+  stripCoachMetricLanguage,
+} from './coach';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
 
@@ -85,13 +89,13 @@ export function useCoachInsights(): CoachInsightsResult {
 
     if (goalResult.status === 'fulfilled') {
       setCurrentGoal(goalResult.value.goal);
-    } else if (isOptionalEmptyState(goalResult.reason)) {
+    } else if (isCoachOptionalEmptyState(goalResult.reason)) {
       setCurrentGoal(null);
     }
 
     if (habitResult.status === 'fulfilled') {
       setHabitSnapshot(habitResult.value.habitSnapshot);
-    } else if (isOptionalEmptyState(habitResult.reason)) {
+    } else if (isCoachOptionalEmptyState(habitResult.reason)) {
       setHabitSnapshot(null);
     }
 
@@ -99,7 +103,7 @@ export function useCoachInsights(): CoachInsightsResult {
       setPersonalizationSnapshot(
         personalizationResult.value.personalizationSnapshot,
       );
-    } else if (isOptionalEmptyState(personalizationResult.reason)) {
+    } else if (isCoachOptionalEmptyState(personalizationResult.reason)) {
       setPersonalizationSnapshot(null);
     }
 
@@ -107,7 +111,7 @@ export function useCoachInsights(): CoachInsightsResult {
       goalResult.status === 'rejected' &&
       habitResult.status === 'rejected' &&
       personalizationResult.status === 'rejected' &&
-      !isOptionalEmptyState(goalResult.reason)
+      !isCoachOptionalEmptyState(goalResult.reason)
     ) {
       setExtraError("Unable to explain today's recommendation.");
     }
@@ -239,7 +243,7 @@ function buildInsightsModel(input: {
 
 function getRecommendation(coachDecision: CoachDecision): string {
   if (coachDecision.headline.trim()) {
-    return limitText(coachDecision.headline.trim(), 92);
+    return limitCoachText(coachDecision.headline.trim(), 92);
   }
 
   switch (coachDecision.priority) {
@@ -277,7 +281,7 @@ function getExplanation(input: {
   }
 
   if (input.coachDecision.summary.trim()) {
-    return stripRawMetricLanguage(input.coachDecision.summary.trim());
+    return stripCoachMetricLanguage(input.coachDecision.summary.trim());
   }
 
   if (input.recoveryScore !== undefined && input.recoveryScore < 60) {
@@ -481,32 +485,6 @@ function getPrioritySignal(priority: CoachDecision['priority']): string {
     default:
       return 'Momentum focus';
   }
-}
-
-function stripRawMetricLanguage(value: string): string {
-  return value
-    .replace(/\b\d+(\.\d+)?%?\b/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-}
-
-function limitText(value: string, maxLength: number): string {
-  return value.length > maxLength
-    ? `${value.slice(0, maxLength - 3).trim()}...`
-    : value;
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    [
-      'USER_PROFILE_NOT_FOUND',
-      'GOAL_NOT_FOUND',
-      'HABIT_SNAPSHOT_NOT_FOUND',
-      'PERSONALIZATION_SNAPSHOT_NOT_FOUND',
-      'NOT_FOUND',
-    ].includes(error.code)
-  );
 }
 
 export function trackCoachInsightsEvent(

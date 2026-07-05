@@ -25,7 +25,7 @@ The product now needs a conversational layer that is still:
 - easy to debug
 - aligned with recovery and nutrition heuristics
 
-This ADR documents the current conversational architecture as an internal product capability. It is not a commitment to LLM-first orchestration, semantic memory, or streaming chat.
+This ADR documents the current conversational architecture as an internal product capability. It is not a commitment to LLM-first orchestration or semantic memory. Streaming now exists as an additive transport on top of the same conversational use-case, not as a replacement for the synchronous contract.
 
 ## Decision
 
@@ -54,6 +54,8 @@ The current conversational experience is exposed through:
 - `POST /ai/chat`
 - `GET /ai/chat/history`
 - `CoachChatScreen`
+
+The current implementation now allows optional OpenAI-assisted responses, but it still preserves the deterministic fallback as the source of truth for product continuity. The LLM path is wrapped by safety, reliability, and observability layers so the public API and user experience remain stable. The same use-case now powers both `POST /ai/chat` and the additive streaming route.
 
 ## Conversational Entities
 
@@ -99,7 +101,7 @@ The supported roles are:
 
 ## Deterministic-First Strategy
 
-The chat layer does not use an LLM in the current implementation.
+The chat layer is still deterministic-first in product behavior.
 
 This is intentional. The design prioritizes:
 
@@ -108,8 +110,10 @@ This is intentional. The design prioritizes:
 - lower operational risk
 - easier debugging
 - alignment with the existing deterministic recovery layer
+- safe LLM fallbacks when the probabilistic path is enabled
 
 The reply generator reuses `UserHealthContext` and interprets the current state through small, testable heuristics.
+When OpenAI is enabled, the generated reply is validated, traced, and protected before it can replace the deterministic path.
 
 ## Relationship With Existing Adaptive Systems
 
@@ -133,11 +137,18 @@ The current chat layer deliberately avoids:
 - medical claims
 - autonomous diagnosis
 - long-term memory
-- streaming
+- streaming transport
 - replay
 - generative orchestration
 
 The responses are conversational, but they remain bounded by the same safe reduced context used throughout the product.
+
+Operationally, the enabled LLM path is also constrained by:
+
+- prompt sanitization and PII redaction
+- timeout, retry, circuit breaker, and kill switch controls
+- request tracing and cost guardrails
+- structured logs without raw prompt or user message leakage
 
 ## Rationale
 
@@ -180,18 +191,16 @@ Introducing it too early would make the behavior harder to reason about and woul
 
 - chat behavior remains simple
 - no multi-turn memory beyond persistence
-- no streaming UX
+- no change to the synchronous UX contract
 - no LLM-powered reasoning yet
 
 ## Future Directions
 
 Potential future extensions, explicitly not implemented:
 
-- LLM integration
 - LangGraph orchestration
 - semantic memory
 - conversation replay
-- evaluation engine
 - multi-agent routing
 - streaming
 - voice interface

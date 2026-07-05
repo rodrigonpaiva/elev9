@@ -24,6 +24,10 @@ A documentação arquitetural segue [Documentation Governance](../specs/GOVERNAN
 - [ADR-003 — Coach Feedback Explainability & Replay System](./adr-003-coach-feedback-explainability.md)
 - [ADR-004 — Conversational Coach Architecture](./adr-004-conversational-coach-architecture.md)
 - [ADR-005 — AI Coach Experience](./adr-005-ai-coach-experience.md)
+- [ADR-006 — AI LLM Observability & Cost Control](./adr-006-ai-llm-observability-cost-control.md)
+- [ADR-007 — OpenAI Responses API & Structured Outputs](./adr-007-openai-responses-api-structured-outputs.md)
+- [ADR-008 — AI Coach Streaming Infrastructure](./adr-008-ai-coach-streaming-infrastructure.md)
+- [ADR-009 — AI Evaluation Framework, Canary Rollout & Rollback](./adr-009-ai-evaluation-rollout-framework.md)
 
 ---
 
@@ -65,6 +69,7 @@ Os ADRs atuais convergem nos seguintes temas:
 - coach-centric mobile surfaces
 - conversational explainability surfaces
 - spec-driven evolution
+- LLM safety, reliability, and observability layers
 
 Esses temas descrevem o estado atual do sistema e não devem ser interpretados como uma plataforma de IA avançada ou como uma camada clínica.
 
@@ -72,6 +77,8 @@ Em particular, a evolução arquitetural atual pode ser lida como:
 
 ```txt
 ADR-003 → conversational explainability → ADR-004 → unified conversational debug surfaces
+ADR-006 → observability & cost control → ADR-007 → Responses API & structured outputs
+ADR-008 → additive streaming transport → ADR-009 → prompt registry, canary rollout, and rollback
 ```
 
 As superfícies internas de debug conversacional atualmente documentadas são:
@@ -82,6 +89,16 @@ As superfícies internas de debug conversacional atualmente documentadas são:
 - `GET /ai/chat/debug/history`
 
 Essas rotas são superfícies internas determinísticas de inspeção. Elas não expõem prompt bruto, `UserHealthContext` bruto, tokens, sessão ou payloads OpenAI internos completos.
+
+ADRs relevantes para o módulo de IA:
+
+- [ADR-003 — Coach Feedback Explainability & Replay System](./adr-003-coach-feedback-explainability.md)
+- [ADR-004 — Conversational Coach Architecture](./adr-004-conversational-coach-architecture.md)
+- [ADR-005 — AI Coach Experience](./adr-005-ai-coach-experience.md)
+- [ADR-006 — AI LLM Observability & Cost Control](./adr-006-ai-llm-observability-cost-control.md)
+- [ADR-007 — OpenAI Responses API & Structured Outputs](./adr-007-openai-responses-api-structured-outputs.md)
+- [ADR-008 — AI Coach Streaming Infrastructure](./adr-008-ai-coach-streaming-infrastructure.md)
+- [ADR-009 — AI Evaluation Framework, Canary Rollout & Rollback](./adr-009-ai-evaluation-rollout-framework.md)
 
 ---
 
@@ -107,14 +124,10 @@ Em termos práticos:
 
 Temas prováveis para ADRs futuros, ainda não implementados:
 
-- LLM orchestration
 - semantic memory
-- evaluation engine
-- prompt versioning
 - wearable integrations
 - adaptive recommendations
 - LangGraph orchestration
-- streaming
 - voice interface
 - multi-agent routing
 

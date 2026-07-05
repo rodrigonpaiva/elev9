@@ -1,50 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { ApiClientError } from '@elev9/api-client';
-import type {
-  CoachChatHistoryMessage,
-  CoachChatHistoryResponse,
-} from '@elev9/types';
+import type { CoachChatHistoryMessage } from '@elev9/types';
 
 import { apiClient } from '../api/client';
 import { useAuth } from '../auth/auth-provider';
 import { useDashboard } from './use-dashboard';
+import {
+  buildConversationContext,
+  createConversationMessage,
+  getConversationErrorMessage,
+  normalizeHistory,
+} from './coach/coach-conversation-helpers';
 
-export type CoachConversationMessageKind =
-  | 'coach'
-  | 'user'
-  | 'system'
-  | 'recommendation'
-  | 'warning'
-  | 'celebration';
+export { formatCoachMessageTime } from './coach/coach-conversation-helpers';
 
-export type CoachConversationMessage = CoachChatHistoryMessage & {
-  localId: string;
-  kind: CoachConversationMessageKind;
-  displayParts: CoachMessagePart[];
-};
-
-export type CoachMessagePart =
-  | {
-      id: string;
-      type: 'paragraph';
-      text: string;
-    }
-  | {
-      id: string;
-      type: 'bullet';
-      text: string;
-    }
-  | {
-      id: string;
-      type: 'divider';
-    };
-
-export type CoachConversationContext = {
-  status: string;
-  signals: string[];
-  suggestedQuestions: string[];
-};
+export type {
+  CoachConversationContext,
+  CoachConversationMessage,
+  CoachConversationMessageKind,
+  CoachMessagePart,
+} from './coach/coach-conversation-helpers';
 
 export type CoachConversationResult = {
   messages: CoachConversationMessage[];
@@ -270,211 +246,6 @@ export function useCoachConversation(): CoachConversationResult {
       error instanceof ApiClientError && error.code === 'NETWORK_ERROR',
     );
   }
-}
-
-function normalizeHistory(
-  response: CoachChatHistoryResponse,
-): CoachConversationMessage[] {
-  return response.map((message, index) =>
-    createConversationMessage(message, `${message.createdAt}-${index}`),
-  );
-}
-
-function createConversationMessage(
-  message: CoachChatHistoryMessage,
-  localId = createLocalId(message.role),
-): CoachConversationMessage {
-  return {
-    ...message,
-    localId,
-    kind: getMessageKind(message),
-    displayParts: formatCoachMessage(message.content),
-  };
-}
-
-function getMessageKind(
-  message: CoachChatHistoryMessage,
-): CoachConversationMessageKind {
-  if (message.role === 'user') {
-    return 'user';
-  }
-
-  const content = message.content.toLowerCase();
-
-  if (content.includes('warning') || content.includes('be careful')) {
-    return 'warning';
-  }
-
-  if (content.includes('great work') || content.includes('well done')) {
-    return 'celebration';
-  }
-
-  if (content.includes('recommend')) {
-    return 'recommendation';
-  }
-
-  return 'coach';
-}
-
-function formatCoachMessage(content: string): CoachMessagePart[] {
-  const trimmed = content.trim();
-
-  if (looksLikeJson(trimmed)) {
-    return [
-      {
-        id: 'paragraph-0',
-        type: 'paragraph',
-        text: 'I have your coaching context ready. Ask me what you want to adjust today.',
-      },
-    ];
-  }
-
-  const lines = trimmed
-    .replace(/\*\*(.*?)\*\*/g, '$1')
-    .replace(/__(.*?)__/g, '$1')
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (lines.length === 0) {
-    return [
-      { id: 'paragraph-0', type: 'paragraph', text: 'I am here with you.' },
-    ];
-  }
-
-  return lines.flatMap((line, index) => {
-    if (/^(-|\*|•)\s+/.test(line)) {
-      return [
-        {
-          id: `bullet-${index}`,
-          type: 'bullet',
-          text: line.replace(/^(-|\*|•)\s+/, ''),
-        } as const,
-      ];
-    }
-
-    if (/^---+$/.test(line)) {
-      return [{ id: `divider-${index}`, type: 'divider' } as const];
-    }
-
-    return [
-      {
-        id: `paragraph-${index}`,
-        type: 'paragraph',
-        text: line.replace(/^#{1,6}\s+/, ''),
-      } as const,
-    ];
-  });
-}
-
-function buildConversationContext(input: {
-  coachStatus?: string;
-  hasWorkout: boolean;
-  hasRecovery: boolean;
-  hasNutrition: boolean;
-  hasProgress: boolean;
-  priority?: string;
-}): CoachConversationContext {
-  const signals = [
-    input.hasWorkout ? 'Workout' : null,
-    input.hasRecovery ? 'Recovery' : null,
-    input.hasNutrition ? 'Nutrition' : null,
-    input.hasProgress ? 'Progress' : null,
-    'Goals',
-  ].filter(Boolean) as string[];
-
-  return {
-    status: input.coachStatus
-      ? `Updated ${formatRelativeTime(input.coachStatus)}`
-      : 'Ready to help',
-    signals: signals.slice(0, 5),
-    suggestedQuestions: getSuggestedQuestions(input.priority),
-  };
-}
-
-function getSuggestedQuestions(priority?: string): string[] {
-  const defaults = [
-    'How ready am I today?',
-    "Should I change today's workout?",
-    'What should I eat after training?',
-    'Why am I feeling tired?',
-  ];
-
-  if (priority === 'nutrition') {
-    return [
-      'What should I eat next?',
-      'How should I time protein today?',
-      "Should I adjust food around today's workout?",
-      'What is my nutrition priority?',
-    ];
-  }
-
-  if (priority === 'recovery') {
-    return [
-      'How should I recover today?',
-      "Should I change today's workout?",
-      'Why am I feeling tired?',
-      'What should I do before sleep?',
-    ];
-  }
-
-  return defaults;
-}
-
-function getConversationErrorMessage(error: unknown): string {
-  if (error instanceof ApiClientError && error.code === 'NETWORK_ERROR') {
-    return "You're offline.\n\nReconnect to continue your conversation.";
-  }
-
-  return 'Unable to reach your coach.';
-}
-
-function formatRelativeTime(value: string): string {
-  const date = new Date(value);
-  const diffMs = Date.now() - date.getTime();
-
-  if (!Number.isFinite(diffMs)) {
-    return 'today';
-  }
-
-  const minutes = Math.max(0, Math.round(diffMs / 60000));
-
-  if (minutes < 1) {
-    return 'just now';
-  }
-
-  if (minutes < 60) {
-    return `${minutes} min ago`;
-  }
-
-  const hours = Math.round(minutes / 60);
-
-  if (hours < 24) {
-    return `${hours} hr ago`;
-  }
-
-  return 'today';
-}
-
-export function formatCoachMessageTime(value: string): string {
-  return formatRelativeTime(value);
-}
-
-function looksLikeJson(value: string): boolean {
-  if (!value.startsWith('{') && !value.startsWith('[')) {
-    return false;
-  }
-
-  try {
-    JSON.parse(value);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function createLocalId(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 export function trackCoachConversationEvent(

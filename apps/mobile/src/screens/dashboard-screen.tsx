@@ -19,6 +19,7 @@ import { RecoveryReadinessCard } from '../components/dashboard/recovery-readines
 import { TodaysWorkoutCard } from '../components/dashboard/todays-workout-card';
 import { TodaysNutritionCard } from '../components/dashboard/todays-nutrition-card';
 import { WeeklyProgressCard } from '../components/dashboard/weekly-progress-card';
+import { getCoachFirstName } from '../hooks/coach';
 import { useDashboard } from '../hooks/use-dashboard';
 import type { UseDashboardResult } from '../hooks/use-dashboard';
 import type { RootStackParamList } from '../navigation/app-navigator';
@@ -31,8 +32,6 @@ type DashboardScreenProps = {
 };
 
 type DashboardState = 'loading' | 'error';
-
-const USER_NAME = 'Rodrigo';
 
 const MOTIVATIONAL_MESSAGES = [
   "Let's build momentum today.",
@@ -63,6 +62,7 @@ export function DashboardScreen({
   const dashboard = useDashboard();
   const entrance = useRef(new Animated.Value(0)).current;
   const hasFocused = useRef(false);
+  const firstName = getCoachFirstName(dashboard.userName);
 
   const motivationalMessage = useMemo(() => {
     const index = Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length);
@@ -199,9 +199,15 @@ export function DashboardScreen({
             },
           ]}
         >
-          <DashboardHeader onOpenProfile={onOpenProfile} />
+          <DashboardHeader
+            firstName={firstName}
+            onOpenProfile={onOpenProfile}
+          />
 
-          <WelcomeSection motivationalMessage={motivationalMessage} />
+          <WelcomeSection
+            firstName={firstName}
+            motivationalMessage={motivationalMessage}
+          />
 
           <DailyFocusCard focus={DAILY_FOCUS} />
           <DailyBriefingButton onPress={handleOpenDailyBriefing} />
@@ -313,7 +319,15 @@ function DashboardCards({
   );
 }
 
-function DashboardHeader({ onOpenProfile }: { onOpenProfile?: () => void }) {
+function DashboardHeader({
+  firstName,
+  onOpenProfile,
+}: {
+  firstName: string | null;
+  onOpenProfile?: () => void;
+}) {
+  const avatarInitial = firstName ? firstName.charAt(0).toUpperCase() : 'E';
+
   return (
     <View style={styles.header}>
       <Text accessibilityRole="text" style={styles.dateText}>
@@ -334,7 +348,7 @@ function DashboardHeader({ onOpenProfile }: { onOpenProfile?: () => void }) {
           importantForAccessibility="no"
           style={styles.avatarInitial}
         >
-          {USER_NAME.charAt(0)}
+          {avatarInitial}
         </Text>
       </Pressable>
     </View>
@@ -342,18 +356,20 @@ function DashboardHeader({ onOpenProfile }: { onOpenProfile?: () => void }) {
 }
 
 function WelcomeSection({
+  firstName,
   motivationalMessage,
 }: {
+  firstName: string | null;
   motivationalMessage: string;
 }) {
+  const greeting = firstName ? `${getGreeting()}, ${firstName}` : getGreeting();
+
   return (
     <View
-      accessibilityLabel={`${getGreeting()}, ${USER_NAME}. ${motivationalMessage}`}
+      accessibilityLabel={`${greeting}. ${motivationalMessage}`}
       style={styles.welcomeSection}
     >
-      <Text style={styles.headline}>
-        {getGreeting()}, {USER_NAME}
-      </Text>
+      <Text style={styles.headline}>{greeting}</Text>
       <Text style={styles.motivationalText}>{motivationalMessage}</Text>
     </View>
   );

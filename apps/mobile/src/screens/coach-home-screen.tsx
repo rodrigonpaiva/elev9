@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import type { ReactNode } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -14,6 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Text } from '@elev9/ui';
 
+import {
+  CoachActionGrid,
+  CoachCenteredState,
+  CoachHeroCard,
+  CoachSection,
+} from '../components/coach';
 import type {
   CoachHomeAction,
   CoachHomeContextItem,
@@ -203,20 +208,19 @@ const MainInsightCard = memo(function MainInsightCard({
   model: CoachHomeModel;
 }) {
   return (
-    <View
+    <CoachHeroCard
       accessibilityLabel={`Today's main insight. ${model.mainInsight}. ${model.insightSummary}`}
-      style={styles.heroCard}
-    >
-      <View style={styles.heroIcon}>
-        <Ionicons name="sparkles" size={19} color={coachTokens.accent} />
-      </View>
-      <Text maxFontSizeMultiplier={1.25} style={styles.heroTitle}>
-        {model.mainInsight}
-      </Text>
-      <Text maxFontSizeMultiplier={1.4} style={styles.heroSummary}>
-        {model.insightSummary}
-      </Text>
-    </View>
+      containerStyle={styles.heroCard}
+      iconColor={coachTokens.accent}
+      iconContainerStyle={styles.heroIcon}
+      iconName="sparkles"
+      subtitle={model.insightSummary}
+      subtitleTextProps={{ maxFontSizeMultiplier: 1.4 }}
+      subtitleStyle={styles.heroSummary}
+      title={model.mainInsight}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
+      titleStyle={styles.heroTitle}
+    />
   );
 });
 
@@ -226,7 +230,7 @@ const ContextSection = memo(function ContextSection({
   items: CoachHomeContextItem[];
 }) {
   return (
-    <Section title="Your Current Context">
+    <CoachSection title="Your Current Context" style={styles.section}>
       <View style={styles.contextGrid}>
         {items.slice(0, 4).map((item) => (
           <View
@@ -241,7 +245,7 @@ const ContextSection = memo(function ContextSection({
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -251,7 +255,7 @@ const PrioritiesSection = memo(function PrioritiesSection({
   priorities: CoachHomePriority[];
 }) {
   return (
-    <Section title="Coach Priorities">
+    <CoachSection title="Coach Priorities" style={styles.section}>
       <View style={styles.priorityList}>
         {priorities.map((priority, index) => (
           <Pressable
@@ -285,7 +289,7 @@ const PrioritiesSection = memo(function PrioritiesSection({
           </Pressable>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -300,7 +304,7 @@ const ActionsSection = memo(function ActionsSection({
   const secondaryActions = actions.filter((action) => !action.isPrimary);
 
   return (
-    <Section title="Today's Actions">
+    <CoachSection title="Today's Actions" style={styles.section}>
       {primaryAction ? (
         <PrimaryButton
           accessibilityLabel={primaryAction.label}
@@ -308,25 +312,14 @@ const ActionsSection = memo(function ActionsSection({
           onPress={() => onActionPress(primaryAction)}
         />
       ) : null}
-      <View style={styles.actionGrid}>
-        {secondaryActions
-          .filter((action) => action.isEnabled)
-          .map((action) => (
-            <Pressable
-              accessibilityLabel={action.label}
-              accessibilityRole="button"
-              key={action.id}
-              onPress={() => onActionPress(action)}
-              style={({ pressed }) => [
-                styles.actionPill,
-                pressed ? styles.pressed : null,
-              ]}
-            >
-              <Text style={styles.actionPillText}>{action.label}</Text>
-            </Pressable>
-          ))}
-      </View>
-    </Section>
+      <CoachActionGrid
+        actions={secondaryActions.filter((action) => action.isEnabled)}
+        actionStyle={styles.actionPill}
+        containerStyle={styles.actionGridContainer}
+        onAction={onActionPress}
+        textStyle={styles.actionPillText}
+      />
+    </CoachSection>
   );
 });
 
@@ -343,7 +336,7 @@ const ConversationPreview = memo(function ConversationPreview({
     "You're set for today. Open the conversation when you want more guidance.";
 
   return (
-    <Section title="Conversation Preview">
+    <CoachSection title="Conversation Preview" style={styles.section}>
       <View
         accessibilityLabel={`Latest coach message. ${preview}`}
         style={styles.previewCard}
@@ -367,7 +360,7 @@ const ConversationPreview = memo(function ConversationPreview({
           <Ionicons name="chevron-forward" size={16} color={coachTokens.text} />
         </Pressable>
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -389,17 +382,6 @@ const CoachStatus = memo(function CoachStatus({
     </View>
   );
 });
-
-function Section({ children, title }: { children: ReactNode; title: string }) {
-  return (
-    <View style={styles.section}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
-        {title}
-      </Text>
-      {children}
-    </View>
-  );
-}
 
 function CoachHomeSkeleton() {
   return (
@@ -437,15 +419,15 @@ function CoachState({
   secondaryText?: string;
 }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={message} style={styles.stateContent}>
-        <Text style={styles.stateTitle}>{message}</Text>
-        {secondaryText ? (
-          <Text style={styles.stateSecondary}>{secondaryText}</Text>
-        ) : null}
-        <PrimaryButton label={buttonLabel} onPress={onPress} />
-      </View>
-    </SafeAreaView>
+    <CoachCenteredState
+      action={<PrimaryButton label={buttonLabel} onPress={onPress} />}
+      contentStyle={styles.stateContent}
+      message={message}
+      safeAreaStyle={styles.safeArea}
+      secondaryText={secondaryText}
+      secondaryTextStyle={styles.stateSecondary}
+      titleStyle={styles.stateTitle}
+    />
   );
 }
 
@@ -670,7 +652,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'center',
   },
-  actionGrid: {
+  actionGridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,

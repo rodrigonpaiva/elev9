@@ -180,6 +180,13 @@ Responsável por:
 - construir contexto consolidado
 - expor coach decisions
 - explicar a recomendação do dia
+- sanitizar prompts e validar respostas antes da geração OpenAI
+- executar chat conversacional opcional via OpenAI com fallback determinístico e controles de confiabilidade
+- expor chat síncrono e streaming aditivo sobre o mesmo use-case e a mesma persistência
+- usar o Responses API com structured outputs e um parser centralizado para normalizar a resposta do modelo
+- registrar traces operacionais, usage reports, cost guardrails e structured logs para requests de LLM
+- expor metadata de capabilities do provider para suportar GPT-5.5 e modelos futuros
+- manter registry de versões de prompt, canary rollout determinístico, rollback por configuração e evaluation runner interno
 - alimentar coach home, briefing, memory, insights, ask coach, weekly review, goal guidance e notifications
 
 Principais entidades:

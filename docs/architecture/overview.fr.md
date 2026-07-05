@@ -2,7 +2,7 @@
 
 ## Summary
 
-Elev9 Coach est organisé comme un monorepo Nx avec un backend NestJS modulaire et un client Expo React Native. L’architecture actuelle prend désormais en charge l’expérience AI Coach complète sur mobile, ainsi que les flux de training, nutrition, recovery, goals, habits, personalization et notifications.
+Elev9 Coach est organisé comme un monorepo Nx avec un backend NestJS modulaire et un client Expo React Native. L’architecture actuelle prend désormais en charge l’expérience AI Coach complète sur mobile, ainsi que les flux de training, nutrition, recovery, goals, habits, personalization, notifications et observability IA.
 
 ## Workspace Structure
 
@@ -37,6 +37,13 @@ Principaux domaines implémentés :
 - `fitness`
 - `training`
 - `progress`
+- `nutrition`
+- `recovery`
+- `goals`
+- `habits`
+- `personalization`
+- `notifications`
+- `ai`
 - `dashboard`
 
 ## Mobile Model
@@ -50,6 +57,7 @@ Périmètre mobile actuel :
 - dashboard authentifié
 - expérience AI Coach complète
 - surfaces liées au workout, à la nutrition, au recovery et aux goals
+- surfaces AI Coach pour home, conversation, briefing, mémoire, insights, ask coach, weekly review, goal guidance et smart notifications
 
 ## Shared Packages
 
@@ -73,6 +81,10 @@ Le projet optimise aujourd’hui :
 - l’itération rapide
 - la cohérence des contrats entre backend et clients
 - les surfaces coach explicables
+- la safety, la fiabilité et l’observability autour d’un coaching LLM optionnel
+- l’usage du Responses API moderne d’OpenAI avec structured outputs et parser centralisé
+- un transport de streaming aditif pour le chat coach sans changer le contrat synchrone
+- un registry de versions de prompt, un canary rollout déterministe, un rollback par configuration et une évaluation interne des prompts coach
 - l’extraction future en sécurité
 
 Il n’optimise pas encore :

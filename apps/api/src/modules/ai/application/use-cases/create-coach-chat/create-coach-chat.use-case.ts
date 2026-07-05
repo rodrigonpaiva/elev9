@@ -1,93 +1,53 @@
-import { Logger, Inject, Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { createHash } from 'crypto';
 
-import { AiLlmService } from '../../services/llm/ai-llm.service';
-import {
-  AiPromptBuilder,
-  type AiPromptBuilderConversationMessage,
-} from '../../services/llm/ai-prompt-builder.service';
-import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
-import { CoachChatReplyGenerator } from '../../services/chat/coach-chat-reply-generator.service';
-import {
-  CoachDecisionReadModelMapper,
-  type CoachDecisionReadModelPayload,
-  PersonalizationReadModelMapper,
-  type PersonalizationReadModelSource,
-} from '../../../../../shared/mappers';
-import {
-  NotificationReadModelMapper,
-  type NotificationMemoryPayload,
-} from '../../../../../shared/mappers';
-import {
-  HabitReadModelMapper,
-  type HabitReadModel,
-  type HabitMemoryPayload,
-} from '../../../../../shared/mappers';
-import {
-  COACH_CONVERSATION_MEMORY_REPOSITORY,
-  CoachConversationMemoryRepository,
-} from '../../../domain/repositories/coach-conversation-memory.repository';
-import {
-  COACH_CONVERSATION_REPOSITORY,
-  CoachConversationRepository,
-} from '../../../domain/repositories/coach-conversation.repository';
-import {
-  COACH_MESSAGE_REPOSITORY,
-  CoachMessageRepository,
-} from '../../../domain/repositories/coach-message.repository';
-import { GetCurrentCoachDecisionUseCase } from '../get-current-coach-decision/get-current-coach-decision.use-case';
-import { GetCurrentNotificationUseCase } from '../../../../notifications/application/use-cases/get-current-notification/get-current-notification.use-case';
-import { GetEngagementSummaryUseCase } from '../../../../notifications/application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
-import { GetCurrentHabitsUseCase } from '../../../../habits/application/use-cases/get-current-habits/get-current-habits.use-case';
-import { GetConsistencySummaryUseCase } from '../../../../habits/application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
-import { GetHabitRiskSignalsUseCase } from '../../../../habits/application/use-cases/get-habit-risk-signals/get-habit-risk-signals.use-case';
-import { GetCurrentPersonalizationUseCase } from '../../../../personalization/application/use-cases/get-current-personalization/get-current-personalization.use-case';
-import { GetBehavioralPatternsUseCase } from '../../../../personalization/application/use-cases/get-behavioral-patterns/get-behavioral-patterns.use-case';
-import { GetUserBehaviorProfileUseCase } from '../../../../personalization/application/use-cases/get-user-behavior-profile/get-user-behavior-profile.use-case';
-import {
-  CoachConversationMemorySummarizer,
-  COACH_CONVERSATION_MEMORY_VERSION,
-} from '../../services/memory/coach-conversation-memory-summarizer.service';
-import {
-  USER_PROFILE_REPOSITORY,
-  UserProfileRepository,
-} from '../../../../users/domain/repositories/user-profile.repository';
+import { AiPromptBuilder } from '../../services/llm/ai-prompt-builder.service';
+import { AiRolloutService } from '../../services/governance/ai-rollout.service';
+import { AI_COACH_CHAT_PROMPT_ID } from '../../services/governance/ai-governance.types';
+import { LLMCancelledError } from '../../services/llm/ai-llm.errors';
+import { CoachChatContextLoaderService } from '../../services/chat/coach-chat-context-loader.service';
+import { CoachChatMemoryUpdaterService } from '../../services/chat/coach-chat-memory-updater.service';
+import { CoachChatPersistenceService } from '../../services/chat/coach-chat-persistence.service';
+import { CoachChatReplyOrchestratorService } from '../../services/chat/coach-chat-reply-orchestrator.service';
+import { CreateCoachChatInput } from './create-coach-chat.input';
+import { CreateCoachChatOutput } from './create-coach-chat.output';
 import {
   CREATE_COACH_CHAT_ERROR_CODES,
   CreateCoachChatError,
 } from './create-coach-chat.errors';
-import { CreateCoachChatInput } from './create-coach-chat.input';
-import { CreateCoachChatOutput } from './create-coach-chat.output';
+import type { CreateCoachChatStreamOptions } from './create-coach-chat.types';
 
 @Injectable()
 export class CreateCoachChatUseCase {
   private readonly logger = new Logger(CreateCoachChatUseCase.name);
 
   constructor(
-    @Inject(USER_PROFILE_REPOSITORY)
-    private readonly userProfileRepository: UserProfileRepository,
-    @Inject(COACH_CONVERSATION_REPOSITORY)
-    private readonly coachConversationRepository: CoachConversationRepository,
-    @Inject(COACH_MESSAGE_REPOSITORY)
-    private readonly coachMessageRepository: CoachMessageRepository,
-    @Inject(COACH_CONVERSATION_MEMORY_REPOSITORY)
-    private readonly coachConversationMemoryRepository: CoachConversationMemoryRepository,
-    private readonly buildUserHealthContextService: BuildUserHealthContextService,
-    private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
-    private readonly getCurrentNotificationUseCase: GetCurrentNotificationUseCase,
-    private readonly getEngagementSummaryUseCase: GetEngagementSummaryUseCase,
-    private readonly getCurrentHabitsUseCase: GetCurrentHabitsUseCase,
-    private readonly getConsistencySummaryUseCase: GetConsistencySummaryUseCase,
-    private readonly getHabitRiskSignalsUseCase: GetHabitRiskSignalsUseCase,
-    private readonly getCurrentPersonalizationUseCase: GetCurrentPersonalizationUseCase,
-    private readonly getUserBehaviorProfileUseCase: GetUserBehaviorProfileUseCase,
-    private readonly getBehavioralPatternsUseCase: GetBehavioralPatternsUseCase,
+    private readonly coachChatContextLoaderService: CoachChatContextLoaderService,
+    private readonly coachChatPersistenceService: CoachChatPersistenceService,
+    private readonly coachChatReplyOrchestratorService: CoachChatReplyOrchestratorService,
+    private readonly coachChatMemoryUpdaterService: CoachChatMemoryUpdaterService,
     private readonly aiPromptBuilder: AiPromptBuilder,
-    private readonly aiLlmService: AiLlmService,
-    private readonly coachChatReplyGenerator: CoachChatReplyGenerator,
-    private readonly coachConversationMemorySummarizer: CoachConversationMemorySummarizer,
+    private readonly aiRolloutService: AiRolloutService,
   ) {}
 
   async execute(input: CreateCoachChatInput): Promise<CreateCoachChatOutput> {
+    return this.executeCoachChat(input);
+  }
+
+  async executeStream(
+    input: CreateCoachChatInput,
+    options: CreateCoachChatStreamOptions = {},
+  ): Promise<CreateCoachChatOutput> {
+    return this.executeCoachChat(input, {
+      onDelta: options.onDelta,
+      streaming: true,
+    });
+  }
+
+  private async executeCoachChat(
+    input: CreateCoachChatInput,
+    options: CreateCoachChatStreamOptions & { streaming?: boolean } = {},
+  ): Promise<CreateCoachChatOutput> {
     const authUserId =
       typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
     const message =
@@ -108,201 +68,96 @@ export class CreateCoachChatUseCase {
     }
 
     try {
-      const userProfile =
-        await this.userProfileRepository.findByAuthUserId(authUserId);
-
-      if (!userProfile) {
-        throw new CreateCoachChatError(
-          CREATE_COACH_CHAT_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          'User profile not found.',
+      const context = await this.coachChatContextLoaderService.load(authUserId);
+      const conversationState =
+        await this.coachChatPersistenceService.resolveConversationState(
+          context.userProfileId,
         );
-      }
-
-      const healthContext = await this.buildUserHealthContextService.build({
+      const userIdHash = this.hashValue(context.userProfileId);
+      const experiment = this.aiRolloutService.resolveCoachChatAssignment({
         authUserId,
+        userIdHash,
+        promptId: AI_COACH_CHAT_PROMPT_ID,
       });
-      const coachDecision = await this.resolveCoachDecision(authUserId);
-      const notification = await this.resolveNotification(authUserId);
-      const habit = await this.resolveHabit(authUserId);
-      const personalization = await this.resolvePersonalization(authUserId);
-      const notificationMemory = notification
-        ? {
-            notificationType: notification.current?.type,
-            suppressed: notification.current?.suppressed ?? false,
-            fatigueLevel: notification.current?.fatigueLevel ?? 'low',
-            engagementScore:
-              notification.engagementSummary?.engagementScore ?? 50,
-          }
-        : undefined;
-      const habitPrompt = HabitReadModelMapper.toPromptPayload(habit);
-      const habitMemory = HabitReadModelMapper.toMemoryPayload(habit);
-      const personalizationPrompt =
-        PersonalizationReadModelMapper.toPromptPayload(personalization);
-      const personalizationMemory =
-        PersonalizationReadModelMapper.toMemoryPayload(personalization);
+      const trace = {
+        conversationId: conversationState.conversationId,
+        userIdHash,
+        experimentId: experiment.experimentId,
+        canaryBucket: experiment.canaryBucket,
+        rolloutVariant: experiment.rolloutVariant,
+      };
 
-      const existingConversation =
-        await this.coachConversationRepository.findLatestByUserProfileId(
-          userProfile.id,
-        );
-      const conversation =
-        existingConversation ??
-        (await this.coachConversationRepository.create({
-          userProfileId: userProfile.id,
-        }));
-
-      const conversationMemory =
-        await this.coachConversationMemoryRepository.findByConversationId(
-          conversation.id,
-        );
-      const coachDecisionPayload =
-        CoachDecisionReadModelMapper.toChatPayload(coachDecision);
-      const conversationMemoryPayload = conversationMemory
-        ? {
-            summary: conversationMemory.summary,
-            metadata: conversationMemory.metadata,
-          }
-        : undefined;
-
-      const conversationHistory = (
-        existingConversation
-          ? await this.coachMessageRepository.findByConversationId({
-              conversationId: conversation.id,
-              limit: 12,
-            })
-          : []
-      )
-        .slice()
-        .reverse()
-        .map((message) => ({
-          role: message.role,
-          content: message.content,
-          createdAt: message.createdAt.toISOString(),
-        })) as AiPromptBuilderConversationMessage[];
-
-      await this.coachMessageRepository.create({
-        conversationId: conversation.id,
-        role: 'user',
-        content: message,
-      });
+      await this.coachChatPersistenceService.persistUserMessage(
+        conversationState.conversationId,
+        message,
+      );
 
       const prompt = this.aiPromptBuilder.build({
         message,
-        healthContext,
-        conversationHistory,
-        ...(conversationMemoryPayload
-          ? { conversationMemory: conversationMemoryPayload }
+        healthContext: context.healthContext,
+        conversationHistory: conversationState.conversationHistory,
+        trace,
+        experiment,
+        ...(conversationState.conversationMemory
+          ? { conversationMemory: conversationState.conversationMemory }
           : {}),
-        ...(coachDecisionPayload
-          ? { coachDecision: coachDecisionPayload }
+        ...(context.coachDecision
+          ? { coachDecision: context.coachDecision }
           : {}),
-        ...(notification ? { notification } : {}),
-        ...(habitPrompt ? { habit: habitPrompt } : {}),
-        ...(personalizationPrompt
-          ? { personalization: personalizationPrompt }
+        ...(context.notification ? { notification: context.notification } : {}),
+        ...(context.habit ? { habit: context.habit } : {}),
+        ...(context.personalization
+          ? { personalization: context.personalization }
           : {}),
       });
 
-      let reply: {
-        content: string;
-        provider: string;
-        model: string;
-        promptVersion: string;
-      } | null = null;
-      let fallbackTriggered = false;
-
-      try {
-        reply = await this.aiLlmService.generateReply(prompt);
-      } catch (_error) {
-        fallbackTriggered = true;
-        this.logger.warn('fallback activated');
-      }
-
-      if (!reply) {
-        if (!fallbackTriggered) {
-          this.logger.log('fallback activated');
-        }
-        const fallbackReply = this.coachChatReplyGenerator.generate({
-          message,
-          healthContext,
-          ...(coachDecisionPayload
-            ? { coachDecision: coachDecisionPayload }
-            : {}),
-          ...(notification ? { notification } : {}),
-          ...(habitPrompt ? { habit: habitPrompt } : {}),
-          ...(personalizationPrompt
-            ? { personalization: personalizationPrompt }
-            : {}),
-        });
-
-        await this.coachMessageRepository.create({
-          conversationId: conversation.id,
-          role: 'assistant',
-          content: fallbackReply,
-          metadata: {
-            source: 'heuristic',
-          },
-        });
-
-        await this.updateConversationMemory({
-          conversationId: conversation.id,
-          healthContext,
-          conversationHistory,
-          userMessage: message,
-          assistantReply: fallbackReply,
-          ...(coachDecisionPayload
-            ? { coachDecision: coachDecisionPayload }
-            : {}),
-          ...(notificationMemory ? { notification: notificationMemory } : {}),
-          ...(habitMemory ? { habit: habitMemory } : {}),
-          ...(personalizationMemory
-            ? { personalization: personalizationMemory }
-            : {}),
-        });
-
-        return {
-          conversationId: conversation.id,
-          reply: fallbackReply,
-        };
-      }
-
-      await this.coachMessageRepository.create({
-        conversationId: conversation.id,
-        role: 'assistant',
-        content: reply.content,
-        metadata: {
-          source: 'llm',
-          provider: reply.provider,
-          model: reply.model,
-          promptVersion: reply.promptVersion,
-        },
+      const reply = await this.coachChatReplyOrchestratorService.execute({
+        prompt,
+        context,
+        message,
+        options,
       });
 
-      await this.updateConversationMemory({
-        conversationId: conversation.id,
-        healthContext,
-        conversationHistory,
+      await this.coachChatPersistenceService.persistAssistantMessage(
+        conversationState.conversationId,
+        reply,
+      );
+
+      await this.coachChatMemoryUpdaterService.update({
+        conversationId: conversationState.conversationId,
+        healthContext: context.healthContext,
+        conversationHistory: conversationState.conversationHistory,
         userMessage: message,
         assistantReply: reply.content,
-        ...(coachDecisionPayload
-          ? { coachDecision: coachDecisionPayload }
+        ...(context.coachDecision
+          ? { coachDecision: context.coachDecision }
           : {}),
-        ...(notificationMemory ? { notification: notificationMemory } : {}),
-        ...(habitMemory ? { habit: habitMemory } : {}),
-        ...(personalizationMemory
-          ? { personalization: personalizationMemory }
+        ...(context.notificationMemory
+          ? { notification: context.notificationMemory }
+          : {}),
+        ...(context.habitMemory ? { habit: context.habitMemory } : {}),
+        ...(context.personalizationMemory
+          ? { personalization: context.personalizationMemory }
           : {}),
       });
 
       return {
-        conversationId: conversation.id,
+        conversationId: conversationState.conversationId,
         reply: reply.content,
       };
     } catch (error) {
+      if (error instanceof LLMCancelledError) {
+        throw error;
+      }
+
       if (error instanceof CreateCoachChatError) {
         throw error;
       }
 
+      this.logger.error(
+        'chat execution failed',
+        error instanceof Error ? error.stack : undefined,
+      );
       throw new CreateCoachChatError(
         CREATE_COACH_CHAT_ERROR_CODES.INTERNAL_ERROR,
         'An unexpected error occurred.',
@@ -310,148 +165,7 @@ export class CreateCoachChatUseCase {
     }
   }
 
-  private async updateConversationMemory(input: {
-    conversationId: string;
-    healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>;
-    conversationHistory: AiPromptBuilderConversationMessage[];
-    userMessage: string;
-    assistantReply: string;
-    coachDecision?: CoachDecisionReadModelPayload;
-    notification?: NotificationMemoryPayload;
-    habit?: HabitMemoryPayload;
-    personalization?: ReturnType<
-      typeof PersonalizationReadModelMapper.toMemoryPayload
-    >;
-  }): Promise<void> {
-    const memory = this.coachConversationMemorySummarizer.summarize({
-      healthContext: input.healthContext,
-      conversationMessages: [
-        ...input.conversationHistory,
-        {
-          role: 'user',
-          content: input.userMessage,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          role: 'assistant',
-          content: input.assistantReply,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-      coachDecision: input.coachDecision,
-      ...(input.notification ? { notification: input.notification } : {}),
-      ...(input.habit ? { habit: input.habit } : {}),
-      ...(input.personalization
-        ? { personalization: input.personalization }
-        : {}),
-    });
-
-    await this.coachConversationMemoryRepository.upsertByConversationId({
-      conversationId: input.conversationId,
-      summary: memory.summary,
-      metadata: {
-        generatedFromMessageCount: memory.metadata.generatedFromMessageCount,
-        version: memory.metadata.version ?? COACH_CONVERSATION_MEMORY_VERSION,
-      },
-    });
-  }
-
-  private async resolvePersonalization(
-    authUserId: string,
-  ): Promise<PersonalizationReadModelSource | undefined> {
-    try {
-      const [snapshotResult, profileResult, patternsResult] =
-        await Promise.allSettled([
-          this.getCurrentPersonalizationUseCase.execute({ authUserId }),
-          this.getUserBehaviorProfileUseCase.execute({ authUserId }),
-          this.getBehavioralPatternsUseCase.execute({ authUserId }),
-        ]);
-
-      return {
-        snapshot:
-          snapshotResult.status === 'fulfilled'
-            ? snapshotResult.value.personalizationSnapshot
-            : undefined,
-        profile:
-          profileResult.status === 'fulfilled'
-            ? profileResult.value.userBehaviorProfile
-            : undefined,
-        patterns:
-          patternsResult.status === 'fulfilled'
-            ? patternsResult.value.behavioralPatterns
-            : undefined,
-      };
-    } catch {
-      return undefined;
-    }
-  }
-
-  private async resolveCoachDecision(authUserId: string) {
-    try {
-      const result = await this.getCurrentCoachDecisionUseCase.execute({
-        authUserId,
-      });
-
-      return result?.coachDecision;
-    } catch {
-      return undefined;
-    }
-  }
-
-  private async resolveNotification(
-    authUserId: string,
-  ): Promise<
-    ReturnType<typeof NotificationReadModelMapper.toPromptPayload> | undefined
-  > {
-    try {
-      const [currentResult, engagementSummaryResult] = await Promise.allSettled(
-        [
-          this.getCurrentNotificationUseCase.execute({
-            authUserId,
-          }),
-          this.getEngagementSummaryUseCase.execute({
-            authUserId,
-          }),
-        ],
-      );
-
-      return NotificationReadModelMapper.toPromptPayload(
-        currentResult.status === 'fulfilled'
-          ? currentResult.value.notificationDecision
-          : undefined,
-        engagementSummaryResult.status === 'fulfilled'
-          ? engagementSummaryResult.value.engagementSummary
-          : undefined,
-      );
-    } catch {
-      return undefined;
-    }
-  }
-
-  private async resolveHabit(
-    authUserId: string,
-  ): Promise<HabitReadModel | undefined> {
-    try {
-      const [currentResult, summaryResult, riskSignalsResult] =
-        await Promise.allSettled([
-          this.getCurrentHabitsUseCase.execute({ authUserId }),
-          this.getConsistencySummaryUseCase.execute({ authUserId }),
-          this.getHabitRiskSignalsUseCase.execute({ authUserId }),
-        ]);
-
-      return {
-        ...(currentResult.status === 'fulfilled'
-          ? { current: currentResult.value.habitSnapshot }
-          : {}),
-        ...(summaryResult.status === 'fulfilled'
-          ? { summary: summaryResult.value.consistencySummary }
-          : {}),
-        ...(riskSignalsResult.status === 'fulfilled'
-          ? { riskSignals: riskSignalsResult.value.habitRiskSignals }
-          : {}),
-      };
-    } catch {
-      return undefined;
-    }
+  private hashValue(value: string): string {
+    return createHash('sha256').update(value).digest('hex');
   }
 }

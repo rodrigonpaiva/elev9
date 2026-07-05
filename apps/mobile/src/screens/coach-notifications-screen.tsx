@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import type { ReactNode } from 'react';
 import {
   FlatList,
   Pressable,
@@ -15,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ApiClientError } from '@elev9/api-client';
 import { Badge, Button, Card, SectionHeader, Text } from '@elev9/ui';
 
+import { CoachActionGrid, CoachCenteredState } from '../components/coach';
 import { apiClient } from '../api/client';
 import type {
   CoachNotificationHistoryItem,
@@ -460,24 +460,14 @@ const QuickActionsSection = memo(function QuickActionsSection({
 }) {
   return (
     <Section title="Quick Actions">
-      <View style={styles.quickActionGrid}>
-        {actions.map((action) => (
-          <Pressable
-            accessibilityLabel={action.label}
-            accessibilityRole="button"
-            key={action.id}
-            onPress={() => onAction(action)}
-            style={({ pressed }) => [
-              styles.quickAction,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <Text maxFontSizeMultiplier={1.15} style={styles.quickActionText}>
-              {action.label}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      <CoachActionGrid
+        actions={actions}
+        actionStyle={styles.quickAction}
+        containerStyle={styles.quickActionGrid}
+        onAction={onAction}
+        textProps={{ maxFontSizeMultiplier: 1.15 }}
+        textStyle={styles.quickActionText}
+      />
     </Section>
   );
 });
@@ -535,15 +525,15 @@ function CoachNotificationsState({
   secondaryText?: string;
 }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={message} style={styles.stateContent}>
-        <Text style={styles.stateTitle}>{message}</Text>
-        {secondaryText ? (
-          <Text style={styles.stateSecondary}>{secondaryText}</Text>
-        ) : null}
-        <Button label={buttonLabel} onPress={onPress} />
-      </View>
-    </SafeAreaView>
+    <CoachCenteredState
+      action={<Button label={buttonLabel} onPress={onPress} />}
+      contentStyle={styles.stateContent}
+      message={message}
+      safeAreaStyle={styles.safeArea}
+      secondaryText={secondaryText}
+      secondaryTextStyle={styles.stateSecondary}
+      titleStyle={styles.stateTitle}
+    />
   );
 }
 

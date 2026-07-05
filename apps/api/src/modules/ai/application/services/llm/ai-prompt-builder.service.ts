@@ -13,6 +13,11 @@ import {
 } from '../context-builder/build-user-health-context.service';
 import { CoachDecisionReadModelPayload } from '../../../../../shared/mappers';
 import { AiLlmMessage, AiLlmPrompt } from './ai-llm.types';
+import {
+  AI_COACH_CHAT_PROMPT_ID,
+  AiRolloutAssignment,
+} from '../governance/ai-governance.types';
+import { AiPromptRegistryService } from '../governance/ai-prompt-registry.service';
 
 export const AI_CHAT_PROMPT_VERSION = 'coach-chat-prompt-v1';
 
@@ -34,11 +39,13 @@ export type AiPromptBuilderInput = {
   message: string;
   healthContext: UserHealthContext;
   conversationHistory: AiPromptBuilderConversationMessage[];
+  trace?: AiLlmPrompt['trace'];
   conversationMemory?: AiPromptBuilderConversationMemory;
   coachDecision?: CoachDecisionReadModelPayload;
   notification?: NotificationPromptPayload;
   habit?: HabitPromptPayload;
   personalization?: PersonalizationPromptPayload;
+  experiment?: AiRolloutAssignment;
 };
 
 export type AiPromptBuilderDebugSnapshot = {
@@ -64,7 +71,20 @@ export type AiPromptBuilderDebugSnapshot = {
 
 @Injectable()
 export class AiPromptBuilder {
+  constructor(
+    private readonly promptRegistry: AiPromptRegistryService = new AiPromptRegistryService(),
+  ) {}
+
   build(input: AiPromptBuilderInput): AiLlmPrompt {
+    const promptDefinition = this.promptRegistry.getVersionMetadata(
+      AI_COACH_CHAT_PROMPT_ID,
+      input.experiment?.selectedPromptVersion,
+    );
+    const promptVersion =
+      promptDefinition?.version ??
+      this.promptRegistry.getCurrentVersion(AI_COACH_CHAT_PROMPT_ID) ??
+      AI_CHAT_PROMPT_VERSION;
+
     const messages: AiLlmMessage[] = [
       {
         role: 'system',
@@ -140,8 +160,40 @@ export class AiPromptBuilder {
     });
 
     return {
-      promptVersion: AI_CHAT_PROMPT_VERSION,
+      promptVersion,
       messages,
+      trace: {
+        ...(input.trace ?? {}),
+        ...(input.experiment
+          ? {
+              experimentId: input.experiment.experimentId,
+              canaryBucket: input.experiment.canaryBucket,
+              rolloutVariant: input.experiment.rolloutVariant,
+            }
+          : {}),
+      },
+      metadata: {
+        promptId: AI_COACH_CHAT_PROMPT_ID,
+        promptReleaseDate: promptDefinition?.releaseDate,
+        promptStatus: promptDefinition?.status,
+        promptAuthor: promptDefinition?.author,
+        promptDescription: promptDefinition?.description,
+        experimentId: input.experiment?.experimentId,
+        canaryBucket: input.experiment?.canaryBucket,
+        canaryPercentage: input.experiment?.canaryPercentage,
+        streamingEnabled: input.experiment?.streamingEnabled,
+        structuredOutputsEnabled: input.experiment?.structuredOutputsEnabled,
+        toolCallingEnabled: input.experiment?.toolCallingEnabled,
+        futureMemoryEnabled: input.experiment?.futureMemoryEnabled,
+        currentPromptVersion: input.experiment?.currentPromptVersion,
+        previousPromptVersion: input.experiment?.previousPromptVersion,
+        currentProvider: input.experiment?.currentProvider,
+        previousProvider: input.experiment?.previousProvider,
+        currentModel: input.experiment?.currentModel,
+        previousModel: input.experiment?.previousModel,
+        provider: input.experiment?.selectedProvider,
+        model: input.experiment?.selectedModel,
+      },
     };
   }
 
@@ -161,7 +213,8 @@ export class AiPromptBuilder {
       : undefined;
 
     return {
-      promptVersion: AI_CHAT_PROMPT_VERSION,
+      promptVersion:
+        input.experiment?.selectedPromptVersion ?? AI_CHAT_PROMPT_VERSION,
       promptPreview: {
         systemSections: [
           'safety_rules',

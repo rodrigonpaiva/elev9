@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   GoalAchievement,
   GoalForecast,
@@ -16,6 +15,7 @@ import { formatGoalType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
+import { isCoachOptionalEmptyState } from './coach';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
@@ -156,7 +156,9 @@ export function useCoachGoalGuidance(): CoachGoalGuidanceResult {
         habitHistoryResult,
         personalizationHistoryResult,
       ].every((result) => result.status === 'rejected') &&
-      !isOptionalEmptyState(firstFailureReason)
+      !isCoachOptionalEmptyState(firstFailureReason, [
+        'TRAINING_PLAN_NOT_FOUND',
+      ])
     ) {
       setState(INITIAL_STATE);
       setExtraError('Unable to prepare your goal guidance.');
@@ -640,20 +642,6 @@ function getMilestoneTarget(
 
 function getAchievementTitle(achievement: GoalAchievement): string {
   return `Goal achievement ${achievement.completionPercentage >= 100 ? 'reached' : 'in progress'}`;
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    [
-      'GOAL_NOT_FOUND',
-      'NOT_FOUND',
-      'HABIT_SNAPSHOT_NOT_FOUND',
-      'PERSONALIZATION_SNAPSHOT_NOT_FOUND',
-      'TRAINING_PLAN_NOT_FOUND',
-      'USER_PROFILE_NOT_FOUND',
-    ].includes(error.code)
-  );
 }
 
 export function trackCoachGoalGuidanceEvent(

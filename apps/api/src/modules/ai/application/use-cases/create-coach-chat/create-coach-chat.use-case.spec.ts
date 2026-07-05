@@ -1,5 +1,12 @@
+import { createHash } from 'crypto';
+
 import { CoachChatReplyGenerator } from '../../services/chat/coach-chat-reply-generator.service';
+import { CoachChatContextLoaderService } from '../../services/chat/coach-chat-context-loader.service';
+import { CoachChatMemoryUpdaterService } from '../../services/chat/coach-chat-memory-updater.service';
+import { CoachChatPersistenceService } from '../../services/chat/coach-chat-persistence.service';
+import { CoachChatReplyOrchestratorService } from '../../services/chat/coach-chat-reply-orchestrator.service';
 import { BuildUserHealthContextService } from '../../services/context-builder/build-user-health-context.service';
+import { AiRolloutService } from '../../services/governance/ai-rollout.service';
 import { AiLlmService } from '../../services/llm/ai-llm.service';
 import { AiPromptBuilder } from '../../services/llm/ai-prompt-builder.service';
 import { CoachConversationMemorySummarizer } from '../../services/memory/coach-conversation-memory-summarizer.service';
@@ -33,6 +40,11 @@ describe('CreateCoachChatUseCase', () => {
   let buildUserHealthContextService: {
     build: jest.MockedFunction<BuildUserHealthContextService['build']>;
   };
+  let aiRolloutService: {
+    resolveCoachChatAssignment: jest.MockedFunction<
+      AiRolloutService['resolveCoachChatAssignment']
+    >;
+  };
   let aiPromptBuilder: jest.Mocked<AiPromptBuilder>;
   let aiLlmService: jest.Mocked<AiLlmService>;
   let replyGenerator: jest.Mocked<CoachChatReplyGenerator>;
@@ -64,6 +76,10 @@ describe('CreateCoachChatUseCase', () => {
   let getBehavioralPatternsUseCase: {
     execute: jest.MockedFunction<GetBehavioralPatternsUseCase['execute']>;
   };
+  let coachChatContextLoaderService: CoachChatContextLoaderService;
+  let coachChatPersistenceService: CoachChatPersistenceService;
+  let coachChatReplyOrchestratorService: CoachChatReplyOrchestratorService;
+  let coachChatMemoryUpdaterService: CoachChatMemoryUpdaterService;
   let useCase: CreateCoachChatUseCase;
 
   beforeEach(() => {
@@ -88,11 +104,39 @@ describe('CreateCoachChatUseCase', () => {
     } as unknown as {
       build: jest.MockedFunction<BuildUserHealthContextService['build']>;
     };
+    aiRolloutService = {
+      resolveCoachChatAssignment: jest.fn().mockReturnValue({
+        experimentId: 'coach-chat-evaluation-rollout',
+        promptId: 'coach-chat',
+        currentPromptVersion: 'coach-chat-prompt-v1',
+        previousPromptVersion: 'coach-chat-prompt-v0',
+        selectedPromptVersion: 'coach-chat-prompt-v1',
+        currentProvider: 'openai',
+        previousProvider: 'openai',
+        selectedProvider: 'openai',
+        currentModel: 'gpt-4.1-mini',
+        previousModel: 'gpt-4.1-mini',
+        selectedModel: 'gpt-4.1-mini',
+        canaryBucket: 12,
+        canaryPercentage: 100,
+        streamingEnabled: false,
+        structuredOutputsEnabled: true,
+        toolCallingEnabled: false,
+        futureMemoryEnabled: false,
+        rolloutVariant: 'current',
+      }),
+    } as unknown as {
+      resolveCoachChatAssignment: jest.MockedFunction<
+        AiRolloutService['resolveCoachChatAssignment']
+      >;
+    };
     aiPromptBuilder = {
       build: jest.fn(),
     } as unknown as jest.Mocked<AiPromptBuilder>;
     aiLlmService = {
       generateReply: jest.fn(),
+      streamReply: jest.fn(),
+      canStream: jest.fn().mockReturnValue(false),
     } as unknown as jest.Mocked<AiLlmService>;
     replyGenerator = {
       generate: jest.fn(),
@@ -137,19 +181,8 @@ describe('CreateCoachChatUseCase', () => {
         behavioralPatterns: [],
       }),
     };
-    coachConversationMemorySummarizer.summarize.mockReturnValue(
-      buildMemorySummary({
-        summary:
-          'goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; notification=type:coach_nudge,suppressed:true,fatigue:high,engagement:84; user_concern=general',
-        generatedFromMessageCount: 2,
-      }),
-    );
-
-    useCase = new CreateCoachChatUseCase(
+    coachChatContextLoaderService = new CoachChatContextLoaderService(
       userProfileRepository,
-      coachConversationRepository,
-      coachMessageRepository,
-      coachConversationMemoryRepository,
       buildUserHealthContextService as unknown as BuildUserHealthContextService,
       getCurrentCoachDecisionUseCase as unknown as GetCurrentCoachDecisionUseCase,
       getCurrentNotificationUseCase as unknown as GetCurrentNotificationUseCase,
@@ -160,10 +193,35 @@ describe('CreateCoachChatUseCase', () => {
       getCurrentPersonalizationUseCase as unknown as GetCurrentPersonalizationUseCase,
       getUserBehaviorProfileUseCase as unknown as GetUserBehaviorProfileUseCase,
       getBehavioralPatternsUseCase as unknown as GetBehavioralPatternsUseCase,
+    );
+    coachChatPersistenceService = new CoachChatPersistenceService(
+      coachConversationRepository,
+      coachMessageRepository,
+      coachConversationMemoryRepository,
+    );
+    coachChatReplyOrchestratorService = new CoachChatReplyOrchestratorService(
+      aiLlmService as unknown as AiLlmService,
+      replyGenerator as unknown as CoachChatReplyGenerator,
+    );
+    coachChatMemoryUpdaterService = new CoachChatMemoryUpdaterService(
+      coachConversationMemorySummarizer as unknown as CoachConversationMemorySummarizer,
+      coachConversationMemoryRepository,
+    );
+    coachConversationMemorySummarizer.summarize.mockReturnValue(
+      buildMemorySummary({
+        summary:
+          'goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; notification=type:coach_nudge,suppressed:true,fatigue:high,engagement:84; user_concern=general',
+        generatedFromMessageCount: 2,
+      }),
+    );
+
+    useCase = new CreateCoachChatUseCase(
+      coachChatContextLoaderService,
+      coachChatPersistenceService,
+      coachChatReplyOrchestratorService,
+      coachChatMemoryUpdaterService,
       aiPromptBuilder,
-      aiLlmService,
-      replyGenerator,
-      coachConversationMemorySummarizer,
+      aiRolloutService as unknown as AiRolloutService,
     );
   });
 
@@ -246,20 +304,32 @@ describe('CreateCoachChatUseCase', () => {
       message: 'Should I train today?',
     });
 
-    expect(aiPromptBuilder.build).toHaveBeenCalledWith({
-      message: 'Should I train today?',
-      healthContext: expect.objectContaining({
-        authUserId: 'auth_user_123',
+    expect(aiPromptBuilder.build).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Should I train today?',
+        healthContext: expect.objectContaining({
+          authUserId: 'auth_user_123',
+        }),
+        conversationHistory: [],
+        trace: expect.objectContaining({
+          conversationId: 'conversation_123',
+          userIdHash: hashValue('profile_123'),
+        }),
+        experiment: expect.objectContaining({
+          promptId: 'coach-chat',
+        }),
+        coachDecision: {
+          priority: 'training',
+          headline: 'Training adaptation recommended',
+          summary: 'Signals are stable and ready for progression.',
+          actionItems: [
+            'Follow the adaptive recommendation',
+            'Monitor fatigue',
+          ],
+          influences: [],
+        },
       }),
-      conversationHistory: [],
-      coachDecision: {
-        priority: 'training',
-        headline: 'Training adaptation recommended',
-        summary: 'Signals are stable and ready for progression.',
-        actionItems: ['Follow the adaptive recommendation', 'Monitor fatigue'],
-        influences: [],
-      },
-    });
+    );
     expect(aiLlmService.generateReply).toHaveBeenCalledWith({
       promptVersion: 'coach-chat-prompt-v1',
       messages: [{ role: 'system', content: 'prompt' }],
@@ -293,6 +363,109 @@ describe('CreateCoachChatUseCase', () => {
         promptVersion: 'coach-chat-prompt-v1',
       },
     });
+    expect(result).toEqual({
+      conversationId: 'conversation_123',
+      reply: 'OpenAI coach reply',
+    });
+  });
+
+  it('streams deltas when streaming is enabled', async () => {
+    mockUserProfile(userProfileRepository);
+    coachConversationRepository.findLatestByUserProfileId.mockResolvedValue(
+      null,
+    );
+    coachConversationMemoryRepository.findByConversationId.mockResolvedValue(
+      null,
+    );
+    buildUserHealthContextService.build.mockResolvedValue(buildHealthContext());
+    getCurrentCoachDecisionUseCase.execute.mockResolvedValue({
+      coachDecision: buildCoachDecision({
+        priority: 'training',
+        headline: 'Training adaptation recommended',
+        summary: 'Signals are stable and ready for progression.',
+        actionItems: ['Follow the adaptive recommendation', 'Monitor fatigue'],
+      }),
+    } as never);
+    aiPromptBuilder.build.mockReturnValue({
+      promptVersion: 'coach-chat-prompt-v1',
+      messages: [{ role: 'system', content: 'prompt' }],
+    });
+    aiLlmService.canStream.mockReturnValue(true);
+    aiLlmService.streamReply.mockImplementation(async (_prompt, onDelta) => {
+      onDelta?.('OpenAI coach reply');
+
+      return {
+        content: 'OpenAI coach reply',
+        provider: 'openai',
+        model: 'gpt-4.1-mini',
+        promptVersion: 'coach-chat-prompt-v1',
+      };
+    });
+    coachMessageRepository.create
+      .mockResolvedValueOnce({
+        id: 'message_user_123',
+        conversationId: 'conversation_123',
+        role: 'user',
+        content: 'Should I train today?',
+        createdAt: new Date('2026-05-18T10:00:01.000Z'),
+      })
+      .mockResolvedValueOnce({
+        id: 'message_assistant_123',
+        conversationId: 'conversation_123',
+        role: 'assistant',
+        content: 'OpenAI coach reply',
+        createdAt: new Date('2026-05-18T10:00:02.000Z'),
+      });
+    coachConversationMemorySummarizer.summarize.mockReturnValue({
+      summary:
+        'goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; user_concern=general',
+      metadata: {
+        generatedFromMessageCount: 2,
+        version: 'memory-v1',
+      },
+    });
+    replyGenerator.generate.mockReturnValue('Fallback reply');
+    coachConversationRepository.create.mockResolvedValue(
+      new CoachConversation({
+        id: 'conversation_123',
+        userProfileId: 'profile_123',
+        createdAt: new Date('2026-05-18T10:00:00.000Z'),
+        updatedAt: new Date('2026-05-18T10:00:00.000Z'),
+      }),
+    );
+    coachConversationMemoryRepository.upsertByConversationId.mockResolvedValue(
+      new CoachConversationMemory({
+        id: 'memory_123',
+        conversationId: 'conversation_123',
+        summary:
+          'goal=gain_muscle; fatigue=LOW; recovery=improving; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:0; user_concern=general',
+        metadata: {
+          generatedFromMessageCount: 2,
+          version: 'memory-v1',
+        },
+        createdAt: new Date('2026-05-18T10:00:03.000Z'),
+        updatedAt: new Date('2026-05-18T10:00:03.000Z'),
+      }),
+    );
+
+    const onDelta = jest.fn();
+    const result = await useCase.executeStream(
+      {
+        authUserId: 'auth_user_123',
+        message: 'Should I train today?',
+      },
+      {
+        onDelta,
+      },
+    );
+
+    expect(aiLlmService.streamReply).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promptVersion: 'coach-chat-prompt-v1',
+      }),
+      expect.any(Function),
+    );
+    expect(onDelta).toHaveBeenCalledWith('OpenAI coach reply');
     expect(result).toEqual({
       conversationId: 'conversation_123',
       reply: 'OpenAI coach reply',
@@ -391,6 +564,9 @@ describe('CreateCoachChatUseCase', () => {
 
     expect(aiPromptBuilder.build).toHaveBeenCalledWith(
       expect.objectContaining({
+        experiment: expect.objectContaining({
+          promptId: 'coach-chat',
+        }),
         notification: expect.objectContaining({
           current: expect.objectContaining({
             type: 'coach_nudge',
@@ -528,6 +704,9 @@ describe('CreateCoachChatUseCase', () => {
 
     expect(aiPromptBuilder.build).toHaveBeenCalledWith(
       expect.objectContaining({
+        experiment: expect.objectContaining({
+          promptId: 'coach-chat',
+        }),
         habit: expect.objectContaining({
           summary: expect.objectContaining({
             trend: 'declining',
@@ -656,32 +835,41 @@ describe('CreateCoachChatUseCase', () => {
       conversationId: 'conversation_456',
       limit: 12,
     });
-    expect(aiPromptBuilder.build).toHaveBeenCalledWith({
-      message: 'Should I train today?',
-      healthContext: expect.objectContaining({
-        fatigueLevel: 'HIGH',
+    expect(aiPromptBuilder.build).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: 'Should I train today?',
+        healthContext: expect.objectContaining({
+          fatigueLevel: 'HIGH',
+        }),
+        conversationHistory: [
+          {
+            role: 'user',
+            content: 'Should I train today?',
+            createdAt: '2026-05-17T10:00:00.000Z',
+          },
+          {
+            role: 'assistant',
+            content: 'Try keeping the session lighter.',
+            createdAt: '2026-05-17T10:00:01.000Z',
+          },
+        ],
+        conversationMemory: {
+          summary:
+            'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:1; user_concern=recovery',
+          metadata: {
+            generatedFromMessageCount: 2,
+            version: 'memory-v1',
+          },
+        },
+        trace: expect.objectContaining({
+          conversationId: 'conversation_456',
+          userIdHash: hashValue('profile_123'),
+        }),
+        experiment: expect.objectContaining({
+          promptId: 'coach-chat',
+        }),
       }),
-      conversationHistory: [
-        {
-          role: 'user',
-          content: 'Should I train today?',
-          createdAt: '2026-05-17T10:00:00.000Z',
-        },
-        {
-          role: 'assistant',
-          content: 'Try keeping the session lighter.',
-          createdAt: '2026-05-17T10:00:01.000Z',
-        },
-      ],
-      conversationMemory: {
-        summary:
-          'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:1; user_concern=recovery',
-        metadata: {
-          generatedFromMessageCount: 2,
-          version: 'memory-v1',
-        },
-      },
-    });
+    );
     expect(replyGenerator.generate).toHaveBeenCalledWith({
       message: 'Should I train today?',
       healthContext: expect.objectContaining({
@@ -930,6 +1118,10 @@ describe('CreateCoachChatUseCase', () => {
     );
   });
 });
+
+function hashValue(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
 
 function mockUserProfile(
   userProfileRepository: jest.Mocked<UserProfileRepository>,

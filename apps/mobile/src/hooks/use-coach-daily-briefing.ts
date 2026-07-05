@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   CoachDecision,
   GetCurrentGoalResponse,
@@ -11,6 +10,14 @@ import { formatGoalType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
+import {
+  getCoachGreetingMessage,
+  getCoachPriorityBenefit,
+  getCoachPriorityGoalLabel,
+  isCoachOptionalEmptyState,
+  normalizeCoachSentence,
+  stripCoachMetricLanguage,
+} from './coach';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
 
@@ -63,8 +70,6 @@ export type CoachDailyBriefingResult = {
   refresh: () => Promise<void>;
 };
 
-const USER_NAME = 'Rodrigo';
-
 export function useCoachDailyBriefing(): CoachDailyBriefingResult {
   const dashboard = useDashboard();
   const [currentGoal, setCurrentGoal] = useState<CurrentGoal | null>(null);
@@ -89,13 +94,13 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
 
     if (goalResult.status === 'fulfilled') {
       setCurrentGoal(goalResult.value.goal);
-    } else if (isOptionalEmptyState(goalResult.reason)) {
+    } else if (isCoachOptionalEmptyState(goalResult.reason)) {
       setCurrentGoal(null);
     }
 
     if (habitResult.status === 'fulfilled') {
       setHabitSnapshot(habitResult.value.habitSnapshot);
-    } else if (isOptionalEmptyState(habitResult.reason)) {
+    } else if (isCoachOptionalEmptyState(habitResult.reason)) {
       setHabitSnapshot(null);
     }
 
@@ -103,7 +108,7 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
       setPersonalizationSnapshot(
         personalizationResult.value.personalizationSnapshot,
       );
-    } else if (isOptionalEmptyState(personalizationResult.reason)) {
+    } else if (isCoachOptionalEmptyState(personalizationResult.reason)) {
       setPersonalizationSnapshot(null);
     }
 
@@ -111,7 +116,7 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
       goalResult.status === 'rejected' &&
       habitResult.status === 'rejected' &&
       personalizationResult.status === 'rejected' &&
-      !isOptionalEmptyState(goalResult.reason)
+      !isCoachOptionalEmptyState(goalResult.reason)
     ) {
       setExtraError("Unable to prepare today's briefing.");
     }
@@ -134,6 +139,7 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
 
     return buildDailyBriefingModel({
       coachDecision: dashboard.coach.data,
+      userName: dashboard.userName,
       currentGoal,
       habitSnapshot,
       personalizationSnapshot,
@@ -185,6 +191,7 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
 
 function buildDailyBriefingModel(input: {
   coachDecision: CoachDecision;
+  userName: string | null;
   currentGoal: CurrentGoal | null;
   habitSnapshot: HabitSnapshot | null;
   personalizationSnapshot: PersonalizationSnapshot | null;
@@ -200,7 +207,7 @@ function buildDailyBriefingModel(input: {
   const summary = getSummary(input);
 
   return {
-    greeting: `${getGreeting()}, ${USER_NAME}.`,
+    greeting: getCoachGreetingMessage(input.userName),
     subtitle: getSubtitle(input.personalizationSnapshot),
     summary,
     interpretation: getInterpretation(input),
@@ -226,9 +233,9 @@ function buildPriorities(
     .slice(0, 3)
     .map((item, index) => ({
       id: `${coachDecision.id}-${index}`,
-      title: normalizeSentence(item),
+      title: normalizeCoachSentence(item),
       reason: getPriorityReason(coachDecision, index),
-      benefit: getExpectedBenefit(coachDecision.priority),
+      benefit: getCoachPriorityBenefit(coachDecision.priority),
     }));
 }
 
@@ -268,7 +275,7 @@ function buildReadiness(input: {
       label: 'Goal',
       value: input.currentGoal
         ? formatGoalType(input.currentGoal.type)
-        : getPriorityGoalLabel(input.coachDecision.priority),
+        : getCoachPriorityGoalLabel(input.coachDecision.priority),
     },
   ];
 }
@@ -342,7 +349,7 @@ function getInterpretation(input: {
   const summary = input.coachDecision.summary.trim();
 
   if (summary.length > 0) {
-    return stripRawMetricLanguage(summary);
+    return stripCoachMetricLanguage(summary);
   }
 
   if (input.habitSnapshot?.trend === 'improving') {
@@ -435,22 +442,6 @@ function getPriorityReason(
   );
 }
 
-function getExpectedBenefit(priority: CoachDecision['priority']): string {
-  switch (priority) {
-    case 'recovery':
-      return 'Better readiness tomorrow.';
-    case 'nutrition':
-      return 'More consistent energy today.';
-    case 'training':
-      return 'A stronger training signal.';
-    case 'consistency':
-      return 'Keeps your momentum intact.';
-    case 'motivation':
-    default:
-      return 'A clearer next step.';
-  }
-}
-
 function getFallbackPriority(priority: CoachDecision['priority']): string {
   switch (priority) {
     case 'recovery':
@@ -495,70 +486,10 @@ function getHabitLabel(habitSnapshot: HabitSnapshot | null): string {
   }
 }
 
-function getPriorityGoalLabel(priority: CoachDecision['priority']): string {
-  switch (priority) {
-    case 'recovery':
-      return 'Improve recovery';
-    case 'nutrition':
-      return 'Nutrition consistency';
-    case 'training':
-      return 'Training progress';
-    case 'consistency':
-      return 'Improve consistency';
-    case 'motivation':
-    default:
-      return 'Personal progress';
-  }
-}
-
-function normalizeSentence(value: string): string {
-  const trimmed = value.trim();
-
-  if (trimmed.endsWith('.') || trimmed.endsWith('!') || trimmed.endsWith('?')) {
-    return trimmed;
-  }
-
-  return `${trimmed}.`;
-}
-
-function stripRawMetricLanguage(value: string): string {
-  return value
-    .replace(/\b\d+(\.\d+)?%?\b/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-}
-
 function limitLines(value: string): string {
   const sentence = value.split(/\n+/).filter(Boolean).slice(0, 2).join(' ');
 
   return sentence.length > 96 ? `${sentence.slice(0, 93).trim()}...` : sentence;
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-
-  if (hour < 12) {
-    return 'Good morning';
-  }
-
-  if (hour < 18) {
-    return 'Good afternoon';
-  }
-
-  return 'Good evening';
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    [
-      'USER_PROFILE_NOT_FOUND',
-      'GOAL_NOT_FOUND',
-      'HABIT_SNAPSHOT_NOT_FOUND',
-      'PERSONALIZATION_SNAPSHOT_NOT_FOUND',
-      'NOT_FOUND',
-    ].includes(error.code)
-  );
 }
 
 export function trackCoachDailyBriefingEvent(

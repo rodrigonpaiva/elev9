@@ -10,6 +10,14 @@ import { Button, Card, colors, Screen, Text } from '@elev9/ui';
 import { apiClient } from '../api/client';
 import { useAuth } from '../auth/auth-provider';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import {
+  getHomeResolverErrorMessage,
+  getNutritionPlanState,
+  getNutritionProfileState,
+  getLocalDateKey,
+  resolveHomeResolverDestination,
+  shouldShowDailyBriefingToday as shouldShowDailyBriefingTodayHelper,
+} from './home-resolver-helpers';
 
 const DAILY_BRIEFING_LAST_SHOWN_KEY = 'elev9.dailyBriefing.lastShownDate';
 
@@ -52,32 +60,28 @@ export function HomeResolverScreen() {
       }
 
       const nutritionState = await resolveNutritionState();
+      const destination = resolveHomeResolverDestination({
+        hasUserProfile: true,
+        fitnessProfile: dashboard.fitnessProfile,
+        trainingPlan: dashboard.trainingPlan,
+        nutritionProfileState: nutritionState.profileState,
+        nutritionPlanState: nutritionState.planState,
+        nutritionGoal: nutritionState.nutritionGoal,
+        shouldShowDailyBriefingToday: await shouldShowDailyBriefingTodayHelper(
+          await AsyncStorage.getItem(DAILY_BRIEFING_LAST_SHOWN_KEY),
+          getLocalDateKey(new Date()),
+        ),
+      });
 
-      if (nutritionState.requiresSetup) {
-        navigation.replace('CreateNutritionProfile', {
-          prefillGoal:
-            nutritionState.nutritionGoal ??
-            mapFitnessGoalToNutritionGoal(dashboard.fitnessProfile.goal),
-        });
-        return;
-      }
-
-      if (await shouldShowDailyBriefingToday()) {
+      if (destination.screen === 'CoachDailyBriefing') {
         await markDailyBriefingShownToday();
-        navigation.replace('CoachDailyBriefing');
-        return;
       }
 
-      navigation.replace('MainTabs');
+      navigation.replace(
+        destination.screen,
+        'params' in destination ? destination.params : undefined,
+      );
     } catch (error) {
-      if (
-        error instanceof ApiClientError &&
-        error.code === 'USER_PROFILE_NOT_FOUND'
-      ) {
-        navigation.replace('CreateProfile');
-        return;
-      }
-
       if (
         error instanceof ApiClientError &&
         error.code === 'AUTH_INVALID_SESSION'
@@ -86,18 +90,15 @@ export function HomeResolverScreen() {
         return;
       }
 
-      if (error instanceof ApiClientError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage('Unable to set up your training space.');
-      }
+      setErrorMessage(getHomeResolverErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
   }
 
   async function resolveNutritionState(): Promise<{
-    requiresSetup: boolean;
+    profileState: 'exists' | 'missing' | 'unknown';
+    planState: 'exists' | 'missing' | 'unknown';
     nutritionGoal: 'fat_loss' | 'maintenance' | 'muscle_gain' | null;
   }> {
     const [profileResult, planResult] = await Promise.allSettled([
@@ -113,8 +114,8 @@ export function HomeResolverScreen() {
         : null;
 
     return {
-      requiresSetup:
-        nutritionProfileState === 'missing' || nutritionPlanState === 'missing',
+      profileState: nutritionProfileState,
+      planState: nutritionPlanState,
       nutritionGoal: nutritionProfile?.goal ?? null,
     };
   }
@@ -151,86 +152,11 @@ export function HomeResolverScreen() {
   );
 }
 
-async function shouldShowDailyBriefingToday(): Promise<boolean> {
-  const todayKey = getLocalDateKey(new Date());
-  const lastShownDate = await AsyncStorage.getItem(
-    DAILY_BRIEFING_LAST_SHOWN_KEY,
-  );
-
-  return lastShownDate !== todayKey;
-}
-
 async function markDailyBriefingShownToday(): Promise<void> {
   await AsyncStorage.setItem(
     DAILY_BRIEFING_LAST_SHOWN_KEY,
     getLocalDateKey(new Date()),
   );
-}
-
-function getNutritionProfileState(
-  result: PromiseSettledResult<
-    Awaited<ReturnType<typeof apiClient.nutrition.getNutritionProfile>>
-  >,
-) {
-  if (result.status === 'fulfilled') {
-    return 'exists' as const;
-  }
-
-  if (
-    result.reason instanceof ApiClientError &&
-    result.reason.code === 'NUTRITION_PROFILE_NOT_FOUND'
-  ) {
-    return 'missing' as const;
-  }
-
-  return 'unknown' as const;
-}
-
-function getNutritionPlanState(
-  result: PromiseSettledResult<
-    Awaited<ReturnType<typeof apiClient.nutrition.getCurrentNutritionPlan>>
-  >,
-) {
-  if (result.status === 'fulfilled') {
-    return 'exists' as const;
-  }
-
-  if (
-    result.reason instanceof ApiClientError &&
-    result.reason.code === 'NUTRITION_PLAN_NOT_FOUND'
-  ) {
-    return 'missing' as const;
-  }
-
-  if (
-    result.reason instanceof ApiClientError &&
-    result.reason.code === 'NUTRITION_PROFILE_NOT_FOUND'
-  ) {
-    return 'missing' as const;
-  }
-
-  return 'unknown' as const;
-}
-
-function mapFitnessGoalToNutritionGoal(
-  goal: 'lose_weight' | 'gain_muscle' | 'maintain',
-) {
-  switch (goal) {
-    case 'lose_weight':
-      return 'fat_loss';
-    case 'gain_muscle':
-      return 'muscle_gain';
-    case 'maintain':
-      return 'maintenance';
-  }
-}
-
-function getLocalDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
 }
 
 const styles = StyleSheet.create({

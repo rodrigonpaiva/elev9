@@ -31,6 +31,7 @@ import {
   trackCoachConversationEvent,
   useCoachConversation,
 } from '../hooks/use-coach-conversation';
+import { resolveAutoSendConversationPrompt } from '../hooks/coach/coach-conversation-helpers';
 
 const conversationTokens = {
   background: '#ffffff',
@@ -94,15 +95,18 @@ export function CoachConversationScreen() {
   }, [conversation.isSending, conversation.messages.length]);
 
   useEffect(() => {
-    const initialPrompt = route.params?.initialPrompt?.trim();
-    const promptId = route.params?.promptId ?? initialPrompt;
+    const autoPrompt = resolveAutoSendConversationPrompt({
+      initialPrompt: route.params?.initialPrompt,
+      promptId: route.params?.promptId,
+      lastAutoPromptId: lastAutoPromptRef.current,
+    });
 
-    if (!initialPrompt || !promptId || lastAutoPromptRef.current === promptId) {
+    if (!autoPrompt) {
       return;
     }
 
-    lastAutoPromptRef.current = promptId;
-    void conversation.sendMessage(initialPrompt);
+    lastAutoPromptRef.current = autoPrompt.promptId;
+    void conversation.sendMessage(autoPrompt.prompt);
   }, [
     conversation.sendMessage,
     route.params?.initialPrompt,

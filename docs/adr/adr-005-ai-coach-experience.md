@@ -49,7 +49,11 @@ The coach experience is split into focused surfaces instead of one monolithic ch
 - Goal Guidance for long-horizon strategy
 - Notifications for proactive nudges
 
-The UI remains calm and premium. The coach never exposes raw prompts, internal reasoning, or debug internals.
+The UI remains calm and premium. When conversational generation uses OpenAI, it is wrapped in a safety layer and a reliability layer with prompt sanitization, PII redaction, output validation, timeout, retry, circuit breaker, kill switch, structured logging, and deterministic fallback. The coach never exposes raw prompts, internal reasoning, or debug internals.
+
+The current production implementation also includes an observability and cost-control layer so LLM requests can be traced, token usage can be counted, estimated cost can be tracked, and request-level guardrails can be enforced without changing the public API.
+The chat surface also exposes an additive streaming transport on top of the same conversational use-case, while keeping the synchronous contract intact.
+Prompt versions are governed internally through a registry, deterministic canary rollout, rollback configuration, and internal evaluation runner.
 
 ## Trade-offs
 
@@ -60,6 +64,7 @@ The UI remains calm and premium. The coach never exposes raw prompts, internal r
 - clearer explanation of recommendations
 - easier reuse of shared read models
 - stronger product identity
+- operational visibility into LLM usage and cost
 
 ### Costs
 
@@ -72,13 +77,14 @@ The UI remains calm and premium. The coach never exposes raw prompts, internal r
 - the mobile app now has a clear coaching center of gravity
 - dashboard, workout, nutrition, recovery, and profile can route into the same coach system
 - explainability must stay consistent across every coach surface
+- LLM availability must remain non-blocking because deterministic fallback is the source of truth for product continuity
 - future AI additions should extend the existing coach shell instead of replacing it
+- request traces, token accounting, and cost guardrails become first-class internal concerns
 
 ## Future Extensions
 
 The current architecture leaves room for:
 
-- streaming responses
 - voice conversations
 - speech-to-text
 - text-to-speech

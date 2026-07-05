@@ -92,6 +92,12 @@ Responsável por:
 - expor coach decisions
 - consumir recovery, goals, habits, personalization, and notifications
 - renderizar experiências de coaching contextual no mobile
+- aplicar uma safety layer para sanitização de prompt, detecção de injection, redaction de PII e validação de saída
+- consultar OpenAI de forma opcional por meio de uma camada de confiabilidade que aplica timeout, retry, circuit breaker, kill switch e fallback determinístico
+- usar o Responses API da OpenAI com structured outputs, parser centralizado de resposta e metadata de capabilities para manter compatibilidade com GPT-5.5 e modelos futuros
+- registrar traces operacionais, contagem de tokens, custo estimado e guardrails de custo por requisição através de uma camada de observabilidade interna
+- expor um transporte de streaming aditivo para chat contextual sem alterar o contrato síncrono existente
+- manter registry de versões de prompt, rollout canário determinístico, rollback por configuração e evaluation runner interno
 
 ### Fluxo da IA
 
@@ -108,7 +114,7 @@ Responsável por:
 
 2. Monta contexto
 
-3. Produz read models e explicações
+3. Produz read models, aplica safety checks, registra telemetria operacional interna e gera resposta conversacional determinística, assistida por LLM ou transmitida por streaming quando habilitado
 
 4. O mobile renderiza a experiência de coach
 

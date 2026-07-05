@@ -47,6 +47,7 @@ POST /users/profile
 GET  /training/today
 POST /progress/daily-check-in
 POST /ai/chat
+POST /ai/chat/stream
 GET  /ai/chat/history
 GET  /ai/coach-decision/today
 GET  /notifications/today
@@ -102,6 +103,12 @@ The coach layer:
 ### AI Constraints in the current implementation
 
 - deterministic read models
+- prompt safety layer for injection detection, PII redaction, context minimization, and output validation
+- optional OpenAI-assisted chat generation behind a reliability layer
+- OpenAI Responses API with structured outputs and a centralized response parser
+- internal observability for request traces, token accounting, cost guardrails, and structured logs
+- optional streaming transport over the same chat use-case when the feature flag is enabled
+- internal prompt version registry, deterministic canary rollout, and rollback-ready provider selection
 - no exposed prompt internals
 - no distributed memory layer
 - no mandatory async queue

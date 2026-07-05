@@ -10,6 +10,7 @@ Nesta organização:
 - `docs/adr/` registra decisões arquiteturais mais estáveis
 - os módulos evoluem por entregas incrementais
 - o estado atual do sistema inclui os contextos de recovery, training, nutrition, goals, habits, personalization, notifications e AI / Coach
+- o módulo `ai` já inclui governança de prompt, rollout canário determinístico, rollback por configuração e avaliação interna
 - o bounded context `dashboard` documenta a superfície adaptativa da home e seus debug surfaces internos
 
 Este índice funciona como ponto central de navegação da arquitetura documental do projeto.
@@ -66,7 +67,9 @@ O módulo `ai` documentado em [docs/specs/ai/README.md](./ai/README.md) atualmen
 CoachDecision
 → CoachFeedback
 → Conversational Coach
-→ Coach Home / Daily Briefing / Memory / Insights / Ask Coach / Weekly Review / Goal Guidance
+→ Coach Home / Daily Briefing / Memory / Insights / Ask Coach / Weekly Review / Goal Guidance / Smart Notifications
+→ Safety / Reliability / Observability layers
+→ Prompt registry / evaluation / canary rollout / rollback governance
 → Replay / Explainability
 ```
 
@@ -79,6 +82,10 @@ Hoje, o módulo cobre principalmente:
 - explainability
 - replay
 - cross-surface coach reads
+- optional LLM-assisted chat behind safety, reliability, and observability layers
+- request tracing, token accounting, bounded retention, and cost guardrails for LLM requests
+- prompt version registry with deterministic canary rollout and config-driven rollback
+- internal evaluation runner and golden prompt dataset
 
 O bounded context `dashboard` documentado em [docs/specs/dashboard/README.md](./dashboard/README.md) reutiliza o mesmo contexto contextual e compartilha read models com a camada coach.
 
@@ -94,6 +101,9 @@ Importante:
 
 - [ADR-002 — Recovery & Adaptive Coaching System](../adr/adr-002-recovery-system.md)
 - [ADR-003 — Coach Feedback Explainability & Replay System](../adr/adr-003-coach-feedback-explainability.md)
+- [ADR-004 — Conversational Coach Architecture](../adr/adr-004-conversational-coach-architecture.md)
+- [ADR-005 — AI Coach Experience](../adr/adr-005-ai-coach-experience.md)
+- [ADR-006 — AI LLM Observability & Cost Control](../adr/adr-006-ai-llm-observability-cost-control.md)
 
 ---
 
@@ -108,6 +118,7 @@ O estado atual da arquitetura pode ser resumido por:
 - replay/debug infrastructure
 - internal explainability metadata
 - coach-centric mobile surfaces
+- optional LLM-assisted chat with safety, reliability, and observability controls
 
 Essas características descrevem o sistema atual e não devem ser lidas como capacidades avançadas de IA generativa.
 
@@ -121,7 +132,7 @@ Possíveis direções arquiteturais futuras, ainda não implementadas:
 - semantic memory
 - adaptive recommendation engine
 - wearable integrations
-- evaluation engine
+- richer telemetry pipelines
 
 Esses itens devem ser tratados como roadmap técnico, não como comportamento atual do sistema.
 

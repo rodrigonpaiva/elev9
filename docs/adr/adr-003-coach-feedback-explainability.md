@@ -134,7 +134,7 @@ This supports:
 - consistent replay behavior
 - future heuristic evolution
 - comparison between generation strategies
-- future prompt or LLM version tracking
+- prompt and LLM version tracking in adjacent AI surfaces
 
 The current implementation is intentionally simple and manual. Versioning is explicit rather than inferred from code changes.
 
@@ -217,7 +217,7 @@ Persisted influences, snapshots, and generator versioning create a foundation fo
 - recommendation engines
 - contextual evaluations
 - future semantic memory
-- future prompt versioning
+- prompt version comparisons in the coach layer
 
 ### Architecture-first approach
 
@@ -239,7 +239,7 @@ This separation makes the system easier to evolve without changing public API co
 - explicit contextual traceability
 - support for future evaluation workflows
 - support for future generator evolution
-- safer path toward LLM or prompt versioning later
+- safer path toward adjacent LLM and prompt governance later
 
 ### Negative
 
@@ -253,9 +253,8 @@ This separation makes the system easier to evolve without changing public API co
 Likely extensions include:
 
 - detailed replay diffing
-- evaluation engine
+- evaluation runner integration
 - heuristic benchmarking
-- prompt versioning
 - LLM replay
 - semantic memory integration
 - recommendation scoring

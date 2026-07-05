@@ -98,7 +98,6 @@ Essas características descrevem o sistema atual e não devem ser lidas como uma
 Possíveis evoluções arquiteturais futuras, ainda não implementadas:
 
 - dashboard replay
-- evaluation engine
 - analytics
 - wearable integrations
 - adaptive recommendation tuning

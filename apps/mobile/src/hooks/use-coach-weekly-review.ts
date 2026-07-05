@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   BehavioralPattern,
   ConsistencySummary,
@@ -15,6 +14,7 @@ import type {
 import { formatGoalType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
+import { isCoachOptionalEmptyState } from './coach';
 
 type ProgressSummary = ProgressSummaryResponse['summary'];
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
@@ -163,7 +163,9 @@ export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
 
     if (
       results.every((result) => result.status === 'rejected') &&
-      !isOptionalEmptyState(progressResult.reason)
+      !isCoachOptionalEmptyState(progressResult.reason, [
+        'TRAINING_PLAN_NOT_FOUND',
+      ])
     ) {
       setState(INITIAL_STATE);
       setErrorMessage('Unable to prepare your weekly review.');
@@ -663,20 +665,6 @@ function getBehaviorPatternLabel(pattern: BehavioralPattern): string {
     default:
       return 'Your coaching pattern became clearer this week.';
   }
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    [
-      'USER_PROFILE_NOT_FOUND',
-      'GOAL_NOT_FOUND',
-      'HABIT_SNAPSHOT_NOT_FOUND',
-      'PERSONALIZATION_SNAPSHOT_NOT_FOUND',
-      'TRAINING_PLAN_NOT_FOUND',
-      'NOT_FOUND',
-    ].includes(error.code)
-  );
 }
 
 export function trackCoachWeeklyReviewEvent(

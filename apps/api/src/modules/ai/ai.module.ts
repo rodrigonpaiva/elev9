@@ -27,15 +27,36 @@ import { PersonalizationModule } from '../personalization/personalization.module
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { BuildUserHealthContextService } from './application/services/context-builder/build-user-health-context.service';
+import { CoachChatContextLoaderService } from './application/services/chat/coach-chat-context-loader.service';
+import { CoachChatMemoryUpdaterService } from './application/services/chat/coach-chat-memory-updater.service';
+import { CoachChatPersistenceService } from './application/services/chat/coach-chat-persistence.service';
+import { CoachChatReplyOrchestratorService } from './application/services/chat/coach-chat-reply-orchestrator.service';
 import { CoachDecisionCalculatorService } from './application/services/coach-decision-calculator.service';
 import { CoachDecisionDateService } from './application/services/coach-decision-date.service';
 import { AiLlmConfigService } from './application/services/llm/ai-llm-config.service';
 import { AiLlmService } from './application/services/llm/ai-llm.service';
+import { AiLlmReliabilityService } from './application/services/llm/ai-llm-reliability.service';
 import { AiPromptBuilder } from './application/services/llm/ai-prompt-builder.service';
+import { OpenAiResponseParserService } from './application/services/llm/openai-response-parser.service';
 import { AI_LLM_PROVIDER } from './application/services/llm/ai-llm.types';
+import {
+  AI_LLM_OBSERVABILITY_METRICS,
+  NoopAiLlmObservabilityMetrics,
+} from './application/services/observability/ai-llm-observability-metrics';
+import { AiLlmObservabilityService } from './application/services/observability/ai-llm-observability.service';
+import {
+  AI_SAFETY_METRICS,
+  NoopAiSafetyMetrics,
+} from './application/services/safety/ai-safety-metrics';
+import { AiPromptInjectionDetectorService } from './application/services/safety/ai-prompt-injection-detector.service';
+import { AiSafetyService } from './application/services/safety/ai-safety.service';
 import { CoachFeedbackGenerator } from './application/services/coach-feedback/coach-feedback-generator.service';
 import { CoachChatReplyGenerator } from './application/services/chat/coach-chat-reply-generator.service';
 import { CoachConversationMemorySummarizer } from './application/services/memory/coach-conversation-memory-summarizer.service';
+import { AiPromptRegistryService } from './application/services/governance/ai-prompt-registry.service';
+import { AiRolloutService } from './application/services/governance/ai-rollout.service';
+import { AiEvaluationDatasetService } from './application/services/governance/ai-evaluation-dataset.service';
+import { AiEvaluationRunnerService } from './application/services/governance/ai-evaluation-runner.service';
 import { CreateCoachChatUseCase } from './application/use-cases/create-coach-chat/create-coach-chat.use-case';
 import { GetCoachChatDebugHistoryUseCase } from './application/use-cases/get-coach-chat-debug-history/get-coach-chat-debug-history.use-case';
 import { GetCoachChatMemoryDebugUseCase } from './application/use-cases/get-coach-chat-memory-debug/get-coach-chat-memory-debug.use-case';
@@ -124,10 +145,23 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
     CoachDecisionDateService,
     AiLlmConfigService,
     AiPromptBuilder,
+    OpenAiResponseParserService,
+    AiPromptInjectionDetectorService,
+    AiSafetyService,
+    AiLlmObservabilityService,
+    AiLlmReliabilityService,
     AiLlmService,
+    AiPromptRegistryService,
+    AiRolloutService,
+    AiEvaluationDatasetService,
+    AiEvaluationRunnerService,
     CoachConversationMemorySummarizer,
     CoachFeedbackGenerator,
     CoachChatReplyGenerator,
+    CoachChatContextLoaderService,
+    CoachChatPersistenceService,
+    CoachChatReplyOrchestratorService,
+    CoachChatMemoryUpdaterService,
     CreateCoachChatUseCase,
     GetCoachChatDebugHistoryUseCase,
     GetCoachChatMemoryDebugUseCase,
@@ -162,6 +196,14 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
     {
       provide: AI_LLM_PROVIDER,
       useClass: OpenAiLlmProvider,
+    },
+    {
+      provide: AI_LLM_OBSERVABILITY_METRICS,
+      useClass: NoopAiLlmObservabilityMetrics,
+    },
+    {
+      provide: AI_SAFETY_METRICS,
+      useClass: NoopAiSafetyMetrics,
     },
   ],
   exports: [

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   NotificationDecision,
   NotificationEngagementSummary,
@@ -8,6 +7,7 @@ import type {
 import { formatNotificationStatus, formatNotificationType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
+import { isCoachOptionalEmptyState } from './coach';
 
 export type CoachNotificationTarget =
   | 'coach-home'
@@ -169,8 +169,8 @@ export function useCoachNotifications(): CoachNotificationsResult {
 
     if (
       results.every((result) => result.status === 'rejected') &&
-      !isOptionalEmptyState(currentReason) &&
-      !isOptionalEmptyState(todayReason)
+      !isCoachOptionalEmptyState(currentReason, ['NOTIFICATION_NOT_FOUND']) &&
+      !isCoachOptionalEmptyState(todayReason, ['NOTIFICATION_NOT_FOUND'])
     ) {
       setState(INITIAL_STATE);
       setErrorMessage('Unable to load smart nudges.');
@@ -659,15 +659,6 @@ function buildAccessibilityLabel(input: {
   }
 
   return pieces.join(' ');
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    ['USER_PROFILE_NOT_FOUND', 'NOT_FOUND', 'NOTIFICATION_NOT_FOUND'].includes(
-      error.code,
-    )
-  );
 }
 
 export function trackCoachNotificationsEvent(

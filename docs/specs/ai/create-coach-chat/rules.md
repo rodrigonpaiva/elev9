@@ -7,8 +7,9 @@
 
 ## Determinism
 
-- a resposta é determinística
-- não existe LLM ativo neste MVP
+- a resposta continua determinística quando o LLM falha ou está desabilitado
+- o LLM é opcional e protegido por safety, reliability e observability
+- a versão do prompt é resolvida por registry interno e rollout canário determinístico
 
 ## Persistence
 
@@ -27,5 +28,6 @@
 - não fazer claims médicos
 - não criar memória longa
 - não criar replay
-- não criar streaming
+- não alterar o contrato síncrono público
 - não expor dados sensíveis no payload público
+- não expor metadata interna de experimento, rollout ou prompt version ao cliente
