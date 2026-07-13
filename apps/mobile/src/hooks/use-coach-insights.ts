@@ -11,9 +11,18 @@ import { formatGoalType } from '@elev9/ui';
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
 import {
+  buildCoachIntelligence,
+  getCoachConfidenceLabel,
+  getCoachFocusLabel,
+  getCoachRiskLabel,
   isCoachOptionalEmptyState,
   limitCoachText,
+  mapUnifiedCoachInsight,
   stripCoachMetricLanguage,
+  type CoachConfidenceLevel,
+  type CoachFocus,
+  type CoachRiskLevel,
+  type CoachUnifiedCoachIntelligence,
 } from './coach';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
@@ -46,12 +55,22 @@ export type CoachInsightAction = {
 export type CoachInsightsModel = {
   recommendation: string;
   explanation: string;
+  focus: string;
+  risk: string;
+  confidence: string;
+  focusLevel: CoachFocus | null;
+  riskLevel: CoachRiskLevel | null;
+  confidenceLevel: CoachConfidenceLevel | null;
+  supportingEvidenceSummary: string;
   signals: CoachInsightSignal[];
   benefits: string[];
   alternative: string;
-  confidence: string;
+  topRecommendation: string;
   actions: CoachInsightAction[];
   accessibilityLabel: string;
+  evidence: CoachUnifiedCoachIntelligence['evidence'];
+  keyFindings: CoachUnifiedCoachIntelligence['keyFindings'];
+  conflicts: CoachUnifiedCoachIntelligence['conflicts'];
 };
 
 export type CoachInsightsResult = {
@@ -132,8 +151,26 @@ export function useCoachInsights(): CoachInsightsResult {
       return null;
     }
 
+    const intelligence =
+      buildCoachIntelligence({
+        coachDecision: dashboard.coach.data,
+        currentGoal,
+        habitSnapshot,
+        personalizationSnapshot,
+        recoverySnapshot: dashboard.recovery.data,
+        workout: dashboard.workout.todaysWorkout,
+        nutrition: dashboard.nutrition.data,
+        progressSummary: dashboard.progress.data,
+      }) ?? dashboard.coach.intelligence;
+    const insight = mapUnifiedCoachInsight({
+      intelligence,
+      fallbackHeadline: dashboard.coach.data.headline,
+      fallbackSummary: dashboard.coach.data.summary,
+    });
+
     return buildInsightsModel({
       coachDecision: dashboard.coach.data,
+      intelligence,
       currentGoal,
       habitSnapshot,
       personalizationSnapshot,
@@ -142,10 +179,12 @@ export function useCoachInsights(): CoachInsightsResult {
       nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
       nextMealTitle: dashboard.nutrition.data?.nextMeal?.title,
       workoutsCompleted: dashboard.progress.data?.workoutsCompleted,
+      insight,
     });
   }, [
     currentGoal,
     dashboard.coach.data,
+    dashboard.coach.intelligence,
     dashboard.nutrition.data,
     dashboard.progress.data,
     dashboard.recovery.data,
@@ -178,6 +217,7 @@ export function useCoachInsights(): CoachInsightsResult {
 
 function buildInsightsModel(input: {
   coachDecision: CoachDecision;
+  intelligence: CoachUnifiedCoachIntelligence | null;
   currentGoal: CurrentGoal | null;
   habitSnapshot: HabitSnapshot | null;
   personalizationSnapshot: PersonalizationSnapshot | null;
@@ -186,19 +226,35 @@ function buildInsightsModel(input: {
   nutritionFocus?: string;
   nextMealTitle?: string;
   workoutsCompleted?: number;
+  insight: ReturnType<typeof mapUnifiedCoachInsight>;
 }): CoachInsightsModel {
-  const recommendation = getRecommendation(input.coachDecision);
-  const explanation = getExplanation(input);
+  const recommendation =
+    input.insight.topRecommendation?.title ??
+    getRecommendation(input.coachDecision);
+  const explanation = input.insight.summary || getExplanation(input);
   const signals = buildSignals(input);
   const benefits = getBenefits(input.coachDecision.priority);
 
   return {
     recommendation,
     explanation,
+    focus: input.insight.currentFocus
+      ? getCoachFocusLabel(input.insight.currentFocus)
+      : 'Coach',
+    risk: input.insight.currentRisk
+      ? getCoachRiskLabel(input.insight.currentRisk.level)
+      : 'No major risk',
+    confidence: input.insight.confidence
+      ? getCoachConfidenceLabel(input.insight.confidence.level)
+      : 'Low confidence',
+    focusLevel: input.insight.currentFocus ?? null,
+    riskLevel: input.insight.currentRisk?.level ?? null,
+    confidenceLevel: input.insight.confidence?.level ?? null,
+    supportingEvidenceSummary: input.insight.supportingEvidenceSummary,
     signals,
     benefits,
     alternative: getAlternative(input.coachDecision.priority, input.hasWorkout),
-    confidence: getConfidence(input),
+    topRecommendation: recommendation,
     actions: [
       {
         id: 'workout',
@@ -237,7 +293,10 @@ function buildInsightsModel(input: {
         isEnabled: true,
       },
     ],
-    accessibilityLabel: `Coach Insight. ${signals[0]?.value ?? recommendation}. Recommendation: ${recommendation}.`,
+    accessibilityLabel: `Coach Insight. ${input.insight.headline}. ${input.insight.supportingEvidenceSummary}.`,
+    evidence: input.insight.evidence,
+    keyFindings: input.insight.keyFindings,
+    conflicts: input.insight.conflicts,
   };
 }
 
@@ -409,26 +468,6 @@ function getAlternative(
     default:
       return 'Start with a short walk or one simple check-in to rebuild momentum.';
   }
-}
-
-function getConfidence(input: {
-  coachDecision: CoachDecision;
-  habitSnapshot: HabitSnapshot | null;
-  personalizationSnapshot: PersonalizationSnapshot | null;
-}): string {
-  if (input.habitSnapshot?.trend === 'improving') {
-    return "I'm confident this recommendation matches your recent progress.";
-  }
-
-  if (input.personalizationSnapshot?.engagementProfile === 'high') {
-    return 'Based on your recent consistency, this is the strongest recommendation today.';
-  }
-
-  if (input.coachDecision.influences.length >= 2) {
-    return "I'm confident because multiple recent signals point in the same direction.";
-  }
-
-  return "This is the clearest recommendation based on today's available coaching signals.";
 }
 
 function getPriorityRationale(priority: CoachDecision['priority']): string {

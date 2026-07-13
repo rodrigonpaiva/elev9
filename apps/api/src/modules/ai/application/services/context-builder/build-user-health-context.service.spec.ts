@@ -249,6 +249,41 @@ describe('BuildUserHealthContextService', () => {
     expect(result.nutritionProfile).toBeUndefined();
   });
 
+  it('loads only the selected nutrition domain when domains are provided', async () => {
+    nutritionProfileRepository.findActiveByUserProfileId.mockResolvedValue(
+      buildNutritionProfile({
+        goal: 'maintenance',
+        mealsPerDay: 3,
+      }),
+    );
+
+    const result = await service.build({
+      authUserId: 'auth_user_123',
+      userProfileId: 'profile_123',
+      domains: ['nutrition'],
+    });
+
+    expect(userProfileRepository.findByAuthUserId).not.toHaveBeenCalled();
+    expect(
+      fitnessProfileRepository.findActiveByUserProfileId,
+    ).not.toHaveBeenCalled();
+    expect(
+      trainingPlanRepository.findActiveByFitnessProfileId,
+    ).not.toHaveBeenCalled();
+    expect(
+      nutritionProfileRepository.findActiveByUserProfileId,
+    ).toHaveBeenCalledWith('profile_123');
+    expect(result.userProfileId).toBe('profile_123');
+    expect(result.nutritionProfile).toEqual({
+      goal: 'maintenance',
+      mealsPerDay: 3,
+      dietaryRestrictions: [],
+      allergies: [],
+      dislikedFoods: [],
+      preferredFoods: ['rice', 'eggs'],
+    });
+  });
+
   it('includes adaptive training recommendation when one exists', async () => {
     mockUserProfile(userProfileRepository);
     getCurrentAdaptiveTrainingUseCase.execute.mockResolvedValue({

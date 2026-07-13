@@ -209,7 +209,9 @@ export function DashboardScreen({
             motivationalMessage={motivationalMessage}
           />
 
-          <DailyFocusCard focus={DAILY_FOCUS} />
+          <DailyFocusCard
+            focus={dashboard.coach.recommendedAction || DAILY_FOCUS}
+          />
           <DailyBriefingButton onPress={handleOpenDailyBriefing} />
 
           <DashboardCards
@@ -271,11 +273,14 @@ function DashboardCards({
         badgeLabel={dashboard.coach.badgeLabel}
         coachDecision={dashboard.coach.data}
         ctaLabel={dashboard.coach.ctaLabel}
+        confidenceLevel={dashboard.coach.intelligence?.confidence.level ?? null}
         errorMessage={dashboard.coach.errorMessage}
         isLoading={dashboard.coach.isLoading}
         onPressCta={onCoachCta}
         onRetry={() => void dashboard.coach.retry()}
+        riskLevel={dashboard.coach.intelligence?.currentRisk?.level ?? null}
         recommendedAction={dashboard.coach.recommendedAction}
+        supportingEvidenceSummary={dashboard.coach.supportingEvidenceSummary}
       />
       <RecoveryReadinessCard
         errorMessage={dashboard.recovery.errorMessage}

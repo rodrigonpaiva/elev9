@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiClientError } from '@elev9/api-client';
 import type {
   CoachDecision,
-  CoachDecisionPriority,
   ProgressSummaryResponse,
   RecoverySnapshot,
   TodayNutrition,
@@ -12,8 +11,20 @@ import type {
 } from '@elev9/types';
 
 import { apiClient } from '../api/client';
-import type { CoachInsightBadgeLabel } from '../components/dashboard/coach-insight-card';
 import type { RecoveryStatus } from '../components/dashboard/todays-workout-card';
+import {
+  buildCoachExplanation,
+  buildCoachIntelligence,
+  buildCoachPersonaGuidance,
+  getCoachBadgeLabel,
+  getCoachConfidenceLabel,
+  getCoachFocusLabel,
+  getCoachRecommendationTarget,
+  mapUnifiedCoachInsight,
+  type CoachExplanation,
+  type CoachPersonaProfile,
+  type CoachUnifiedCoachIntelligence,
+} from './coach';
 
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
 type ProgressSummary = ProgressSummaryResponse['summary'];
@@ -40,10 +51,14 @@ type DashboardDomainResult<TData> = DomainState<TData> & {
 };
 
 type CoachDisplay = {
-  badgeLabel: CoachInsightBadgeLabel;
+  badgeLabel: string;
   recommendedAction: string;
   ctaLabel: string;
   actionTarget: DashboardCoachActionTarget;
+  currentFocus: string | null;
+  currentRiskLabel: string | null;
+  confidenceLabel: string | null;
+  supportingEvidenceSummary: string;
 };
 
 export type UseDashboardResult = {
@@ -51,7 +66,12 @@ export type UseDashboardResult = {
   isRefreshing: boolean;
   error: string | null;
   userName: string | null;
-  coach: DashboardDomainResult<CoachDecision> & CoachDisplay;
+  coach: DashboardDomainResult<CoachDecision> &
+    CoachDisplay & {
+      intelligence: CoachUnifiedCoachIntelligence | null;
+      persona: CoachPersonaProfile | null;
+      explanation: CoachExplanation | null;
+    };
   recovery: DashboardDomainResult<RecoverySnapshot> & {
     status: RecoveryStatus | null;
   };
@@ -180,9 +200,39 @@ export function useDashboard(): UseDashboardResult {
     () => resolveRecoveryStatus(recovery.data),
     [recovery.data],
   );
+  const coachIntelligence = useMemo(
+    () =>
+      buildCoachIntelligence({
+        coachDecision: coach.data,
+        currentGoal: null,
+        recoverySnapshot: recovery.data,
+        workout: todaysWorkout,
+        nutrition: nutrition.data,
+        progressSummary: progress.data,
+      }),
+    [coach.data, nutrition.data, progress.data, recovery.data, todaysWorkout],
+  );
+  const coachPersona = useMemo(
+    () =>
+      buildCoachPersonaGuidance({
+        intelligence: coachIntelligence,
+        personalizationSnapshot: null,
+        currentGoal: null,
+      }),
+    [coachIntelligence],
+  );
+  const coachExplanation = useMemo(
+    () =>
+      buildCoachExplanation({
+        intelligence: coachIntelligence,
+        persona: coachPersona,
+      }),
+    [coachIntelligence, coachPersona],
+  );
   const coachDisplay = useMemo(
-    () => resolveCoachInsightDisplay(coach.data, todaysWorkout),
-    [coach.data, todaysWorkout],
+    () =>
+      resolveCoachInsightDisplay(coach.data, todaysWorkout, coachIntelligence),
+    [coach.data, coachIntelligence, todaysWorkout],
   );
 
   const retryCoach = useCallback(() => loadDomain('coach'), [loadDomain]);
@@ -202,6 +252,9 @@ export function useDashboard(): UseDashboardResult {
     coach: {
       ...coach,
       ...coachDisplay,
+      intelligence: coachIntelligence,
+      persona: coachPersona,
+      explanation: coachExplanation,
       retry: retryCoach,
     },
     recovery: {
@@ -506,49 +559,55 @@ function resolveWeeklyPlannedWorkoutCount(trainingPlan: TrainingPlan | null) {
 function resolveCoachInsightDisplay(
   coachDecision: CoachDecision | null,
   workout: TodayWorkout | null,
+  intelligence: CoachUnifiedCoachIntelligence | null,
 ): CoachDisplay {
   if (!coachDecision) {
     return {
-      badgeLabel: 'Insight',
+      badgeLabel: 'Coach Insight',
       recommendedAction: 'Open Coach',
       ctaLabel: 'Open Coach',
       actionTarget: 'coach',
+      currentFocus: null,
+      currentRiskLabel: null,
+      confidenceLabel: null,
+      supportingEvidenceSummary: '',
     };
   }
 
-  const fallbackAction = getCoachRecommendedAction(
-    coachDecision.priority,
-    workout,
-  );
-  const primaryAction = coachDecision.actionItems
-    .find((action) => action.trim().length > 0)
-    ?.trim();
-  const recommendedAction = primaryAction ?? fallbackAction;
-  const actionTarget = getCoachActionTarget(coachDecision.priority, workout);
+  const recommendation = intelligence?.topRecommendation ?? null;
+  const recommendedAction =
+    recommendation?.title?.trim() ||
+    coachDecision.actionItems
+      .find((action) => action.trim().length > 0)
+      ?.trim() ||
+    getCoachRecommendedAction(coachDecision.priority, workout);
+  const actionTarget = recommendation
+    ? getCoachRecommendationTarget(recommendation)
+    : getCoachActionTarget(coachDecision.priority, workout);
+  const insight = mapUnifiedCoachInsight({
+    intelligence,
+    fallbackHeadline: coachDecision.headline,
+    fallbackSummary: coachDecision.summary,
+  });
 
   return {
-    badgeLabel: getCoachBadgeLabel(coachDecision.priority),
+    badgeLabel: getCoachBadgeLabel(
+      intelligence?.primaryExpert ??
+        mapCoachPriorityToExpert(coachDecision.priority),
+      insight.currentRisk,
+    ),
     recommendedAction,
     ctaLabel: getCoachCtaLabel(actionTarget),
     actionTarget,
+    currentFocus: insight.currentFocus
+      ? getCoachFocusLabel(insight.currentFocus)
+      : null,
+    currentRiskLabel: insight.currentRisk ? insight.currentRisk.title : null,
+    confidenceLabel: insight.confidence
+      ? getCoachConfidenceLabel(insight.confidence.level)
+      : null,
+    supportingEvidenceSummary: insight.supportingEvidenceSummary,
   };
-}
-
-function getCoachBadgeLabel(
-  priority: CoachDecisionPriority,
-): CoachInsightBadgeLabel {
-  switch (priority) {
-    case 'recovery':
-      return 'Recovery Focus';
-    case 'training':
-    case 'consistency':
-      return 'Performance Focus';
-    case 'nutrition':
-      return 'Recommendation';
-    case 'motivation':
-    default:
-      return 'Insight';
-  }
 }
 
 function getCoachRecommendedAction(
@@ -605,6 +664,31 @@ function getCoachCtaLabel(target: DashboardCoachActionTarget): string {
     case 'coach':
     default:
       return 'Ask Coach';
+  }
+}
+
+function mapCoachPriorityToExpert(
+  priority: CoachDecision['priority'],
+):
+  | 'Workout'
+  | 'Nutrition'
+  | 'Recovery'
+  | 'Goal'
+  | 'Habit'
+  | 'Progress'
+  | 'Motivation' {
+  switch (priority) {
+    case 'training':
+      return 'Workout';
+    case 'nutrition':
+      return 'Nutrition';
+    case 'recovery':
+      return 'Recovery';
+    case 'consistency':
+      return 'Habit';
+    case 'motivation':
+    default:
+      return 'Motivation';
   }
 }
 

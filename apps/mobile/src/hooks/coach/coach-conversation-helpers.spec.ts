@@ -70,11 +70,19 @@ describe('coach conversation helpers', () => {
         hasProgress: true,
         priority: 'recovery',
       }),
-    ).toEqual({
-      status: 'Ready to help',
-      signals: ['Workout', 'Recovery', 'Progress', 'Goals'],
-      suggestedQuestions: getSuggestedQuestions('recovery'),
-    });
+    ).toEqual(
+      expect.objectContaining({
+        status: 'Ready to help',
+        summary: 'Your coach is still gathering context.',
+        focus: 'Coach',
+        risk: 'No major risk',
+        confidence: 'Low confidence',
+        persona: 'Supportive',
+        topRecommendation: 'Keep following your plan.',
+        signals: ['Workout', 'Recovery', 'Progress', 'Goals'],
+        suggestedQuestions: getSuggestedQuestions('recovery'),
+      }),
+    );
   });
 
   it('maps coach errors to the correct fallback copy', () => {

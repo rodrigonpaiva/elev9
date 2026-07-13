@@ -17,6 +17,8 @@ import {
   CoachActionGrid,
   CoachCenteredState,
   CoachHeroCard,
+  CoachConfidenceBadge,
+  CoachRiskBadge,
   CoachSection,
 } from '../components/coach';
 import type {
@@ -209,7 +211,7 @@ const MainInsightCard = memo(function MainInsightCard({
 }) {
   return (
     <CoachHeroCard
-      accessibilityLabel={`Today's main insight. ${model.mainInsight}. ${model.insightSummary}`}
+      accessibilityLabel={`Today's main insight. ${model.mainInsight}. ${model.insightSummary}. ${model.currentFocus}. ${model.currentRisk}. ${model.confidence}.`}
       containerStyle={styles.heroCard}
       iconColor={coachTokens.accent}
       iconContainerStyle={styles.heroIcon}
@@ -371,13 +373,29 @@ const CoachStatus = memo(function CoachStatus({
 }) {
   return (
     <View
-      accessibilityLabel={`${model.statusText} ${model.statusDetail}`}
+      accessibilityLabel={`${model.statusText} ${model.statusDetail} ${model.currentRisk} ${model.confidence}`}
       style={styles.statusCard}
     >
-      <Ionicons name="checkmark-circle" size={18} color={coachTokens.green} />
-      <View style={styles.statusTextWrap}>
+      <View style={styles.statusHeader}>
+        <Ionicons name="checkmark-circle" size={18} color={coachTokens.green} />
         <Text style={styles.statusTitle}>{model.statusText}</Text>
-        <Text style={styles.statusDetail}>{model.statusDetail}</Text>
+      </View>
+      <Text style={styles.statusDetail}>{model.statusDetail}</Text>
+      <View style={styles.statusBadges}>
+        <CoachRiskBadge level={model.riskLevel} />
+        <CoachConfidenceBadge level={model.confidenceLevel} />
+      </View>
+      <View style={styles.statusSummary}>
+        <Text style={styles.statusSummaryLabel}>Current Focus</Text>
+        <Text style={styles.statusSummaryValue}>{model.currentFocus}</Text>
+        <Text style={styles.statusSummaryLabel}>Current Risk</Text>
+        <Text style={styles.statusSummaryValue}>{model.currentRisk}</Text>
+        <Text style={styles.statusSummaryLabel}>Confidence</Text>
+        <Text style={styles.statusSummaryValue}>{model.confidence}</Text>
+        <Text style={styles.statusSummaryLabel}>Evidence</Text>
+        <Text style={styles.statusSummaryValue}>
+          {model.supportingEvidenceSummary || 'No supporting evidence yet.'}
+        </Text>
       </View>
     </View>
   );
@@ -708,15 +726,24 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   statusCard: {
-    flexDirection: 'row',
-    gap: 10,
+    gap: 12,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: coachTokens.border,
     backgroundColor: coachTokens.card,
     padding: 16,
   },
-  statusTextWrap: {
+  statusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  statusBadges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  statusSummary: {
     flex: 1,
     gap: 4,
   },
@@ -731,6 +758,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     fontWeight: '500',
+  },
+  statusSummaryLabel: {
+    color: coachTokens.tertiaryText,
+    fontSize: 11,
+    lineHeight: 15,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  statusSummaryValue: {
+    color: coachTokens.text,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+    marginBottom: 6,
   },
   pressed: {
     opacity: 0.72,

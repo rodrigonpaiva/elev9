@@ -17,6 +17,8 @@ import {
   CoachActionGrid,
   CoachCenteredState,
   CoachHeroCard,
+  CoachEvidenceList,
+  CoachPriorityBanner,
   CoachSection,
 } from '../components/coach';
 import type {
@@ -143,11 +145,13 @@ export function CoachInsightsScreen() {
           style={styles.content}
         >
           <RecommendationHero model={insights.model} />
+          <PriorityBanner model={insights.model} />
           <Explanation model={insights.model} />
           <Signals signals={insights.model.signals} />
           <Benefits benefits={insights.model.benefits} />
           <Alternative alternative={insights.model.alternative} />
           <Confidence confidence={insights.model.confidence} />
+          <EvidenceSection model={insights.model} />
           <QuickActions
             actions={insights.model.actions}
             onAction={handleAction}
@@ -165,7 +169,7 @@ const RecommendationHero = memo(function RecommendationHero({
 }) {
   return (
     <CoachHeroCard
-      accessibilityLabel={`Recommendation. ${model.recommendation}`}
+      accessibilityLabel={`Recommendation. ${model.recommendation}. ${model.focus}.`}
       containerStyle={styles.hero}
       iconColor={insightTokens.text}
       iconContainerStyle={styles.heroIcon}
@@ -173,6 +177,22 @@ const RecommendationHero = memo(function RecommendationHero({
       title={model.recommendation}
       titleTextProps={{ maxFontSizeMultiplier: 1.25, numberOfLines: 2 }}
       titleStyle={styles.heroText}
+    />
+  );
+});
+
+const PriorityBanner = memo(function PriorityBanner({
+  model,
+}: {
+  model: CoachInsightsModel;
+}) {
+  return (
+    <CoachPriorityBanner
+      confidenceLevel={model.confidenceLevel}
+      detail={model.supportingEvidenceSummary || model.explanation}
+      focus={model.focusLevel}
+      riskLevel={model.riskLevel}
+      title={model.topRecommendation}
     />
   );
 });
@@ -199,6 +219,18 @@ const Explanation = memo(function Explanation({
           </Text>
         ))}
       </View>
+    </CoachSection>
+  );
+});
+
+const EvidenceSection = memo(function EvidenceSection({
+  model,
+}: {
+  model: CoachInsightsModel;
+}) {
+  return (
+    <CoachSection title="Supporting Evidence" style={styles.section}>
+      <CoachEvidenceList evidence={model.evidence} maxItems={3} />
     </CoachSection>
   );
 });

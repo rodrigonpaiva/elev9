@@ -17,6 +17,8 @@ import {
   CoachActionGrid,
   CoachCenteredState,
   CoachHeroCard,
+  CoachEvidenceList,
+  CoachPriorityBanner,
   CoachSection,
 } from '../components/coach';
 import type {
@@ -198,7 +200,13 @@ export function CoachWeeklyReviewScreen() {
             tintColor={weeklyTokens.accent}
           />
         }
-        ListHeaderComponent={<WeeklyHero model={weeklyReview.model} />}
+        ListHeaderComponent={
+          <View style={styles.headerStack}>
+            <WeeklyHero model={weeklyReview.model} />
+            <WeeklyPriority model={weeklyReview.model} />
+            <WeeklyEvidence model={weeklyReview.model} />
+          </View>
+        }
         initialNumToRender={8}
         maxToRenderPerBatch={8}
         windowSize={7}
@@ -242,6 +250,34 @@ const WeeklyHero = memo(function WeeklyHero({
       titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
       titleStyle={styles.heroTitle}
     />
+  );
+});
+
+const WeeklyPriority = memo(function WeeklyPriority({
+  model,
+}: {
+  model: CoachWeeklyReviewModel;
+}) {
+  return (
+    <CoachPriorityBanner
+      confidenceLevel={model.confidenceLevel}
+      detail={model.supportingEvidenceSummary || model.weekSummary}
+      focus={model.focus}
+      riskLevel={model.riskLevel}
+      title={model.topRecommendation}
+    />
+  );
+});
+
+const WeeklyEvidence = memo(function WeeklyEvidence({
+  model,
+}: {
+  model: CoachWeeklyReviewModel;
+}) {
+  return (
+    <CoachSection title="Supporting Evidence" style={styles.section}>
+      <CoachEvidenceList evidence={model.evidence} maxItems={3} />
+    </CoachSection>
   );
 });
 
@@ -522,6 +558,9 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 36,
     gap: 22,
+  },
+  headerStack: {
+    gap: 16,
   },
   hero: {
     borderRadius: 28,

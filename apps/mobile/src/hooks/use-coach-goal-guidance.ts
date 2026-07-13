@@ -15,7 +15,18 @@ import { formatGoalType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
-import { isCoachOptionalEmptyState } from './coach';
+import {
+  buildCoachIntelligence,
+  getCoachConfidenceLabel,
+  getCoachFocusLabel,
+  getCoachRiskLabel,
+  isCoachOptionalEmptyState,
+  mapUnifiedCoachInsight,
+  type CoachConfidenceLevel,
+  type CoachFocus,
+  type CoachRiskLevel,
+  type CoachUnifiedCoachIntelligence,
+} from './coach';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
@@ -60,6 +71,13 @@ export type CoachGoalGuidanceModel = {
   goalTitle: string;
   subtitle: string;
   currentProgress: string;
+  currentFocus: string;
+  focus: CoachFocus | null;
+  currentRisk: string;
+  confidence: string;
+  riskLevel: CoachRiskLevel | null;
+  confidenceLevel: CoachConfidenceLevel | null;
+  supportingEvidenceSummary: string;
   helping: CoachGoalGuidanceHelpingCard[];
   barriers: CoachGoalGuidanceBarrierCard[];
   strategy: string;
@@ -67,6 +85,8 @@ export type CoachGoalGuidanceModel = {
   milestones: CoachGoalGuidanceMilestone[];
   quickActions: CoachGoalGuidanceAction[];
   accessibilityLabel: string;
+  topRecommendation: string;
+  evidence: CoachUnifiedCoachIntelligence['evidence'];
 };
 
 export type CoachGoalGuidanceResult = {
@@ -211,28 +231,51 @@ export function useCoachGoalGuidance(): CoachGoalGuidanceResult {
     await Promise.all([dashboard.refresh(), loadExtras()]);
   }, [dashboard.refresh, loadExtras]);
 
-  const model = useMemo(
-    () =>
-      buildGoalGuidanceModel({
-        ...state,
+  const model = useMemo(() => {
+    const intelligence =
+      buildCoachIntelligence({
         coachDecision: dashboard.coach.data,
-        progressSummary: dashboard.progress.data,
+        currentGoal: state.currentGoal,
+        goalProgressSnapshot: state.goalHistory.at(-1) ?? undefined,
+        goalForecast: state.forecast,
+        goalMilestones: state.milestones,
+        goalAchievements: state.achievements,
+        habitSnapshot: state.habitHistory.at(-1) ?? undefined,
+        personalizationSnapshot:
+          state.personalizationHistory.at(-1) ?? undefined,
         recoverySnapshot: dashboard.recovery.data,
-        workoutPlan: dashboard.workout.data,
-        todayWorkout: dashboard.workout.todaysWorkout,
-        nutritionProgress: dashboard.nutrition.data?.progress,
-        nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
-      }),
-    [
-      dashboard.coach.data,
-      dashboard.nutrition.data,
-      dashboard.progress.data,
-      dashboard.recovery.data,
-      dashboard.workout.data,
-      dashboard.workout.todaysWorkout,
-      state,
-    ],
-  );
+        progressSummary: dashboard.progress.data,
+        nutrition: dashboard.nutrition.data,
+        workout: dashboard.workout.todaysWorkout,
+      }) ?? dashboard.coach.intelligence;
+    const insight = mapUnifiedCoachInsight({
+      intelligence,
+      fallbackHeadline: dashboard.coach.data?.headline,
+      fallbackSummary: dashboard.coach.data?.summary,
+    });
+
+    return buildGoalGuidanceModel({
+      ...state,
+      intelligence,
+      insight,
+      coachDecision: dashboard.coach.data,
+      progressSummary: dashboard.progress.data,
+      recoverySnapshot: dashboard.recovery.data,
+      workoutPlan: dashboard.workout.data,
+      todayWorkout: dashboard.workout.todaysWorkout,
+      nutritionProgress: dashboard.nutrition.data?.progress,
+      nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
+    });
+  }, [
+    dashboard.coach.data,
+    dashboard.coach.intelligence,
+    dashboard.nutrition.data,
+    dashboard.progress.data,
+    dashboard.recovery.data,
+    dashboard.workout.data,
+    dashboard.workout.todaysWorkout,
+    state,
+  ]);
 
   const errorMessage =
     dashboard.error ||
@@ -271,6 +314,8 @@ export function useCoachGoalGuidance(): CoachGoalGuidanceResult {
 function buildGoalGuidanceModel(
   input: GoalGuidanceState & {
     coachDecision: ReturnType<typeof useDashboard>['coach']['data'];
+    intelligence: CoachUnifiedCoachIntelligence | null;
+    insight: ReturnType<typeof mapUnifiedCoachInsight>;
     progressSummary: DashboardProgress;
     recoverySnapshot: RecoverySnapshot | null;
     workoutPlan: TrainingPlan | null;
@@ -295,11 +340,26 @@ function buildGoalGuidanceModel(
     goalTitle,
     subtitle: "Let's keep moving toward your goal.",
     currentProgress,
+    currentFocus: input.insight.currentFocus
+      ? getCoachFocusLabel(input.insight.currentFocus)
+      : 'Coach',
+    focus: input.insight.currentFocus ?? null,
+    currentRisk: input.insight.currentRisk
+      ? getCoachRiskLabel(input.insight.currentRisk.level)
+      : 'No major risk',
+    confidence: input.insight.confidence
+      ? getCoachConfidenceLabel(input.insight.confidence.level)
+      : 'Low confidence',
+    riskLevel: input.insight.currentRisk?.level ?? null,
+    confidenceLevel: input.insight.confidence?.level ?? null,
+    supportingEvidenceSummary: input.insight.supportingEvidenceSummary,
     helping,
     barriers,
     strategy,
     forecast,
     milestones,
+    topRecommendation: input.insight.topRecommendation?.title ?? strategy,
+    evidence: input.insight.evidence,
     quickActions: [
       {
         id: 'workout',
@@ -332,7 +392,7 @@ function buildGoalGuidanceModel(
         isEnabled: true,
       },
     ],
-    accessibilityLabel: `Goal Guidance. ${currentProgress}. ${helping[0]?.title ?? 'Goal strategy available.'}`,
+    accessibilityLabel: `Goal Guidance. ${currentProgress}. ${input.insight.supportingEvidenceSummary}.`,
   };
 }
 

@@ -9,6 +9,7 @@ import { CoachChatContextLoaderService } from '../../services/chat/coach-chat-co
 import { CoachChatMemoryUpdaterService } from '../../services/chat/coach-chat-memory-updater.service';
 import { CoachChatPersistenceService } from '../../services/chat/coach-chat-persistence.service';
 import { CoachChatReplyOrchestratorService } from '../../services/chat/coach-chat-reply-orchestrator.service';
+import { AgentRuntimeService } from '../../services/agent/agent-runtime.service';
 import { CreateCoachChatInput } from './create-coach-chat.input';
 import { CreateCoachChatOutput } from './create-coach-chat.output';
 import {
@@ -28,6 +29,7 @@ export class CreateCoachChatUseCase {
     private readonly coachChatMemoryUpdaterService: CoachChatMemoryUpdaterService,
     private readonly aiPromptBuilder: AiPromptBuilder,
     private readonly aiRolloutService: AiRolloutService,
+    private readonly agentRuntimeService?: AgentRuntimeService,
   ) {}
 
   async execute(input: CreateCoachChatInput): Promise<CreateCoachChatOutput> {
@@ -86,6 +88,25 @@ export class CreateCoachChatUseCase {
         canaryBucket: experiment.canaryBucket,
         rolloutVariant: experiment.rolloutVariant,
       };
+
+      if (this.agentRuntimeService?.isEnabled()) {
+        const agentResponse = await this.agentRuntimeService.execute(
+          {
+            authUserId,
+            message,
+            signal: input.signal,
+          },
+          {
+            streaming: Boolean(options.streaming),
+            ...(options.onDelta ? { onDelta: options.onDelta } : {}),
+          },
+        );
+
+        return {
+          conversationId: agentResponse.conversationId,
+          reply: agentResponse.assistantText,
+        };
+      }
 
       await this.coachChatPersistenceService.persistUserMessage(
         conversationState.conversationId,

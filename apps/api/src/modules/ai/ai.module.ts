@@ -31,6 +31,34 @@ import { CoachChatContextLoaderService } from './application/services/chat/coach
 import { CoachChatMemoryUpdaterService } from './application/services/chat/coach-chat-memory-updater.service';
 import { CoachChatPersistenceService } from './application/services/chat/coach-chat-persistence.service';
 import { CoachChatReplyOrchestratorService } from './application/services/chat/coach-chat-reply-orchestrator.service';
+import { AgentRuntimeConfigService } from './application/services/agent/agent-runtime.config';
+import { AgentContextOrchestratorService } from './application/services/agent/agent-context-orchestrator.service';
+import { AgentContextSelectionPolicy } from './application/services/agent/agent-context-selection.policy';
+import { AgentIntentClassifierService } from './application/services/agent/agent-intent-classifier.service';
+import { AgentExecutionEngineService } from './application/services/agent/execution/agent-execution.engine.service';
+import { AgentExecutionPolicy } from './application/services/agent/execution/agent-execution.policy';
+import { AgentExecutionValidator } from './application/services/agent/execution/agent-execution.validator';
+import { AgentMemoryPolicy } from './application/services/agent/memory/agent-memory.policy';
+import { AgentMemoryService } from './application/services/agent/memory/agent-memory.service';
+import { AgentTraceService } from './application/services/agent/observability/agent-trace.service';
+import { AgentPlanningEngineService } from './application/services/agent/planning/agent-planning-engine.service';
+import { AgentPlanningPolicy } from './application/services/agent/planning/agent-planning.policy';
+import { AgentPlanValidator } from './application/services/agent/planning/agent-plan-validator.service';
+import { AgentPolicyEngineService } from './application/services/agent/policies/agent-policy.engine.service';
+import { AgentPolicyRegistry } from './application/services/agent/policies/agent-policy.registry';
+import { CoachExpertRegistry } from './application/services/experts/coach-expert.registry';
+import {
+  CoachExpertRoutingPolicy,
+  CoachExpertRouterService,
+} from './application/services/experts/coach-expert-router';
+import { CoachExpertCompositionService } from './application/services/experts/composition/coach-expert-composition';
+import { CoachExpertObservabilityService } from './application/services/experts/observability/coach-expert-observability';
+import { CoachExplainabilityService } from './application/services/explainability/coach-explainability';
+import { CoachPersonaEngineService } from './application/services/persona/coach-persona-engine';
+import { AgentToolRegistryService } from './application/services/agent/tools/agent-tool-registry.service';
+import { AgentToolExecutionPolicy } from './application/services/agent/tools/agent-tool-execution.policy';
+import { AgentToolExecutorService } from './application/services/agent/tools/agent-tool-executor.service';
+import { AgentRuntimeService } from './application/services/agent/agent-runtime.service';
 import { CoachDecisionCalculatorService } from './application/services/coach-decision-calculator.service';
 import { CoachDecisionDateService } from './application/services/coach-decision-date.service';
 import { AiLlmConfigService } from './application/services/llm/ai-llm-config.service';
@@ -155,6 +183,32 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
     AiRolloutService,
     AiEvaluationDatasetService,
     AiEvaluationRunnerService,
+    AgentRuntimeConfigService,
+    AgentIntentClassifierService,
+    AgentContextSelectionPolicy,
+    AgentPolicyRegistry,
+    CoachExpertRegistry,
+    AgentPolicyEngineService,
+    AgentContextOrchestratorService,
+    AgentExecutionPolicy,
+    AgentExecutionValidator,
+    AgentExecutionEngineService,
+    AgentMemoryPolicy,
+    AgentMemoryService,
+    AgentTraceService,
+    AgentPlanningPolicy,
+    AgentPlanValidator,
+    AgentPlanningEngineService,
+    CoachExpertRoutingPolicy,
+    CoachExpertRouterService,
+    CoachExpertCompositionService,
+    CoachExpertObservabilityService,
+    CoachExplainabilityService,
+    CoachPersonaEngineService,
+    AgentToolExecutionPolicy,
+    AgentToolRegistryService,
+    AgentToolExecutorService,
+    AgentRuntimeService,
     CoachConversationMemorySummarizer,
     CoachFeedbackGenerator,
     CoachChatReplyGenerator,

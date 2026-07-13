@@ -9,7 +9,11 @@ import type {
 
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
-import { isCoachOptionalEmptyState } from './coach';
+import {
+  buildCoachIntelligence,
+  isCoachOptionalEmptyState,
+  mapUnifiedCoachInsight,
+} from './coach';
 import {
   type AskCoachCategory,
   type AskCoachCategoryId,
@@ -118,29 +122,48 @@ export function useAskCoach(): AskCoachResult {
     await Promise.all([dashboard.refresh(), loadExtras()]);
   }, [dashboard.refresh, loadExtras]);
 
-  const model = useMemo(
-    () =>
-      buildAskCoachModel({
+  const model = useMemo(() => {
+    const intelligence =
+      buildCoachIntelligence({
         coachDecision: dashboard.coach.data,
         currentGoal: extras.currentGoal,
         habitSnapshot: extras.habitSnapshot,
         personalizationSnapshot: extras.personalizationSnapshot,
-        chatHistory: extras.chatHistory,
-        recoveryScore: dashboard.recovery.data?.readinessScore,
-        hasWorkout: Boolean(dashboard.workout.todaysWorkout),
-        nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
-        nextMealTitle: dashboard.nutrition.data?.nextMeal?.title,
-        selectedCategory,
-      }),
-    [
-      dashboard.coach.data,
-      dashboard.nutrition.data,
-      dashboard.recovery.data,
-      dashboard.workout.todaysWorkout,
-      extras,
+        recoverySnapshot: dashboard.recovery.data,
+        workout: dashboard.workout.todaysWorkout,
+        nutrition: dashboard.nutrition.data,
+        progressSummary: dashboard.progress.data,
+      }) ?? dashboard.coach.intelligence;
+    const insight = mapUnifiedCoachInsight({
+      intelligence,
+      fallbackHeadline: dashboard.coach.data?.headline,
+      fallbackSummary: dashboard.coach.data?.summary,
+    });
+
+    return buildAskCoachModel({
+      coachDecision: dashboard.coach.data,
+      intelligence,
+      insight,
+      currentGoal: extras.currentGoal,
+      habitSnapshot: extras.habitSnapshot,
+      personalizationSnapshot: extras.personalizationSnapshot,
+      chatHistory: extras.chatHistory,
+      recoveryScore: dashboard.recovery.data?.readinessScore,
+      hasWorkout: Boolean(dashboard.workout.todaysWorkout),
+      nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
+      nextMealTitle: dashboard.nutrition.data?.nextMeal?.title,
       selectedCategory,
-    ],
-  );
+    });
+  }, [
+    dashboard.coach.data,
+    dashboard.coach.intelligence,
+    dashboard.progress.data,
+    dashboard.nutrition.data,
+    dashboard.recovery.data,
+    dashboard.workout.todaysWorkout,
+    extras,
+    selectedCategory,
+  ]);
 
   const errorMessage =
     dashboard.error ||

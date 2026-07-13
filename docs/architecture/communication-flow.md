@@ -109,6 +109,12 @@ The coach layer:
 - internal observability for request traces, token accounting, cost guardrails, and structured logs
 - optional streaming transport over the same chat use-case when the feature flag is enabled
 - internal prompt version registry, deterministic canary rollout, and rollback-ready provider selection
+- internal `AgentRuntime` orchestration with deterministic context selection, planning, execution, memory, and trace recording
+- internal `CoachExpertRegistry` metadata used by policy and planning before execution
+- internal `WorkoutExpert`, `NutritionExpert`, and `RecoveryExpert` metadata used by policy and planning before execution
+- internal `GoalExpert` metadata used by policy and planning before execution
+- internal `HabitExpert` metadata used by policy and planning before execution
+- internal `ProgressExpert` metadata used by policy and planning before execution
 - no exposed prompt internals
 - no distributed memory layer
 - no mandatory async queue

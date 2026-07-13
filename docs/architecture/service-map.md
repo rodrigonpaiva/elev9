@@ -186,6 +186,21 @@ Responsável por:
 - usar o Responses API com structured outputs e um parser centralizado para normalizar a resposta do modelo
 - registrar traces operacionais, usage reports, cost guardrails e structured logs para requests de LLM
 - expor metadata de capabilities do provider para suportar GPT-5.5 e modelos futuros
+- operar um `AgentRuntime` interno com policy, context orchestration, planning, execution, memory e observability
+- operar um `CoachExpertRegistry` interno para metadata de roteamento de especialistas
+- operar um `CoachExpertRouter` interno para primary/complementary expert selection, dependency ordering e route validation
+- operar a `Expert Observability` interna para capturar contribution, conflict, health e retention metadata dos especialistas
+- operar um `WorkoutExpert` interno para análise determinística de treino com base em estado confiável
+- operar um `NutritionExpert` interno para análise determinística de nutrição com base em estado confiável
+- operar um `RecoveryExpert` interno para análise determinística de recovery com base em estado confiável
+- operar um `GoalExpert` interno para análise determinística de progresso de metas, milestones e forecast com base em estado confiável
+- operar um `HabitExpert` interno para análise determinística de consistência comportamental, streaks, padrões, risco e progresso de longo prazo com base em estado confiável
+- operar um `ProgressExpert` interno para análise determinística de evolução longitudinal, momentum, plateau, regression e consistência de progresso com base em estado confiável
+- operar um `MotivationExpert` interno para análise determinística de engajamento comportamental, oportunidade motivacional, estratégia e risco com base em estado confiável
+- operar a `Expert Composition Engine` interna para consolidação determinística das contribuições dos especialistas em inteligência unificada
+- operar a `Coach Persona Engine` interna para tradução determinística da inteligência unificada em guidance de comunicação para o prompt builder
+- operar a `Explainability Layer` interna para tradução determinística da inteligência unificada em evidência estruturada para o prompt builder
+- fornecer ao mobile as mesmas leituras unificadas, guidance de persona e explicações estruturadas sem alterar contratos públicos
 - manter registry de versões de prompt, canary rollout determinístico, rollback por configuração e evaluation runner interno
 - alimentar coach home, briefing, memory, insights, ask coach, weekly review, goal guidance e notifications
 

@@ -9,6 +9,11 @@ import { formatGoalType } from '@elev9/ui/formatters/enum-labels';
 
 import { formatCoachRelativeTime } from './coach-relative-time';
 import { limitCoachText } from './coach-copy';
+import type {
+  CoachUnifiedCoachIntelligence,
+  CoachPersonaProfile,
+} from './coach-intelligence';
+import { mapUnifiedCoachInsight } from './coach-intelligence';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
 
@@ -75,6 +80,9 @@ const CATEGORIES: AskCoachCategory[] = [
 
 export function buildAskCoachModel(input: {
   coachDecision?: CoachDecision;
+  intelligence?: CoachUnifiedCoachIntelligence | null;
+  insight?: ReturnType<typeof mapUnifiedCoachInsight>;
+  persona?: CoachPersonaProfile | null;
   currentGoal: CurrentGoal | null;
   habitSnapshot: HabitSnapshot | null;
   personalizationSnapshot: PersonalizationSnapshot | null;
@@ -90,6 +98,11 @@ export function buildAskCoachModel(input: {
   );
   const personalizedSuggestions = buildPersonalizedSuggestions(input);
   const recentConversations = buildRecentConversations(input.chatHistory);
+  const insight =
+    input.insight ??
+    mapUnifiedCoachInsight({
+      intelligence: input.intelligence ?? null,
+    });
 
   if (
     !input.coachDecision &&
@@ -105,8 +118,7 @@ export function buildAskCoachModel(input: {
 
   return {
     heroTitle: 'What would you like help with today?',
-    heroSubtitle:
-      "I already know today's context. Choose a question below or ask anything.",
+    heroSubtitle: buildHeroSubtitle({ insight, persona: input.persona }),
     selectedCategory: input.selectedCategory,
     categories: CATEGORIES,
     questions: questions.slice(0, 8),
@@ -144,8 +156,25 @@ export function buildAskCoachModel(input: {
         isEnabled: true,
       },
     ],
-    accessibilityLabel: `Ask Coach. ${questions.length} suggested questions available.`,
+    accessibilityLabel: `Ask Coach. ${insight.headline}. ${insight.supportingEvidenceSummary}.`,
   };
+}
+
+function buildHeroSubtitle(input: {
+  insight: ReturnType<typeof mapUnifiedCoachInsight>;
+  persona: CoachPersonaProfile | null | undefined;
+}): string {
+  const focusLabel = input.insight.currentFocus
+    ? input.insight.currentFocus.toLowerCase()
+    : 'coach';
+  const tone = input.persona?.tone.toLowerCase() ?? 'supportive';
+  const summary = input.insight.summary.trim();
+
+  if (summary.length > 0) {
+    return `${tone} guidance focused on ${focusLabel}. ${summary}`;
+  }
+
+  return `${tone} guidance focused on ${focusLabel}.`;
 }
 
 export function buildQuestions(input: {

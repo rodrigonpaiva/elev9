@@ -12,3 +12,4 @@ export {
   normalizeCoachSentence,
   stripCoachMetricLanguage,
 } from './coach-copy';
+export * from './coach-intelligence';

@@ -77,6 +77,13 @@ import { ProgressController } from './presentation/http/progress.controller';
       useClass: MongooseDailyCheckInRepository,
     },
   ],
-  exports: [CLOCK, WORKOUT_LOG_REPOSITORY, DAILY_CHECK_IN_REPOSITORY],
+  exports: [
+    CLOCK,
+    WORKOUT_LOG_REPOSITORY,
+    DAILY_CHECK_IN_REPOSITORY,
+    GetDailyCheckInHistoryUseCase,
+    GetWorkoutHistoryUseCase,
+    GetProgressSummaryUseCase,
+  ],
 })
 export class ProgressModule {}

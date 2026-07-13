@@ -16,6 +16,8 @@ import { Text } from '@elev9/ui';
 import {
   CoachCenteredState,
   CoachHeroCard,
+  CoachEvidenceList,
+  CoachPriorityBanner,
   CoachSection,
 } from '../components/coach';
 import type {
@@ -136,6 +138,7 @@ export function CoachDailyBriefingScreen() {
         >
           <MorningGreeting model={briefing.model} />
           <SummaryHero model={briefing.model} />
+          <PriorityBanner model={briefing.model} />
           <WhyButton onPress={() => navigation.navigate('CoachInsights')} />
           <NeedHelpButton onPress={() => navigation.navigate('AskCoach')} />
           <WeeklyReviewButton
@@ -147,6 +150,7 @@ export function CoachDailyBriefingScreen() {
           <CoachInterpretation model={briefing.model} />
           <Priorities priorities={briefing.model.priorities} />
           <ReadinessOverview items={briefing.model.readiness} />
+          <EvidenceSection model={briefing.model} />
           {briefing.model.schedule.length > 0 ? (
             <TodaySchedule schedule={briefing.model.schedule} />
           ) : null}
@@ -185,7 +189,7 @@ const SummaryHero = memo(function SummaryHero({
 }) {
   return (
     <CoachHeroCard
-      accessibilityLabel={`Today's summary. ${model.summary}`}
+      accessibilityLabel={`Today's summary. ${model.summary}. ${model.currentFocus}.`}
       containerStyle={styles.hero}
       iconColor={briefingTokens.text}
       iconContainerStyle={styles.heroIcon}
@@ -194,6 +198,34 @@ const SummaryHero = memo(function SummaryHero({
       titleTextProps={{ maxFontSizeMultiplier: 1.25, numberOfLines: 2 }}
       titleStyle={styles.heroText}
     />
+  );
+});
+
+const PriorityBanner = memo(function PriorityBanner({
+  model,
+}: {
+  model: CoachDailyBriefingModel;
+}) {
+  return (
+    <CoachPriorityBanner
+      confidenceLevel={model.confidenceLevel}
+      detail={model.supportingEvidenceSummary || model.interpretation}
+      focus={model.focus}
+      riskLevel={model.riskLevel}
+      title={model.topRecommendation}
+    />
+  );
+});
+
+const EvidenceSection = memo(function EvidenceSection({
+  model,
+}: {
+  model: CoachDailyBriefingModel;
+}) {
+  return (
+    <CoachSection title="Supporting Evidence" style={styles.section}>
+      <CoachEvidenceList evidence={model.evidence} maxItems={3} />
+    </CoachSection>
   );
 });
 

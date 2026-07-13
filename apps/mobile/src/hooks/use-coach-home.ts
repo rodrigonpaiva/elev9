@@ -10,12 +10,20 @@ import { formatGoalType } from '@elev9/ui';
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
 import {
+  buildCoachIntelligence,
   formatCoachRelativeTime,
+  getCoachConfidenceLabel,
   getCoachGreetingMessage,
   getCoachPriorityBenefit,
   getCoachPriorityGoalLabel,
+  getCoachFocusLabel,
+  getCoachRiskLabel,
   isCoachOptionalEmptyState,
   normalizeCoachSentence,
+  mapUnifiedCoachInsight,
+  type CoachConfidenceLevel,
+  type CoachRiskLevel,
+  type CoachUnifiedCoachIntelligence,
 } from './coach';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
@@ -68,6 +76,12 @@ export type CoachHomeModel = {
   subtitle: string;
   mainInsight: string;
   insightSummary: string;
+  currentFocus: string;
+  currentRisk: string;
+  confidence: string;
+  riskLevel: CoachRiskLevel | null;
+  confidenceLevel: CoachConfidenceLevel | null;
+  supportingEvidenceSummary: string;
   contextItems: CoachHomeContextItem[];
   priorities: CoachHomePriority[];
   actions: CoachHomeAction[];
@@ -133,8 +147,24 @@ export function useCoachHome(): CoachHomeResult {
       return null;
     }
 
+    const intelligence =
+      buildCoachIntelligence({
+        coachDecision: dashboard.coach.data,
+        currentGoal,
+        recoverySnapshot: dashboard.recovery.data,
+        workout: dashboard.workout.todaysWorkout,
+        nutrition: dashboard.nutrition.data,
+        progressSummary: dashboard.progress.data,
+      }) ?? dashboard.coach.intelligence;
+    const insight = mapUnifiedCoachInsight({
+      intelligence,
+      fallbackHeadline: dashboard.coach.data.headline,
+      fallbackSummary: dashboard.coach.data.summary,
+    });
+
     return buildCoachHomeModel({
       coachDecision: dashboard.coach.data,
+      intelligence,
       userName: dashboard.userName,
       latestMessage,
       currentGoal,
@@ -142,11 +172,14 @@ export function useCoachHome(): CoachHomeResult {
       hasWorkout: Boolean(dashboard.workout.todaysWorkout),
       mealsRemaining: getMealsRemaining(dashboard.nutrition.data?.meals.length),
       nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
+      insight,
     });
   }, [
     currentGoal,
     dashboard.coach.data,
+    dashboard.coach.intelligence,
     dashboard.nutrition.data,
+    dashboard.progress.data,
     dashboard.recovery.data,
     dashboard.workout.todaysWorkout,
     latestMessage,
@@ -181,6 +214,7 @@ export function useCoachHome(): CoachHomeResult {
 
 function buildCoachHomeModel(input: {
   coachDecision: CoachDecision;
+  intelligence: CoachUnifiedCoachIntelligence | null;
   userName: string | null;
   latestMessage: CoachChatHistoryMessage | null;
   currentGoal: CurrentGoal | null;
@@ -188,9 +222,10 @@ function buildCoachHomeModel(input: {
   hasWorkout: boolean;
   mealsRemaining?: number;
   nutritionFocus?: string;
+  insight: ReturnType<typeof mapUnifiedCoachInsight>;
 }): CoachHomeModel {
   const contextItems = buildContextItems(input);
-  const priorities = buildPriorities(input.coachDecision);
+  const priorities = buildPriorities(input.coachDecision, input.intelligence);
   const updatedAt =
     input.coachDecision.updatedAt || input.coachDecision.createdAt;
   const generatedAt = getGeneratedAt(input.coachDecision);
@@ -198,8 +233,20 @@ function buildCoachHomeModel(input: {
   return {
     greeting: getCoachGreetingMessage(input.userName),
     subtitle: "Here's what deserves your attention today.",
-    mainInsight: input.coachDecision.headline,
-    insightSummary: input.coachDecision.summary,
+    mainInsight: input.insight.headline,
+    insightSummary: input.insight.summary,
+    currentFocus: input.insight.currentFocus
+      ? getCoachFocusLabel(input.insight.currentFocus)
+      : 'Coach',
+    currentRisk: input.insight.currentRisk
+      ? getCoachRiskLabel(input.insight.currentRisk.level)
+      : 'No major risk',
+    confidence: input.insight.confidence
+      ? getCoachConfidenceLabel(input.insight.confidence.level)
+      : 'Low confidence',
+    riskLevel: input.insight.currentRisk?.level ?? null,
+    confidenceLevel: input.insight.confidence?.level ?? null,
+    supportingEvidenceSummary: input.insight.supportingEvidenceSummary,
     contextItems,
     priorities,
     actions: [
@@ -286,7 +333,7 @@ function buildCoachHomeModel(input: {
     statusDetail: generatedAt
       ? "Today's recommendations are based on your latest workout and nutrition logs."
       : "Today's recommendations are based on the latest signals Elev9 has available.",
-    accessibilityLabel: `Coach Home. ${input.coachDecision.headline}. ${priorities.length} priorities available.`,
+    accessibilityLabel: `Coach Home. ${input.insight.headline}. ${input.insight.supportingEvidenceSummary}.`,
   };
 }
 
@@ -327,11 +374,18 @@ function buildContextItems(input: {
   ];
 }
 
-function buildPriorities(coachDecision: CoachDecision): CoachHomePriority[] {
+function buildPriorities(
+  coachDecision: CoachDecision,
+  intelligence: CoachUnifiedCoachIntelligence | null,
+): CoachHomePriority[] {
   const sourceItems =
-    coachDecision.actionItems.length > 0
-      ? coachDecision.actionItems
-      : [getFallbackPriority(coachDecision.priority)];
+    intelligence && intelligence.recommendations.length > 0
+      ? intelligence.recommendations.map(
+          (recommendation) => recommendation.title,
+        )
+      : coachDecision.actionItems.length > 0
+        ? coachDecision.actionItems
+        : [getFallbackPriority(coachDecision.priority)];
 
   return sourceItems
     .filter((item) => item.trim().length > 0)
@@ -339,7 +393,7 @@ function buildPriorities(coachDecision: CoachDecision): CoachHomePriority[] {
     .map((item, index) => ({
       id: `${coachDecision.id}-${index}`,
       title: normalizeCoachSentence(item),
-      reason: getPriorityReason(coachDecision, index),
+      reason: getPriorityReason(coachDecision, index, intelligence),
       benefit: getCoachPriorityBenefit(coachDecision.priority),
     }));
 }
@@ -380,7 +434,14 @@ function getRecoveryLabel(score?: number): string {
 function getPriorityReason(
   coachDecision: CoachDecision,
   index: number,
+  intelligence: CoachUnifiedCoachIntelligence | null,
 ): string {
+  const evidence = intelligence?.evidence[index];
+
+  if (evidence?.detail) {
+    return evidence.detail;
+  }
+
   const influence =
     coachDecision.influences[index] ?? coachDecision.influences[0];
 

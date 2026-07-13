@@ -28,6 +28,8 @@ A documentação arquitetural segue [Documentation Governance](../specs/GOVERNAN
 - [ADR-007 — OpenAI Responses API & Structured Outputs](./adr-007-openai-responses-api-structured-outputs.md)
 - [ADR-008 — AI Coach Streaming Infrastructure](./adr-008-ai-coach-streaming-infrastructure.md)
 - [ADR-009 — AI Evaluation Framework, Canary Rollout & Rollback](./adr-009-ai-evaluation-rollout-framework.md)
+- [ADR-010 — AI Agent Platform Core Architecture](./adr-010-ai-agent-platform-core-architecture.md)
+- [ADR-011 — Coach Intelligence Architecture](./adr-011-coach-intelligence-architecture.md)
 
 ---
 
@@ -70,6 +72,10 @@ Os ADRs atuais convergem nos seguintes temas:
 - conversational explainability surfaces
 - spec-driven evolution
 - LLM safety, reliability, and observability layers
+- internal agent scaffolding with deterministic context orchestration and metadata-only tool cataloging
+- centralized policy governance for context, tools, memory, fallback, cost, and latency decisions
+- deterministic planning engine with validated immutable execution plans
+- internal read-only tool execution pipeline behind feature flags
 
 Esses temas descrevem o estado atual do sistema e não devem ser interpretados como uma plataforma de IA avançada ou como uma camada clínica.
 
@@ -99,6 +105,8 @@ ADRs relevantes para o módulo de IA:
 - [ADR-007 — OpenAI Responses API & Structured Outputs](./adr-007-openai-responses-api-structured-outputs.md)
 - [ADR-008 — AI Coach Streaming Infrastructure](./adr-008-ai-coach-streaming-infrastructure.md)
 - [ADR-009 — AI Evaluation Framework, Canary Rollout & Rollback](./adr-009-ai-evaluation-rollout-framework.md)
+- [ADR-010 — AI Agent Platform Core Architecture](./adr-010-ai-agent-platform-core-architecture.md)
+- [ADR-011 — Coach Intelligence Architecture](./adr-011-coach-intelligence-architecture.md)
 
 ---
 
@@ -130,6 +138,7 @@ Temas prováveis para ADRs futuros, ainda não implementados:
 - LangGraph orchestration
 - voice interface
 - multi-agent routing
+- semantic memory layering beyond the current deterministic memory scopes
 
 Esses itens devem ser tratados como áreas potenciais de decisão arquitetural futura, não como capacidades já entregues.
 

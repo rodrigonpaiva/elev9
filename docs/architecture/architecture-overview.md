@@ -98,6 +98,17 @@ Responsável por:
 - registrar traces operacionais, contagem de tokens, custo estimado e guardrails de custo por requisição através de uma camada de observabilidade interna
 - expor um transporte de streaming aditivo para chat contextual sem alterar o contrato síncrono existente
 - manter registry de versões de prompt, rollout canário determinístico, rollback por configuração e evaluation runner interno
+- operar um `AgentRuntime` interno com policy, context orchestration, planning, execution, memory e trace, tudo behind feature flags
+- operar um `CoachExpertRegistry` interno com roteamento determinístico de especialistas do coach, apenas como metadata de planejamento
+- operar um `CoachExpertRouter` interno para primary/complementary expert selection, dependency ordering and route validation
+- operar o `WorkoutExpert` interno como especialista determinístico de treino, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `NutritionExpert` interno como especialista determinístico de nutrição, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `RecoveryExpert` interno como especialista determinístico de recovery, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `GoalExpert` interno como especialista determinístico de progresso de metas, milestones e forecast, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `HabitExpert` interno como especialista determinístico de consistência comportamental, streaks e padrões, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `ProgressExpert` interno como especialista determinístico de evolução longitudinal, momentum, plateau e regression, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `MotivationExpert` interno como especialista determinístico de engajamento comportamental, oportunidade motivacional e estratégia interna, com contribuição estruturada e sem alterar o plano do usuário
+- operar a `Expert Composition Engine` interna para consolidar as contribuições dos especialistas em uma inteligência unificada antes da construção do prompt
 
 ### Fluxo da IA
 
@@ -114,7 +125,7 @@ Responsável por:
 
 2. Monta contexto
 
-3. Produz read models, aplica safety checks, registra telemetria operacional interna e gera resposta conversacional determinística, assistida por LLM ou transmitida por streaming quando habilitado
+3. Produz read models, aplica safety checks, registra telemetria operacional interna, considera especialistas do coach como metadata de planejamento, aplica o `CoachExpertRouter` para ordenar a execução determinística, executa o `WorkoutExpert`, o `NutritionExpert`, o `RecoveryExpert`, o `GoalExpert`, o `HabitExpert`, o `ProgressExpert` e o `MotivationExpert`, consolida as contribuições pela `Expert Composition Engine` e gera resposta conversacional determinística, assistida por LLM ou transmitida por streaming quando habilitado
 
 4. O mobile renderiza a experiência de coach
 

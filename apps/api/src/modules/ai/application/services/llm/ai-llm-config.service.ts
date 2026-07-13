@@ -259,7 +259,7 @@ export class AiLlmConfigService {
       return false;
     }
 
-    return fallback;
+    throw new LLMConfigurationError(`Invalid value for ${key}.`);
   }
 
   private readString(key: string, fallback: string): string {

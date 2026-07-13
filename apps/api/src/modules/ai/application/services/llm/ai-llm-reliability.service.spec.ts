@@ -372,6 +372,12 @@ describe('AiLlmConfigService', () => {
     expect(() => new AiLlmConfigService()).toThrow(LLMConfigurationError);
   });
 
+  it('rejects invalid boolean flag configuration', () => {
+    process.env.AI_LLM_STREAMING_ENABLED = 'maybe';
+
+    expect(() => new AiLlmConfigService()).toThrow(LLMConfigurationError);
+  });
+
   it('rejects missing api key when enabled', () => {
     process.env.AI_LLM_ENABLED = 'true';
     delete process.env.OPENAI_API_KEY;

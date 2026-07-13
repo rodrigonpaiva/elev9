@@ -4,6 +4,17 @@ import type {
   CoachChatHistoryResponse,
 } from '@elev9/types';
 
+import type {
+  CoachExplanation,
+  CoachPersonaProfile,
+  CoachUnifiedCoachIntelligence,
+} from './coach-intelligence';
+import {
+  getCoachConfidenceLabel,
+  getCoachFocusLabel,
+  getCoachRiskLabel,
+  mapUnifiedCoachInsight,
+} from './coach-intelligence';
 import { formatCoachRelativeTime } from './coach-relative-time';
 
 export type CoachConversationMessageKind =
@@ -38,6 +49,12 @@ export type CoachConversationMessage = CoachChatHistoryMessage & {
 
 export type CoachConversationContext = {
   status: string;
+  summary: string;
+  focus: string;
+  risk: string;
+  confidence: string;
+  persona: string;
+  topRecommendation: string;
   signals: string[];
   suggestedQuestions: string[];
 };
@@ -146,6 +163,9 @@ export function buildConversationContext(input: {
   hasNutrition: boolean;
   hasProgress: boolean;
   priority?: string;
+  intelligence?: CoachUnifiedCoachIntelligence | null;
+  persona?: CoachPersonaProfile | null;
+  explanation?: CoachExplanation | null;
 }): CoachConversationContext {
   const signals = [
     input.hasWorkout ? 'Workout' : null,
@@ -154,6 +174,9 @@ export function buildConversationContext(input: {
     input.hasProgress ? 'Progress' : null,
     'Goals',
   ].filter(Boolean) as string[];
+  const insight = mapUnifiedCoachInsight({
+    intelligence: input.intelligence ?? null,
+  });
 
   return {
     status: input.coachStatus
@@ -161,6 +184,24 @@ export function buildConversationContext(input: {
           style: 'compact',
         })}`
       : 'Ready to help',
+    summary:
+      input.explanation?.summary ||
+      insight.summary ||
+      'Your coach is ready with current context.',
+    focus: insight.currentFocus
+      ? getCoachFocusLabel(insight.currentFocus)
+      : 'Coach',
+    risk: insight.currentRisk
+      ? getCoachRiskLabel(insight.currentRisk.level)
+      : 'No major risk',
+    confidence: insight.confidence
+      ? getCoachConfidenceLabel(insight.confidence.level)
+      : 'Low confidence',
+    persona: input.persona
+      ? `${input.persona.tone.toLowerCase()} · ${input.persona.verbosity.toLowerCase()}`
+      : 'Supportive',
+    topRecommendation:
+      insight.topRecommendation?.title ?? 'Keep following your plan.',
     signals: signals.slice(0, 5),
     suggestedQuestions: getSuggestedQuestions(input.priority),
   };

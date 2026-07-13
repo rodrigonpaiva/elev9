@@ -17,6 +17,8 @@ import {
   CoachActionGrid,
   CoachCenteredState,
   CoachHeroCard,
+  CoachEvidenceList,
+  CoachPriorityBanner,
   CoachSection,
 } from '../components/coach';
 import type {
@@ -212,7 +214,9 @@ export function CoachGoalGuidanceScreen() {
             style={styles.content}
           >
             <GoalHero model={guidance.model} />
+            <GoalPriority model={guidance.model} />
             {sections.map((section) => renderSection({ item: section }))}
+            <GoalEvidence model={guidance.model} />
             <SectionTitle title="Milestones" />
           </View>
         }
@@ -258,6 +262,34 @@ const GoalHero = memo(function GoalHero({
       titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
       titleStyle={styles.heroTitle}
     />
+  );
+});
+
+const GoalPriority = memo(function GoalPriority({
+  model,
+}: {
+  model: CoachGoalGuidanceModel;
+}) {
+  return (
+    <CoachPriorityBanner
+      confidenceLevel={model.confidenceLevel}
+      detail={model.supportingEvidenceSummary || model.strategy}
+      focus={model.focus}
+      riskLevel={model.riskLevel}
+      title={model.topRecommendation}
+    />
+  );
+});
+
+const GoalEvidence = memo(function GoalEvidence({
+  model,
+}: {
+  model: CoachGoalGuidanceModel;
+}) {
+  return (
+    <CoachSection title="Supporting Evidence" style={styles.section}>
+      <CoachEvidenceList evidence={model.evidence} maxItems={3} />
+    </CoachSection>
   );
 });
 
