@@ -19,7 +19,7 @@ import type {
 
 export type AgentContextOrchestrationMetadata = {
   detectedIntent: AgentIntent;
-  selectedDomains: AgentContextDomain[];
+  selectedDomains: readonly AgentContextDomain[];
   selectedDomainCount: number;
   orchestrationDurationMs: number;
   rationale: string;
@@ -36,7 +36,7 @@ export type AgentContextOrchestrationResult = {
   request: AgentRequest;
   context: AgentContext;
   intent: AgentIntent;
-  selectedDomains: AgentContextDomain[];
+  selectedDomains: readonly AgentContextDomain[];
   metadata: AgentContextOrchestrationMetadata;
 };
 
@@ -86,7 +86,7 @@ export class AgentContextOrchestratorService {
     const loadedContext = await this.coachChatContextLoaderService.load(
       request.sessionMetadata.authUserId,
       {
-        domains: allowedDomains,
+        domains: [...allowedDomains],
         userProfileId: request.sessionMetadata.userProfileId,
       },
     );
@@ -138,7 +138,7 @@ export class AgentContextOrchestratorService {
   private buildAgentContext(input: {
     request: AgentRequest;
     classification: { intent: AgentIntent };
-    selectedDomains: AgentContextDomain[];
+    selectedDomains: readonly AgentContextDomain[];
     conversationState: CoachChatConversationState;
     loadedContext: CoachChatLoadedContext;
   }): AgentContext {

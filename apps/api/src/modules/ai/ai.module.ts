@@ -55,6 +55,13 @@ import { CoachExpertCompositionService } from './application/services/experts/co
 import { CoachExpertObservabilityService } from './application/services/experts/observability/coach-expert-observability';
 import { CoachExplainabilityService } from './application/services/explainability/coach-explainability';
 import { CoachPersonaEngineService } from './application/services/persona/coach-persona-engine';
+import { CoachIntelligenceConfigService } from './application/services/coach-intelligence/coach-intelligence.config';
+import { CoachIntelligenceContextAssemblerService } from './application/services/coach-intelligence/coach-intelligence.context-assembler.service';
+import { CoachIntelligenceFreshnessPolicy } from './application/services/coach-intelligence/coach-intelligence.policy';
+import { CoachIntelligenceObservabilityService } from './application/services/coach-intelligence/coach-intelligence.observability.service';
+import { CoachIntelligenceMapperService } from './application/services/coach-intelligence/coach-intelligence.mapper.service';
+import { CoachIntelligenceSourceAdaptersService } from './application/services/coach-intelligence/coach-intelligence.source-adapters.service';
+import { CoachIntelligenceAggregationService } from './application/services/coach-intelligence/coach-intelligence.aggregation.service';
 import { AgentToolRegistryService } from './application/services/agent/tools/agent-tool-registry.service';
 import { AgentToolExecutionPolicy } from './application/services/agent/tools/agent-tool-execution.policy';
 import { AgentToolExecutorService } from './application/services/agent/tools/agent-tool-executor.service';
@@ -98,11 +105,13 @@ import { BuildCoachDecisionUseCase } from './application/use-cases/build-coach-d
 import { GetCurrentCoachDecisionUseCase } from './application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case';
 import { GetCoachDecisionHistoryUseCase } from './application/use-cases/get-coach-decision-history/get-coach-decision-history.use-case';
 import { GetTodayCoachDecisionUseCase } from './application/use-cases/get-today-coach-decision/get-today-coach-decision.use-case';
+import { GetCoachIntelligenceUseCase } from './application/use-cases/get-coach-intelligence/get-coach-intelligence.use-case';
 import { ReplayCoachDecisionUseCase } from './application/use-cases/replay-coach-decision/replay-coach-decision.use-case';
 import { GenerateCoachFeedbackUseCase } from './application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case';
 import { ReplayCoachFeedbackUseCase } from './application/use-cases/replay-coach-feedback/replay-coach-feedback.use-case';
 import { AiController } from './presentation/http/ai.controller';
 import { CoachDecisionController } from './presentation/http/coach-decision.controller';
+import { CoachIntelligenceController } from './presentation/http/coach-intelligence.controller';
 import { COACH_CONVERSATION_REPOSITORY } from './domain/repositories/coach-conversation.repository';
 import { MongooseCoachConversationRepository } from './infrastructure/mongoose/mongoose-coach-conversation.repository';
 import { COACH_CONVERSATION_MEMORY_REPOSITORY } from './domain/repositories/coach-conversation-memory.repository';
@@ -159,11 +168,19 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
       },
     ]),
   ],
-  controllers: [AiController, CoachDecisionController],
+  controllers: [AiController, CoachDecisionController, CoachIntelligenceController],
   providers: [
     AuthSessionGuard,
     PlatformDateService,
     BuildUserHealthContextService,
+    CoachIntelligenceConfigService,
+    CoachIntelligenceFreshnessPolicy,
+    CoachIntelligenceObservabilityService,
+    CoachIntelligenceMapperService,
+    CoachIntelligenceSourceAdaptersService,
+    CoachIntelligenceContextAssemblerService,
+    CoachIntelligenceAggregationService,
+    GetCoachIntelligenceUseCase,
     BuildCoachDecisionUseCase,
     GetTodayCoachDecisionUseCase,
     GetCurrentCoachDecisionUseCase,
@@ -262,6 +279,7 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
   ],
   exports: [
     BuildUserHealthContextService,
+    GetCoachIntelligenceUseCase,
     COACH_DECISION_REPOSITORY,
     GetCurrentCoachDecisionUseCase,
     GenerateCoachFeedbackUseCase,

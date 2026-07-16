@@ -25,6 +25,7 @@ import type {
   AgentExecutionStep,
   AgentExecutionStepName,
   AgentExecutionState,
+  AgentExecutionValidationResult,
 } from './agent-execution.types';
 import type { AgentMemoryRuntimeMetadata } from '../memory/agent-memory.types';
 
@@ -503,8 +504,9 @@ export class AgentExecutionEngineService {
           continue;
         }
 
-        if (stepName === 'COMPLETE') {
+    if (stepName === 'COMPLETE') {
           await this.refreshWorkingMemory({
+            lifecycleEvents,
             request: input.request,
             context: input.context,
             plan: input.plan,
@@ -668,10 +670,7 @@ export class AgentExecutionEngineService {
 
   private createInitialState(
     input: AgentExecutionContext,
-    validation: {
-      status: 'valid' | 'invalid';
-      issues: string[];
-    },
+    validation: AgentExecutionValidationResult,
     lifecycleEvents: AgentExecutionLifecycleEvent[],
   ): AgentExecutionState {
     return {
@@ -769,7 +768,7 @@ export class AgentExecutionEngineService {
     toolExecutionOutcome: AgentToolExecutionOutcome;
     currentStep: AgentExecutionStepName;
     fallbackUsed: boolean;
-    stepStatus: 'completed' | 'failed';
+    stepStatus: 'completed' | 'failed' | 'skipped';
     stepCount: number;
     startedAt: number;
   }): Promise<void> {

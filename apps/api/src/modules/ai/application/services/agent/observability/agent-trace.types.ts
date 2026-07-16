@@ -187,6 +187,10 @@ export type AgentTrace = {
   selectedExpertIds: readonly string[];
   rejectedExpertIds: readonly string[];
   expertSelectionReason?: string;
+  complementaryExpertIds: readonly string[];
+  orderedExpertIds: readonly string[];
+  blockedExpertIds: readonly string[];
+  skippedExpertIds: readonly string[];
   candidateToolIds: readonly string[];
   selectedToolIds: readonly string[];
   executionStrategy?: AgentExecutionStrategy;

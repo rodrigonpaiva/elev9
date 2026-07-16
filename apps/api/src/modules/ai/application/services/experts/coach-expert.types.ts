@@ -2,7 +2,7 @@ import type {
   AgentContextDomain,
   AgentIntent,
   AgentRequest,
-} from '../agent.types';
+} from '../agent/agent.types';
 import type { AgentPolicyEvaluation } from '../agent/policies/agent-policy.types';
 import type { UserHealthContext } from '../context-builder/build-user-health-context.service';
 import type { RecoverySnapshot } from '../../../../recovery/domain/entities/recovery-snapshot.entity';

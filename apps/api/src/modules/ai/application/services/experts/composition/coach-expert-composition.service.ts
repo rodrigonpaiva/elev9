@@ -15,8 +15,8 @@ import type {
 } from './coach-expert-composition.types';
 import type {
   CoachExpertContribution,
-  CoachExpertSelection,
-} from '../router/coach-expert-router.types';
+} from '../coach-expert.types';
+import type { CoachExpertSelection } from '../router/coach-expert-router.types';
 import type { CoachExpertResult } from '../coach-expert.types';
 
 type ExpertAnalysisRecord = Record<string, unknown> & {

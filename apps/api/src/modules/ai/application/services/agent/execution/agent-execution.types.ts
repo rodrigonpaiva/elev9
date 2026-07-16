@@ -6,6 +6,7 @@ import type {
 import type {
   AgentActionResult,
   AgentContext,
+  AgentContextDomain,
   AgentPlan,
   AgentRequest,
   AgentToolExecutionMetrics,
@@ -72,7 +73,7 @@ export type AgentExecutionValidationStatus = 'valid' | 'invalid';
 
 export type AgentExecutionValidationResult = {
   status: AgentExecutionValidationStatus;
-  issues: string[];
+  issues: readonly string[];
 };
 
 export type AgentExecutionState = {
@@ -100,6 +101,16 @@ export type AgentExecutionState = {
     toolExecutionMetrics?: AgentToolExecutionMetrics;
     fallbackUsed: boolean;
     promptAssemblyDurationMs?: number;
+    policyApproved?: boolean;
+    policyBlocked?: boolean;
+    policyFallbackRequired?: boolean;
+    policyReason?: string;
+    policyViolationCount?: number;
+    policyAllowedLLM?: boolean;
+    policyAllowedDomainCount?: number;
+    policyAllowedToolCount?: number;
+    policyBlockedDomainIds?: readonly AgentContextDomain[];
+    policyBlockedToolIds?: readonly string[];
   };
   lifecycleEvents: readonly AgentExecutionLifecycleEvent[];
 };

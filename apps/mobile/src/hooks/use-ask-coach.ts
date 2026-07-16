@@ -10,7 +10,6 @@ import type {
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
 import {
-  buildCoachIntelligence,
   isCoachOptionalEmptyState,
   mapUnifiedCoachInsight,
 } from './coach';
@@ -123,17 +122,11 @@ export function useAskCoach(): AskCoachResult {
   }, [dashboard.refresh, loadExtras]);
 
   const model = useMemo(() => {
-    const intelligence =
-      buildCoachIntelligence({
-        coachDecision: dashboard.coach.data,
-        currentGoal: extras.currentGoal,
-        habitSnapshot: extras.habitSnapshot,
-        personalizationSnapshot: extras.personalizationSnapshot,
-        recoverySnapshot: dashboard.recovery.data,
-        workout: dashboard.workout.todaysWorkout,
-        nutrition: dashboard.nutrition.data,
-        progressSummary: dashboard.progress.data,
-      }) ?? dashboard.coach.intelligence;
+    if (dashboard.coach.mode === 'error' && !dashboard.coach.intelligence) {
+      return null;
+    }
+
+    const intelligence = dashboard.coach.intelligence;
     const insight = mapUnifiedCoachInsight({
       intelligence,
       fallbackHeadline: dashboard.coach.data?.headline,
@@ -157,6 +150,7 @@ export function useAskCoach(): AskCoachResult {
   }, [
     dashboard.coach.data,
     dashboard.coach.intelligence,
+    dashboard.coach.mode,
     dashboard.progress.data,
     dashboard.nutrition.data,
     dashboard.recovery.data,

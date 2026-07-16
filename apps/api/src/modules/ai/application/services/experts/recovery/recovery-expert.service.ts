@@ -20,6 +20,7 @@ import type {
   RecoveryStatus,
   RecoveryTrainingImpact,
   RecoveryTrendAssessment,
+  RecoveryTrendAssessmentShape,
   TrainingImpactAssessment,
   RecoveryExpertContribution,
 } from './recovery-expert.types';
@@ -441,11 +442,13 @@ export class RecoveryExpert extends BaseCoachExpert {
   }
 
   private resolveLatestSnapshot(
-    currentSnapshot: RecoverySnapshot | undefined,
+    currentSnapshot: UserHealthContext['recoverySnapshot'] | RecoverySnapshot | undefined,
     recoveryHistory: readonly RecoverySnapshotLike[],
   ): RecoverySnapshotLike | undefined {
     if (currentSnapshot) {
-      return currentSnapshot;
+      return {
+        ...currentSnapshot,
+      };
     }
 
     if (recoveryHistory.length === 0) {

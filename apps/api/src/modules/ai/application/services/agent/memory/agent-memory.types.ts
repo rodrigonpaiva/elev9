@@ -1,8 +1,8 @@
-import type { AiRolloutAssignment } from '../../../governance/ai-governance.types';
+import type { AiRolloutAssignment } from '../../governance/ai-governance.types';
 import type {
   AiPromptBuilderConversationMemory,
   AiPromptBuilderConversationMessage,
-} from '../../../llm/ai-prompt-builder.service';
+} from '../../llm/ai-prompt-builder.service';
 import type {
   AgentContextDomain,
   AgentIntent,

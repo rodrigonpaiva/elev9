@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import type { AgentPolicyEvaluation } from '../../policies/agent-policy.types';
+import type { AgentPolicyEvaluation } from '../../agent/policies/agent-policy.types';
 import type { CoachExpertCompositionResult } from '../composition/coach-expert-composition.types';
 import type { CoachPersonaGuidance } from '../../persona/coach-persona-engine.types';
 import type { CoachExplanation } from '../../explainability/coach-explainability.types';
@@ -311,8 +311,6 @@ export class CoachExpertObservabilityService {
       personaTone: input.personaGuidance?.tone,
       personaFocus: input.personaGuidance?.focus,
       personaVerbosity: input.personaGuidance?.verbosity,
-      promptAssemblyDurationMs:
-        input.runtimeMetadata.promptAssemblyDurationMs ?? 0,
     });
 
     const next = this.updateStoredTrace(current, {
@@ -416,7 +414,7 @@ export class CoachExpertObservabilityService {
       string,
       readonly CoachExpertContribution[]
     >;
-    compositionParticipating: readonly CoachExpertCompositionResult['participatingExperts'];
+    compositionParticipating: CoachExpertCompositionResult['participatingExperts'];
     explanation?: CoachExplanation;
   }): readonly CoachExpertExecutionSummary[] {
     const allExpertIds = this.uniqueValues([

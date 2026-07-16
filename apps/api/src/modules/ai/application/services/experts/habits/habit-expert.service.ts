@@ -12,14 +12,18 @@ import type {
   HabitConsistencyAssessment,
   HabitExpertContribution,
   HabitPatternAssessment,
+  HabitCrossDomainInterpretation,
   HabitPatternCode,
   HabitPriority,
   HabitRecommendation,
   HabitRecommendationCode,
   HabitRiskAssessment,
+  HabitRiskLevel,
   HabitStatus,
   HabitTrend,
+  HabitTrendAssessment,
 } from './habit-expert.types';
+import type { HabitSnapshot } from '../../../../../habits/domain/entities/habit-snapshot.entity';
 
 const COACH_EXPERT_VERSION = '1.0.0';
 const HABIT_EXPERT_ID = 'HabitExpert';
@@ -52,7 +56,7 @@ type HabitSnapshotLike = {
   streakDays: number;
   adherenceScore: number;
   trend: { value?: string } | string;
-  sourceContext?: Readonly<Record<string, unknown>>;
+  sourceContext?: HabitSnapshot['sourceContext'];
   generatedAt?: Date | string;
 };
 

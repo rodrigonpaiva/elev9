@@ -679,7 +679,7 @@ export class CoachExpertCompositionPolicy {
     routeScore: number;
     policyScore: number;
     completenessScore: number;
-  }): string[] {
+  }): readonly string[] {
     const factors: string[] = [];
 
     if (input.input.primaryExpert) {

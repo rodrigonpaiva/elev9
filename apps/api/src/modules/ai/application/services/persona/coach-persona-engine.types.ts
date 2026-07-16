@@ -2,9 +2,9 @@ import type {
   AgentContextDomain,
   AgentIntent,
   AgentSafetyMetadata,
-} from '../agent.types';
-import type { AgentPlan } from '../agent.types';
-import type { AgentPolicyEvaluation } from '../policies/agent-policy.types';
+} from '../agent/agent.types';
+import type { AgentPlan } from '../agent/agent.types';
+import type { AgentPolicyEvaluation } from '../agent/policies/agent-policy.types';
 import type { UserHealthContext } from '../context-builder/build-user-health-context.service';
 import type { PersonalizationPromptPayload } from '../../../../../shared/mappers';
 import type { CoachExpertCompositionResult } from '../experts/composition/coach-expert-composition.types';

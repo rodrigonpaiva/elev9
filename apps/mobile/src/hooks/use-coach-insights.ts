@@ -11,7 +11,6 @@ import { formatGoalType } from '@elev9/ui';
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
 import {
-  buildCoachIntelligence,
   getCoachConfidenceLabel,
   getCoachFocusLabel,
   getCoachRiskLabel,
@@ -151,17 +150,11 @@ export function useCoachInsights(): CoachInsightsResult {
       return null;
     }
 
-    const intelligence =
-      buildCoachIntelligence({
-        coachDecision: dashboard.coach.data,
-        currentGoal,
-        habitSnapshot,
-        personalizationSnapshot,
-        recoverySnapshot: dashboard.recovery.data,
-        workout: dashboard.workout.todaysWorkout,
-        nutrition: dashboard.nutrition.data,
-        progressSummary: dashboard.progress.data,
-      }) ?? dashboard.coach.intelligence;
+    if (dashboard.coach.mode === 'error' && !dashboard.coach.intelligence) {
+      return null;
+    }
+
+    const intelligence = dashboard.coach.intelligence;
     const insight = mapUnifiedCoachInsight({
       intelligence,
       fallbackHeadline: dashboard.coach.data.headline,
@@ -185,6 +178,7 @@ export function useCoachInsights(): CoachInsightsResult {
     currentGoal,
     dashboard.coach.data,
     dashboard.coach.intelligence,
+    dashboard.coach.mode,
     dashboard.nutrition.data,
     dashboard.progress.data,
     dashboard.recovery.data,

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiClientError } from '@elev9/api-client';
 import type {
   CoachDecision,
+  CoachIntelligenceAggregate,
   ProgressSummaryResponse,
   RecoverySnapshot,
   TodayNutrition,
@@ -13,9 +14,6 @@ import type {
 import { apiClient } from '../api/client';
 import type { RecoveryStatus } from '../components/dashboard/todays-workout-card';
 import {
-  buildCoachExplanation,
-  buildCoachIntelligence,
-  buildCoachPersonaGuidance,
   getCoachBadgeLabel,
   getCoachConfidenceLabel,
   getCoachFocusLabel,
@@ -25,6 +23,7 @@ import {
   type CoachPersonaProfile,
   type CoachUnifiedCoachIntelligence,
 } from './coach';
+import { useCoachIntelligence } from './coach/use-coach-intelligence';
 
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
 type ProgressSummary = ProgressSummaryResponse['summary'];
@@ -68,6 +67,13 @@ export type UseDashboardResult = {
   userName: string | null;
   coach: DashboardDomainResult<CoachDecision> &
     CoachDisplay & {
+      aggregate: CoachIntelligenceAggregate | null;
+      mode: 'loading' | 'canonical' | 'fallback' | 'disabled' | 'error';
+      isFallbackUsed: boolean;
+      isFeatureDisabled: boolean;
+      availability: CoachIntelligenceAggregate['availability'] | null;
+      freshness: CoachIntelligenceAggregate['freshness'] | null;
+      warnings: CoachIntelligenceAggregate['warnings'];
       intelligence: CoachUnifiedCoachIntelligence | null;
       persona: CoachPersonaProfile | null;
       explanation: CoachExplanation | null;
@@ -179,15 +185,6 @@ export function useDashboard(): UseDashboardResult {
     [],
   );
 
-  const refresh = useCallback(
-    () => loadDashboardData({ refresh: true }),
-    [loadDashboardData],
-  );
-
-  useEffect(() => {
-    void loadDashboardData();
-  }, [loadDashboardData]);
-
   const todaysWorkout = useMemo(
     () => resolveTodaysWorkout(workout.data),
     [workout.data],
@@ -200,42 +197,57 @@ export function useDashboard(): UseDashboardResult {
     () => resolveRecoveryStatus(recovery.data),
     [recovery.data],
   );
+  const coachIntelligenceState = useCoachIntelligence({
+    coachDecision: coach.data,
+    currentGoal: null,
+    recoverySnapshot: recovery.data,
+    workout: todaysWorkout,
+    nutrition: nutrition.data,
+    progressSummary: progress.data,
+  });
   const coachIntelligence = useMemo(
-    () =>
-      buildCoachIntelligence({
-        coachDecision: coach.data,
-        currentGoal: null,
-        recoverySnapshot: recovery.data,
-        workout: todaysWorkout,
-        nutrition: nutrition.data,
-        progressSummary: progress.data,
-      }),
-    [coach.data, nutrition.data, progress.data, recovery.data, todaysWorkout],
+    () => coachIntelligenceState.intelligence,
+    [coachIntelligenceState.intelligence],
   );
-  const coachPersona = useMemo(
-    () =>
-      buildCoachPersonaGuidance({
-        intelligence: coachIntelligence,
-        personalizationSnapshot: null,
-        currentGoal: null,
-      }),
-    [coachIntelligence],
-  );
-  const coachExplanation = useMemo(
-    () =>
-      buildCoachExplanation({
-        intelligence: coachIntelligence,
-        persona: coachPersona,
-      }),
-    [coachIntelligence, coachPersona],
+  const refresh = useCallback(
+    async () => {
+      await Promise.all([
+        loadDashboardData({ refresh: true }),
+        coachIntelligenceState.refresh(),
+      ]);
+    },
+    [coachIntelligenceState.refresh, loadDashboardData],
   );
   const coachDisplay = useMemo(
-    () =>
-      resolveCoachInsightDisplay(coach.data, todaysWorkout, coachIntelligence),
-    [coach.data, coachIntelligence, todaysWorkout],
+    () => {
+      if (coachIntelligenceState.mode === 'error' && !coachIntelligence) {
+        return {
+          badgeLabel: 'Coach Insight',
+          recommendedAction: 'Open Coach',
+          ctaLabel: 'Open Coach',
+          actionTarget: 'coach' as const,
+          currentFocus: null,
+          currentRiskLabel: null,
+          confidenceLabel: null,
+          supportingEvidenceSummary: '',
+        };
+      }
+
+      return resolveCoachInsightDisplay(coach.data, todaysWorkout, coachIntelligence);
+    },
+    [coach.data, coachIntelligence, coachIntelligenceState.mode, todaysWorkout],
   );
 
-  const retryCoach = useCallback(() => loadDomain('coach'), [loadDomain]);
+  useEffect(() => {
+    void loadDashboardData();
+  }, [loadDashboardData]);
+
+  const retryCoach = useCallback(
+    async () => {
+      await Promise.all([loadDomain('coach'), coachIntelligenceState.retry()]);
+    },
+    [coachIntelligenceState.retry, loadDomain],
+  );
   const retryRecovery = useCallback(() => loadDomain('recovery'), [loadDomain]);
   const retryWorkout = useCallback(() => loadDomain('workout'), [loadDomain]);
   const retryNutrition = useCallback(
@@ -245,16 +257,24 @@ export function useDashboard(): UseDashboardResult {
   const retryProgress = useCallback(() => loadDomain('progress'), [loadDomain]);
 
   return {
-    isLoading,
-    isRefreshing,
+    isLoading: isLoading || coachIntelligenceState.isLoading,
+    isRefreshing: isRefreshing || coachIntelligenceState.isRefreshing,
     error,
     userName,
     coach: {
       ...coach,
       ...coachDisplay,
+      errorMessage: coachIntelligenceState.errorMessage ?? coach.errorMessage,
+      aggregate: coachIntelligenceState.aggregate,
+      mode: coachIntelligenceState.mode,
+      isFallbackUsed: coachIntelligenceState.isFallbackUsed,
+      isFeatureDisabled: coachIntelligenceState.isFeatureDisabled,
+      availability: coachIntelligenceState.availability,
+      freshness: coachIntelligenceState.freshness,
+      warnings: coachIntelligenceState.warnings,
       intelligence: coachIntelligence,
-      persona: coachPersona,
-      explanation: coachExplanation,
+      persona: coachIntelligenceState.persona,
+      explanation: coachIntelligenceState.explanation,
       retry: retryCoach,
     },
     recovery: {

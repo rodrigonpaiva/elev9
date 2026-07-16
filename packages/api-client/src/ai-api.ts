@@ -1,5 +1,6 @@
 import type {
   CoachChatHistoryResponse,
+  CoachIntelligenceAggregate,
   GetCoachDecisionHistoryQuery,
   GetCoachDecisionHistoryResponse,
   GetCurrentCoachDecisionResponse,
@@ -73,6 +74,12 @@ export function createAiApi(httpClient: HttpClient) {
       return httpClient.request<CoachDecisionReplayResponse>({
         method: 'GET',
         path: `/ai/coach-decision/debug/${encodeURIComponent(id)}/replay`,
+      });
+    },
+    getCoachIntelligence(): Promise<CoachIntelligenceAggregate> {
+      return httpClient.request<CoachIntelligenceAggregate>({
+        method: 'GET',
+        path: '/ai/coach-intelligence',
       });
     },
   };

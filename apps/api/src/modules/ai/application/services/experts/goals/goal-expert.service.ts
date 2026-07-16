@@ -432,7 +432,7 @@ export class GoalExpert extends BaseCoachExpert {
       `milestones_remaining=${input.milestoneAssessment.remainingMilestones.length}`,
       `goal_history_count=${input.goalContext.goalHistory?.length ?? 0}`,
       `achievement_history_count=${input.goalContext.achievementHistory?.length ?? 0}`,
-      `health_context_source=${input.healthContext.source ?? 'unknown'}`,
+      `health_context_user=${input.healthContext.userProfileId ?? 'unknown'}`,
     ];
 
     return Object.freeze(signals);
@@ -525,9 +525,7 @@ export class GoalExpert extends BaseCoachExpert {
       status: derivedStatus,
       confidence: derivedConfidence,
       predictedCompletionDate:
-        storedForecast?.predictedCompletionDate?.toISOString?.() ??
-        storedForecast?.predictedCompletionDate ??
-        null,
+        storedForecast?.predictedCompletionDate?.toISOString() ?? null,
       estimatedDaysRemaining:
         storedForecast?.estimatedDaysRemaining ??
         this.resolveEstimatedDaysRemaining(

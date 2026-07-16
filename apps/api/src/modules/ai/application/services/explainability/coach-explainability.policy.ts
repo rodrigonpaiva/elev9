@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import type { AgentContextDomain } from '../agent.types';
+import type { AgentContextDomain } from '../agent/agent.types';
 import type { CoachExpertCompositionResult } from '../experts/composition/coach-expert-composition.types';
 import type { CoachPersonaGuidance } from '../persona/coach-persona-engine';
 import type {
@@ -95,13 +95,22 @@ export class CoachExplainabilityPolicy {
         missingEvidence,
         blockedExpertIds,
       }),
+      summary: this.buildSummary({
+        composition,
+        evidences,
+        decisionReasons,
+        recommendationReasons,
+        riskExplanations,
+        conflictExplanations,
+        missingEvidence,
+      }),
     });
   }
 
   private buildEvidence(
     input: CoachExplainabilityEngineInput,
     blockedExpertIds: ReadonlySet<string>,
-  ): CoachEvidence[] {
+  ): readonly CoachEvidence[] {
     const composition = input.unifiedCoachIntelligence;
     const evidences: CoachEvidence[] = [];
 
@@ -805,6 +814,30 @@ export class CoachExplainabilityPolicy {
     });
   }
 
+  private buildSummary(input: {
+    composition: CoachExpertCompositionResult | undefined;
+    evidences: readonly CoachEvidence[];
+    decisionReasons: readonly CoachDecisionReason[];
+    recommendationReasons: readonly CoachRecommendationReason[];
+    riskExplanations: readonly CoachRiskExplanation[];
+    conflictExplanations: readonly CoachConflictExplanation[];
+    missingEvidence: readonly CoachMissingEvidence[];
+  }): string {
+    const recommendationCount = input.composition?.recommendations.length ?? 0;
+    const riskCount = input.riskExplanations.length;
+    const conflictCount = input.conflictExplanations.length;
+    const missingEvidenceCount = input.missingEvidence.length;
+
+    return [
+      `evidence=${input.evidences.length}`,
+      `decisions=${input.decisionReasons.length}`,
+      `recommendations=${recommendationCount}`,
+      `risks=${riskCount}`,
+      `conflicts=${conflictCount}`,
+      `missing=${missingEvidenceCount}`,
+    ].join(';');
+  }
+
   private resolveBlockedExpertIds(
     input: CoachExplainabilityEngineInput,
   ): ReadonlySet<string> {
@@ -911,119 +944,6 @@ export class CoachExplainabilityPolicy {
         ),
       ),
     ];
-  }
-
-  private collectEvidenceForFocus(
-    evidences: readonly CoachEvidence[],
-  ): CoachEvidence[] {
-    return evidences.filter((evidence) =>
-      [
-        'RECOVERY_CHECK_IN',
-        'RECOVERY_SNAPSHOT',
-        'NUTRITION_PROFILE',
-        'GOAL_PROGRESS',
-        'HABIT_STREAK',
-        'WEEKLY_PROGRESS',
-        'RECENT_MILESTONE',
-        'PLATEAU_SIGNAL',
-        'SAFETY_RISK',
-        'CONFLICTING_GUIDANCE',
-        'PERSONALIZATION_SIGNAL',
-      ].includes(evidence.type),
-    );
-  }
-
-  private pickEvidence(
-    evidences: readonly CoachEvidence[],
-    types: readonly string[],
-  ): readonly CoachEvidence[] {
-    return evidences.filter((evidence) => types.includes(evidence.type));
-  }
-
-  private pickEvidenceForRecommendation(
-    recommendationCode: string,
-    evidences: readonly CoachEvidence[],
-  ): readonly CoachEvidence[] {
-    const code = recommendationCode.toUpperCase();
-    const evidenceTypes: CoachEvidence['type'][] = [];
-
-    if (
-      code.includes('RECOVERY') ||
-      code.includes('REST') ||
-      code.includes('PAUSE')
-    ) {
-      evidenceTypes.push(
-        'RECOVERY_CHECK_IN',
-        'RECOVERY_SNAPSHOT',
-        'SAFETY_RISK',
-      );
-    }
-
-    if (
-      code.includes('NUTRITION') ||
-      code.includes('CALORIE') ||
-      code.includes('PROTEIN') ||
-      code.includes('MEAL') ||
-      code.includes('HYDRATION')
-    ) {
-      evidenceTypes.push('NUTRITION_PROFILE');
-    }
-
-    if (
-      code.includes('WORKOUT') ||
-      code.includes('LOAD') ||
-      code.includes('VOLUME') ||
-      code.includes('TRAIN') ||
-      code.includes('MOVE')
-    ) {
-      evidenceTypes.push(
-        'WORKOUT_HISTORY',
-        'WORKOUT_COMPLETION',
-        'WEEKLY_PROGRESS',
-      );
-    }
-
-    if (
-      code.includes('GOAL') ||
-      code.includes('MILESTONE') ||
-      code.includes('TARGET')
-    ) {
-      evidenceTypes.push('GOAL_PROGRESS', 'RECENT_MILESTONE');
-    }
-
-    if (
-      code.includes('HABIT') ||
-      code.includes('STREAK') ||
-      code.includes('CONSIST')
-    ) {
-      evidenceTypes.push('HABIT_STREAK', 'WEEKLY_PROGRESS');
-    }
-
-    if (evidenceTypes.length === 0) {
-      evidenceTypes.push('EXPERT_CONTRIBUTION');
-    }
-
-    return this.pickEvidence(evidences, evidenceTypes);
-  }
-
-  private pickEvidenceForRisk(
-    riskLevel: string,
-    evidences: readonly CoachEvidence[],
-  ): readonly CoachEvidence[] {
-    const evidenceTypes: CoachEvidence['type'][] = [
-      'SAFETY_RISK',
-      'CONFLICTING_GUIDANCE',
-    ];
-
-    if (riskLevel === 'CRITICAL' || riskLevel === 'HIGH') {
-      evidenceTypes.push('RECOVERY_CHECK_IN', 'RECOVERY_SNAPSHOT');
-    }
-
-    if (riskLevel === 'MEDIUM') {
-      evidenceTypes.push('WEEKLY_PROGRESS', 'HABIT_STREAK');
-    }
-
-    return this.pickEvidence(evidences, evidenceTypes);
   }
 
   private createEvidence(input: {

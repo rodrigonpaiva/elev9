@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import type { AgentContextDomain, AgentIntent } from '../agent.types';
+import type { AgentContextDomain, AgentIntent } from '../agent/agent.types';
 import type { CoachExpert, CoachExpertCapability } from './coach-expert.types';
 import { GoalExpert } from './goal-expert';
 import { HabitExpert } from './habit-expert';

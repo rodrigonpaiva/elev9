@@ -1,18 +1,8 @@
-import type { CoachConversation } from '../../../domain/entities/coach-conversation.entity';
 import type { CoachConversationMemory } from '../../../domain/entities/coach-conversation-memory.entity';
-import type { Goal } from '../../../../../goals/domain/entities/goal.entity';
-import type { GoalAchievement } from '../../../../../goals/domain/entities/goal-achievement.entity';
-import type { GoalForecast } from '../../../../../goals/domain/entities/goal-forecast.entity';
-import type { GoalMilestone } from '../../../../../goals/domain/entities/goal-milestone.entity';
-import type { GoalProgressSnapshot } from '../../../../../goals/domain/entities/goal-progress-snapshot.entity';
-import type { RecoverySnapshot } from '../../../../../recovery/domain/entities/recovery-snapshot.entity';
-import type { NutritionLog } from '../../../../../nutrition/domain/entities/nutrition-log.entity';
-import type { NutritionPlan } from '../../../../../nutrition/domain/entities/nutrition-plan.entity';
-import type { GetTodayNutritionOutput } from '../../../../../nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.output';
-import type { GetDailyCheckInHistoryOutput } from '../../../../../progress/application/use-cases/get-daily-check-in-history/get-daily-check-in-history.output';
-import type { GetProgressSummaryOutput } from '../../../../../progress/application/use-cases/get-progress-summary/get-progress-summary.output';
-import type { GetWorkoutHistoryOutput } from '../../../../../progress/application/use-cases/get-workout-history/get-workout-history.output';
-import type { HabitSnapshot } from '../../../../../habits/domain/entities/habit-snapshot.entity';
+import type { GetTodayNutritionOutput } from '../../../../nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.output';
+import type { GetDailyCheckInHistoryOutput } from '../../../../progress/application/use-cases/get-daily-check-in-history/get-daily-check-in-history.output';
+import type { GetProgressSummaryOutput } from '../../../../progress/application/use-cases/get-progress-summary/get-progress-summary.output';
+import type { GetWorkoutHistoryOutput } from '../../../../progress/application/use-cases/get-workout-history/get-workout-history.output';
 import type {
   AiPromptBuilderConversationMemory,
   AiPromptBuilderConversationMessage,
@@ -27,6 +17,18 @@ import type {
   PersonalizationMemoryPayload,
   PersonalizationPromptPayload,
 } from '../../../../../shared/mappers';
+import type {
+  Goal as GoalEntity,
+} from '../../../../goals/domain/entities/goal.entity';
+import type { GoalAchievement } from '../../../../goals/domain/entities/goal-achievement.entity';
+import type { GoalForecast } from '../../../../goals/domain/entities/goal-forecast.entity';
+import type { GoalMilestone } from '../../../../goals/domain/entities/goal-milestone.entity';
+import type { GoalProgressSnapshot } from '../../../../goals/domain/entities/goal-progress-snapshot.entity';
+import type { NutritionLog } from '../../../../nutrition/domain/entities/nutrition-log.entity';
+import type { NutritionPlan } from '../../../../nutrition/domain/entities/nutrition-plan.entity';
+import type { RecoverySnapshot } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
+import type { HabitSnapshot } from '../../../../habits/domain/entities/habit-snapshot.entity';
+import type { CoachConversation } from '../../../domain/entities/coach-conversation.entity';
 
 export type CreateCoachChatStreamOptions = {
   onDelta?: (delta: string) => void;
@@ -52,7 +54,7 @@ export type CoachChatLoadedContext = {
 };
 
 export type CoachChatGoalContext = {
-  currentGoal?: Goal;
+  currentGoal?: GoalEntity;
   progressSnapshot?: GoalProgressSnapshot;
   forecast?: GoalForecast;
   goalHistory?: readonly GoalProgressSnapshot[];
@@ -63,12 +65,13 @@ export type CoachChatGoalContext = {
 export type CoachChatProgressContext = {
   weeklySummary?: GetProgressSummaryOutput['summary'];
   monthlySummary?: GetProgressSummaryOutput['summary'];
-  workoutHistory?: readonly GetWorkoutHistoryOutput['workoutLogs'];
-  dailyCheckInHistory?: readonly GetDailyCheckInHistoryOutput['dailyCheckIns'];
+  workoutHistory?: GetWorkoutHistoryOutput['workoutLogs'];
+  dailyCheckInHistory?: GetDailyCheckInHistoryOutput['dailyCheckIns'];
 };
 
 export type CoachChatConversationState = {
-  conversation: CoachConversation;
+  conversationId: string;
+  conversation?: CoachConversation;
   conversationHistory: AiPromptBuilderConversationMessage[];
   conversationMemory?: AiPromptBuilderConversationMemory;
 };

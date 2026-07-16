@@ -40,7 +40,7 @@ export type AgentPlanningValidationStatus = 'valid' | 'invalid';
 
 export type AgentPlanningValidationResult = {
   status: AgentPlanningValidationStatus;
-  issues: string[];
+  issues: readonly string[];
 };
 
 export type AgentPlanningPolicyDecision = {

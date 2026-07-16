@@ -16,7 +16,6 @@ import { formatGoalType } from '@elev9/ui';
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
 import {
-  buildCoachIntelligence,
   getCoachConfidenceLabel,
   getCoachFocusLabel,
   getCoachRiskLabel,
@@ -243,19 +242,11 @@ export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
   }, [load]);
 
   const model = useMemo(() => {
-    const intelligence =
-      buildCoachIntelligence({
-        coachDecision: dashboard.coach.data,
-        currentGoal: state.currentGoal?.goal ?? null,
-        goalProgressSnapshot: state.goalHistory.at(-1) ?? undefined,
-        habitSnapshot: state.habitHistory.at(-1) ?? undefined,
-        consistencySummary: state.consistencySummary,
-        personalizationSnapshot:
-          state.personalizationHistory.at(-1) ?? undefined,
-        recoverySnapshot: state.recoveryHistory.at(-1) ?? undefined,
-        progressSummary: state.progressSummary,
-        workout: getTodayWorkout(state.trainingPlan),
-      }) ?? null;
+    if (dashboard.coach.mode === 'error' && !dashboard.coach.intelligence) {
+      return null;
+    }
+
+    const intelligence = dashboard.coach.intelligence;
     const insight = mapUnifiedCoachInsight({
       intelligence,
       fallbackHeadline: state.currentGoal
@@ -267,7 +258,7 @@ export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
     });
 
     return buildWeeklyReviewModel(state, intelligence, insight);
-  }, [dashboard.coach.data, state]);
+  }, [dashboard.coach.data, dashboard.coach.intelligence, dashboard.coach.mode, state]);
   const hasSignals =
     Boolean(state.progressSummary) ||
     Boolean(state.trainingPlan) ||

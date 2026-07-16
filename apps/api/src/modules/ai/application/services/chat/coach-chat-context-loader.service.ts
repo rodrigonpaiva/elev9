@@ -49,7 +49,7 @@ import type { AgentContextDomain } from '../agent/agent.types';
 import type { RecoverySnapshot } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
 
 export type CoachChatContextLoadOptions = {
-  domains?: AgentContextDomain[];
+  domains?: readonly AgentContextDomain[];
   userProfileId?: string;
 };
 

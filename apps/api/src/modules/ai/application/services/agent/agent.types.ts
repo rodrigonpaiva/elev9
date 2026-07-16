@@ -1,8 +1,11 @@
 import type { AiRolloutAssignment } from '../governance/ai-governance.types';
 import type { CoachDecisionReadModelPayload } from '../../../../../shared/mappers';
 import type {
+  HabitMemoryPayload,
   HabitPromptPayload,
+  NotificationMemoryPayload,
   NotificationPromptPayload,
+  PersonalizationMemoryPayload,
   PersonalizationPromptPayload,
 } from '../../../../../shared/mappers';
 import type { NutritionLog } from '../../../../nutrition/domain/entities/nutrition-log.entity';
@@ -22,12 +25,12 @@ import type {
 } from './tools/agent-tool-execution.types';
 import type {
   CoachExpertContribution,
-  CoachExpertRoutingDecision,
   CoachExpertResult,
   CoachExpertCapability,
   CoachExpertMetadata,
   CoachExpertPrioritySnapshot,
 } from '../experts/coach-expert.types';
+import type { CoachExpertRoutingDecision } from '../experts/router/coach-expert-router.types';
 import type {
   AgentExecutionStrategy,
   AgentPlanningStep,
@@ -131,6 +134,14 @@ export type AgentActionResult = {
   metadata?: Record<string, unknown>;
 };
 
+export type { AgentToolDescriptor } from './tools/agent-tool.types';
+export type {
+  AgentToolExecutionMetrics,
+  AgentToolExecutionOutcome,
+  AgentToolExecutionResult,
+} from './tools/agent-tool-execution.types';
+export type { CoachExpertRoutingDecision } from '../experts/router/coach-expert-router.types';
+
 export type AgentSessionMetadata = {
   requestId: string;
   authUserId: string;
@@ -160,7 +171,7 @@ export type AgentSafetyMetadata = {
 
 export type AgentContext = {
   intent: AgentIntent;
-  selectedDomains: AgentContextDomain[];
+  selectedDomains: readonly AgentContextDomain[];
   healthContext: UserHealthContext;
   goalContext?: CoachChatGoalContext;
   progress?: CoachChatProgressContext;
@@ -175,9 +186,9 @@ export type AgentContext = {
   habit?: HabitPromptPayload;
   notification?: NotificationPromptPayload;
   personalization?: PersonalizationPromptPayload;
-  notificationMemory?: NotificationPromptPayload;
-  habitMemory?: HabitPromptPayload;
-  personalizationMemory?: PersonalizationPromptPayload;
+  notificationMemory?: NotificationMemoryPayload;
+  habitMemory?: HabitMemoryPayload;
+  personalizationMemory?: PersonalizationMemoryPayload;
   safetyMetadata: AgentSafetyMetadata;
   rolloutMetadata: AiRolloutAssignment;
 };
@@ -291,7 +302,7 @@ export type AgentResponse = {
   fallbackUsed: boolean;
   planSummary: string;
   executedSteps: AgentStep[];
-  actionResults: AgentActionResult[];
+  actionResults: readonly AgentActionResult[];
   metadata: AgentRuntimeMetadata;
   observabilityTraceReference: AgentObservabilityTraceReference;
 };

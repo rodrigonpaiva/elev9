@@ -24,6 +24,7 @@ import {
   ADAPTIVE_TRAINING_RECOMMENDATION_REPOSITORY,
   AdaptiveTrainingRecommendationRepository,
 } from '../../../../../training/domain/repositories/adaptive-training-recommendation.repository';
+import { NutritionPlan } from '../../../../../nutrition/domain/entities/nutrition-plan.entity';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
@@ -573,32 +574,7 @@ export class AgentToolExecutorService {
     };
   }
 
-  private normalizeNutritionPlan(plan: {
-    id: string;
-    userProfileId: string;
-    nutritionProfileId: string;
-    fitnessProfileId: string;
-    status: 'active' | 'archived' | 'replaced';
-    weekStartDate: string;
-    weekEndDate: string;
-    macroTargets: Record<string, unknown>;
-    days: Array<{
-      date: string;
-      dayIndex: number;
-      meals: Array<{
-        id: string;
-        name: string;
-        mealType: string;
-        calories: number;
-      }>;
-      dailyMacroTargets: Record<string, unknown>;
-    }>;
-    generatedBy: 'deterministic';
-    sourceContext?: Record<string, unknown>;
-    createdAt: Date;
-    updatedAt?: Date;
-    replacedAt?: Date;
-  }): Record<string, unknown> {
+  private normalizeNutritionPlan(plan: NutritionPlan): Record<string, unknown> {
     return {
       id: plan.id,
       userProfileId: plan.userProfileId,
@@ -613,6 +589,12 @@ export class AgentToolExecutorService {
         date: day.date,
         dayIndex: day.dayIndex,
         mealCount: day.meals.length,
+        meals: day.meals.map((meal) => ({
+          id: meal.id,
+          type: meal.type,
+          title: meal.title,
+          status: meal.status,
+        })),
         dailyMacroTargets: day.dailyMacroTargets,
       })),
       generatedBy: plan.generatedBy,

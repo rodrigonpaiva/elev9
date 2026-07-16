@@ -74,6 +74,7 @@ import { AdaptiveTrainingController } from './presentation/http/adaptive-trainin
   ],
   exports: [
     GetCurrentAdaptiveTrainingUseCase,
+    GetMyTrainingPlanUseCase,
     TRAINING_PLAN_REPOSITORY,
     ADAPTIVE_TRAINING_RECOMMENDATION_REPOSITORY,
   ],

@@ -1020,7 +1020,7 @@ export class AgentTraceService {
     if (Array.isArray(value)) {
       const frozen = value.map((item) => this.freezeValue(item));
 
-      return Object.freeze(frozen) as Readonly<T>;
+      return Object.freeze(frozen) as unknown as Readonly<T>;
     }
 
     const frozenObject: Record<string, unknown> = {};

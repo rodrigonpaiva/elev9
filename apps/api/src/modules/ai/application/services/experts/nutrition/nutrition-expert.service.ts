@@ -22,12 +22,15 @@ import type {
   NutritionRecoverySupportLevel,
   NutritionRiskAssessment,
   NutritionStatus,
+  NutritionExpertContribution,
 } from './nutrition-expert.types';
 import type {
   Meal,
   MealType,
+  MealLogStatus,
 } from '../../../../../nutrition/domain/entities/meal.entity';
 import type { NutritionLog } from '../../../../../nutrition/domain/entities/nutrition-log.entity';
+import type { NutritionPlan } from '../../../../../nutrition/domain/entities/nutrition-plan.entity';
 import type { UserHealthContext } from '../../context-builder/build-user-health-context.service';
 
 const COACH_EXPERT_VERSION = '1.0.0';
@@ -1205,49 +1208,6 @@ export class NutritionExpert extends BaseCoachExpert {
     });
   }
 
-  private selectPrimaryRecommendation(
-    recommendations: readonly NutritionRecommendation[],
-    nutritionStatus?: NutritionStatus,
-  ): NutritionRecommendation {
-    if (recommendations.length === 0) {
-      return Object.freeze({
-        code:
-          nutritionStatus === 'NO_PROFILE'
-            ? 'SET_UP_NUTRITION_PROFILE'
-            : nutritionStatus === 'NO_PLAN'
-              ? 'CREATE_OR_REFRESH_NUTRITION_PLAN'
-              : 'MAINTAIN_CURRENT_PLAN',
-        summary:
-          nutritionStatus === 'NO_PROFILE'
-            ? 'Set up a nutrition profile.'
-            : nutritionStatus === 'NO_PLAN'
-              ? 'Create or refresh the nutrition plan.'
-              : 'Maintain current nutrition plan.',
-        reason: 'No stronger deterministic adjustment was required.',
-        priority:
-          nutritionStatus === 'NO_PROFILE'
-            ? 'CRITICAL'
-            : nutritionStatus === 'NO_PLAN'
-              ? 'HIGH'
-              : 'LOW',
-        metadata: Object.freeze({ nutritionStatus }),
-      });
-    }
-
-    return [...recommendations].sort((left, right) => {
-      if (left.priority !== right.priority) {
-        return (
-          RECOMMENDATION_PRIORITY[right.priority] -
-          RECOMMENDATION_PRIORITY[left.priority]
-        );
-      }
-
-      return (
-        RECOMMENDATION_ORDER.indexOf(left.code) -
-        RECOMMENDATION_ORDER.indexOf(right.code)
-      );
-    })[0];
-  }
 
   private buildEmptyMacroAssessment(
     nutritionStatus: NutritionStatus,

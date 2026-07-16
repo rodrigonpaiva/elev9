@@ -190,8 +190,29 @@ export class ProgressExpert extends BaseCoachExpert {
     }
 
     const progressContext = context.progress ?? {};
+    const fallbackWorkoutHistory = healthContext.recentWorkoutLogs.map(
+      (log) => ({
+        id: log.id,
+        trainingPlanId: log.trainingPlanId,
+        workoutDayIndex: log.workoutDayIndex,
+        durationMinutes: log.durationMinutes,
+        completedExercises: log.completedExercises.map((exercise) => ({
+          name: exercise.name,
+          setsDone: exercise.setsDone,
+          repsDone: exercise.repsDone,
+        })),
+        ...(log.feedback ? { feedback: log.feedback } : {}),
+        date: log.date,
+        createdAt:
+          typeof log.createdAt === 'string'
+            ? log.createdAt
+            : log.createdAt instanceof Date
+              ? log.createdAt.toISOString()
+              : `${log.date}T00:00:00.000Z`,
+      }),
+    );
     const workoutHistory = this.normalizeWorkoutHistory(
-      progressContext.workoutHistory ?? healthContext.recentWorkoutLogs,
+      progressContext.workoutHistory ?? fallbackWorkoutHistory,
     );
     const checkInHistory = this.normalizeCheckInHistory(
       progressContext.dailyCheckInHistory ?? [],

@@ -30,7 +30,7 @@ export type AgentToolCapability =
   | 'SYSTEM_GUARDRAILS';
 
 export type AgentToolMetadata = {
-  capabilities: AgentToolCapability[];
+  capabilities: readonly AgentToolCapability[];
 };
 
 export type AgentToolDescriptor = {
@@ -38,8 +38,8 @@ export type AgentToolDescriptor = {
   displayName: string;
   description: string;
   category: AgentToolCategory;
-  supportedIntents: AgentIntent[];
-  supportedContextDomains: AgentContextDomain[];
+  supportedIntents: readonly AgentIntent[];
+  supportedContextDomains: readonly AgentContextDomain[];
   estimatedCost: number;
   estimatedLatencyMs: number;
   enabled: boolean;

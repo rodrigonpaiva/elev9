@@ -1,6 +1,10 @@
-import type { AgentContextDomain, AgentIntent } from '../../agent.types';
-import type { AgentPolicyEvaluation } from '../../policies/agent-policy.types';
+import type { AgentContextDomain, AgentIntent } from '../../agent/agent.types';
+import type { AgentPolicyEvaluation } from '../../agent/policies/agent-policy.types';
 import type { CoachExpertMetadata } from '../coach-expert.types';
+import type {
+  CoachExpertContribution,
+  CoachExpertResult,
+} from '../coach-expert.types';
 import type { CoachExpertRoutingDecision } from '../router/coach-expert-router.types';
 import type { CoachExpertCompositionResult } from '../composition/coach-expert-composition.types';
 import type { CoachPersonaGuidance } from '../../persona/coach-persona-engine.types';
@@ -149,23 +153,8 @@ export type CoachExpertObservabilityStartInput = Readonly<{
 
 export type CoachExpertObservabilityCompleteInput = Readonly<{
   requestId: string;
-  expertResults: readonly {
-    expertId: string;
-    summary: string;
-    contributions: readonly {
-      expertId: string;
-      type: string;
-      summary: string;
-      metadata?: Readonly<Record<string, unknown>>;
-    }[];
-    metadata: Readonly<Record<string, unknown>>;
-  }[];
-  expertContributions: readonly {
-    expertId: string;
-    type: string;
-    summary: string;
-    metadata?: Readonly<Record<string, unknown>>;
-  }[];
+  expertResults: readonly CoachExpertResult[];
+  expertContributions: readonly CoachExpertContribution[];
   composition?: CoachExpertCompositionResult;
   personaGuidance?: CoachPersonaGuidance;
   explanation?: CoachExplanation;

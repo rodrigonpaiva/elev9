@@ -1,6 +1,6 @@
-import type { AgentContextDomain, AgentIntent } from '../../agent.types';
+import type { AgentContextDomain, AgentIntent } from '../../agent/agent.types';
 import type { AgentPolicyEvaluation } from '../../agent/policies/agent-policy.types';
-import type { AgentPlan } from '../../agent.types';
+import type { AgentPlan } from '../../agent/agent.types';
 import type {
   CoachExpertContribution,
   CoachExpertMetadata,

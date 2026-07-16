@@ -83,6 +83,7 @@ export class AiLlmReliabilityService {
         provider,
         model,
         promptVersion: prompt.promptVersion,
+        startTime: new Date().toISOString(),
         promptId: prompt.metadata?.promptId,
         promptReleaseDate: prompt.metadata?.promptReleaseDate,
         promptStatus: prompt.metadata?.promptStatus,

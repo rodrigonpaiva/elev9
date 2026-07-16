@@ -156,6 +156,9 @@ export class AiLlmObservabilityService {
         requestId: context.requestId,
         provider: context.provider,
         model: context.model,
+        promptVersion: context.promptVersion,
+        safetyVersion: context.safetyVersion,
+        startTime: context.startTime,
         durationMs,
         retryCount: context.retryCount,
         fallbackUsed: context.fallbackUsed,
@@ -193,6 +196,9 @@ export class AiLlmObservabilityService {
         requestId: context.requestId,
         provider: context.provider,
         model: context.model,
+        promptVersion: context.promptVersion,
+        safetyVersion: context.safetyVersion,
+        startTime: context.startTime,
         durationMs,
         retryCount: context.retryCount,
         fallbackUsed: context.fallbackUsed,
@@ -458,12 +464,7 @@ export class AiLlmObservabilityService {
 
   private recordLatency(context: AiLlmObservabilityLatencyContext): void {
     this.metrics.recordLatency({
-      requestId: context.requestId,
-      provider: context.provider,
-      model: context.model,
-      durationMs: context.durationMs,
-      retryCount: context.retryCount,
-      fallbackUsed: context.fallbackUsed,
+      ...context,
     });
     this.updateLifecycle(
       context.requestId,

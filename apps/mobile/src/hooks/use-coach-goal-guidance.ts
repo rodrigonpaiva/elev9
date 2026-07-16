@@ -16,7 +16,6 @@ import { formatGoalType } from '@elev9/ui';
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
 import {
-  buildCoachIntelligence,
   getCoachConfidenceLabel,
   getCoachFocusLabel,
   getCoachRiskLabel,
@@ -232,22 +231,11 @@ export function useCoachGoalGuidance(): CoachGoalGuidanceResult {
   }, [dashboard.refresh, loadExtras]);
 
   const model = useMemo(() => {
-    const intelligence =
-      buildCoachIntelligence({
-        coachDecision: dashboard.coach.data,
-        currentGoal: state.currentGoal,
-        goalProgressSnapshot: state.goalHistory.at(-1) ?? undefined,
-        goalForecast: state.forecast,
-        goalMilestones: state.milestones,
-        goalAchievements: state.achievements,
-        habitSnapshot: state.habitHistory.at(-1) ?? undefined,
-        personalizationSnapshot:
-          state.personalizationHistory.at(-1) ?? undefined,
-        recoverySnapshot: dashboard.recovery.data,
-        progressSummary: dashboard.progress.data,
-        nutrition: dashboard.nutrition.data,
-        workout: dashboard.workout.todaysWorkout,
-      }) ?? dashboard.coach.intelligence;
+    if (dashboard.coach.mode === 'error' && !dashboard.coach.intelligence) {
+      return null;
+    }
+
+    const intelligence = dashboard.coach.intelligence;
     const insight = mapUnifiedCoachInsight({
       intelligence,
       fallbackHeadline: dashboard.coach.data?.headline,
@@ -269,6 +257,7 @@ export function useCoachGoalGuidance(): CoachGoalGuidanceResult {
   }, [
     dashboard.coach.data,
     dashboard.coach.intelligence,
+    dashboard.coach.mode,
     dashboard.nutrition.data,
     dashboard.progress.data,
     dashboard.recovery.data,

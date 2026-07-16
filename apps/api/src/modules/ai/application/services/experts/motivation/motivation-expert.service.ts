@@ -602,7 +602,7 @@ export class MotivationExpert extends BaseCoachExpert {
     const confidence = this.resolveConfidence({
       healthContext,
       goalContext,
-      habit,
+      habit: habit ?? undefined,
       progress,
       workoutExpert,
       nutritionExpert,

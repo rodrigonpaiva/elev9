@@ -1,5 +1,5 @@
-import type { AgentContextDomain, AgentIntent } from '../../agent.types';
-import type { AgentPolicyEvaluation } from '../../policies/agent-policy.types';
+import type { AgentContextDomain, AgentIntent } from '../../agent/agent.types';
+import type { AgentPolicyEvaluation } from '../../agent/policies/agent-policy.types';
 import type { CoachExpertMetadata } from '../coach-expert.types';
 
 export type CoachExpertRoutingConfidence = 'LOW' | 'MEDIUM' | 'HIGH';

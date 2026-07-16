@@ -282,7 +282,16 @@ export class WorkoutExpert extends BaseCoachExpert {
       recentWorkoutCount: healthContext?.recentWorkoutLogs.length ?? 0,
       completedWorkoutCount: 0,
       workoutHistory: Object.freeze([]),
-      todayWorkout: healthContext?.todayWorkout ?? null,
+      todayWorkout: healthContext?.todayWorkout
+        ? Object.freeze({
+            dayIndex: healthContext.todayWorkout.dayIndex,
+            title: healthContext.todayWorkout.title,
+            focus: healthContext.todayWorkout.focus,
+            format: healthContext.todayWorkout.format,
+            intensity: healthContext.todayWorkout.intensity,
+            exerciseCount: healthContext.todayWorkout.exercises.length,
+          })
+        : null,
       signals: Object.freeze([
         'analysis_blocked_by_policy',
         `health_context_available=${Boolean(healthContext)}`,
@@ -424,7 +433,7 @@ export class WorkoutExpert extends BaseCoachExpert {
   }
 
   private buildWorkoutHistory(
-    logs: readonly UserHealthContext['recentWorkoutLogs'],
+    logs: UserHealthContext['recentWorkoutLogs'],
     todayWorkout: UserHealthContextTodayWorkout | null,
   ): WorkoutAnalysis['workoutHistory'] {
     return [...logs]
@@ -439,9 +448,10 @@ export class WorkoutExpert extends BaseCoachExpert {
         const isTodayWorkout = todayWorkout
           ? log.workoutDayIndex === todayWorkout.dayIndex
           : false;
-        const plannedExercises = isTodayWorkout
-          ? todayWorkout.exercises.length
-          : log.completedExercises.length;
+        const plannedExercises =
+          isTodayWorkout && todayWorkout
+            ? todayWorkout.exercises.length
+            : log.completedExercises.length;
 
         return Object.freeze({
           workoutDayIndex: log.workoutDayIndex,
@@ -454,7 +464,7 @@ export class WorkoutExpert extends BaseCoachExpert {
   }
 
   private countActiveInjuries(
-    limitations: readonly UserHealthContext['limitations'],
+    limitations: UserHealthContext['limitations'],
   ): number {
     return limitations.filter((limitation) =>
       this.isActiveInjury(limitation.type, limitation.description),
@@ -563,7 +573,7 @@ export class WorkoutExpert extends BaseCoachExpert {
   private resolveTrainingStatus(
     healthContext: UserHealthContext,
     todayWorkout: UserHealthContextTodayWorkout | null,
-    recentWorkoutLogs: readonly UserHealthContext['recentWorkoutLogs'],
+    recentWorkoutLogs: UserHealthContext['recentWorkoutLogs'],
   ): WorkoutTrainingStatus {
     if (!todayWorkout) {
       return 'unavailable';
@@ -602,7 +612,7 @@ export class WorkoutExpert extends BaseCoachExpert {
     adaptiveRecommendation?: NonNullable<
       WorkoutAnalysis['adaptiveRecommendation']
     >;
-    recentWorkoutLogs: readonly UserHealthContext['recentWorkoutLogs'];
+    recentWorkoutLogs: UserHealthContext['recentWorkoutLogs'];
     healthContext: UserHealthContext;
   }): WorkoutRiskAssessment {
     const factors: string[] = [];

@@ -30,7 +30,10 @@ import type {
   CoachExpertResult,
 } from '../experts/coach-expert.types';
 import type { CoachExpertCompositionResult } from '../experts/composition/coach-expert-composition';
-import type { CoachExpertRoutingDecision } from '../experts/coach-expert-router';
+import type {
+  CoachExpertRoutingDecision,
+  CoachExpertRoutingReasonCode,
+} from '../experts/coach-expert-router';
 import type { CoachExplanation } from '../explainability/coach-explainability';
 import type { CoachPersonaGuidance } from '../persona/coach-persona-engine';
 import { AgentToolRegistryService } from './tools/agent-tool-registry.service';
@@ -216,13 +219,13 @@ export class AgentRuntimeService {
       input.selectedDomains,
     ).slice(0, this.config.getMaxExperts());
     const primaryExpert = selectedExperts[0] ?? null;
-    const route = {
+    const route: CoachExpertRoutingDecision['route'] = {
       primaryExpert: primaryExpert
         ? this.freezeExpertSelection({
             expert: primaryExpert,
             role: 'PRIMARY',
             sequence: 0,
-            reasonCodes: ['PRIMARY_DOMAIN_MATCH'],
+            reasonCodes: ['PRIMARY_DOMAIN_MATCH'] as const,
           })
         : null,
       complementaryExperts: Object.freeze([]),
@@ -233,13 +236,15 @@ export class AgentRuntimeService {
             role: index === 0 ? 'PRIMARY' : 'COMPLEMENTARY',
             sequence: index,
             reasonCodes:
-              index === 0 ? ['PRIMARY_DOMAIN_MATCH'] : ['COMPLEMENTARY_RULE'],
+              index === 0
+                ? (['PRIMARY_DOMAIN_MATCH'] as const)
+                : (['COMPLEMENTARY_RULE'] as const),
           }),
         ),
       ),
       blockedExperts: Object.freeze([]),
       skippedExperts: Object.freeze([]),
-    } as const;
+    };
     const orderedExperts = route.orderedExperts.map(
       (selection) => selection.expert,
     );
@@ -252,6 +257,15 @@ export class AgentRuntimeService {
       0,
     );
 
+    const routingReasons: CoachExpertRoutingDecision['routingReasons'] = [
+      {
+        code: primaryExpert
+          ? 'PRIMARY_DOMAIN_MATCH'
+          : 'NO_PRIMARY_SELECTED',
+        ...(primaryExpert ? { expertId: primaryExpert.id } : {}),
+      },
+    ];
+
     return Object.freeze({
       primaryExpert: primaryExpert ? this.freezeExpert(primaryExpert) : null,
       complementaryExperts: Object.freeze(
@@ -260,12 +274,7 @@ export class AgentRuntimeService {
       orderedExperts: Object.freeze(orderedExperts),
       blockedExperts: Object.freeze([]),
       skippedExperts: Object.freeze([]),
-      routingReasons: Object.freeze([
-        {
-          code: primaryExpert ? 'PRIMARY_DOMAIN_MATCH' : 'NO_PRIMARY_SELECTED',
-          ...(primaryExpert ? { expertId: primaryExpert.id } : {}),
-        },
-      ]),
+      routingReasons: Object.freeze(routingReasons),
       estimatedCost,
       estimatedLatencyMs,
       confidence: primaryExpert ? 'MEDIUM' : 'LOW',
@@ -918,7 +927,9 @@ export class AgentRuntimeService {
     });
   }
 
-  private buildActionResults(actions: AgentAction[]): AgentActionResult[] {
+  private buildActionResults(
+    actions: readonly AgentAction[],
+  ): readonly AgentActionResult[] {
     return actions.map((action) => ({
       action,
       status: 'skipped',
@@ -941,9 +952,9 @@ export class AgentRuntimeService {
     stepLimitReached: boolean;
     request: AgentRequest;
     detectedIntent: AgentContext['intent'];
-    selectedDomains: AgentContextDomain[];
-    candidateTools: AgentToolDescriptor[];
-    selectedTools: AgentToolDescriptor[];
+    selectedDomains: readonly AgentContextDomain[];
+    candidateTools: readonly AgentToolDescriptor[];
+    selectedTools: readonly AgentToolDescriptor[];
     toolExecution: AgentToolExecutionOutcome;
     expertExecution: AgentExpertExecutionOutcome;
     memory: AgentMemoryMetadata;
@@ -1300,13 +1311,13 @@ export class AgentRuntimeService {
     expert: CoachExpertMetadata;
     role: 'PRIMARY' | 'COMPLEMENTARY' | 'DEPENDENCY';
     sequence: number;
-    reasonCodes: readonly string[];
+    reasonCodes: readonly CoachExpertRoutingReasonCode[];
     sourceExpertId?: string;
   }): Readonly<{
     expert: CoachExpertMetadata;
     role: 'PRIMARY' | 'COMPLEMENTARY' | 'DEPENDENCY';
     sequence: number;
-    reasonCodes: readonly string[];
+    reasonCodes: readonly CoachExpertRoutingReasonCode[];
     sourceExpertId?: string;
   }> {
     return Object.freeze({

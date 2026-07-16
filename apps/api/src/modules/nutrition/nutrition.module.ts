@@ -101,6 +101,7 @@ import { NutritionController } from './presentation/http/nutrition.controller';
     NUTRITION_LOG_REPOSITORY,
     NUTRITION_RECOMMENDATION_REPOSITORY,
     GetCurrentNutritionPlanUseCase,
+    GetNutritionRecommendationsUseCase,
     GetTodayNutritionUseCase,
   ],
 })
