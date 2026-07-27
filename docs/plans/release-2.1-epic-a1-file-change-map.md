@@ -63,3 +63,25 @@ Implemented/added backend paths: `progress/domain/entities/daily-check-in.entity
 |    48 | `docs/plans/release-2.1-epic-a1-file-change-map.md`                    | MODIFY | Record actual Prompt 3 file changes                                      | Contract implementation | Low    |
 
 No backend endpoint, mobile file, Recovery rule, feature flag or dependency was changed by Prompt 3.
+
+## Prompt 4 Actual Changes
+
+| Order | File                                                                               | Action | Reason                                                                                            | Depends On            | Risk   |
+| ----: | ---------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------- | --------------------- | ------ |
+|    49 | `apps/mobile/src/screens/daily-check-in-screen.tsx`                                | CREATE | Provide the typed screen container, create/edit route handling and controlled submission boundary | Mobile navigation     | Medium |
+|    50 | `apps/mobile/src/navigation/app-navigator.tsx`                                     | MODIFY | Register the typed `DailyCheckIn` route without changing existing CTAs                            | Screen container      | Medium |
+|    51 | `apps/mobile/src/features/daily-check-in/models/daily-check-in-form-state.ts`      | CREATE | Keep local draft, validation and progress state independent of API/domain rules                   | Shared request shape  | Low    |
+|    52 | `apps/mobile/src/features/daily-check-in/constants/daily-check-in-questions.ts`    | CREATE | Define only the four confirmed questions and semantic labels                                      | Backend ranges        | Low    |
+|    53 | `apps/mobile/src/features/daily-check-in/hooks/use-daily-check-in-form.ts`         | CREATE | Orchestrate local selection, navigation, review, retry and duplicate-submit prevention            | Form model            | Medium |
+|    54 | `apps/mobile/src/features/daily-check-in/components/daily-check-in-flow.tsx`       | CREATE | Compose the hybrid flow and visual states                                                         | Feature components    | Medium |
+|    55 | `apps/mobile/src/features/daily-check-in/components/daily-check-in-question.tsx`   | CREATE | Render one question with reusable controls and navigation                                         | Scale component       | Low    |
+|    56 | `apps/mobile/src/features/daily-check-in/components/daily-check-in-scale.tsx`      | CREATE | Render accessible reusable 1–5 selection control                                                  | UI tokens             | Medium |
+|    57 | `apps/mobile/src/features/daily-check-in/components/daily-check-in-review.tsx`     | CREATE | Show and edit all four answers before submission                                                  | Form state            | Low    |
+|    58 | `apps/mobile/src/features/daily-check-in/components/daily-check-in-error.tsx`      | CREATE | Provide safe retry and review error state                                                         | Form state            | Low    |
+|    59 | `apps/mobile/src/features/daily-check-in/components/daily-check-in-success.tsx`    | CREATE | Provide controlled success presentation for injected submitters                                   | Submission boundary   | Low    |
+|    60 | `apps/mobile/src/features/daily-check-in/index.ts`                                 | CREATE | Keep the feature's public local exports cohesive                                                  | Feature files         | Low    |
+|    61 | `apps/mobile/src/features/daily-check-in/models/daily-check-in-form-state.spec.ts` | CREATE | Test initialization, selection, validation, edit hydration and progress                           | Form model            | Low    |
+|    62 | `docs/plans/release-2.1-epic-a1-daily-check-in-implementation-plan.md`             | MODIFY | Record UX, accessibility and Prompt 5 boundary decisions                                          | Mobile implementation | Low    |
+|    63 | `docs/plans/release-2.1-epic-a1-file-change-map.md`                                | MODIFY | Record actual Prompt 4 paths                                                                      | Mobile implementation | Low    |
+
+No backend, shared contract, API client, dashboard CTA, analytics or Recovery file was changed by Prompt 4.

@@ -13,6 +13,7 @@ import { CreateFitnessProfileScreen } from '../screens/create-fitness-profile-sc
 import { CreateProfileScreen } from '../screens/create-profile-screen';
 import { CreateTrainingPlanScreen } from '../screens/create-training-plan-screen';
 import { DailyCheckInHistoryScreen } from '../screens/daily-check-in-history-screen';
+import { DailyCheckInScreen } from '../screens/daily-check-in-screen';
 import { CoachChatScreen } from '../screens/coach-chat-screen';
 import { CoachDailyBriefingScreen } from '../screens/coach-daily-briefing-screen';
 import { CoachHomeScreen } from '../screens/coach-home-screen';
@@ -81,6 +82,12 @@ export type RootStackParamList = {
   CoachNotifications: undefined;
   CoachMemoryTimeline: undefined;
   CoachWeeklyReview: undefined;
+  DailyCheckIn:
+    | {
+        mode?: 'create' | 'edit';
+        initialValues?: import('@elev9/types').SubmitDailyCheckInRequest;
+      }
+    | undefined;
   DailyCheckInHistory: undefined;
   MealDetail: {
     mealId: string;
@@ -274,6 +281,13 @@ export function AppNavigator() {
             <Stack.Screen
               name="CoachChat"
               component={CoachChatScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="DailyCheckIn"
+              component={DailyCheckInScreen}
               options={{
                 headerShown: false,
               }}

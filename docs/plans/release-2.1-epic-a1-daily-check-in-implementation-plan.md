@@ -243,3 +243,21 @@ Today absence is represented by the successful backend response `{ completedToda
 The public timezone contract is `string`, while the current user-profile capability remains effectively `UTC`. No IANA enum or client-controlled timezone field was introduced.
 
 Prompt 3 validation: `types` and `api-client` builds passed; the dedicated `progress-api.spec.ts` passed when executed directly because neither package has an Nx test target. The mobile source was not modified and remains a future consumer of the aligned client.
+
+## Mobile Daily Check-in UI Update — Prompt 4
+
+The mobile implementation uses a hybrid five-step flow: four focused questions followed by one review step. This keeps the interaction conversational while allowing the user to inspect and edit every answer before submission.
+
+Implemented UI assets:
+
+- typed `DailyCheckIn` route with optional `mode: 'create' | 'edit'` and initial values;
+- `DailyCheckInFlow`, question, scale, review, error and success components;
+- local form hook and pure state model;
+- canonical 1–5 scale matching the backend DTO;
+- injected `onSubmit` boundary, with the navigable screen intentionally failing with a controlled Prompt 5 message when no callback is provided;
+- accessibility labels, radio state/value, progress semantics, live error regions and exit confirmation;
+- local edit mode without adding IDs, dates, timezone or Recovery logic.
+
+The design reuses `Screen`, `Card`, `Button`, `Text`, `Badge`, colors, spacing and radius tokens from `@elev9/ui`. The existing dashboard CTA and API client were intentionally left unchanged.
+
+The mobile project has no component-testing library in its current dependencies. Pure form-state tests were added and the full mobile build/test targets are used for static and runtime validation. Final API wiring, real today-state loading, cache invalidation, dashboard refresh and analytics remain Prompt 5 work.
