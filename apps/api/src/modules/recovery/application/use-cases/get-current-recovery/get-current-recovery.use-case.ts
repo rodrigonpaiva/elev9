@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 import { BuildRecoverySnapshotUseCase } from '../build-recovery-snapshot/build-recovery-snapshot.use-case';
 import {
@@ -15,15 +15,27 @@ import {
 } from './get-current-recovery.errors';
 import { GetCurrentRecoveryInput } from './get-current-recovery.input';
 import { GetCurrentRecoveryOutput } from './get-current-recovery.output';
+import {
+  DAILY_CHECK_IN_REPOSITORY,
+  DailyCheckInRepository,
+} from '../../../../progress/domain/repositories/daily-check-in.repository';
+import { RecoveryDateService } from '../../services/recovery-date.service';
+import { isRecoverySnapshotStaleForCheckIn } from '../../services/recovery-freshness';
 
 @Injectable()
 export class GetCurrentRecoveryUseCase {
+  private readonly logger = new Logger(GetCurrentRecoveryUseCase.name);
+
   constructor(
     @Inject(USER_PROFILE_REPOSITORY)
     private readonly userProfileRepository: UserProfileRepository,
     @Inject(RECOVERY_SNAPSHOT_REPOSITORY)
     private readonly recoverySnapshotRepository: RecoverySnapshotRepository,
     private readonly buildRecoverySnapshotUseCase: BuildRecoverySnapshotUseCase,
+    @Optional()
+    @Inject(DAILY_CHECK_IN_REPOSITORY)
+    private readonly dailyCheckInRepository?: DailyCheckInRepository,
+    private readonly recoveryDateService: RecoveryDateService = new RecoveryDateService(),
   ) {}
 
   async execute(
@@ -56,9 +68,26 @@ export class GetCurrentRecoveryUseCase {
         );
 
       if (latestSnapshot) {
-        return {
-          recoverySnapshot: latestSnapshot,
-        };
+        const todayDate = this.recoveryDateService.getDateString(
+          new Date(),
+          String(userProfile.timezone || 'UTC'),
+        );
+        const todayCheckIn = this.dailyCheckInRepository
+          ? await this.dailyCheckInRepository.findByUserProfileIdAndLocalDate({
+              userProfileId: userProfile.id,
+              localDate: todayDate,
+            })
+          : null;
+
+        if (!isRecoverySnapshotStaleForCheckIn(latestSnapshot, todayCheckIn)) {
+          return { recoverySnapshot: latestSnapshot };
+        }
+
+        this.logger.log({
+          event: 'recovery_stale_snapshot_rejected',
+          userProfileId: userProfile.id,
+          localDate: todayDate,
+        });
       }
 
       return await this.buildRecoverySnapshotUseCase.execute({

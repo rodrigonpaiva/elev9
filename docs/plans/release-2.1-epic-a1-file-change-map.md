@@ -103,3 +103,20 @@ No backend, shared contract, API client, dashboard CTA, analytics or Recovery fi
 | 74 | `docs/plans/release-2.1-epic-a1-file-change-map.md` | MODIFY | Record actual Prompt 5 paths and scope | Prompt 5 implementation | Low |
 
 Prompt 5 intentionally leaves product analytics, offline persistence/queue, background retry, backend/contracts/API-client changes and final E2E validation to later work.
+
+## Prompt 6 Actual Changes
+
+| Order | File | Action | Reason | Depends On | Risk |
+| ----: | ---- | ------ | ------ | ---------- | ---- |
+| 75 | `apps/api/src/modules/recovery/application/services/recovery-freshness.ts` | CREATE | Centralize stale-snapshot comparison against the latest check-in update. | Progress and Recovery date/persistence contracts | Low |
+| 76 | `apps/api/src/modules/recovery/application/services/recovery-freshness.spec.ts` | CREATE | Prove fresh, stale, and no-check-in behavior. | Freshness helper | Low |
+| 77 | `apps/api/src/modules/recovery/application/use-cases/get-today-recovery/get-today-recovery.use-case.ts` | MODIFY | Reject and rebuild a stale current-day snapshot. | Freshness helper, Daily Check-in repository | Medium |
+| 78 | `apps/api/src/modules/recovery/application/use-cases/get-today-recovery/get-today-recovery.use-case.spec.ts` | MODIFY | Cover stale today Recovery rebuild. | Use-case correction | Low |
+| 79 | `apps/api/src/modules/recovery/application/use-cases/get-current-recovery/get-current-recovery.use-case.ts` | MODIFY | Apply local-day freshness to current Recovery reads. | Freshness helper, Recovery date service | Medium |
+| 80 | `apps/api/src/modules/recovery/application/use-cases/get-current-recovery/get-current-recovery.use-case.spec.ts` | MODIFY | Cover stale current Recovery rebuild. | Use-case correction | Low |
+| 81 | `apps/api/src/modules/ai/application/services/context-builder/build-user-health-context.service.ts` | MODIFY | Route production context composition through canonical today Recovery. | GetTodayRecoveryUseCase | Medium |
+| 82 | `apps/api/src/modules/ai/application/use-cases/get-today-coach-decision/get-today-coach-decision.use-case.ts` | MODIFY | Rebuild today Coach decisions sourced from stale Recovery. | Current Recovery use case | Medium |
+| 83 | `apps/api/src/modules/ai/application/use-cases/get-today-coach-decision/get-today-coach-decision.use-case.spec.ts` | MODIFY | Prove stale Coach decision invalidation. | Coach use-case correction | Low |
+| 84 | `apps/api/src/modules/ai/application/use-cases/get-current-coach-decision/get-current-coach-decision.use-case.ts` | MODIFY | Rebuild current Coach decisions after newer Recovery. | Current Recovery use case | Medium |
+| 85 | `apps/api/src/modules/training/application/use-cases/build-adaptive-training-recommendation/build-adaptive-training-recommendation.use-case.ts` | MODIFY | Prefer canonical today Recovery for Training consumers. | GetTodayRecoveryUseCase | Medium |
+| 86 | `docs/audits/release-2.1-epic-a1-recovery-coach-validation.md` | CREATE | Record evidence, flags, legacy paths, risks, and final verdict. | Completed audit | Low |

@@ -274,3 +274,16 @@ The mobile flow is now connected to the existing typed API client without introd
 - Safe technical logs contain only mapped error codes in development; health-signal payloads and response bodies are not logged.
 
 Prompt 5 validation: `npm exec nx test mobile -- --runInBand` passed with 10 suites and 41 tests; `npm exec nx build mobile` passed for Web, iOS and Android bundles. `npm exec nx build types`, `npm exec nx build api-client`, `npm exec nx build api`, `npm run lint` (the repository script targets `types` and `api-client`) and `git diff --check` also passed. No mobile lint target is configured in the workspace.
+
+## Recovery and Coach Context Validation — Prompt 6
+
+- Added shared Recovery freshness comparison in `apps/api/src/modules/recovery/application/services/recovery-freshness.ts`.
+- Updated today/current Recovery reads to rebuild when the current check-in is newer than the stored snapshot.
+- Routed production Health Context composition through `GetTodayRecoveryUseCase`.
+- Updated today/current Coach decision reads to reject decisions sourced from older Recovery snapshots.
+- Updated Training's adaptive recommendation use case to prefer canonical today Recovery without adding adaptive behavior.
+- Confirmed `motivationLevel` remains context-only; it was not added to the Recovery formula.
+- Confirmed Nutrition does not currently consume Recovery or Health Context; no scope expansion was made.
+- Added freshness and stale-decision tests; full API suite passed with 206 suites and 1333 tests.
+- Created `docs/audits/release-2.1-epic-a1-recovery-coach-validation.md` with evidence and remaining risks.
+- Full Mongo-backed E2E remains a required external validation if the sandbox continues to block `MongoMemoryServer/EPERM`.

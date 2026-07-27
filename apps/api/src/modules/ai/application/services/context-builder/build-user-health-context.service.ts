@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 
 import {
   ActivityLevel,
@@ -42,6 +42,7 @@ import type {
   AdaptiveVolumeAction,
 } from '../../../../training/domain/value-objects/adaptive-recommendation-type.value-object';
 import { BuildRecoverySnapshotUseCase } from '../../../../recovery/application/use-cases/build-recovery-snapshot/build-recovery-snapshot.use-case';
+import { GetTodayRecoveryUseCase } from '../../../../recovery/application/use-cases/get-today-recovery/get-today-recovery.use-case';
 import { calculateStreak } from '../../../../progress/application/use-cases/get-progress-summary/calculate-streak';
 import {
   TrainingPlanDay,
@@ -174,6 +175,8 @@ export class BuildUserHealthContextService {
     @Inject(CLOCK)
     private readonly clock: Clock,
     private readonly platformDateService: PlatformDateService = new PlatformDateService(),
+    @Optional()
+    private readonly getTodayRecoveryUseCase?: GetTodayRecoveryUseCase,
   ) {}
 
   async build(input: BuildUserHealthContextInput): Promise<UserHealthContext> {
@@ -692,6 +695,18 @@ export class BuildUserHealthContextService {
     userProfileId: string;
     fitnessProfileId?: string;
   }): Promise<RecoverySnapshot | null> {
+    if (this.getTodayRecoveryUseCase) {
+      try {
+        const result = await this.getTodayRecoveryUseCase.execute({
+          authUserId: input.authUserId,
+        });
+
+        return result.recoverySnapshot;
+      } catch {
+        return null;
+      }
+    }
+
     const existingSnapshot =
       await this.recoverySnapshotRepository.findLatestByUserProfileId(
         input.userProfileId,

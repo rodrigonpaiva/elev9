@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 import { BuildCoachDecisionUseCase } from '../build-coach-decision/build-coach-decision.use-case';
 import {
@@ -15,15 +15,20 @@ import {
 } from './get-current-coach-decision.errors';
 import { GetCurrentCoachDecisionInput } from './get-current-coach-decision.input';
 import { GetCurrentCoachDecisionOutput } from './get-current-coach-decision.output';
+import { GetCurrentRecoveryUseCase } from '../../../../recovery/application/use-cases/get-current-recovery/get-current-recovery.use-case';
 
 @Injectable()
 export class GetCurrentCoachDecisionUseCase {
+  private readonly logger = new Logger(GetCurrentCoachDecisionUseCase.name);
+
   constructor(
     @Inject(USER_PROFILE_REPOSITORY)
     private readonly userProfileRepository: UserProfileRepository,
     @Inject(COACH_DECISION_REPOSITORY)
     private readonly coachDecisionRepository: CoachDecisionRepository,
     private readonly buildCoachDecisionUseCase: BuildCoachDecisionUseCase,
+    @Optional()
+    private readonly getCurrentRecoveryUseCase?: GetCurrentRecoveryUseCase,
   ) {}
 
   async execute(
@@ -56,9 +61,26 @@ export class GetCurrentCoachDecisionUseCase {
         );
 
       if (latestDecision) {
-        return {
-          coachDecision: latestDecision,
-        };
+        const recoverySnapshot = this.getCurrentRecoveryUseCase
+          ? (await this.getCurrentRecoveryUseCase.execute({ authUserId }))
+              .recoverySnapshot
+          : null;
+
+        if (
+          !recoverySnapshot ||
+          !isSourceNewer(
+            recoverySnapshot.sourceContext?.generatedAt,
+            latestDecision.sourceContext?.generatedAt,
+          )
+        ) {
+          return { coachDecision: latestDecision };
+        }
+
+        this.logger.log({
+          event: 'coach_stale_decision_rejected',
+          userProfileId: userProfile.id,
+          localDate: latestDecision.date,
+        });
       }
 
       return await this.buildCoachDecisionUseCase.execute({ authUserId });
@@ -73,4 +95,17 @@ export class GetCurrentCoachDecisionUseCase {
       );
     }
   }
+}
+
+function isSourceNewer(
+  sourceTimestamp: string | undefined,
+  targetTimestamp: string | undefined,
+): boolean {
+  if (!sourceTimestamp || !targetTimestamp) {
+    return Boolean(sourceTimestamp && !targetTimestamp);
+  }
+
+  return (
+    new Date(sourceTimestamp).getTime() > new Date(targetTimestamp).getTime()
+  );
 }

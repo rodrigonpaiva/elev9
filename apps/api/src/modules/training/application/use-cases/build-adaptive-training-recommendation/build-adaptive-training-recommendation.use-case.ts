@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 
 import { calculateStreak } from '../../../../progress/application/use-cases/get-progress-summary/calculate-streak';
 import {
@@ -28,6 +28,7 @@ import {
   RECOVERY_SNAPSHOT_REPOSITORY,
   RecoverySnapshotRepository,
 } from '../../../../recovery/domain/repositories/recovery-snapshot.repository';
+import { GetTodayRecoveryUseCase } from '../../../../recovery/application/use-cases/get-today-recovery/get-today-recovery.use-case';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
@@ -81,6 +82,8 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
     private readonly adaptiveTrainingRecommendationRepository: AdaptiveTrainingRecommendationRepository,
     private readonly adaptiveTrainingRecommendationCalculatorService: AdaptiveTrainingRecommendationCalculatorService,
     private readonly adaptiveTrainingDateService: AdaptiveTrainingDateService,
+    @Optional()
+    private readonly getTodayRecoveryUseCase?: GetTodayRecoveryUseCase,
   ) {}
 
   async execute(
@@ -123,10 +126,12 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
 
       const trainingPlanId = activeTrainingPlan?.id;
 
-      const recoverySnapshot =
-        await this.recoverySnapshotRepository.findLatestByUserProfileId(
-          userProfile.id,
-        );
+      const recoverySnapshot = this.getTodayRecoveryUseCase
+        ? (await this.getTodayRecoveryUseCase.execute({ authUserId }))
+            .recoverySnapshot
+        : await this.recoverySnapshotRepository.findLatestByUserProfileId(
+            userProfile.id,
+          );
 
       const recentWorkoutLogs = trainingPlanId
         ? await this.workoutLogRepository.findByTrainingPlanIdsAndDateRange({
