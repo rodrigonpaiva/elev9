@@ -18,6 +18,8 @@ import type {
 } from '../models/daily-check-in-form-state';
 import type { SubmitDailyCheckInRequest } from '@elev9/types';
 import type { DailyCheckInSubmit } from '../hooks/use-daily-check-in-form';
+import type { DailyCheckInAnalytics } from '../hooks/use-daily-check-in-analytics';
+import type { DailyCheckInAnalyticsErrorCategory } from '../models/daily-check-in-analytics';
 
 export type DailyCheckInFlowProps = {
   mode?: DailyCheckInMode;
@@ -26,6 +28,9 @@ export type DailyCheckInFlowProps = {
   onClose: () => void;
   onDone: () => void;
   onDirtyChange?: (isDirty: boolean) => void;
+  analytics?: DailyCheckInAnalytics;
+  analyticsErrorCategory?: DailyCheckInAnalyticsErrorCategory;
+  entryPoint?: 'dashboard' | 'other';
 };
 
 export function DailyCheckInFlow({
@@ -35,6 +40,9 @@ export function DailyCheckInFlow({
   onClose,
   onDone,
   onDirtyChange,
+  analytics,
+  analyticsErrorCategory = 'unknown',
+  entryPoint = 'other',
 }: DailyCheckInFlowProps) {
   const form = useDailyCheckInForm({ initialValues, onSubmit });
   const progress = getDailyCheckInProgress(form.step);
@@ -42,8 +50,60 @@ export function DailyCheckInFlow({
   const currentQuestion = form.currentQuestion;
 
   useEffect(() => {
+    analytics?.start(mode, entryPoint);
+    const step = currentQuestion?.field ?? 'review';
+    analytics?.stepViewed(mode, step, form.step);
+  }, [analytics, currentQuestion?.field, entryPoint, form.step, mode]);
+
+  useEffect(() => {
+    if (form.status === 'success') {
+      analytics?.successViewed(mode);
+    }
+  }, [analytics, form.status, mode]);
+
+  useEffect(() => {
     onDirtyChange?.(form.isDirty && form.status !== 'success');
   }, [form.isDirty, form.status, onDirtyChange]);
+
+  const handleClose = () => {
+    analytics?.exited(
+      mode,
+      currentQuestion?.field ?? 'review',
+      form.status === 'success',
+      form.isDirty,
+    );
+    onClose();
+  };
+
+  const handleDone = () => {
+    analytics?.exited(mode, 'review', true, false);
+    onDone();
+  };
+
+  const handleContinue = () => {
+    const step = currentQuestion?.field;
+    if (!step) {
+      return;
+    }
+
+    analytics?.stepCompleted(mode, step, form.step);
+    if (form.step === DAILY_CHECK_IN_QUESTIONS.length - 1) {
+      form.goToReview();
+      return;
+    }
+
+    form.goToStep(form.step + 1);
+  };
+
+  const handleRetry = () => {
+    analytics?.retrySelected(mode, analyticsErrorCategory);
+    void form.submit();
+  };
+
+  const handleSubmit = () => {
+    analytics?.stepCompleted(mode, 'review', DAILY_CHECK_IN_REVIEW_STEP);
+    void form.submit();
+  };
 
   return (
     <Screen contentStyle={styles.content} scroll>
@@ -52,7 +112,7 @@ export function DailyCheckInFlow({
           <Button
             accessibilityLabel="Close daily check-in"
             label="Close"
-            onPress={onClose}
+            onPress={handleClose}
             style={styles.closeButton}
             variant="ghost"
           />
@@ -85,12 +145,12 @@ export function DailyCheckInFlow({
         </View>
 
         {form.status === 'success' ? (
-          <DailyCheckInSuccess isEdit={mode === 'edit'} onDone={onDone} />
+          <DailyCheckInSuccess isEdit={mode === 'edit'} onDone={handleDone} />
         ) : form.status === 'error' ? (
           <DailyCheckInError
             message={form.errorMessage ?? 'Please try again.'}
             onBack={() => form.retry()}
-            onRetry={() => void form.submit()}
+            onRetry={handleRetry}
           />
         ) : (
           <>
@@ -113,11 +173,7 @@ export function DailyCheckInFlow({
                 onChange={(value) =>
                   form.selectAnswer(currentQuestion.field, value)
                 }
-                onContinue={
-                  form.step === DAILY_CHECK_IN_QUESTIONS.length - 1
-                    ? form.goToReview
-                    : () => form.goToStep(form.step + 1)
-                }
+                onContinue={handleContinue}
                 question={currentQuestion}
                 value={form.values[currentQuestion.field]}
               />
@@ -133,7 +189,7 @@ export function DailyCheckInFlow({
                     ),
                   )
                 }
-                onSubmit={() => void form.submit()}
+                onSubmit={handleSubmit}
                 values={form.values as SubmitDailyCheckInRequest}
               />
             )}

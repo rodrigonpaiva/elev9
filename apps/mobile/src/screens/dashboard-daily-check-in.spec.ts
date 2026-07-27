@@ -1,5 +1,8 @@
 import type { UseDashboardResult } from '../hooks/use-dashboard';
-import { getDailyCheckInCtaLabel } from './dashboard-daily-check-in-helpers';
+import {
+  getDailyCheckInAnalyticsCompletionState,
+  getDailyCheckInCtaLabel,
+} from './dashboard-daily-check-in-helpers';
 
 function dashboardFixture(
   completedToday: boolean,
@@ -28,5 +31,23 @@ describe('dashboard daily check-in CTA', () => {
     expect(getDailyCheckInCtaLabel(dashboardFixture(false, 'workout'))).toBe(
       'Fallback CTA',
     );
+  });
+
+  it('tracks only the relevant pending or completed CTA state', () => {
+    expect(
+      getDailyCheckInAnalyticsCompletionState(
+        dashboardFixture(false, 'check_in'),
+      ),
+    ).toBe('pending');
+    expect(
+      getDailyCheckInAnalyticsCompletionState(
+        dashboardFixture(true, 'check_in'),
+      ),
+    ).toBe('completed');
+    expect(
+      getDailyCheckInAnalyticsCompletionState(
+        dashboardFixture(false, 'workout'),
+      ),
+    ).toBeNull();
   });
 });

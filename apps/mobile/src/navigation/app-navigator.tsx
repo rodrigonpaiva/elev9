@@ -85,6 +85,7 @@ export type RootStackParamList = {
   DailyCheckIn:
     | {
         mode?: 'create' | 'edit';
+        entryPoint?: 'dashboard' | 'other';
         initialValues?: import('@elev9/types').SubmitDailyCheckInRequest;
       }
     | undefined;

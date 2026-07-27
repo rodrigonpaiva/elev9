@@ -1,0 +1,230 @@
+import type {
+  DailyCheckInMode,
+  DailyCheckInStep,
+} from '../features/daily-check-in/models/daily-check-in-analytics';
+
+export type ProductAnalyticsEventMap = {
+  daily_check_in_cta_viewed: {
+    completionState: 'pending' | 'completed';
+    entryPoint: 'dashboard';
+  };
+  daily_check_in_cta_selected: {
+    completionState: 'pending' | 'completed';
+    entryPoint: 'dashboard';
+  };
+  daily_check_in_started: {
+    mode: DailyCheckInMode;
+    entryPoint: 'dashboard' | 'other';
+    flowSessionId: string;
+  };
+  daily_check_in_step_viewed: {
+    mode: DailyCheckInMode;
+    step: DailyCheckInStep;
+    stepIndex: number;
+    totalSteps: number;
+    flowSessionId: string;
+  };
+  daily_check_in_step_completed: {
+    mode: DailyCheckInMode;
+    step: DailyCheckInStep;
+    stepIndex: number;
+    totalSteps: number;
+    flowSessionId: string;
+  };
+  daily_check_in_submit_started: {
+    mode: DailyCheckInMode;
+    attemptNumber: number;
+    flowSessionId: string;
+  };
+  daily_check_in_submit_succeeded: {
+    mode: DailyCheckInMode;
+    attemptNumber: number;
+    durationMs: number;
+    flowSessionId: string;
+  };
+  daily_check_in_submit_failed: {
+    mode: DailyCheckInMode;
+    attemptNumber: number;
+    durationMs: number;
+    errorCategory:
+      | 'network'
+      | 'authentication'
+      | 'profile_unavailable'
+      | 'validation'
+      | 'recovery_processing'
+      | 'server'
+      | 'unknown';
+    flowSessionId: string;
+  };
+  daily_check_in_retry_selected: {
+    mode: DailyCheckInMode;
+    previousErrorCategory: ProductAnalyticsEventMap['daily_check_in_submit_failed']['errorCategory'];
+    attemptNumber: number;
+    flowSessionId: string;
+  };
+  daily_check_in_success_viewed: {
+    mode: DailyCheckInMode;
+    flowSessionId: string;
+  };
+  daily_check_in_exited: {
+    mode: DailyCheckInMode;
+    lastStep: DailyCheckInStep;
+    completed: boolean;
+    hadUnsavedChanges: boolean;
+    elapsedMs: number;
+    flowSessionId: string;
+  };
+};
+
+export type ProductAnalyticsEventName = keyof ProductAnalyticsEventMap;
+
+export interface ProductAnalytics {
+  track<EventName extends ProductAnalyticsEventName>(
+    eventName: EventName,
+    properties: ProductAnalyticsEventMap[EventName],
+  ): void;
+}
+
+export const PRODUCT_ANALYTICS_FORBIDDEN_PROPERTIES = [
+  'energyLevel',
+  'sleepQuality',
+  'muscleSoreness',
+  'motivationLevel',
+  'notes',
+  'recoveryScore',
+  'readinessScore',
+  'userProfileId',
+  'email',
+  'name',
+  'token',
+  'prompt',
+] as const;
+
+const PRODUCT_ANALYTICS_ALLOWED_PROPERTIES: {
+  [EventName in ProductAnalyticsEventName]: readonly string[];
+} = {
+  daily_check_in_cta_viewed: ['completionState', 'entryPoint'],
+  daily_check_in_cta_selected: ['completionState', 'entryPoint'],
+  daily_check_in_started: ['mode', 'entryPoint', 'flowSessionId'],
+  daily_check_in_step_viewed: [
+    'mode',
+    'step',
+    'stepIndex',
+    'totalSteps',
+    'flowSessionId',
+  ],
+  daily_check_in_step_completed: [
+    'mode',
+    'step',
+    'stepIndex',
+    'totalSteps',
+    'flowSessionId',
+  ],
+  daily_check_in_submit_started: ['mode', 'attemptNumber', 'flowSessionId'],
+  daily_check_in_submit_succeeded: [
+    'mode',
+    'attemptNumber',
+    'durationMs',
+    'flowSessionId',
+  ],
+  daily_check_in_submit_failed: [
+    'mode',
+    'attemptNumber',
+    'durationMs',
+    'errorCategory',
+    'flowSessionId',
+  ],
+  daily_check_in_retry_selected: [
+    'mode',
+    'previousErrorCategory',
+    'attemptNumber',
+    'flowSessionId',
+  ],
+  daily_check_in_success_viewed: ['mode', 'flowSessionId'],
+  daily_check_in_exited: [
+    'mode',
+    'lastStep',
+    'completed',
+    'hadUnsavedChanges',
+    'elapsedMs',
+    'flowSessionId',
+  ],
+};
+
+type ProductAnalyticsProvider = ProductAnalytics & {
+  track: ProductAnalytics['track'];
+};
+
+export class NoopProductAnalytics implements ProductAnalytics {
+  track<EventName extends ProductAnalyticsEventName>(
+    _eventName: EventName,
+    _properties: ProductAnalyticsEventMap[EventName],
+  ): void {}
+}
+
+class SafeProductAnalytics implements ProductAnalytics {
+  constructor(
+    private readonly provider: ProductAnalyticsProvider,
+    private readonly enabled: boolean,
+  ) {}
+
+  track<EventName extends ProductAnalyticsEventName>(
+    eventName: EventName,
+    properties: ProductAnalyticsEventMap[EventName],
+  ): void {
+    if (
+      !this.enabled ||
+      containsForbiddenProperty(properties) ||
+      !hasOnlyAllowedProperties(eventName, properties)
+    ) {
+      return;
+    }
+
+    try {
+      this.provider.track(eventName, properties);
+    } catch {
+      // Product analytics must never affect the product flow.
+    }
+  }
+}
+
+const noopProductAnalytics = new NoopProductAnalytics();
+
+export const productAnalytics: ProductAnalytics = new SafeProductAnalytics(
+  noopProductAnalytics,
+  false,
+);
+
+export function createProductAnalytics(
+  provider: ProductAnalyticsProvider = noopProductAnalytics,
+  enabled = false,
+): ProductAnalytics {
+  return new SafeProductAnalytics(provider, enabled);
+}
+
+export function containsForbiddenProperty(value: unknown): boolean {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  return Object.entries(value).some(([key, nestedValue]) => {
+    if (
+      (PRODUCT_ANALYTICS_FORBIDDEN_PROPERTIES as readonly string[]).includes(
+        key,
+      )
+    ) {
+      return true;
+    }
+
+    return containsForbiddenProperty(nestedValue);
+  });
+}
+
+function hasOnlyAllowedProperties<EventName extends ProductAnalyticsEventName>(
+  eventName: EventName,
+  properties: ProductAnalyticsEventMap[EventName],
+): boolean {
+  const allowed = PRODUCT_ANALYTICS_ALLOWED_PROPERTIES[eventName];
+
+  return Object.keys(properties).every((key) => allowed.includes(key));
+}

@@ -287,3 +287,14 @@ Prompt 5 validation: `npm exec nx test mobile -- --runInBand` passed with 10 sui
 - Added freshness and stale-decision tests; full API suite passed with 206 suites and 1333 tests.
 - Created `docs/audits/release-2.1-epic-a1-recovery-coach-validation.md` with evidence and remaining risks.
 - Full Mongo-backed E2E remains a required external validation if the sandbox continues to block `MongoMemoryServer/EPERM`.
+
+## Product Analytics — Prompt 7
+
+- Audited the repository and found no active canonical Product Analytics provider; existing telemetry is technical/AI observability only.
+- Added `apps/mobile/src/analytics/product-analytics.ts` with typed event contracts, an event-property allowlist, forbidden-property protection, provider failure isolation, and a noop default.
+- Instrumented Dashboard CTA viewed/selected events and the Daily Check-in lifecycle: start, steps, submit, retry, success, and reliable explicit exit.
+- Added ephemeral flow-session correlation and monotonic client durations without persisting identity or health data.
+- Classified UI errors into safe analytics categories without sending raw API errors.
+- Added privacy, provider-failure, error-mapping, and analytics boundary tests.
+- Created `docs/analytics/release-2.1-epic-a1-daily-check-in-event-taxonomy.md`.
+- External provider activation, consent, retention enforcement, offline queueing, and E2E remain future work.

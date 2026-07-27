@@ -10,6 +10,9 @@ import { Button, Card, colors, Screen, Text } from '@elev9/ui';
 import {
   DailyCheckInFlow,
   useDailyCheckIn,
+  useDailyCheckInAnalytics,
+  mapDailyCheckInError,
+  mapDailyCheckInAnalyticsError,
   type DailyCheckInSubmit,
 } from '../features/daily-check-in';
 import type { RootStackParamList } from '../navigation/app-navigator';
@@ -27,16 +30,59 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
   const initialValues = route.params?.initialValues;
   const [isDirty, setIsDirty] = useState(Boolean(initialValues));
   const dailyCheckIn = useDailyCheckIn();
+  const analytics = useDailyCheckInAnalytics();
+  const entryPoint = route.params?.entryPoint ?? 'other';
+
+  useEffect(() => {
+    if (dailyCheckIn.isLoading || dailyCheckIn.error) {
+      return;
+    }
+
+    analytics.start(dailyCheckIn.mode, entryPoint);
+  }, [
+    analytics,
+    dailyCheckIn.error,
+    dailyCheckIn.isLoading,
+    dailyCheckIn.mode,
+    entryPoint,
+  ]);
+
   const submit = useCallback<DailyCheckInSubmit>(
     async (values: SubmitDailyCheckInRequest) => {
+      const mode = dailyCheckIn.mode;
+      const attemptNumber = analytics.submitStarted(mode);
+
       if (onSubmit) {
-        await onSubmit(values);
-        return;
+        try {
+          await onSubmit(values);
+          analytics.submitSucceeded(mode, attemptNumber);
+          return;
+        } catch (error) {
+          analytics.submitFailed(mode, attemptNumber, 'unknown');
+          throw error;
+        }
       }
 
-      await dailyCheckIn.submit(values);
+      try {
+        await dailyCheckIn.submit(values);
+        analytics.submitSucceeded(mode, attemptNumber);
+      } catch (error) {
+        const mappedError = mapDailyCheckInError(error);
+        analytics.submitFailed(
+          mode,
+          attemptNumber,
+          mapDailyCheckInAnalyticsError(mappedError.code),
+        );
+        throw error;
+      }
     },
-    [dailyCheckIn.submit, onSubmit],
+    [
+      analytics,
+      dailyCheckIn.error?.code,
+      dailyCheckIn.mode,
+      dailyCheckIn.submit,
+      onSubmit,
+    ],
   );
 
   const confirmExit = useCallback(() => {
@@ -99,6 +145,13 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
       onClose={confirmExit}
       onDone={() => navigation.goBack()}
       onDirtyChange={setIsDirty}
+      analytics={analytics}
+      analyticsErrorCategory={
+        dailyCheckIn.error
+          ? mapDailyCheckInAnalyticsError(dailyCheckIn.error.code)
+          : 'unknown'
+      }
+      entryPoint={entryPoint}
       onSubmit={submit}
     />
   );

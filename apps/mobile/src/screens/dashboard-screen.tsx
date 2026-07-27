@@ -14,6 +14,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { Text } from '@elev9/ui';
 
+import { productAnalytics } from '../analytics/product-analytics';
 import { CoachInsightCard } from '../components/dashboard/coach-insight-card';
 import { RecoveryReadinessCard } from '../components/dashboard/recovery-readiness-card';
 import { TodaysWorkoutCard } from '../components/dashboard/todays-workout-card';
@@ -23,7 +24,10 @@ import { getCoachFirstName } from '../hooks/coach';
 import { useDashboard } from '../hooks/use-dashboard';
 import type { UseDashboardResult } from '../hooks/use-dashboard';
 import type { RootStackParamList } from '../navigation/app-navigator';
-import { getDailyCheckInCtaLabel } from './dashboard-daily-check-in-helpers';
+import {
+  getDailyCheckInAnalyticsCompletionState,
+  getDailyCheckInCtaLabel,
+} from './dashboard-daily-check-in-helpers';
 
 type DashboardScreenProps = {
   onOpenHistory?: () => void;
@@ -63,6 +67,9 @@ export function DashboardScreen({
   const dashboard = useDashboard();
   const entrance = useRef(new Animated.Value(0)).current;
   const hasFocused = useRef(false);
+  const lastTrackedCheckInCtaState = useRef<'pending' | 'completed' | null>(
+    null,
+  );
   const firstName = getCoachFirstName(dashboard.userName);
 
   const motivationalMessage = useMemo(() => {
@@ -94,6 +101,33 @@ export function DashboardScreen({
       void dashboard.refresh();
     }, [dashboard.refresh]),
   );
+
+  useEffect(() => {
+    if (dashboard.isLoading || dashboard.error) {
+      return;
+    }
+
+    const completionState = getDailyCheckInAnalyticsCompletionState(dashboard);
+
+    if (!completionState) {
+      return;
+    }
+
+    if (lastTrackedCheckInCtaState.current === completionState) {
+      return;
+    }
+
+    lastTrackedCheckInCtaState.current = completionState;
+    productAnalytics.track('daily_check_in_cta_viewed', {
+      completionState,
+      entryPoint: 'dashboard',
+    });
+  }, [
+    dashboard.coach.actionTarget,
+    dashboard.dailyCheckIn.completedToday,
+    dashboard.error,
+    dashboard.isLoading,
+  ]);
 
   const handleStartWorkout = useCallback(() => {
     if (!dashboard.workout.data || !dashboard.workout.todaysWorkout) {
@@ -142,7 +176,14 @@ export function DashboardScreen({
         handleStartWorkout();
         return;
       case 'check_in':
+        productAnalytics.track('daily_check_in_cta_selected', {
+          completionState: dashboard.dailyCheckIn.completedToday
+            ? 'completed'
+            : 'pending',
+          entryPoint: 'dashboard',
+        });
         navigation.navigate('DailyCheckIn', {
+          entryPoint: 'dashboard',
           mode: dashboard.dailyCheckIn.completedToday ? 'edit' : 'create',
         });
         return;

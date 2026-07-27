@@ -9,6 +9,7 @@ export type DailyCheckInUiErrorCode =
   | 'PROFILE_UNAVAILABLE'
   | 'INVALID_INPUT'
   | 'RECOVERY_FAILED'
+  | 'SERVER_ERROR'
   | 'UNKNOWN';
 
 export type DailyCheckInUiError = {
@@ -75,6 +76,14 @@ export function mapDailyCheckInError(error: unknown): DailyCheckInUiError {
     return {
       code: 'INVALID_INPUT',
       message: 'Please review your answers and try again.',
+      retryable: true,
+    };
+  }
+
+  if (typeof error.status === 'number' && error.status >= 500) {
+    return {
+      code: 'SERVER_ERROR',
+      message: 'We could not save your check-in. Please try again.',
       retryable: true,
     };
   }
