@@ -223,3 +223,23 @@ The backend implementation selected the smallest compatible path:
 The implementation deliberately leaves shared package types/API-client alignment for Prompt 3. Backend HTTP DTOs expose `localDate`, `timezone` and `updatedAt` without exposing Mongo internals.
 
 Validation status for Prompt 2: `api` build passed; `api` unit/integration-oriented suite passed with 205 suites and 1,327 tests; `types` and `api-client` builds passed; configured lint passed. The E2E target remains unvalidated because `MongoMemoryServer` cannot bind/listen in the sandbox (`EPERM`, code 48). The new E2E file is present and must be run in an environment with MongoMemoryServer networking permitted.
+
+## Shared Contracts and API Client Update — Prompt 3
+
+The public contract now follows the actual backend DTOs and exposes only the four confirmed signals:
+
+- `SubmitDailyCheckInRequest` — `energyLevel`, `sleepQuality`, `muscleSoreness`, `motivationLevel`.
+- `DailyCheckIn` — the four signals plus `localDate`, `timezone`, `createdAt` and `updatedAt`.
+- `SubmitDailyCheckInResponse` — the canonical `dailyCheckIn` record.
+- `GetTodayDailyCheckInResponse` — `completedToday` plus nullable `dailyCheckIn`.
+- `DailyCheckInHistoryResponse` — the existing `dailyCheckIns` collection using the canonical record shape.
+
+`LocalDate`, `IsoDateTime` and `Timezone` remain lightweight string aliases. They document transport semantics but do not claim runtime validation in `packages/types`. Runtime validation remains in the NestJS DTO because this workspace does not use a shared schema library.
+
+The API client now exposes `submitDailyCheckIn`, `getTodayDailyCheckIn` and `getDailyCheckInHistory`. The existing `createDailyCheckIn` method remains as a deprecated compatibility alias. The client never calculates `localDate`, selects a timezone, decides create versus update, or recalculates Recovery.
+
+Today absence is represented by the successful backend response `{ completedToday: false, dailyCheckIn: null }`; it is not converted into a generic `404` error. Authentication, validation, conflict and Recovery errors continue to propagate through `ApiClientError`.
+
+The public timezone contract is `string`, while the current user-profile capability remains effectively `UTC`. No IANA enum or client-controlled timezone field was introduced.
+
+Prompt 3 validation: `types` and `api-client` builds passed; the dedicated `progress-api.spec.ts` passed when executed directly because neither package has an Nx test target. The mobile source was not modified and remains a future consumer of the aligned client.

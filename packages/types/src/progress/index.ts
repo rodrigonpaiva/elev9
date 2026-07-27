@@ -33,12 +33,25 @@ export type LogWorkoutResponse = {
   };
 };
 
-export type CreateDailyCheckInRequest = {
+/** Values accepted by the canonical daily check-in submission endpoint. */
+export type SubmitDailyCheckInRequest = {
   energyLevel: number;
   sleepQuality: number;
   muscleSoreness: number;
   motivationLevel: number;
 };
+
+/** @deprecated Use SubmitDailyCheckInRequest. */
+export type CreateDailyCheckInRequest = SubmitDailyCheckInRequest;
+
+/** A calendar date resolved by the API in YYYY-MM-DD format. */
+export type LocalDate = string;
+
+/** JSON transport representation of an instant in time. */
+export type IsoDateTime = string;
+
+/** The effective profile timezone returned by the API. */
+export type Timezone = string;
 
 export type DailyCheckIn = {
   id: string;
@@ -46,11 +59,33 @@ export type DailyCheckIn = {
   sleepQuality: number;
   muscleSoreness: number;
   motivationLevel: number;
-  createdAt: string;
+  localDate: LocalDate;
+  timezone: Timezone;
+  createdAt: IsoDateTime;
+  updatedAt: IsoDateTime;
 };
 
-export type DailyCheckInResponse = {
+/** Minimal read model used by contexts that do not expose day metadata. */
+export type DailyCheckInSummary = Pick<
+  DailyCheckIn,
+  | 'id'
+  | 'energyLevel'
+  | 'sleepQuality'
+  | 'muscleSoreness'
+  | 'motivationLevel'
+  | 'createdAt'
+>;
+
+export type SubmitDailyCheckInResponse = {
   dailyCheckIn: DailyCheckIn;
+};
+
+/** @deprecated Use SubmitDailyCheckInResponse. */
+export type DailyCheckInResponse = SubmitDailyCheckInResponse;
+
+export type GetTodayDailyCheckInResponse = {
+  completedToday: boolean;
+  dailyCheckIn: DailyCheckIn | null;
 };
 
 export type GetDailyCheckInHistoryQuery = {

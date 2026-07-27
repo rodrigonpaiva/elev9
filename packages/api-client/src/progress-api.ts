@@ -1,22 +1,32 @@
 import type {
-  CreateDailyCheckInRequest,
   DailyCheckInHistoryResponse,
-  DailyCheckInResponse,
   GetDailyCheckInHistoryQuery,
+  GetTodayDailyCheckInResponse,
   ProgressSummaryResponse,
+  SubmitDailyCheckInRequest,
+  SubmitDailyCheckInResponse,
 } from '@elev9/types';
 
 import type { HttpClient } from './http-client';
 
 export function createProgressApi(httpClient: HttpClient) {
+  const submitDailyCheckIn = (
+    input: SubmitDailyCheckInRequest,
+  ): Promise<SubmitDailyCheckInResponse> =>
+    httpClient.request<SubmitDailyCheckInResponse>({
+      method: 'POST',
+      path: '/progress/daily-check-in',
+      body: input,
+    });
+
   return {
-    createDailyCheckIn(
-      input: CreateDailyCheckInRequest,
-    ): Promise<DailyCheckInResponse> {
-      return httpClient.request<DailyCheckInResponse>({
-        method: 'POST',
-        path: '/progress/daily-check-in',
-        body: input,
+    submitDailyCheckIn,
+    /** @deprecated Use submitDailyCheckIn. */
+    createDailyCheckIn: submitDailyCheckIn,
+    getTodayDailyCheckIn(): Promise<GetTodayDailyCheckInResponse> {
+      return httpClient.request<GetTodayDailyCheckInResponse>({
+        method: 'GET',
+        path: '/progress/daily-check-in/today',
       });
     },
     getDailyCheckInHistory(

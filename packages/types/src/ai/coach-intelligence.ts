@@ -29,7 +29,7 @@ import type {
   TodayNutrition,
 } from '../nutrition';
 import type { RecoverySnapshot } from '../recovery';
-import type { DailyCheckIn, ProgressSummaryResponse } from '../progress';
+import type { DailyCheckInSummary, ProgressSummaryResponse } from '../progress';
 
 export type CoachExpertName =
   | 'Workout'
@@ -409,7 +409,7 @@ export interface CoachHabitsSection {
 
 export interface CoachProgressSection {
   progressSummary: ProgressSummaryResponse['summary'] | null;
-  dailyCheckIn: DailyCheckIn | null;
+  dailyCheckIn: DailyCheckInSummary | null;
 }
 
 export interface CoachPersonalizationSection {
