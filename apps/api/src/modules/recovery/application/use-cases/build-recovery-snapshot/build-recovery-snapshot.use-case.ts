@@ -88,8 +88,9 @@ export class BuildRecoverySnapshotUseCase {
         );
       }
 
-      const todayDate = this.resolveDateString(input.date);
-      const recentWindow = this.getRecentWindowDateRange(todayDate);
+      const timezone = String(userProfile.timezone || 'UTC');
+      const todayDate = this.resolveDateString(input.date, timezone);
+      const recentWindow = this.getRecentWindowDateRange(todayDate, timezone);
 
       const dailyCheckIns =
         await this.dailyCheckInRepository.findManyByUserProfileId(
@@ -97,13 +98,14 @@ export class BuildRecoverySnapshotUseCase {
         );
       const recentCheckIns = dailyCheckIns.filter((checkIn) =>
         this.isDateInRange(
-          this.recoveryDateService.getDateString(checkIn.createdAt),
+          checkIn.localDate ??
+            this.recoveryDateService.getDateString(checkIn.createdAt, timezone),
           recentWindow.startDate,
           recentWindow.endDate,
         ),
       );
       const latestCheckIn =
-        this.pickLatestCheckInForDate(dailyCheckIns, todayDate) ??
+        this.pickLatestCheckInForDate(dailyCheckIns, todayDate, timezone) ??
         dailyCheckIns[0] ??
         null;
 
@@ -304,13 +306,18 @@ export class BuildRecoverySnapshotUseCase {
       energyLevel: number;
       muscleSoreness: number;
       createdAt: Date;
+      localDate?: string;
     }>,
     dateString: string,
+    timezone: string,
   ) {
     const todayCheckIns = checkIns.filter(
       (checkIn) =>
-        this.recoveryDateService.getDateString(checkIn.createdAt) ===
-        dateString,
+        (checkIn.localDate ??
+          this.recoveryDateService.getDateString(
+            checkIn.createdAt,
+            timezone,
+          )) === dateString,
     );
 
     if (todayCheckIns.length > 0) {
@@ -332,13 +339,18 @@ export class BuildRecoverySnapshotUseCase {
       );
   }
 
-  private resolveDateString(date?: string): string {
+  private resolveDateString(date?: string, timezone = 'UTC'): string {
     const value = typeof date === 'string' ? date.trim() : '';
 
-    return value || this.recoveryDateService.todayUtcDateString();
+    return (
+      value || this.recoveryDateService.getDateString(new Date(), timezone)
+    );
   }
 
-  private getRecentWindowDateRange(todayDate: string): {
+  private getRecentWindowDateRange(
+    todayDate: string,
+    timezone = 'UTC',
+  ): {
     startDate: string;
     endDate: string;
   } {

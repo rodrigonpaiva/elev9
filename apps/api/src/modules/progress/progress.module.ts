@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { AuthModule } from '../auth/auth.module';
+import { RecoveryModule } from '../recovery/recovery.module';
 import { FitnessModule } from '../fitness/fitness.module';
 import { TRAINING_PLAN_REPOSITORY } from '../training/domain/repositories/training-plan.repository';
 import { MongooseTrainingPlanRepository } from '../training/infrastructure/mongoose/mongoose-training-plan.repository';
@@ -12,7 +13,9 @@ import {
 import { UsersModule } from '../users/users.module';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { CreateDailyCheckInUseCase } from './application/use-cases/create-daily-check-in/create-daily-check-in.use-case';
+import { DailyCheckInDateService } from './application/services/daily-check-in-date.service';
 import { GetDailyCheckInHistoryUseCase } from './application/use-cases/get-daily-check-in-history/get-daily-check-in-history.use-case';
+import { GetTodayDailyCheckInUseCase } from './application/use-cases/get-today-daily-check-in/get-today-daily-check-in.use-case';
 import { GetWorkoutHistoryUseCase } from './application/use-cases/get-workout-history/get-workout-history.use-case';
 import { GetProgressSummaryUseCase } from './application/use-cases/get-progress-summary/get-progress-summary.use-case';
 import { LogWorkoutUseCase } from './application/use-cases/log-workout/log-workout.use-case';
@@ -35,6 +38,7 @@ import { ProgressController } from './presentation/http/progress.controller';
 @Module({
   imports: [
     AuthModule,
+    forwardRef(() => RecoveryModule),
     UsersModule,
     FitnessModule,
     MongooseModule.forFeature([
@@ -56,7 +60,9 @@ import { ProgressController } from './presentation/http/progress.controller';
   providers: [
     AuthSessionGuard,
     CreateDailyCheckInUseCase,
+    DailyCheckInDateService,
     GetDailyCheckInHistoryUseCase,
+    GetTodayDailyCheckInUseCase,
     GetWorkoutHistoryUseCase,
     GetProgressSummaryUseCase,
     LogWorkoutUseCase,
@@ -82,6 +88,7 @@ import { ProgressController } from './presentation/http/progress.controller';
     WORKOUT_LOG_REPOSITORY,
     DAILY_CHECK_IN_REPOSITORY,
     GetDailyCheckInHistoryUseCase,
+    GetTodayDailyCheckInUseCase,
     GetWorkoutHistoryUseCase,
     GetProgressSummaryUseCase,
   ],

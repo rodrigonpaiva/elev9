@@ -1,5 +1,6 @@
-export type GetDailyCheckInHistoryOutput = {
-  dailyCheckIns: Array<{
+export class GetTodayDailyCheckInResponseDto {
+  completedToday!: boolean;
+  dailyCheckIn!: {
     id: string;
     energyLevel: number;
     sleepQuality: number;
@@ -9,5 +10,5 @@ export type GetDailyCheckInHistoryOutput = {
     timezone: string;
     createdAt: string;
     updatedAt: string;
-  }>;
-};
+  } | null;
+}

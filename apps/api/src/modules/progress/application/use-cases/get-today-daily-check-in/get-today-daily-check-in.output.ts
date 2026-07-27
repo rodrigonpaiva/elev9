@@ -1,5 +1,6 @@
-export type GetDailyCheckInHistoryOutput = {
-  dailyCheckIns: Array<{
+export type GetTodayDailyCheckInOutput = {
+  completedToday: boolean;
+  dailyCheckIn: {
     id: string;
     energyLevel: number;
     sleepQuality: number;
@@ -7,7 +8,7 @@ export type GetDailyCheckInHistoryOutput = {
     motivationLevel: number;
     localDate: string;
     timezone: string;
-    createdAt: string;
-    updatedAt: string;
-  }>;
+    createdAt: Date;
+    updatedAt: Date;
+  } | null;
 };

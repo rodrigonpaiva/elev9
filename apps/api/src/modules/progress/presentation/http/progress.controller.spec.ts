@@ -107,7 +107,10 @@ describe('ProgressController', () => {
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 5,
+        localDate: '2026-05-04',
+        timezone: 'UTC',
         createdAt: '2026-05-04T10:00:00.000Z',
+        updatedAt: '2026-05-04T10:00:00.000Z',
       },
     });
   });

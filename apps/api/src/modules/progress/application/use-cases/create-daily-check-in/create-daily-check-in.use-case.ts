@@ -1,13 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
 } from '../../../../users/domain/repositories/user-profile.repository';
+import { BuildRecoverySnapshotUseCase } from '../../../../recovery/application/use-cases/build-recovery-snapshot/build-recovery-snapshot.use-case';
 import {
   DAILY_CHECK_IN_REPOSITORY,
   DailyCheckInRepository,
 } from '../../../domain/repositories/daily-check-in.repository';
+import { DailyCheckInDateService } from '../../services/daily-check-in-date.service';
 import {
   CREATE_DAILY_CHECK_IN_ERROR_CODES,
   CreateDailyCheckInError,
@@ -17,11 +19,16 @@ import { CreateDailyCheckInOutput } from './create-daily-check-in.output';
 
 @Injectable()
 export class CreateDailyCheckInUseCase {
+  private readonly logger = new Logger(CreateDailyCheckInUseCase.name);
+
   constructor(
     @Inject(USER_PROFILE_REPOSITORY)
     private readonly userProfileRepository: UserProfileRepository,
     @Inject(DAILY_CHECK_IN_REPOSITORY)
     private readonly dailyCheckInRepository: DailyCheckInRepository,
+    private readonly dailyCheckInDateService: DailyCheckInDateService = new DailyCheckInDateService(),
+    @Optional()
+    private readonly buildRecoverySnapshotUseCase?: BuildRecoverySnapshotUseCase,
   ) {}
 
   async execute(
@@ -49,13 +56,51 @@ export class CreateDailyCheckInUseCase {
         );
       }
 
-      const dailyCheckIn = await this.dailyCheckInRepository.create({
+      const day = this.dailyCheckInDateService.resolveDay(
+        String(userProfile.timezone),
+      );
+      const dailyCheckIn = await this.dailyCheckInRepository.upsert({
         userProfileId: userProfile.id,
+        localDate: day.localDate,
+        timezone: day.timezone,
+        legacyDayStart: day.legacyDayStart,
+        legacyDayEnd: day.legacyDayEnd,
         energyLevel: input.energyLevel,
         sleepQuality: input.sleepQuality,
         muscleSoreness: input.muscleSoreness,
         motivationLevel: input.motivationLevel,
       });
+
+      this.logger.log({
+        event: 'daily_check_in_upserted',
+        userProfileId: userProfile.id,
+        localDate: day.localDate,
+        timezone: day.timezone,
+      });
+
+      if (this.buildRecoverySnapshotUseCase) {
+        try {
+          await this.buildRecoverySnapshotUseCase.execute({
+            authUserId,
+            date: day.localDate,
+          });
+          this.logger.log({
+            event: 'daily_check_in_recovery_recalculated',
+            userProfileId: userProfile.id,
+            localDate: day.localDate,
+          });
+        } catch {
+          this.logger.error({
+            event: 'daily_check_in_recovery_recalculation_failed',
+            userProfileId: userProfile.id,
+            localDate: day.localDate,
+          });
+          throw new CreateDailyCheckInError(
+            CREATE_DAILY_CHECK_IN_ERROR_CODES.RECOVERY_RECALCULATION_FAILED,
+            'Recovery recalculation failed after saving the daily check-in.',
+          );
+        }
+      }
 
       return {
         dailyCheckIn: {
@@ -64,7 +109,10 @@ export class CreateDailyCheckInUseCase {
           sleepQuality: dailyCheckIn.sleepQuality,
           muscleSoreness: dailyCheckIn.muscleSoreness,
           motivationLevel: dailyCheckIn.motivationLevel,
+          localDate: dailyCheckIn.localDate ?? day.localDate,
+          timezone: dailyCheckIn.timezone ?? day.timezone,
           createdAt: dailyCheckIn.createdAt,
+          updatedAt: dailyCheckIn.updatedAt,
         },
       };
     } catch (error) {

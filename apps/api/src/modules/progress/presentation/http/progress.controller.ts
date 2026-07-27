@@ -9,6 +9,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Post,
+  Optional,
   Query,
   Req,
   UnauthorizedException,
@@ -21,6 +22,11 @@ import {
   CreateDailyCheckInError,
 } from '../../application/use-cases/create-daily-check-in/create-daily-check-in.errors';
 import { CreateDailyCheckInUseCase } from '../../application/use-cases/create-daily-check-in/create-daily-check-in.use-case';
+import {
+  GET_TODAY_DAILY_CHECK_IN_ERROR_CODES,
+  GetTodayDailyCheckInError,
+} from '../../application/use-cases/get-today-daily-check-in/get-today-daily-check-in.errors';
+import { GetTodayDailyCheckInUseCase } from '../../application/use-cases/get-today-daily-check-in/get-today-daily-check-in.use-case';
 import {
   GET_DAILY_CHECK_IN_HISTORY_ERROR_CODES,
   GetDailyCheckInHistoryError,
@@ -45,6 +51,7 @@ import { CreateDailyCheckInRequestDto } from './dto/create-daily-check-in.reques
 import { CreateDailyCheckInResponseDto } from './dto/create-daily-check-in.response.dto';
 import { GetDailyCheckInHistoryQueryDto } from './dto/get-daily-check-in-history.query.dto';
 import { GetDailyCheckInHistoryResponseDto } from './dto/get-daily-check-in-history.response.dto';
+import { GetTodayDailyCheckInResponseDto } from './dto/get-today-daily-check-in.response.dto';
 import { GetProgressSummaryQueryDto } from './dto/get-progress-summary.query.dto';
 import { GetProgressSummaryResponseDto } from './dto/get-progress-summary.response.dto';
 import { GetWorkoutHistoryQueryDto } from './dto/get-workout-history.query.dto';
@@ -71,6 +78,8 @@ export class ProgressController {
     private readonly getProgressSummaryUseCase: GetProgressSummaryUseCase,
     private readonly getDailyCheckInHistoryUseCase: GetDailyCheckInHistoryUseCase,
     private readonly getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
+    @Optional()
+    private readonly getTodayDailyCheckInUseCase?: GetTodayDailyCheckInUseCase,
   ) {}
 
   @Post('daily-check-in')
@@ -96,7 +105,14 @@ export class ProgressController {
           sleepQuality: result.dailyCheckIn.sleepQuality,
           muscleSoreness: result.dailyCheckIn.muscleSoreness,
           motivationLevel: result.dailyCheckIn.motivationLevel,
+          localDate:
+            result.dailyCheckIn.localDate ??
+            result.dailyCheckIn.createdAt.toISOString().slice(0, 10),
+          timezone: result.dailyCheckIn.timezone ?? 'UTC',
           createdAt: result.dailyCheckIn.createdAt.toISOString(),
+          updatedAt: (
+            result.dailyCheckIn.updatedAt ?? result.dailyCheckIn.createdAt
+          ).toISOString(),
         },
       };
     } catch (error) {
@@ -211,6 +227,44 @@ export class ProgressController {
     }
   }
 
+  @Get('daily-check-in/today')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getTodayDailyCheckIn(
+    @Req() request: RequestWithAuthUser,
+  ): Promise<GetTodayDailyCheckInResponseDto> {
+    if (!this.getTodayDailyCheckInUseCase) {
+      throw new InternalServerErrorException(
+        'Daily check-in today is unavailable.',
+      );
+    }
+
+    try {
+      const result = await this.getTodayDailyCheckInUseCase.execute({
+        authUserId: request.authUser?.id ?? '',
+      });
+
+      return {
+        completedToday: result.completedToday,
+        dailyCheckIn: result.dailyCheckIn
+          ? {
+              id: result.dailyCheckIn.id,
+              energyLevel: result.dailyCheckIn.energyLevel,
+              sleepQuality: result.dailyCheckIn.sleepQuality,
+              muscleSoreness: result.dailyCheckIn.muscleSoreness,
+              motivationLevel: result.dailyCheckIn.motivationLevel,
+              localDate: result.dailyCheckIn.localDate,
+              timezone: result.dailyCheckIn.timezone,
+              createdAt: result.dailyCheckIn.createdAt.toISOString(),
+              updatedAt: result.dailyCheckIn.updatedAt.toISOString(),
+            }
+          : null,
+      };
+    } catch (error) {
+      this.handleGetTodayDailyCheckInError(error);
+    }
+  }
+
   private handleCreateDailyCheckInError(error: unknown): never {
     if (!(error instanceof CreateDailyCheckInError)) {
       throw new InternalServerErrorException('An unexpected error occurred.');
@@ -218,6 +272,7 @@ export class ProgressController {
 
     switch (error.code) {
       case CREATE_DAILY_CHECK_IN_ERROR_CODES.INVALID_INPUT:
+      case CREATE_DAILY_CHECK_IN_ERROR_CODES.INVALID_TIMEZONE:
         throw new BadRequestException({
           code: error.code,
           message: error.message,
@@ -235,10 +290,40 @@ export class ProgressController {
           message: error.message,
           details: error.details,
         });
+      case CREATE_DAILY_CHECK_IN_ERROR_CODES.RECOVERY_RECALCULATION_FAILED:
+        throw new ConflictException({
+          code: error.code,
+          message: error.message,
+        });
       case CREATE_DAILY_CHECK_IN_ERROR_CODES.INTERNAL_ERROR:
       default:
         throw new InternalServerErrorException({
           code: CREATE_DAILY_CHECK_IN_ERROR_CODES.INTERNAL_ERROR,
+          message: 'An unexpected error occurred.',
+        });
+    }
+  }
+
+  private handleGetTodayDailyCheckInError(error: unknown): never {
+    if (!(error instanceof GetTodayDailyCheckInError)) {
+      throw new InternalServerErrorException('An unexpected error occurred.');
+    }
+
+    switch (error.code) {
+      case GET_TODAY_DAILY_CHECK_IN_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+        });
+      case GET_TODAY_DAILY_CHECK_IN_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+        });
+      case GET_TODAY_DAILY_CHECK_IN_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: error.code,
           message: 'An unexpected error occurred.',
         });
     }

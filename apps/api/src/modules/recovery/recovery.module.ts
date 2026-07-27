@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { AuthModule } from '../auth/auth.module';
@@ -32,7 +32,7 @@ import { RecoveryController } from './presentation/http/recovery.controller';
     AuthModule,
     UsersModule,
     FitnessModule,
-    ProgressModule,
+    forwardRef(() => ProgressModule),
     MongooseModule.forFeature([
       {
         name: TRAINING_PLAN_MODEL_NAME,

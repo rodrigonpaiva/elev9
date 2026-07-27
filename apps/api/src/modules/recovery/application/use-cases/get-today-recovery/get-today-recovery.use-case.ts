@@ -50,7 +50,10 @@ export class GetTodayRecoveryUseCase {
         );
       }
 
-      const todayDate = this.recoveryDateService.todayUtcDateString();
+      const todayDate = this.recoveryDateService.getDateString(
+        new Date(),
+        String(userProfile.timezone || 'UTC'),
+      );
       const existingSnapshot =
         await this.recoverySnapshotRepository.findByUserProfileIdAndDate(
           userProfile.id,

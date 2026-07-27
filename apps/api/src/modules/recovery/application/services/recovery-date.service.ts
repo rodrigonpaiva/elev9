@@ -12,8 +12,19 @@ export class RecoveryDateService {
     return this.platformDateService.getTodayDateString(now);
   }
 
-  getDateString(date: Date): string {
-    return this.platformDateService.getDateString(date);
+  getDateString(date: Date, timezone = 'UTC'): string {
+    if (timezone === 'UTC') {
+      return this.platformDateService.getDateString(date);
+    }
+
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+      .format(date)
+      .replace(/\//g, '-');
   }
 
   getUtcDayRange(dateString: string): { start: Date; end: Date } {

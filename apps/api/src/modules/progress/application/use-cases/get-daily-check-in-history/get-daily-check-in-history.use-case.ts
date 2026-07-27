@@ -67,7 +67,12 @@ export class GetDailyCheckInHistoryUseCase {
           sleepQuality: dailyCheckIn.sleepQuality,
           muscleSoreness: dailyCheckIn.muscleSoreness,
           motivationLevel: dailyCheckIn.motivationLevel,
+          localDate:
+            dailyCheckIn.localDate ??
+            dailyCheckIn.createdAt.toISOString().slice(0, 10),
+          timezone: dailyCheckIn.timezone ?? String(userProfile.timezone),
           createdAt: dailyCheckIn.createdAt.toISOString(),
+          updatedAt: dailyCheckIn.updatedAt.toISOString(),
         })),
       };
     } catch (error) {
