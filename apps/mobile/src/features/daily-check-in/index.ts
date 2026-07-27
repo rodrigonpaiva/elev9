@@ -6,4 +6,6 @@ export * from './components/daily-check-in-scale';
 export * from './components/daily-check-in-success';
 export * from './constants/daily-check-in-questions';
 export * from './hooks/use-daily-check-in-form';
+export * from './hooks/use-daily-check-in';
 export * from './models/daily-check-in-form-state';
+export * from './models/daily-check-in-integration';

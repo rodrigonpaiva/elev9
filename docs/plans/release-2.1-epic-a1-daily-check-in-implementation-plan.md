@@ -261,3 +261,16 @@ Implemented UI assets:
 The design reuses `Screen`, `Card`, `Button`, `Text`, `Badge`, colors, spacing and radius tokens from `@elev9/ui`. The existing dashboard CTA and API client were intentionally left unchanged.
 
 The mobile project has no component-testing library in its current dependencies. Pure form-state tests were added and the full mobile build/test targets are used for static and runtime validation. Final API wiring, real today-state loading, cache invalidation, dashboard refresh and analytics remain Prompt 5 work.
+
+## Mobile Integration and Dashboard Connection Update — Prompt 5
+
+The mobile flow is now connected to the existing typed API client without introducing a second data-management library:
+
+- `useDailyCheckIn` loads `getTodayDailyCheckIn()` as the canonical source. A null record resolves to create mode; a record resolves to edit mode, regardless of route hints.
+- Submission delegates only the four shared signals to `submitDailyCheckIn()`. The hook prevents concurrent submissions, maps transport/domain failures to safe UI errors, and signs out through the existing auth provider for expired sessions.
+- After a successful mutation, the hook stores the canonical response and fetches the synchronously recalculated Recovery snapshot. No date, timezone, readiness or Recovery calculation exists in mobile.
+- Dashboard loading now includes the canonical daily-check-in state. The primary check-in CTA navigates to `DailyCheckIn`, uses pending/completed copy, and no longer redirects to history. Existing dashboard focus refresh re-fetches the dashboard domains, Recovery and deterministic Coach intelligence after returning from the flow.
+- The existing history route remains unchanged. No analytics, offline persistence, background retry, new dependency, backend file, shared contract or API-client implementation was changed in Prompt 5.
+- Safe technical logs contain only mapped error codes in development; health-signal payloads and response bodies are not logged.
+
+Prompt 5 validation: `npm exec nx test mobile -- --runInBand` passed with 10 suites and 41 tests; `npm exec nx build mobile` passed for Web, iOS and Android bundles. `npm exec nx build types`, `npm exec nx build api-client`, `npm exec nx build api`, `npm run lint` (the repository script targets `types` and `api-client`) and `git diff --check` also passed. No mobile lint target is configured in the workspace.

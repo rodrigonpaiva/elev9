@@ -23,6 +23,7 @@ import { getCoachFirstName } from '../hooks/coach';
 import { useDashboard } from '../hooks/use-dashboard';
 import type { UseDashboardResult } from '../hooks/use-dashboard';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { getDailyCheckInCtaLabel } from './dashboard-daily-check-in-helpers';
 
 type DashboardScreenProps = {
   onOpenHistory?: () => void;
@@ -141,7 +142,9 @@ export function DashboardScreen({
         handleStartWorkout();
         return;
       case 'check_in':
-        navigation.navigate('DailyCheckInHistory');
+        navigation.navigate('DailyCheckIn', {
+          mode: dashboard.dailyCheckIn.completedToday ? 'edit' : 'create',
+        });
         return;
       case 'nutrition':
         handleOpenNutritionRecommendations();
@@ -152,6 +155,7 @@ export function DashboardScreen({
     }
   }, [
     dashboard.coach.actionTarget,
+    dashboard.dailyCheckIn.completedToday,
     handleOpenNutritionRecommendations,
     handleStartWorkout,
     navigation,
@@ -272,7 +276,7 @@ function DashboardCards({
       <CoachInsightCard
         badgeLabel={dashboard.coach.badgeLabel}
         coachDecision={dashboard.coach.data}
-        ctaLabel={dashboard.coach.ctaLabel}
+        ctaLabel={getDailyCheckInCtaLabel(dashboard)}
         confidenceLevel={dashboard.coach.intelligence?.confidence.level ?? null}
         errorMessage={dashboard.coach.errorMessage}
         isLoading={dashboard.coach.isLoading}

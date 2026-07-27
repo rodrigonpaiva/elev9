@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 
 import type { SubmitDailyCheckInRequest } from '@elev9/types';
+import { Button, Card, colors, Screen, Text } from '@elev9/ui';
 
 import {
   DailyCheckInFlow,
+  useDailyCheckIn,
   type DailyCheckInSubmit,
 } from '../features/daily-check-in';
 import type { RootStackParamList } from '../navigation/app-navigator';
@@ -22,9 +24,9 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<DailyCheckInRoute>();
-  const mode = route.params?.mode ?? 'create';
   const initialValues = route.params?.initialValues;
   const [isDirty, setIsDirty] = useState(Boolean(initialValues));
+  const dailyCheckIn = useDailyCheckIn();
   const submit = useCallback<DailyCheckInSubmit>(
     async (values: SubmitDailyCheckInRequest) => {
       if (onSubmit) {
@@ -32,11 +34,9 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
         return;
       }
 
-      throw new Error(
-        'Daily Check-in is ready for the Prompt 5 API integration.',
-      );
+      await dailyCheckIn.submit(values);
     },
-    [onSubmit],
+    [dailyCheckIn.submit, onSubmit],
   );
 
   const confirmExit = useCallback(() => {
@@ -79,10 +79,23 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
     return unsubscribe;
   }, [isDirty, navigation]);
 
+  if (dailyCheckIn.isLoading && !dailyCheckIn.dailyCheckIn) {
+    return <DailyCheckInLoading />;
+  }
+
+  if (dailyCheckIn.error && !dailyCheckIn.dailyCheckIn) {
+    return (
+      <DailyCheckInLoadError
+        errorMessage={dailyCheckIn.error.message}
+        onRetry={() => void dailyCheckIn.retry()}
+      />
+    );
+  }
+
   return (
     <DailyCheckInFlow
-      initialValues={initialValues}
-      mode={mode}
+      initialValues={dailyCheckIn.initialValues}
+      mode={dailyCheckIn.mode}
       onClose={confirmExit}
       onDone={() => navigation.goBack()}
       onDirtyChange={setIsDirty}
@@ -90,3 +103,60 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
     />
   );
 }
+
+function DailyCheckInLoading() {
+  return (
+    <Screen contentStyle={styles.stateContent}>
+      <View
+        accessibilityLabel="Loading today's check-in"
+        style={styles.stateCard}
+      >
+        <ActivityIndicator
+          accessibilityLabel="Daily check-in loading"
+          color={colors.primary}
+        />
+        <Text accessibilityLiveRegion="polite" style={styles.stateText}>
+          Checking in with your Coach...
+        </Text>
+      </View>
+    </Screen>
+  );
+}
+
+function DailyCheckInLoadError({
+  errorMessage,
+  onRetry,
+}: {
+  errorMessage: string;
+  onRetry: () => void;
+}) {
+  return (
+    <Screen contentStyle={styles.stateContent}>
+      <Card style={styles.errorCard}>
+        <Text accessibilityRole="header" variant="title">
+          Check-in unavailable
+        </Text>
+        <Text accessibilityLiveRegion="polite" style={styles.stateText}>
+          {errorMessage}
+        </Text>
+        <Button label="Try again" onPress={onRetry} />
+      </Card>
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  stateContent: {
+    justifyContent: 'center',
+  },
+  stateCard: {
+    alignItems: 'center',
+    gap: 14,
+  },
+  errorCard: {
+    gap: 16,
+  },
+  stateText: {
+    color: colors.mutedText,
+  },
+});

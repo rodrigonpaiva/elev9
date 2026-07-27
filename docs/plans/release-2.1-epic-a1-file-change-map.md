@@ -85,3 +85,21 @@ No backend endpoint, mobile file, Recovery rule, feature flag or dependency was 
 |    63 | `docs/plans/release-2.1-epic-a1-file-change-map.md`                                | MODIFY | Record actual Prompt 4 paths                                                                      | Mobile implementation | Low    |
 
 No backend, shared contract, API client, dashboard CTA, analytics or Recovery file was changed by Prompt 4.
+
+## Prompt 5 Actual Changes
+
+| Order | File | Action | Reason | Depends On | Risk |
+| ----: | ---- | ------ | ------ | ---------- | ---- |
+| 64 | `apps/mobile/src/features/daily-check-in/hooks/use-daily-check-in.ts` | CREATE | Load today's canonical state, resolve create/edit, submit safely, map errors and refresh Recovery | Shared API client and auth provider | High |
+| 65 | `apps/mobile/src/features/daily-check-in/models/daily-check-in-integration.ts` | CREATE | Keep transport-to-UI error mapping outside the screen | API client error contract | Medium |
+| 66 | `apps/mobile/src/features/daily-check-in/models/daily-check-in-integration.spec.ts` | CREATE | Verify safe network, session and Recovery error mapping | Error mapper | Low |
+| 67 | `apps/mobile/src/features/daily-check-in/index.ts` | MODIFY | Export the integration boundary and safe error model | Feature hook/models | Low |
+| 68 | `apps/mobile/src/screens/daily-check-in-screen.tsx` | MODIFY | Replace the Prompt 4 submission placeholder with the real hook and canonical today loading states | Integration hook and UI flow | High |
+| 69 | `apps/mobile/src/hooks/use-dashboard.ts` | MODIFY | Fetch today's status as a dashboard domain and include it in refresh/error/loading state | Progress API client | High |
+| 70 | `apps/mobile/src/screens/dashboard-screen.tsx` | MODIFY | Route primary check-in CTA to DailyCheckIn with pending/completed mode hints | Dashboard daily state | Medium |
+| 71 | `apps/mobile/src/screens/dashboard-daily-check-in-helpers.ts` | CREATE | Keep CTA copy logic pure and independently testable | Dashboard result type | Low |
+| 72 | `apps/mobile/src/screens/dashboard-daily-check-in.spec.ts` | CREATE | Verify pending, completed and unrelated CTA states | CTA helper | Low |
+| 73 | `docs/plans/release-2.1-epic-a1-daily-check-in-implementation-plan.md` | MODIFY | Record real integration, refresh, error and validation decisions | Prompt 5 implementation | Low |
+| 74 | `docs/plans/release-2.1-epic-a1-file-change-map.md` | MODIFY | Record actual Prompt 5 paths and scope | Prompt 5 implementation | Low |
+
+Prompt 5 intentionally leaves product analytics, offline persistence/queue, background retry, backend/contracts/API-client changes and final E2E validation to later work.
