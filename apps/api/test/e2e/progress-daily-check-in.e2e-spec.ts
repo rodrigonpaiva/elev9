@@ -98,6 +98,51 @@ describe('Progress Daily Check-in E2E', () => {
       .expect(200);
 
     expect(history.body.dailyCheckIns).toHaveLength(1);
+
+    const recovery = await request(app.getHttpServer())
+      .get('/recovery/experience/current')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(recovery.body).toEqual({
+      availability: 'available',
+      recovery: expect.objectContaining({
+        category: expect.any(String),
+        freshness: 'current',
+        breakdown: expect.arrayContaining([
+          expect.objectContaining({ key: 'energy' }),
+          expect.objectContaining({ key: 'sleep' }),
+          expect.objectContaining({ key: 'muscle_soreness' }),
+        ]),
+      }),
+    });
+    expect(recovery.body.recovery).not.toHaveProperty('sourceContext');
+    expect(recovery.body).not.toHaveProperty('userProfileId');
+
+    const recoveryHistory = await request(app.getHttpServer())
+      .get('/recovery/experience/history?days=7')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(recoveryHistory.body.range).toEqual({ days: 7 });
+    expect(recoveryHistory.body.items).toHaveLength(1);
+    expect(recoveryHistory.body.trend.direction).toBe('insufficient_data');
+  });
+
+  it('returns explicit insufficient data without exposing internal fields', async () => {
+    const token = await registerAndGetToken('recovery-no-check-in-e2e@email.com');
+
+    const response = await request(app.getHttpServer())
+      .get('/recovery/experience/current')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body).toEqual({
+      availability: 'insufficient_data',
+      recovery: null,
+    });
+    expect(response.body).not.toHaveProperty('userProfileId');
+    expect(response.body).not.toHaveProperty('sourceContext');
   });
 
   async function registerAndGetToken(email: string): Promise<string> {

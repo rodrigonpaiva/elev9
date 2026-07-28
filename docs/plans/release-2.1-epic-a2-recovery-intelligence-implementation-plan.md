@@ -195,3 +195,20 @@ Keep the A2 audit, plan and file map synchronized. Add API/read-model documentat
 
 Critical dependencies are safe DTO design, legacy snapshot compatibility, removal of duplicated mobile thresholds, and product agreement on non-clinical factor explanations. A2 must not proceed to UI implementation until these are resolved in Prompt 2.
 
+## Execution Status
+
+- Prompt 1 — completed: architecture and gap audit.
+- Prompt 2 — completed: backend safe Recovery read models and product endpoints.
+- Prompt 3 — next: shared Recovery contracts and API client alignment.
+
+### Prompt 2 decisions
+
+- Compatibility preserved for legacy `/recovery/today`, `/recovery/current` and `/recovery/history` responses.
+- New public product endpoints: `GET /recovery/experience/current` and `GET /recovery/experience/history?days=7`.
+- Public availability: `available`, `not_available`, `insufficient_data`, `processing_failed`.
+- Public freshness: `current`, `stale`, `legacy`, `unknown`.
+- Existing intensity thresholds were preserved through a backend category mapper: recovery→low, light→moderate, moderate→good, hard→high.
+- Breakdown exposes only energy, sleep and muscle soreness impact states; `motivationLevel` remains Coach-only context.
+- Trend requires two valid snapshots, compares ordered half-series averages and uses a threshold of five points.
+- Legacy snapshots are not migrated automatically; missing source context is exposed as `legacy` and excluded from trend.
+- E2E was added but execution remains blocked in the sandbox by `MongoMemoryServer` `listen EPERM 0.0.0.0`.

@@ -33,3 +33,23 @@
 | 29 | `docs/plans/release-2.1-epic-a2-file-change-map.md` | NO_CHANGE_EXPECTED | A2 implementation map | None | Low |
 
 Actions are intentionally prospective. This Prompt 1 created no production code, tests, configuration, dependency or lockfile changes.
+
+## Prompt 2 actual changes
+
+| Order | File or Directory | Action | Reason | Depends On | Risk |
+|---:|---|---|---|---|---|
+| 30 | `apps/api/src/modules/recovery/application/read-models/recovery-read-model.types.ts` | CREATE | Internal public read-model types | Backend response design | Medium |
+| 31 | `apps/api/src/modules/recovery/application/services/recovery-category.policy.ts` | CREATE | Canonical public category mapping | Existing intensity semantics | High |
+| 32 | `apps/api/src/modules/recovery/application/services/recovery-factor-breakdown.policy.ts` | CREATE | Safe deterministic factor presentation | Source context boundary | High |
+| 33 | `apps/api/src/modules/recovery/application/services/recovery-insight.policy.ts` | CREATE | Deterministic non-clinical insight | Availability/category model | Medium |
+| 34 | `apps/api/src/modules/recovery/application/services/recovery-trend.policy.ts` | CREATE | Bounded history trend | History semantics | Medium |
+| 35 | `apps/api/src/modules/recovery/application/services/recovery-read-model.mapper.ts` | CREATE | Hide entity internals from public response | Policies | High |
+| 36 | `apps/api/src/modules/recovery/application/use-cases/get-current-recovery-read-model/` | CREATE | Public current use case | Existing current use case | High |
+| 37 | `apps/api/src/modules/recovery/application/use-cases/get-recovery-history-read-model/` | CREATE | Public history/trend use case | Existing history use case | Medium |
+| 38 | `apps/api/src/modules/recovery/presentation/http/dto/get-recovery-experience-*.ts` | CREATE | Safe endpoint DTOs/query validation | Read models | High |
+| 39 | `apps/api/src/modules/recovery/presentation/http/recovery.controller.ts` | UPDATE | Add compatibility-preserving public routes | New use cases | High |
+| 40 | `apps/api/src/modules/recovery/recovery.module.ts` | UPDATE | Register policies, mapper and use cases | New application services | Medium |
+| 41 | `apps/api/src/modules/recovery/application/services/recovery-read-model.mapper.spec.ts` | CREATE | Privacy and mapping tests | Mapper | High |
+| 42 | `apps/api/src/modules/recovery/application/services/recovery-trend.policy.spec.ts` | CREATE | Trend boundaries and legacy tests | Trend policy | Medium |
+| 43 | `apps/api/test/e2e/progress-daily-check-in.e2e-spec.ts` | UPDATE | Validate A1→safe Recovery read model | Mongo E2E environment | High |
+| 44 | `docs/architecture/release-2.1-epic-a2-recovery-read-models.md` | CREATE | Document public boundary and decisions | Implementation | Low |

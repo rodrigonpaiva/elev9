@@ -26,6 +26,13 @@ import {
 } from './infrastructure/mongoose/recovery-snapshot.schema';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { RecoveryController } from './presentation/http/recovery.controller';
+import { RecoveryCategoryPolicy } from './application/services/recovery-category.policy';
+import { RecoveryFactorBreakdownPolicy } from './application/services/recovery-factor-breakdown.policy';
+import { RecoveryInsightPolicy } from './application/services/recovery-insight.policy';
+import { RecoveryReadModelMapper } from './application/services/recovery-read-model.mapper';
+import { RecoveryTrendPolicy } from './application/services/recovery-trend.policy';
+import { GetCurrentRecoveryReadModelUseCase } from './application/use-cases/get-current-recovery-read-model/get-current-recovery-read-model.use-case';
+import { GetRecoveryHistoryReadModelUseCase } from './application/use-cases/get-recovery-history-read-model/get-recovery-history-read-model.use-case';
 
 @Module({
   imports: [
@@ -54,6 +61,13 @@ import { RecoveryController } from './presentation/http/recovery.controller';
     GetTodayRecoveryUseCase,
     GetCurrentRecoveryUseCase,
     GetRecoveryHistoryUseCase,
+    RecoveryCategoryPolicy,
+    RecoveryFactorBreakdownPolicy,
+    RecoveryInsightPolicy,
+    RecoveryReadModelMapper,
+    RecoveryTrendPolicy,
+    GetCurrentRecoveryReadModelUseCase,
+    GetRecoveryHistoryReadModelUseCase,
     {
       provide: TRAINING_PLAN_REPOSITORY,
       useClass: MongooseTrainingPlanRepository,
