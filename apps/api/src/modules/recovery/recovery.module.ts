@@ -83,6 +83,7 @@ import { GetRecoveryHistoryReadModelUseCase } from './application/use-cases/get-
     BuildRecoverySnapshotUseCase,
     GetTodayRecoveryUseCase,
     GetCurrentRecoveryUseCase,
+    GetCurrentRecoveryReadModelUseCase,
     GetRecoveryHistoryUseCase,
   ],
 })

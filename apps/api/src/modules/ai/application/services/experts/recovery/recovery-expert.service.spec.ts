@@ -3,6 +3,7 @@ import type {
   CoachExpertRequest,
 } from '../coach-expert.types';
 import type { RecoverySnapshot } from '../../../../../recovery/domain/entities/recovery-snapshot.entity';
+import type { RecoveryCurrentReadModel } from '../../../../../recovery/application/read-models/recovery-read-model.types';
 import { RecoveryExpert } from './recovery-expert.service';
 
 describe('RecoveryExpert', () => {
@@ -161,6 +162,75 @@ describe('RecoveryExpert', () => {
       ),
     ).toContain('REDUCE_TODAYS_INTENSITY');
     expect(result.contributions[1].summary).toBe('Prioritize recovery.');
+  });
+
+  it('uses canonical Recovery semantics instead of recalculating from score or raw check-in values', () => {
+    const request = buildRequest();
+    const canonicalRecovery: RecoveryCurrentReadModel = {
+      availability: 'available',
+      recovery: {
+        score: 92,
+        fatigueScore: 8,
+        category: 'low',
+        freshness: 'current',
+        lastUpdatedAt: '2026-07-28T10:00:00.000Z',
+        trend: 'stable',
+        breakdown: [
+          {
+            key: 'sleep',
+            impact: 'negative',
+            labelKey: 'recovery.factors.sleep.label',
+            explanationKey: 'recovery.factors.sleep.explanation',
+          },
+          {
+            key: 'energy',
+            impact: 'positive',
+            labelKey: 'recovery.factors.energy.label',
+            explanationKey: 'recovery.factors.energy.explanation',
+          },
+        ],
+        insight: {
+          tone: 'caution',
+          titleKey: 'recovery.insight.low.title',
+          bodyKey: 'recovery.insight.low.body',
+          action: 'prioritize_recovery',
+        },
+      },
+    };
+    const result = expert.analyze(
+      request,
+      buildContext({
+        request,
+        healthContext: buildHealthContext({
+          recoveryExperience: canonicalRecovery,
+          latestCheckIn: {
+            energyLevel: 1,
+            sleepQuality: 1,
+            muscleSoreness: 5,
+            motivationLevel: 1,
+            createdAt: new Date('2026-07-28T10:00:00.000Z'),
+          },
+        }),
+      }),
+    );
+
+    expect(result.metadata.analysis).toMatchObject({
+      recoveryStatus: 'POOR',
+      recoveryAvailability: 'available',
+      recoveryFreshness: 'current',
+      recoveryCategory: 'low',
+      trend: { trend: 'STABLE' },
+      trainingImpact: { impact: 'ACTIVE_RECOVERY' },
+    });
+    expect(result.metadata.analysis.factorImpacts).toEqual([
+      { key: 'sleep', impact: 'negative' },
+      { key: 'energy', impact: 'positive' },
+    ]);
+    expect(result.metadata.analysis.sleepQuality).toBeNull();
+    expect(result.metadata.analysis.muscleSoreness).toBeNull();
+    expect(JSON.stringify(result.metadata.analysis)).not.toContain(
+      'motivationLevel=1',
+    );
   });
 
   it('takes a full recovery day when readiness is critically poor and fatigue is very high', () => {

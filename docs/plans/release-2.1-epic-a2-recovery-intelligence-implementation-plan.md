@@ -238,6 +238,25 @@ Critical dependencies are safe DTO design, legacy snapshot compatibility, remova
 - Prompt 2 — completed: backend safe Recovery read models and product endpoints.
 - Prompt 3 — completed: shared Recovery contracts and API client alignment.
 
+## Prompt 6 Status
+
+- Prompt 1 — completed.
+- Prompt 2 — completed.
+- Prompt 3 — completed.
+- Prompt 4 — completed.
+- Prompt 5 — completed.
+- Prompt 6 — completed: Health Context now carries the canonical Recovery Experience read model when available, and the Recovery Coach expert consumes category, availability, freshness, factor impacts and insight action without recalculating them. The legacy snapshot path remains only as a compatibility fallback.
+- Prompt 7 — next: Product Analytics and Recovery Observability.
+
+### Prompt 6 decisions
+
+- The Coach uses `GetCurrentRecoveryReadModelUseCase` internally; it does not call the Recovery HTTP controller or API client.
+- `RecoveryModule` remains the semantic owner. No Recovery algorithm, weight or threshold changed.
+- The canonical Coach branch maps public category and insight action to the existing Coach analysis vocabulary; it does not derive category, trend or factor impact from score/check-in values.
+- `motivationLevel` remains Coach context only and is not represented as a Recovery factor or score cause.
+- LLM and generative AI remain disabled by default.
+- Legacy snapshot behavior is preserved as a compatibility fallback and remains a documented migration gap.
+
 ### Prompt 2 decisions
 
 - Compatibility preserved for legacy `/recovery/today`, `/recovery/current` and `/recovery/history` responses.

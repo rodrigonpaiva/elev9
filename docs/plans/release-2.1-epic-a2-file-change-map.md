@@ -95,3 +95,18 @@ Prompt 4 did not alter API, contracts, API client, Dashboard, navigation, analyt
 | 65 | `docs/architecture/release-2.1-epic-a2-mobile-recovery-integration.md` | CREATE | Document integration flow and policies | Implementation | Low |
 
 Prompt 5 did not alter API, contracts, API client, backend, algorithm, analytics, offline persistence, dependencies or lockfiles.
+
+## Prompt 6 actual changes
+
+| Order | File or Directory | Action | Reason | Depends On | Risk |
+|---:|---|---|---|---|---|
+| 66 | `apps/api/src/modules/recovery/recovery.module.ts` | UPDATE | Export the canonical current Recovery read-model use case for internal consumers | Recovery read models | Medium |
+| 67 | `apps/api/src/modules/ai/application/services/context-builder/build-user-health-context.service.ts` | UPDATE | Attach the product-safe current Recovery semantics to Health Context | Recovery use case | High |
+| 68 | `apps/api/src/modules/ai/application/services/experts/recovery/recovery-expert.types.ts` | UPDATE | Represent canonical availability/freshness/factor semantics in existing Coach analysis | Health Context | Medium |
+| 69 | `apps/api/src/modules/ai/application/services/experts/recovery/recovery-expert.service.ts` | UPDATE | Consume canonical Recovery semantics before legacy fallback | Canonical context | High |
+| 70 | `apps/api/src/modules/ai/application/services/experts/recovery/recovery-expert.service.spec.ts` | UPDATE | Prove category/factor/privacy parity and no score/raw-check-in recalculation | Coach policy | High |
+| 71 | `docs/architecture/release-2.1-epic-a2-deterministic-recovery-coach.md` | CREATE | Document deterministic Coach boundary, safety and compatibility | Implementation | Low |
+| 72 | `docs/plans/release-2.1-epic-a2-recovery-intelligence-implementation-plan.md` | UPDATE | Record Prompt 6 decisions and Prompt 7 next step | Implementation | Low |
+| 73 | `docs/plans/release-2.1-epic-a2-file-change-map.md` | UPDATE | Record actual Prompt 6 files | Implementation | Low |
+
+Prompt 6 did not alter Recovery calculation, contracts, API client, mobile integration, Dashboard, analytics, offline persistence, dependencies or lockfiles.

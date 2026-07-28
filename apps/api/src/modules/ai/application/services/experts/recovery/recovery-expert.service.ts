@@ -8,6 +8,11 @@ import type {
 import type { UserHealthContext } from '../../context-builder/build-user-health-context.service';
 import type { RecoverySnapshot } from '../../../../../recovery/domain/entities/recovery-snapshot.entity';
 import type {
+  RecoveryCurrentReadModel,
+  RecoveryReadCategory,
+  RecoveryTrendDirection,
+} from '../../../../../recovery/application/read-models/recovery-read-model.types';
+import type {
   RecoveryAnalysis,
   RecoveryConfidence,
   RecoveryGoalAlignment,
@@ -166,6 +171,14 @@ export class RecoveryExpert extends BaseCoachExpert {
       return this.buildBlockedAnalysis(Boolean(healthContext));
     }
 
+    if (healthContext.recoveryExperience) {
+      return this.buildCanonicalAnalysis({
+        experience: healthContext.recoveryExperience,
+        healthContext,
+        recoveryHistory: context.recoveryHistory ?? [],
+      });
+    }
+
     const recoveryHistory = [...(context.recoveryHistory ?? [])];
     const latestSnapshot = this.resolveLatestSnapshot(
       healthContext.recoverySnapshot,
@@ -270,6 +283,201 @@ export class RecoveryExpert extends BaseCoachExpert {
       fatigueScore: latestSnapshot.fatigueScore ?? null,
       recommendedIntensity: latestSnapshot.recommendedIntensity ?? null,
     });
+  }
+
+  private buildCanonicalAnalysis(input: {
+    experience: RecoveryCurrentReadModel;
+    healthContext: UserHealthContext;
+    recoveryHistory: readonly RecoverySnapshotLike[];
+  }): RecoveryAnalysis {
+    const { experience, healthContext, recoveryHistory } = input;
+    const recovery = experience.recovery;
+
+    if (experience.availability !== 'available' || !recovery) {
+      const unavailable = this.buildMissingRecoveryAnalysis(
+        healthContext,
+        recoveryHistory,
+      );
+
+      return Object.freeze({
+        ...unavailable,
+        recoveryAvailability: experience.availability,
+        recoveryFreshness: recovery?.freshness,
+      });
+    }
+
+    const recoveryStatus = this.mapCanonicalCategoryToStatus(
+      recovery.category,
+    );
+    const trend = this.mapCanonicalTrend(recovery.trend);
+    const trainingImpact = this.mapCanonicalActionToTrainingImpact(
+      recovery.insight.action,
+    );
+    const recommendations = Object.freeze([
+      this.buildCanonicalRecommendation(recovery.insight.action),
+    ]);
+    const factorImpacts = Object.freeze(
+      recovery.breakdown.map((factor) => ({
+        key: factor.key,
+        impact: factor.impact,
+      })),
+    );
+    const risks: RecoveryRiskAssessment[] = [
+      Object.freeze({
+        level: recovery.category === 'low' ? 'HIGH' : 'LOW',
+        summary: 'Recovery guidance is based on the canonical Recovery result.',
+        factors: Object.freeze(
+          recovery.breakdown
+            .filter((factor) => factor.impact === 'negative')
+            .map((factor) => `limiting_factor=${factor.key}`),
+        ),
+        metadata: Object.freeze({
+          recoveryAvailability: experience.availability,
+          recoveryFreshness: recovery.freshness,
+        }),
+      }),
+    ];
+
+    return Object.freeze({
+      recoveryStatus,
+      readiness: Object.freeze({
+        score: recovery.score,
+        level: this.mapCanonicalCategoryToReadinessLevel(recovery.category),
+        recommendedIntensity: null,
+        fatigueScore: recovery.fatigueScore,
+        summary: 'Recovery readiness is provided by the canonical Recovery result.',
+        metadata: Object.freeze({ recoveryCategory: recovery.category }),
+      }),
+      trend: Object.freeze({
+        trend,
+        summary: 'Recovery trend is provided by the canonical Recovery result.',
+        factors: Object.freeze(
+          recovery.trend === 'insufficient_data'
+            ? ['insufficient_recovery_history']
+            : [`canonical_trend=${recovery.trend}`],
+        ),
+        metadata: Object.freeze({ recoveryFreshness: recovery.freshness }),
+      }),
+      trainingImpact,
+      nutritionSupport: Object.freeze({
+        level: 'UNKNOWN',
+        summary: 'Nutrition support is outside the Recovery result.',
+        factors: Object.freeze(['not_part_of_recovery_semantics']),
+        metadata: Object.freeze({}),
+      }),
+      goalAlignment: this.resolveGoalAlignment(healthContext, undefined),
+      recommendations,
+      risks: Object.freeze(risks),
+      confidence: recovery.freshness === 'current' ? 'HIGH' : 'MEDIUM',
+      priority: recovery.category === 'low' ? 'HIGH' : 'LOW',
+      signals: Object.freeze([
+        `recovery_category=${recovery.category}`,
+        `recovery_freshness=${recovery.freshness}`,
+        `recovery_availability=${experience.availability}`,
+        ...factorImpacts.map((factor) => `factor_${factor.key}=${factor.impact}`),
+      ]),
+      recoverySnapshotPresent: true,
+      recoveryHistoryCount: recoveryHistory.length,
+      recentWorkoutCount: healthContext.recentWorkoutLogs.length,
+      sleepQuality: null,
+      muscleSoreness: null,
+      readinessScore: recovery.score,
+      fatigueScore: recovery.fatigueScore,
+      recommendedIntensity: null,
+      recoveryAvailability: experience.availability,
+      recoveryFreshness: recovery.freshness,
+      recoveryCategory: recovery.category,
+      factorImpacts,
+    });
+  }
+
+  private mapCanonicalCategoryToStatus(category: RecoveryReadCategory): RecoveryStatus {
+    switch (category) {
+      case 'low':
+        return 'POOR';
+      case 'moderate':
+        return 'MODERATE';
+      case 'good':
+      case 'high':
+        return 'GOOD';
+    }
+  }
+
+  private mapCanonicalCategoryToReadinessLevel(
+    category: RecoveryReadCategory,
+  ): RecoveryReadinessAssessment['level'] {
+    switch (category) {
+      case 'low':
+        return 'LOW';
+      case 'moderate':
+        return 'MEDIUM';
+      case 'good':
+      case 'high':
+        return 'HIGH';
+    }
+  }
+
+  private mapCanonicalTrend(
+    trend: RecoveryTrendDirection,
+  ): RecoveryTrendAssessment {
+    switch (trend) {
+      case 'improving':
+        return 'IMPROVING';
+      case 'declining':
+        return 'DECLINING';
+      case 'stable':
+        return 'STABLE';
+      case 'insufficient_data':
+      default:
+        return 'UNKNOWN';
+    }
+  }
+
+  private mapCanonicalActionToTrainingImpact(
+    action: NonNullable<RecoveryCurrentReadModel['recovery']>['insight']['action'],
+  ): TrainingImpactAssessment {
+    const mapping: Record<
+      NonNullable<RecoveryCurrentReadModel['recovery']>['insight']['action'],
+      RecoveryTrainingImpact
+    > = {
+      train_as_planned: 'FULL_SESSION',
+      reduce_intensity: 'REDUCED_INTENSITY',
+      prioritize_recovery: 'ACTIVE_RECOVERY',
+      complete_check_in: 'ACTIVE_RECOVERY',
+      try_again_later: 'ACTIVE_RECOVERY',
+    };
+    const impact = mapping[action];
+
+    return Object.freeze({
+      impact,
+      summary: 'Training guidance follows the canonical Recovery insight.',
+      factors: Object.freeze([`canonical_action=${action}`]),
+      metadata: Object.freeze({ action }),
+    });
+  }
+
+  private buildCanonicalRecommendation(
+    action: NonNullable<RecoveryCurrentReadModel['recovery']>['insight']['action'],
+  ): RecoveryRecommendation {
+    const mapping: Record<
+      NonNullable<RecoveryCurrentReadModel['recovery']>['insight']['action'],
+      RecoveryRecommendationCode
+    > = {
+      train_as_planned: 'PROCEED_WITH_TODAYS_SESSION',
+      reduce_intensity: 'REDUCE_TODAYS_INTENSITY',
+      prioritize_recovery: 'PRIORITIZE_RECOVERY',
+      complete_check_in: 'PRIORITIZE_RECOVERY',
+      try_again_later: 'PRIORITIZE_RECOVERY',
+    };
+    const code = mapping[action];
+
+    return this.buildRecommendation(
+      code,
+      'Follow your Recovery guidance.',
+      'This guidance follows the canonical Recovery insight.',
+      code === 'PRIORITIZE_RECOVERY' ? 'HIGH' : 'LOW',
+      Object.freeze({ action }),
+    );
   }
 
   private buildBlockedAnalysis(

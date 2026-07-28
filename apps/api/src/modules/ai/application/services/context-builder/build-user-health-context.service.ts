@@ -60,6 +60,8 @@ import {
   RecoveryInfluence,
   RecoverySnapshot,
 } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
+import type { RecoveryCurrentReadModel } from '../../../../recovery/application/read-models/recovery-read-model.types';
+import { GetCurrentRecoveryReadModelUseCase } from '../../../../recovery/application/use-cases/get-current-recovery-read-model/get-current-recovery-read-model.use-case';
 
 export type UserHealthContextTodayWorkout = {
   dayIndex: number;
@@ -123,6 +125,8 @@ export type UserHealthContext = {
     createdAt: Date;
   };
   recoverySnapshot?: UserHealthContextRecoverySnapshot;
+  /** Product-safe Recovery semantics shared with Coach and mobile. */
+  recoveryExperience?: RecoveryCurrentReadModel;
   adaptiveTrainingRecommendation?: UserHealthContextAdaptiveTrainingRecommendation;
   adaptiveRecommendationType?: AdaptiveRecommendationType;
   adaptiveRecommendedIntensity?: AdaptiveRecommendedIntensity;
@@ -177,6 +181,8 @@ export class BuildUserHealthContextService {
     private readonly platformDateService: PlatformDateService = new PlatformDateService(),
     @Optional()
     private readonly getTodayRecoveryUseCase?: GetTodayRecoveryUseCase,
+    @Optional()
+    private readonly getCurrentRecoveryReadModelUseCase?: GetCurrentRecoveryReadModelUseCase,
   ) {}
 
   async build(input: BuildUserHealthContextInput): Promise<UserHealthContext> {
@@ -226,6 +232,9 @@ export class BuildUserHealthContextService {
         userProfileId: userProfile.id,
         fitnessProfileId: fitnessProfile?.id,
       });
+      const recoveryExperience = await this.resolveRecoveryExperience({
+        authUserId,
+      });
 
       const contextWithoutTrainingPlan: UserHealthContext = {
         ...baseContext,
@@ -252,6 +261,7 @@ export class BuildUserHealthContextService {
         recoverySnapshot: recoverySnapshot
           ? this.mapRecoverySnapshot(recoverySnapshot)
           : undefined,
+        recoveryExperience,
         ...(adaptiveTrainingRecommendation
           ? {
               adaptiveTrainingRecommendation,
@@ -446,6 +456,12 @@ export class BuildUserHealthContextService {
       context.fatigueLevel = this.mapFatigueLevel(
         recoverySnapshot.fatigueScore,
       );
+    }
+
+    if (shouldLoadRecovery) {
+      context.recoveryExperience = await this.resolveRecoveryExperience({
+        authUserId,
+      });
     }
 
     if (nutritionProfile) {
@@ -728,6 +744,21 @@ export class BuildUserHealthContextService {
       return result.recoverySnapshot;
     } catch {
       return null;
+    }
+  }
+
+  private async resolveRecoveryExperience(input: {
+    authUserId: string;
+  }): Promise<RecoveryCurrentReadModel | undefined> {
+    if (!this.getCurrentRecoveryReadModelUseCase) {
+      return undefined;
+    }
+
+    try {
+      return await this.getCurrentRecoveryReadModelUseCase.execute(input);
+    } catch {
+      // The legacy snapshot remains available as a compatibility fallback.
+      return undefined;
     }
   }
 

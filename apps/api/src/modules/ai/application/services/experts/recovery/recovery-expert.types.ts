@@ -6,6 +6,11 @@ import type {
 } from '../coach-expert.types';
 import type { RecoverySnapshot } from '../../../../../recovery/domain/entities/recovery-snapshot.entity';
 import type { UserHealthContext } from '../../context-builder/build-user-health-context.service';
+import type {
+  RecoveryFactorImpact,
+  RecoveryReadAvailability,
+  RecoveryReadFreshness,
+} from '../../../../../recovery/application/read-models/recovery-read-model.types';
 
 export type RecoveryStatus =
   | 'OPTIMAL'
@@ -122,6 +127,13 @@ export type RecoveryAnalysis = {
   readinessScore: number | null;
   fatigueScore: number | null;
   recommendedIntensity: RecoverySnapshot['recommendedIntensity'] | null;
+  recoveryAvailability?: RecoveryReadAvailability;
+  recoveryFreshness?: RecoveryReadFreshness;
+  recoveryCategory?: 'low' | 'moderate' | 'good' | 'high';
+  factorImpacts?: readonly {
+    key: 'energy' | 'sleep' | 'muscle_soreness';
+    impact: RecoveryFactorImpact;
+  }[];
 };
 
 export type RecoveryExpertContribution = {
