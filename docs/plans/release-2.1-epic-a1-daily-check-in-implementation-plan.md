@@ -310,3 +310,7 @@ The state model is `idle → draft → submitting → queued/syncing → synced|
 The Dashboard presents queued/failed as distinct from `completedToday`; pending local data never becomes canonical success. Product analytics reuses the Prompt 7 allowlisted noop boundary and records only transport behavior (`queued`, `sync_started`, `sync_succeeded`, `sync_failed`, `pending_discarded`).
 
 The remaining operational limitation is account isolation with fixed namespaced keys: logout cleanup is mandatory and implemented, but a future multi-account storage abstraction should provide a stronger pseudonymous session namespace before enabling long-lived local persistence.
+
+## Final Production Certification — Prompt 9
+
+The final audit at commit `e4ae424` found no functional or privacy blocker in the implemented A1 path. The verdict is `CERTIFIED_WITH_CONDITIONS`: automated API/mobile/build evidence passes, but Mongo-backed E2E cannot initialize in the sandbox (`listen EPERM`/MongoMemoryServer code 48), and physical-device/manual validation remains outstanding. Conditions are recorded in `docs/audits/release-2.1-epic-a1-production-certification.md`: external E2E, iOS/Android online/offline/accessibility checks, legacy database duplicate audit, AsyncStorage security review and controlled rollout monitoring.

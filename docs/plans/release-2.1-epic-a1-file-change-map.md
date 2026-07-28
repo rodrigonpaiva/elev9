@@ -160,3 +160,13 @@ Prompt 5 intentionally leaves product analytics, offline persistence/queue, back
 |   114 | `apps/mobile/src/features/daily-check-in/offline/*.spec.ts`                       | CREATE | Prove storage validation, state transitions, sync, concurrency and privacy boundaries.    | Offline implementation          | Medium |
 |   115 | `docs/architecture/release-2.1-epic-a1-offline-resilience.md`                     | CREATE | Document storage, queue, lifecycle, privacy, failure and manual validation strategy.      | Offline implementation          | Low    |
 |   116 | `docs/analytics/release-2.1-epic-a1-daily-check-in-event-taxonomy.md`             | MODIFY | Document safe offline transport events.                                                   | Analytics extension             | Low    |
+
+## Prompt 9 Actual Changes
+
+| Order | File                                                                   | Action | Reason                                                                                    | Depends On                          | Risk |
+| ----: | ---------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------- | ----------------------------------- | ---- |
+|   117 | `docs/audits/release-2.1-epic-a1-production-certification.md`          | CREATE | Record final requirement matrix, evidence, verdict, conditions and rollout/rollback plan. | Completed audit and validation runs | Low  |
+|   118 | `docs/plans/release-2.1-epic-a1-daily-check-in-implementation-plan.md` | MODIFY | Record final certification verdict and external validation conditions.                    | Certification report                | Low  |
+|   119 | `docs/plans/release-2.1-epic-a1-file-change-map.md`                    | MODIFY | Record Prompt 9 documentation-only changes.                                               | Certification report                | Low  |
+
+No production code, dependency, lockfile, backend, contract, mobile feature or `.vscode/settings.json` was changed by Prompt 9.
