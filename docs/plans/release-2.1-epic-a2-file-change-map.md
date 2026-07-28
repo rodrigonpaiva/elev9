@@ -53,3 +53,15 @@ Actions are intentionally prospective. This Prompt 1 created no production code,
 | 42 | `apps/api/src/modules/recovery/application/services/recovery-trend.policy.spec.ts` | CREATE | Trend boundaries and legacy tests | Trend policy | Medium |
 | 43 | `apps/api/test/e2e/progress-daily-check-in.e2e-spec.ts` | UPDATE | Validate A1→safe Recovery read model | Mongo E2E environment | High |
 | 44 | `docs/architecture/release-2.1-epic-a2-recovery-read-models.md` | CREATE | Document public boundary and decisions | Implementation | Low |
+
+## Prompt 3 actual changes
+
+| Order | File or Directory | Action | Reason | Depends On | Risk |
+|---:|---|---|---|---|---|
+| 45 | `packages/types/src/recovery/index.ts` | UPDATE | Add public Recovery Experience contracts | Backend read models | High |
+| 46 | `packages/types/src/recovery/recovery-experience-contract.spec.ts` | CREATE | Compile-time shape and privacy checks | Public contracts | Medium |
+| 47 | `packages/api-client/src/recovery-api.ts` | UPDATE | Add typed current/history Experience methods | Shared contracts | Medium |
+| 48 | `packages/api-client/src/recovery-api.spec.ts` | CREATE | Route, query, error and compatibility tests | API client methods | Medium |
+| 49 | `docs/architecture/release-2.1-epic-a2-recovery-contracts-and-client.md` | CREATE | Document contract boundary and client behavior | Implementation | Low |
+
+Prompt 3 did not alter backend production code, mobile production code, Dashboard, navigation, analytics, offline storage, lockfiles or dependencies.

@@ -1,5 +1,8 @@
 import type {
+  GetCurrentRecoveryExperienceResponse,
   GetCurrentRecoveryResponse,
+  GetRecoveryExperienceHistoryQuery,
+  GetRecoveryExperienceHistoryResponse,
   GetRecoveryHistoryResponse,
   GetTodayRecoveryResponse,
 } from '@elev9/types';
@@ -22,6 +25,13 @@ export function createRecoveryApi(httpClient: HttpClient) {
       });
     },
 
+    getCurrentRecoveryExperience(): Promise<GetCurrentRecoveryExperienceResponse> {
+      return httpClient.request<GetCurrentRecoveryExperienceResponse>({
+        method: 'GET',
+        path: '/recovery/experience/current',
+      });
+    },
+
     getRecoveryHistory(input?: {
       limit?: number;
     }): Promise<GetRecoveryHistoryResponse> {
@@ -35,5 +45,27 @@ export function createRecoveryApi(httpClient: HttpClient) {
         path: `/recovery/history${query}`,
       });
     },
+
+    getRecoveryExperienceHistory(
+      input?: GetRecoveryExperienceHistoryQuery,
+    ): Promise<GetRecoveryExperienceHistoryResponse> {
+      const days = input?.days;
+      if (days !== undefined) {
+        validateHistoryDays(days);
+      }
+
+      const query = days === undefined ? '' : `?days=${encodeURIComponent(days)}`;
+
+      return httpClient.request<GetRecoveryExperienceHistoryResponse>({
+        method: 'GET',
+        path: `/recovery/experience/history${query}`,
+      });
+    },
   };
+}
+
+function validateHistoryDays(days: number): void {
+  if (!Number.isInteger(days) || days < 1 || days > 90) {
+    throw new RangeError('Recovery history days must be an integer between 1 and 90.');
+  }
 }

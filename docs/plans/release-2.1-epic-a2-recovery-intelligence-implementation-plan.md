@@ -199,7 +199,7 @@ Critical dependencies are safe DTO design, legacy snapshot compatibility, remova
 
 - Prompt 1 — completed: architecture and gap audit.
 - Prompt 2 — completed: backend safe Recovery read models and product endpoints.
-- Prompt 3 — next: shared Recovery contracts and API client alignment.
+- Prompt 3 — completed: shared Recovery contracts and API client alignment.
 
 ### Prompt 2 decisions
 
@@ -212,3 +212,19 @@ Critical dependencies are safe DTO design, legacy snapshot compatibility, remova
 - Trend requires two valid snapshots, compares ordered half-series averages and uses a threshold of five points.
 - Legacy snapshots are not migrated automatically; missing source context is exposed as `legacy` and excluded from trend.
 - E2E was added but execution remains blocked in the sandbox by `MongoMemoryServer` `listen EPERM 0.0.0.0`.
+
+## Prompt 3 Status
+
+- Prompt 1 — completed.
+- Prompt 2 — completed.
+- Prompt 3 — completed: shared `RecoveryExperience*` contracts, compile-time privacy fixtures and typed API client methods.
+- Prompt 4 — next: Mobile Recovery UI.
+
+### Prompt 3 decisions
+
+- New contracts live alongside, and do not replace, the legacy Recovery snapshot contracts.
+- `LocalDate` and `IsoDateTime` aliases are reused from the existing Progress contract package.
+- New client methods are `getCurrentRecoveryExperience()` and `getRecoveryExperienceHistory(query?)`.
+- The client serializes only `days`, omitting it when undefined and rejecting non-integer values outside 1..90.
+- HTTP and network failures remain `ApiClientError`; the client does not synthesize `processing_failed`.
+- The backend public DTO is the source of truth; no backend, mobile, Dashboard or API client consumer migration was performed.

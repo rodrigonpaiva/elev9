@@ -1,3 +1,5 @@
+import type { IsoDateTime, LocalDate } from '../progress';
+
 export type RecoveryTrend = 'improving' | 'stable' | 'declining';
 
 export type RecommendedIntensity = 'recovery' | 'light' | 'moderate' | 'hard';
@@ -75,4 +77,105 @@ export type GetCurrentRecoveryResponse = {
 
 export type GetRecoveryHistoryResponse = {
   recoverySnapshots: RecoverySnapshot[];
+};
+
+/** Public product availability returned by the Recovery Experience endpoints. */
+export type RecoveryExperienceAvailability =
+  | 'available'
+  | 'not_available'
+  | 'insufficient_data'
+  | 'processing_failed';
+
+/** Freshness is intentionally richer than a boolean so legacy data is not hidden. */
+export type RecoveryExperienceFreshness =
+  | 'current'
+  | 'stale'
+  | 'legacy'
+  | 'unknown';
+
+export type RecoveryExperienceCategory = 'low' | 'moderate' | 'good' | 'high';
+
+export type RecoveryExperienceFactorKey =
+  | 'energy'
+  | 'sleep'
+  | 'muscle_soreness';
+
+export type RecoveryExperienceFactorImpact =
+  | 'positive'
+  | 'neutral'
+  | 'negative'
+  | 'unavailable';
+
+export type RecoveryExperienceInsightTone =
+  | 'supportive'
+  | 'caution'
+  | 'positive'
+  | 'neutral';
+
+export type RecoveryExperienceInsightAction =
+  | 'train_as_planned'
+  | 'reduce_intensity'
+  | 'prioritize_recovery'
+  | 'complete_check_in'
+  | 'try_again_later';
+
+export type RecoveryExperienceTrendDirection =
+  | 'improving'
+  | 'stable'
+  | 'declining'
+  | 'insufficient_data';
+
+export type RecoveryExperienceFactor = {
+  key: RecoveryExperienceFactorKey;
+  impact: RecoveryExperienceFactorImpact;
+  labelKey: string;
+  explanationKey: string;
+};
+
+export type RecoveryExperienceInsight = {
+  tone: RecoveryExperienceInsightTone;
+  titleKey: string;
+  bodyKey: string;
+  action: RecoveryExperienceInsightAction;
+};
+
+export type RecoveryExperienceCurrent = {
+  score: number;
+  fatigueScore: number;
+  category: RecoveryExperienceCategory;
+  freshness: RecoveryExperienceFreshness;
+  lastUpdatedAt: IsoDateTime;
+  trend: RecoveryExperienceTrendDirection;
+  breakdown: RecoveryExperienceFactor[];
+  insight: RecoveryExperienceInsight;
+};
+
+export type GetCurrentRecoveryExperienceResponse = {
+  availability: RecoveryExperienceAvailability;
+  recovery: RecoveryExperienceCurrent | null;
+};
+
+export type GetRecoveryExperienceHistoryQuery = {
+  days?: number;
+};
+
+export type RecoveryExperienceHistoryItem = {
+  localDate: LocalDate;
+  score: number;
+  category: RecoveryExperienceCategory;
+  availability: RecoveryExperienceAvailability;
+  freshness: RecoveryExperienceFreshness;
+};
+
+export type RecoveryExperienceTrend = {
+  direction: RecoveryExperienceTrendDirection;
+  comparedDays: number;
+};
+
+export type GetRecoveryExperienceHistoryResponse = {
+  range: {
+    days: number;
+  };
+  items: RecoveryExperienceHistoryItem[];
+  trend: RecoveryExperienceTrend;
 };
