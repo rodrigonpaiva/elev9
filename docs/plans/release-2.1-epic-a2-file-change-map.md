@@ -110,3 +110,23 @@ Prompt 5 did not alter API, contracts, API client, backend, algorithm, analytics
 | 73 | `docs/plans/release-2.1-epic-a2-file-change-map.md` | UPDATE | Record actual Prompt 6 files | Implementation | Low |
 
 Prompt 6 did not alter Recovery calculation, contracts, API client, mobile integration, Dashboard, analytics, offline persistence, dependencies or lockfiles.
+
+## Prompt 7 actual changes
+
+| Order | File or Directory | Action | Reason | Depends On | Risk |
+|---:|---|---|---|---|---|
+| 74 | `apps/mobile/src/analytics/product-analytics.ts` | UPDATE | Add typed, allowlisted Recovery action events | Existing analytics boundary | Medium |
+| 75 | `apps/mobile/src/analytics/product-analytics.spec.ts` | UPDATE | Verify Recovery event allowlist and privacy rejection | Event catalog | Medium |
+| 76 | `apps/mobile/src/screens/dashboard-screen.tsx` | UPDATE | Track explicit Dashboard Recovery CTA intent | Recovery route | Low |
+| 77 | `apps/mobile/src/features/recovery/screens/recovery-screen-container.tsx` | UPDATE | Track screen entry, refresh, retry and Check-in handoff | Recovery integration | Medium |
+| 78 | `apps/api/src/modules/recovery/application/services/recovery-observability.service.ts` | CREATE | Redacted operational signal adapter over existing logger | Recovery read models | Medium |
+| 79 | `apps/api/src/modules/recovery/application/services/recovery-observability.service.spec.ts` | CREATE | Verify low-cardinality signal privacy | Observability adapter | Medium |
+| 80 | `apps/api/src/modules/recovery/application/use-cases/get-current-recovery-read-model/get-current-recovery-read-model.use-case.ts` | UPDATE | Record current request outcome, duration and legacy encounter | Read-model endpoint | Medium |
+| 81 | `apps/api/src/modules/recovery/application/use-cases/get-recovery-history-read-model/get-recovery-history-read-model.use-case.ts` | UPDATE | Record history outcome and trend data sufficiency | History endpoint | Medium |
+| 82 | `apps/api/src/modules/recovery/application/use-cases/get-current-recovery/get-current-recovery.use-case.ts` | UPDATE | Record canonical rebuild attempt/success/failure and redact stale log | Recovery rebuild | High |
+| 83 | `apps/api/src/modules/recovery/application/use-cases/get-today-recovery/get-today-recovery.use-case.ts` | UPDATE | Remove profile/date identifiers from stale Recovery log | Privacy boundary | Medium |
+| 84 | `apps/api/src/modules/recovery/recovery.module.ts` | UPDATE | Register observability adapter | Recovery module | Low |
+| 85 | `docs/architecture/release-2.1-epic-a2-recovery-analytics-observability.md` | CREATE | Document event catalog, signals, privacy and retention | Implementation | Low |
+| 86 | `apps/api/src/modules/ai/application/services/context-builder/build-user-health-context.service.ts` | UPDATE | Emit a redacted Coach Recovery context outcome through the reused Recovery observability adapter | Prompt 6 canonical context | Medium |
+
+Prompt 7 did not alter contracts, API client, Recovery algorithm, weights, thresholds, UI layout, offline persistence, dependencies or lockfiles.

@@ -29,6 +29,42 @@ describe('Product analytics boundary', () => {
     expect(provider.track).toHaveBeenCalledTimes(1);
   });
 
+  it('accepts Recovery navigation intent events without health-state properties', () => {
+    const provider = { track: jest.fn() };
+    const analytics = createProductAnalytics(provider, true);
+
+    analytics.track('recovery_dashboard_cta_selected', {
+      entryPoint: 'dashboard',
+    });
+    analytics.track('recovery_screen_viewed', { entryPoint: 'unknown' });
+    analytics.track('recovery_refresh_requested', {
+      trigger: 'pull_to_refresh',
+    });
+    analytics.track('recovery_retry_requested', {
+      resource: 'current_and_history',
+    });
+    analytics.track('recovery_history_retry_requested', {
+      resource: 'history',
+    });
+    analytics.track('recovery_check_in_cta_selected', {
+      entryPoint: 'recovery',
+    });
+
+    expect(provider.track).toHaveBeenCalledTimes(6);
+  });
+
+  it('drops sensitive Recovery properties even when supplied by an untyped caller', () => {
+    const provider = { track: jest.fn() };
+    const analytics = createProductAnalytics(provider, true);
+
+    analytics.track('recovery_screen_viewed', {
+      entryPoint: 'unknown',
+      score: 82,
+    } as never);
+
+    expect(provider.track).not.toHaveBeenCalled();
+  });
+
   it('drops forbidden health and identity properties before a provider sees them', () => {
     const provider = { track: jest.fn() };
     const analytics = createProductAnalytics(provider, true);

@@ -86,8 +86,8 @@ export class GetTodayRecoveryUseCase {
 
         this.logger.log({
           event: 'recovery_stale_snapshot_rejected',
-          userProfileId: userProfile.id,
-          localDate: todayDate,
+          operation: 'recovery.today',
+          result: 'rebuild_required',
         });
       }
 

@@ -32,14 +32,25 @@ flowchart TD
   J --> K[Deterministic Coach and Training]
 ```
 
-## Prompt 4 Status
+## Current Execution Status
+
+- Prompt 1 — completed.
+- Prompt 2 — completed.
+- Prompt 3 — completed.
+- Prompt 4 — completed.
+- Prompt 5 — completed.
+- Prompt 6 — completed.
+- Prompt 7 — completed: Recovery product-action analytics and redacted operational observability.
+- Prompt 8 — next: Offline Recovery Read Cache.
+
+## Prompt 4 Status (historical detail)
 
 - Prompt 1 — completed
 - Prompt 2 — completed
 - Prompt 3 — completed
 - Prompt 4 — completed
 - Prompt 5 — completed
-- Prompt 6 — next
+- Prompt 6 — completed
 
 ### Mobile UI decisions
 
@@ -246,7 +257,17 @@ Critical dependencies are safe DTO design, legacy snapshot compatibility, remova
 - Prompt 4 — completed.
 - Prompt 5 — completed.
 - Prompt 6 — completed: Health Context now carries the canonical Recovery Experience read model when available, and the Recovery Coach expert consumes category, availability, freshness, factor impacts and insight action without recalculating them. The legacy snapshot path remains only as a compatibility fallback.
-- Prompt 7 — next: Product Analytics and Recovery Observability.
+- Prompt 7 — completed: typed Recovery action events were added to the existing noop/allowlisted analytics boundary; Recovery current/history/rebuild/legacy/trend operational signals use a redacted logger adapter; the stale Recovery log no longer contains profile/date identifiers.
+- Prompt 8 — next: Offline Recovery Read Cache.
+
+### Prompt 7 decisions
+
+- Product Analytics tracks only explicit navigation and action intent: Dashboard entry, screen view, refresh, retry, history retry and Daily Check-in handoff.
+- The current seven-day-only UI does not emit a history-range event.
+- No score, category, freshness, factor, trend, insight, Daily Check-in value, profile identifier or response payload is sent to Product Analytics or Recovery operational signals.
+- The existing mobile analytics provider remains noop by default; no provider, event bus or dependency was added.
+- Backend Recovery operational signals reuse Nest structured logging through `RecoveryObservabilityService`; no exporter or tracing backend was introduced.
+- Existing Coach intelligence trace retention and identifiers remain a follow-up outside the new Recovery signal payload.
 
 ### Prompt 6 decisions
 

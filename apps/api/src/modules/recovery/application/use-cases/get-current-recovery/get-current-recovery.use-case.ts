@@ -21,6 +21,7 @@ import {
 } from '../../../../progress/domain/repositories/daily-check-in.repository';
 import { RecoveryDateService } from '../../services/recovery-date.service';
 import { isRecoverySnapshotStaleForCheckIn } from '../../services/recovery-freshness';
+import { RecoveryObservabilityService } from '../../services/recovery-observability.service';
 
 @Injectable()
 export class GetCurrentRecoveryUseCase {
@@ -36,6 +37,8 @@ export class GetCurrentRecoveryUseCase {
     @Inject(DAILY_CHECK_IN_REPOSITORY)
     private readonly dailyCheckInRepository?: DailyCheckInRepository,
     private readonly recoveryDateService: RecoveryDateService = new RecoveryDateService(),
+    @Optional()
+    private readonly observability?: RecoveryObservabilityService,
   ) {}
 
   async execute(
@@ -85,14 +88,12 @@ export class GetCurrentRecoveryUseCase {
 
         this.logger.log({
           event: 'recovery_stale_snapshot_rejected',
-          userProfileId: userProfile.id,
-          localDate: todayDate,
+          operation: 'recovery.current',
+          result: 'rebuild_required',
         });
       }
 
-      return await this.buildRecoverySnapshotUseCase.execute({
-        authUserId,
-      });
+      return await this.rebuild(authUserId);
     } catch (error) {
       if (error instanceof GetCurrentRecoveryError) {
         throw error;
@@ -102,6 +103,20 @@ export class GetCurrentRecoveryUseCase {
         GET_CURRENT_RECOVERY_ERROR_CODES.INTERNAL_ERROR,
         'An unexpected error occurred.',
       );
+    }
+  }
+
+  private async rebuild(authUserId: string): Promise<GetCurrentRecoveryOutput> {
+    this.observability?.recordRebuild('attempt');
+    try {
+      const result = await this.buildRecoverySnapshotUseCase.execute({
+        authUserId,
+      });
+      this.observability?.recordRebuild('success');
+      return result;
+    } catch (error) {
+      this.observability?.recordRebuild('failure');
+      throw error;
     }
   }
 }

@@ -33,6 +33,7 @@ import { RecoveryReadModelMapper } from './application/services/recovery-read-mo
 import { RecoveryTrendPolicy } from './application/services/recovery-trend.policy';
 import { GetCurrentRecoveryReadModelUseCase } from './application/use-cases/get-current-recovery-read-model/get-current-recovery-read-model.use-case';
 import { GetRecoveryHistoryReadModelUseCase } from './application/use-cases/get-recovery-history-read-model/get-recovery-history-read-model.use-case';
+import { RecoveryObservabilityService } from './application/services/recovery-observability.service';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { GetRecoveryHistoryReadModelUseCase } from './application/use-cases/get-
     RecoveryTrendPolicy,
     GetCurrentRecoveryReadModelUseCase,
     GetRecoveryHistoryReadModelUseCase,
+    RecoveryObservabilityService,
     {
       provide: TRAINING_PLAN_REPOSITORY,
       useClass: MongooseTrainingPlanRepository,
@@ -85,6 +87,7 @@ import { GetRecoveryHistoryReadModelUseCase } from './application/use-cases/get-
     GetCurrentRecoveryUseCase,
     GetCurrentRecoveryReadModelUseCase,
     GetRecoveryHistoryUseCase,
+    RecoveryObservabilityService,
   ],
 })
 export class RecoveryModule {}

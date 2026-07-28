@@ -171,6 +171,9 @@ export function DashboardScreen({
   }, [navigation]);
 
   const handleOpenRecovery = useCallback(() => {
+    productAnalytics.track('recovery_dashboard_cta_selected', {
+      entryPoint: 'dashboard',
+    });
     navigation.navigate('Recovery');
   }, [navigation]);
 

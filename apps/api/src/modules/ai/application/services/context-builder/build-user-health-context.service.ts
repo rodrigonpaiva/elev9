@@ -62,6 +62,7 @@ import {
 } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
 import type { RecoveryCurrentReadModel } from '../../../../recovery/application/read-models/recovery-read-model.types';
 import { GetCurrentRecoveryReadModelUseCase } from '../../../../recovery/application/use-cases/get-current-recovery-read-model/get-current-recovery-read-model.use-case';
+import { RecoveryObservabilityService } from '../../../../recovery/application/services/recovery-observability.service';
 
 export type UserHealthContextTodayWorkout = {
   dayIndex: number;
@@ -183,6 +184,8 @@ export class BuildUserHealthContextService {
     private readonly getTodayRecoveryUseCase?: GetTodayRecoveryUseCase,
     @Optional()
     private readonly getCurrentRecoveryReadModelUseCase?: GetCurrentRecoveryReadModelUseCase,
+    @Optional()
+    private readonly recoveryObservability?: RecoveryObservabilityService,
   ) {}
 
   async build(input: BuildUserHealthContextInput): Promise<UserHealthContext> {
@@ -755,8 +758,13 @@ export class BuildUserHealthContextService {
     }
 
     try {
-      return await this.getCurrentRecoveryReadModelUseCase.execute(input);
+      const result = await this.getCurrentRecoveryReadModelUseCase.execute(input);
+      this.recoveryObservability?.recordCoachContext(
+        result.availability === 'available' ? 'available' : 'fallback',
+      );
+      return result;
     } catch {
+      this.recoveryObservability?.recordCoachContext('failure');
       // The legacy snapshot remains available as a compatibility fallback.
       return undefined;
     }

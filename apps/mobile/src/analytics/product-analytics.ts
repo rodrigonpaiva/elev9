@@ -4,6 +4,24 @@ import type {
 } from '../features/daily-check-in/models/daily-check-in-analytics';
 
 export type ProductAnalyticsEventMap = {
+  recovery_dashboard_cta_selected: {
+    entryPoint: 'dashboard';
+  };
+  recovery_screen_viewed: {
+    entryPoint: 'dashboard' | 'daily_check_in' | 'navigation' | 'unknown';
+  };
+  recovery_refresh_requested: {
+    trigger: 'pull_to_refresh';
+  };
+  recovery_retry_requested: {
+    resource: 'current_and_history';
+  };
+  recovery_history_retry_requested: {
+    resource: 'history';
+  };
+  recovery_check_in_cta_selected: {
+    entryPoint: 'recovery';
+  };
   daily_check_in_cta_viewed: {
     completionState: 'pending' | 'completed';
     entryPoint: 'dashboard';
@@ -115,6 +133,16 @@ export const PRODUCT_ANALYTICS_FORBIDDEN_PROPERTIES = [
   'notes',
   'recoveryScore',
   'readinessScore',
+  'score',
+  'category',
+  'breakdown',
+  'factor',
+  'trend',
+  'insight',
+  'sourceContext',
+  'requestBody',
+  'responseBody',
+  'payload',
   'userProfileId',
   'email',
   'name',
@@ -125,6 +153,12 @@ export const PRODUCT_ANALYTICS_FORBIDDEN_PROPERTIES = [
 const PRODUCT_ANALYTICS_ALLOWED_PROPERTIES: {
   [EventName in ProductAnalyticsEventName]: readonly string[];
 } = {
+  recovery_dashboard_cta_selected: ['entryPoint'],
+  recovery_screen_viewed: ['entryPoint'],
+  recovery_refresh_requested: ['trigger'],
+  recovery_retry_requested: ['resource'],
+  recovery_history_retry_requested: ['resource'],
+  recovery_check_in_cta_selected: ['entryPoint'],
   daily_check_in_cta_viewed: ['completionState', 'entryPoint'],
   daily_check_in_cta_selected: ['completionState', 'entryPoint'],
   daily_check_in_started: ['mode', 'entryPoint', 'flowSessionId'],

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 
 import { GetRecoveryHistoryUseCase } from '../get-recovery-history/get-recovery-history.use-case';
 import {
@@ -12,6 +12,7 @@ import {
 import type { RecoveryHistoryReadModel } from '../../read-models/recovery-read-model.types';
 import { RecoveryReadModelMapper } from '../../services/recovery-read-model.mapper';
 import { RecoveryTrendPolicy } from '../../services/recovery-trend.policy';
+import { RecoveryObservabilityService } from '../../services/recovery-observability.service';
 
 const DEFAULT_DAYS = 7;
 const MAX_DAYS = 90;
@@ -22,6 +23,8 @@ export class GetRecoveryHistoryReadModelUseCase {
     private readonly getRecoveryHistoryUseCase: GetRecoveryHistoryUseCase,
     private readonly mapper: RecoveryReadModelMapper,
     private readonly trendPolicy: RecoveryTrendPolicy,
+    @Optional()
+    private readonly observability?: RecoveryObservabilityService,
   ) {}
 
   async execute(input: {
@@ -29,6 +32,7 @@ export class GetRecoveryHistoryReadModelUseCase {
     days?: number;
   }): Promise<RecoveryHistoryReadModel> {
     const days = this.resolveDays(input.days);
+    const startedAt = Date.now();
 
     try {
       const result = await this.getRecoveryHistoryUseCase.execute({
@@ -36,14 +40,28 @@ export class GetRecoveryHistoryReadModelUseCase {
         limit: days,
       });
 
-      return {
+      const response = {
         range: { days },
         items: result.recoverySnapshots.map((snapshot) =>
           this.mapper.mapHistoryItem(snapshot),
         ),
         trend: this.trendPolicy.calculate(result.recoverySnapshots),
       };
+      this.observability?.recordHistoryRequest(
+        response.items.length === 0 ? 'expected_empty' : 'success',
+        elapsedMs(startedAt),
+      );
+      this.observability?.recordTrend(
+        response.trend.direction === 'insufficient_data'
+          ? 'insufficient_data'
+          : 'computed',
+      );
+      return response;
     } catch (error) {
+      this.observability?.recordHistoryRequest(
+        'technical_failure',
+        elapsedMs(startedAt),
+      );
       if (error instanceof GetRecoveryHistoryError) {
         if (error.code === GET_RECOVERY_HISTORY_ERROR_CODES.INVALID_SESSION) {
           throw new GetRecoveryHistoryReadModelError(
@@ -82,4 +100,8 @@ export class GetRecoveryHistoryReadModelUseCase {
     }
     return days;
   }
+}
+
+function elapsedMs(startedAt: number): number {
+  return Math.max(0, Date.now() - startedAt);
 }
