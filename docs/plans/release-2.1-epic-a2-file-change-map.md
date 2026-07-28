@@ -130,3 +130,22 @@ Prompt 6 did not alter Recovery calculation, contracts, API client, mobile integ
 | 86 | `apps/api/src/modules/ai/application/services/context-builder/build-user-health-context.service.ts` | UPDATE | Emit a redacted Coach Recovery context outcome through the reused Recovery observability adapter | Prompt 6 canonical context | Medium |
 
 Prompt 7 did not alter contracts, API client, Recovery algorithm, weights, thresholds, UI layout, offline persistence, dependencies or lockfiles.
+
+## Prompt 8 actual changes
+
+| Order | File or Directory | Action | Reason | Depends On | Risk |
+|---:|---|---|---|---|---|
+| 87 | `apps/mobile/src/storage/session-owner-storage.ts` | CREATE | Opaque per-session cache namespace with best-effort storage | Auth lifecycle | Medium |
+| 88 | `apps/mobile/src/features/recovery/cache/recovery-cache-schema.ts` | CREATE | Versioned allowlisted cache record, runtime validation and age policy | Public Recovery contracts | High |
+| 89 | `apps/mobile/src/features/recovery/cache/recovery-cache.ts` | CREATE | AsyncStorage adapter with independent current/history writes and cleanup | Cache schema | High |
+| 90 | `apps/mobile/src/features/recovery/hooks/use-recovery-experience.ts` | UPDATE | Network-first cache fallback, source metadata and session isolation | Cache adapter | High |
+| 91 | `apps/mobile/src/features/recovery/models/recovery-screen-state-mapper.ts` | UPDATE | Carry cache source metadata and classify recoverable transport errors | Hook state | Medium |
+| 92 | `apps/mobile/src/features/recovery/models/recovery-screen-state.ts` | UPDATE | Represent cache source metadata on available UI state | Presentation | Low |
+| 93 | `apps/mobile/src/features/recovery/components/recovery-offline-notice.tsx` | CREATE | Explicit offline/last-saved presentation with accessible retry | Cache state | Medium |
+| 94 | `apps/mobile/src/features/recovery/screens/recovery-screen.tsx` | UPDATE | Render offline notice without changing canonical freshness | Offline state | Medium |
+| 95 | `apps/mobile/src/auth/auth-provider.tsx` | UPDATE | Create/ensure session namespace and clear Recovery cache on logout | Session lifecycle | High |
+| 96 | `apps/mobile/src/features/recovery/cache/recovery-cache-schema.spec.ts` | CREATE | Schema, privacy, version and age tests | Cache schema | Medium |
+| 97 | `apps/mobile/src/features/recovery/cache/recovery-cache.spec.ts` | CREATE | Storage lifecycle, partial write, corruption and failure tests | Cache adapter | Medium |
+| 98 | `docs/architecture/release-2.1-epic-a2-offline-recovery-cache.md` | CREATE | Offline cache architecture, privacy and operational policy | Implementation | Low |
+
+Prompt 8 did not alter backend, shared contracts, API client, Recovery algorithm, Coach, Training, Product Analytics taxonomy, dependencies or lockfiles.

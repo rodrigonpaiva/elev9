@@ -269,6 +269,28 @@ Critical dependencies are safe DTO design, legacy snapshot compatibility, remova
 - Backend Recovery operational signals reuse Nest structured logging through `RecoveryObservabilityService`; no exporter or tracing backend was introduced.
 - Existing Coach intelligence trace retention and identifiers remain a follow-up outside the new Recovery signal payload.
 
+## Prompt 8 Status
+
+- Prompt 1 — completed.
+- Prompt 2 — completed.
+- Prompt 3 — completed.
+- Prompt 4 — completed.
+- Prompt 5 — completed.
+- Prompt 6 — completed.
+- Prompt 7 — completed.
+- Prompt 8 — completed: the mobile app now uses a versioned AsyncStorage read cache with opaque session ownership, allowlisted public responses, seven-day history scope, 24-hour soft age and seven-day hard expiry. Network remains first; only recoverable transport failures use cache, and logout removes the owner namespace.
+- Prompt 9 — next: Production Certification.
+
+### Prompt 8 decisions
+
+- AsyncStorage is reused because it is already installed and used by the mobile app; no storage dependency or framework was added.
+- Current and history are independently mergeable so a partial network success cannot erase the other resource.
+- Cache records persist only public Recovery Experience fields and use explicit version/owner validation.
+- Cache age is local metadata (`recent`, `old`, `expired`) and never overwrites backend Recovery freshness.
+- `processing_failed` responses are rendered but never replace a previously useful current cache.
+- Cache fallback is limited to recoverable network transport errors; authorization, validation and contract errors remain errors.
+- Logout clears Recovery cache and the session namespace; account/session generation prevents older responses from rendering after a switch.
+
 ### Prompt 6 decisions
 
 - The Coach uses `GetCurrentRecoveryReadModelUseCase` internally; it does not call the Recovery HTTP controller or API client.

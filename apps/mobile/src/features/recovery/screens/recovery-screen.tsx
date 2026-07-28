@@ -14,6 +14,7 @@ import { RecoveryInsightCard } from '../components/recovery-insight-card';
 import { RecoveryLoadingState } from '../components/recovery-loading-state';
 import { RecoveryScoreHero } from '../components/recovery-score-hero';
 import { RecoveryTrendSummary } from '../components/recovery-trend-summary';
+import { RecoveryOfflineNotice } from '../components/recovery-offline-notice';
 
 export type RecoveryScreenProps = {
   state: RecoveryScreenState;
@@ -80,6 +81,7 @@ export function RecoveryScreen({
             state={state}
             onInsightAction={onInsightAction}
             onOpenHistoryItem={onOpenHistoryItem}
+            onRetry={onRetry}
             onRetryHistory={onRetryHistory}
             onSelectHistoryRange={onSelectHistoryRange}
           />
@@ -124,17 +126,26 @@ function AvailableRecoveryContent({
   state,
   onInsightAction,
   onOpenHistoryItem,
+  onRetry,
   onRetryHistory,
   onSelectHistoryRange,
 }: {
   state: Extract<RecoveryScreenState, { status: 'available' }>;
   onInsightAction?: (action: RecoveryExperienceInsightAction) => void;
   onOpenHistoryItem?: (localDate: string) => void;
+  onRetry?: () => void;
   onRetryHistory?: () => void;
   onSelectHistoryRange?: (days: 7) => void;
 }) {
   return (
     <View style={styles.stack}>
+      {state.dataSource === 'cache' ? (
+        <RecoveryOfflineNotice
+          cacheAge={state.cacheAge}
+          savedAt={state.cacheSavedAt}
+          onRetry={onRetry}
+        />
+      ) : null}
       <RecoveryScoreHero current={state.current} />
       {state.currentErrorMessage ? (
         <Card accessibilityLiveRegion="polite" style={styles.refreshError}>

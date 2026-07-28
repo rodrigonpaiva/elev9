@@ -14,6 +14,9 @@ export type RecoveryScreenAvailableState = {
   historyStatus: 'loading' | 'available' | 'error';
   historyErrorMessage?: string;
   currentErrorMessage?: string;
+  dataSource?: 'network' | 'cache';
+  cacheSavedAt?: string;
+  cacheAge?: 'recent' | 'old';
 };
 
 export type RecoveryScreenState =

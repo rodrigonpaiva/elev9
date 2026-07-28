@@ -18,6 +18,13 @@ import {
   setAccessToken,
 } from '../storage/token-storage';
 import { clearDailyCheckInOfflineStorage } from '../features/daily-check-in/offline/daily-check-in-storage';
+import { clearRecoveryCacheForOwner } from '../features/recovery/cache/recovery-cache';
+import {
+  clearSessionOwnerKey,
+  createSessionOwnerKey,
+  ensureSessionOwnerKey,
+  getSessionOwnerKey,
+} from '../storage/session-owner-storage';
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -49,6 +56,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       try {
         nextToken = await getAccessToken();
+        if (nextToken) await ensureSessionOwnerKey();
       } catch (error) {
         console.error('AuthProvider bootstrap error:', error);
       } finally {
@@ -95,10 +103,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
           await clearAccessToken();
         } finally {
           try {
-            await clearDailyCheckInOfflineStorage();
+            await clearRecoveryCacheForOwner(await getSessionOwnerKey());
           } finally {
-            setAccessTokenState(null);
-            setStatus('unauthenticated');
+            try {
+              await clearSessionOwnerKey();
+            } finally {
+              try {
+                await clearDailyCheckInOfflineStorage();
+              } finally {
+                setAccessTokenState(null);
+                setStatus('unauthenticated');
+              }
+            }
           }
         }
       },
@@ -342,6 +358,7 @@ async function persistSession(
   setStatus: (value: AuthStatus) => void,
 ): Promise<void> {
   await setAccessToken(response.accessToken);
+  await createSessionOwnerKey();
   setAccessTokenState(response.accessToken);
   setStatus('authenticated');
 }

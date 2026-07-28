@@ -2,9 +2,11 @@ import type {
   GetCurrentRecoveryExperienceResponse,
   GetRecoveryExperienceHistoryResponse,
 } from '@elev9/types';
+import { ApiClientError } from '@elev9/api-client';
 
 import {
   buildRecoveryScreenState,
+  isRecoverableRecoveryNetworkError,
   mapRecoveryExperienceError,
   type RecoveryCurrentResource,
   type RecoveryHistoryResource,
@@ -36,6 +38,23 @@ const history: GetRecoveryExperienceHistoryResponse = {
 };
 
 describe('Recovery screen state mapper', () => {
+  it('identifies only transport failures as cache-recoverable', () => {
+    expect(
+      isRecoverableRecoveryNetworkError(new ApiClientError({
+        status: 0,
+        code: 'NETWORK_ERROR',
+        message: 'offline',
+      })),
+    ).toBe(true);
+    expect(
+      isRecoverableRecoveryNetworkError(new ApiClientError({
+        status: 401,
+        code: 'UNAUTHORIZED',
+        message: 'unauthorized',
+      })),
+    ).toBe(false);
+  });
+
   it('keeps current available when history fails', () => {
     const state = buildRecoveryScreenState({
       current: { status: 'success', response: current },

@@ -11,13 +11,22 @@ export type RecoveryCurrentResource =
   | {
       status: 'success';
       response: GetCurrentRecoveryExperienceResponse;
+      dataSource?: 'network' | 'cache';
+      cacheSavedAt?: string;
+      cacheAge?: 'recent' | 'old';
       errorMessage?: string;
     }
   | { status: 'error'; message: string; isRetrying: boolean };
 
 export type RecoveryHistoryResource =
   | { status: 'loading' }
-  | { status: 'success'; response: GetRecoveryExperienceHistoryResponse }
+  | {
+      status: 'success';
+      response: GetRecoveryExperienceHistoryResponse;
+      dataSource?: 'network' | 'cache';
+      cacheSavedAt?: string;
+      cacheAge?: 'recent' | 'old';
+    }
   | { status: 'error'; message: string };
 
 export function buildRecoveryScreenState(input: {
@@ -76,6 +85,13 @@ export function buildRecoveryScreenState(input: {
       input.current.status === 'success'
         ? input.current.errorMessage
         : undefined,
+    ...(input.current.status === 'success' && input.current.dataSource
+      ? {
+          dataSource: input.current.dataSource,
+          cacheSavedAt: input.current.cacheSavedAt,
+          cacheAge: input.current.cacheAge,
+        }
+      : {}),
   };
 }
 
@@ -93,4 +109,11 @@ export function mapRecoveryExperienceError(error: unknown): string {
   }
 
   return 'We couldn’t load your Recovery right now.';
+}
+
+export function isRecoverableRecoveryNetworkError(error: unknown): boolean {
+  return (
+    error instanceof ApiClientError &&
+    (error.status === 0 || error.code === 'NETWORK_ERROR')
+  );
 }
