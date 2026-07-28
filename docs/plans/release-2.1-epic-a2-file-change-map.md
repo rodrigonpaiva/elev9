@@ -149,3 +149,12 @@ Prompt 7 did not alter contracts, API client, Recovery algorithm, weights, thres
 | 98 | `docs/architecture/release-2.1-epic-a2-offline-recovery-cache.md` | CREATE | Offline cache architecture, privacy and operational policy | Implementation | Low |
 
 Prompt 8 did not alter backend, shared contracts, API client, Recovery algorithm, Coach, Training, Product Analytics taxonomy, dependencies or lockfiles.
+
+## Prompt 9 actual changes
+
+| Order | File or Directory | Action | Reason | Depends On | Risk |
+|---:|---|---|---|---|---|
+| 99 | `docs/certification/release-2.1-epic-a2-production-certification.md` | CREATE | Formal evidence matrix, verdict, conditions, rollback, runbook and release checklist | Prompts 1–8 evidence | Low |
+| 100 | `docs/plans/release-2.1-epic-a2-recovery-intelligence-implementation-plan.md` | UPDATE | Record Prompt 9 verdict and external sign-off next action | Certification | Low |
+
+Prompt 9 required no production-code, test, dependency or configuration correction. The verdict is `CERTIFIED_WITH_CONDITIONS`.

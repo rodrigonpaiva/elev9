@@ -279,7 +279,15 @@ Critical dependencies are safe DTO design, legacy snapshot compatibility, remova
 - Prompt 6 — completed.
 - Prompt 7 — completed.
 - Prompt 8 — completed: the mobile app now uses a versioned AsyncStorage read cache with opaque session ownership, allowlisted public responses, seven-day history scope, 24-hour soft age and seven-day hard expiry. Network remains first; only recoverable transport failures use cache, and logout removes the owner namespace.
-- Prompt 9 — next: Production Certification.
+- Prompt 9 — completed: production certification issued `CERTIFIED_WITH_CONDITIONS`. Automated unit/build/E2E evidence passed; physical device, manual accessibility, physical offline/account-switch and operational dashboard conditions remain open.
+
+### Prompt 9 certification decision
+
+```text
+CERTIFIED_WITH_CONDITIONS
+```
+
+The A2 code path has no identified P0 blocker. Full rollout remains conditional on external device/offline/accessibility validation, security review of local wellness-data storage, real legacy-data review, named sign-offs and operational dashboards/alerts. The next action is `External Validation and Release Sign-off`; no additional implementation prompt is required by this certification.
 
 ### Prompt 8 decisions
 
@@ -310,7 +318,7 @@ Critical dependencies are safe DTO design, legacy snapshot compatibility, remova
 - Breakdown exposes only energy, sleep and muscle soreness impact states; `motivationLevel` remains Coach-only context.
 - Trend requires two valid snapshots, compares ordered half-series averages and uses a threshold of five points.
 - Legacy snapshots are not migrated automatically; missing source context is exposed as `legacy` and excluded from trend.
-- E2E was added but execution remains blocked in the sandbox by `MongoMemoryServer` `listen EPERM 0.0.0.0`.
+- E2E was added; the initial sandbox execution hit `MongoMemoryServer` `listen EPERM 0.0.0.0`, then the same suite passed under approved elevated local-port execution. External device/Coach semantic validation remains a release condition.
 
 ## Prompt 3 Status
 
