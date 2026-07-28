@@ -45,6 +45,7 @@ export const availableRecoveryScreenFixture: RecoveryScreenAvailableState = {
   trend: { direction: 'improving', comparedDays: 4 },
   selectedRange: 7,
   isRefreshing: false,
+  historyStatus: 'available',
 };
 
 export const staleRecoveryScreenFixture: RecoveryScreenAvailableState = {

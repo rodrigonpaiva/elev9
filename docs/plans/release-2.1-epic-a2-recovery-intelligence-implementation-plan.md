@@ -38,7 +38,8 @@ flowchart TD
 - Prompt 2 — completed
 - Prompt 3 — completed
 - Prompt 4 — completed
-- Prompt 5 — next
+- Prompt 5 — completed
+- Prompt 6 — next
 
 ### Mobile UI decisions
 
@@ -54,7 +55,19 @@ flowchart TD
 - Fixtures públicas para available, stale e legacy.
 - Testes unitários de copy, acessibilidade textual, datas locais e screen state.
 - Build mobile aprovado; render tests não existem no workspace e não foi instalada biblioteca para criá-los.
-- Restam API integration, navigation, Dashboard, analytics, offline read cache e validação física.
+- Restavam API integration, navigation, Dashboard, analytics, offline read cache e validação física; Prompt 5 resolveu somente API integration, navigation e Dashboard.
+
+## Prompt 5 Status
+
+- `useRecoveryExperience` integra current e history através dos métodos públicos do API client.
+- Current e history possuem estados independentes; falha de history preserva current válido.
+- A rota tipada `Recovery` aponta para `RecoveryScreenContainer`.
+- O Dashboard Recovery card usa o response público de current e abre a rota dedicada.
+- Thresholds locais e leitura de `sourceContext` foram removidos do card principal.
+- `DailyCheckInHistoryScreen` agora se apresenta como `Daily Check-in History`.
+- Retorno ao Recovery após Daily Check-in atualiza dados por focus refresh.
+- Não foram alterados backend, contracts, API client, analytics ou offline persistence.
+- Restam validação determinística do Coach, analytics, cache offline, E2E físico e certificação.
 
 ## Backend Work
 

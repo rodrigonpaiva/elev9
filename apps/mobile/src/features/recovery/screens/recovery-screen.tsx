@@ -1,6 +1,6 @@
 import type { RecoveryExperienceInsightAction } from '@elev9/types';
 import { RefreshControl, StyleSheet, View } from 'react-native';
-import { Button, Screen, SectionHeader, Text, colors } from '@elev9/ui';
+import { Button, Card, Screen, SectionHeader, Text, colors } from '@elev9/ui';
 
 import { availableHistoryPointCount } from '../helpers/recovery-history-presentation';
 import type { RecoveryScreenState } from '../models/recovery-screen-state';
@@ -20,6 +20,7 @@ export type RecoveryScreenProps = {
   onBack?: () => void;
   onRefresh?: () => void;
   onRetry?: () => void;
+  onRetryHistory?: () => void;
   onCompleteCheckIn?: () => void;
   onOpenHistoryItem?: (localDate: string) => void;
   onSelectHistoryRange?: (days: 7) => void;
@@ -31,6 +32,7 @@ export function RecoveryScreen({
   onBack,
   onRefresh,
   onRetry,
+  onRetryHistory,
   onCompleteCheckIn,
   onOpenHistoryItem,
   onSelectHistoryRange,
@@ -78,6 +80,7 @@ export function RecoveryScreen({
             state={state}
             onInsightAction={onInsightAction}
             onOpenHistoryItem={onOpenHistoryItem}
+            onRetryHistory={onRetryHistory}
             onSelectHistoryRange={onSelectHistoryRange}
           />
         ) : null}
@@ -121,16 +124,24 @@ function AvailableRecoveryContent({
   state,
   onInsightAction,
   onOpenHistoryItem,
+  onRetryHistory,
   onSelectHistoryRange,
 }: {
   state: Extract<RecoveryScreenState, { status: 'available' }>;
   onInsightAction?: (action: RecoveryExperienceInsightAction) => void;
   onOpenHistoryItem?: (localDate: string) => void;
+  onRetryHistory?: () => void;
   onSelectHistoryRange?: (days: 7) => void;
 }) {
   return (
     <View style={styles.stack}>
       <RecoveryScoreHero current={state.current} />
+      {state.currentErrorMessage ? (
+        <Card accessibilityLiveRegion="polite" style={styles.refreshError}>
+          <Text style={styles.muted}>{state.currentErrorMessage}</Text>
+          <Button label="Retry Recovery" onPress={onRetry} style={styles.historyButton} />
+        </Card>
+      ) : null}
       <RecoveryFreshnessNote
         freshness={state.current.freshness}
         lastUpdatedAt={state.current.lastUpdatedAt}
@@ -148,11 +159,29 @@ function AvailableRecoveryContent({
         availablePointCount={availableHistoryPointCount(state.history)}
         trend={state.trend}
       />
-      <RecoveryHistoryChart history={state.history} />
-      <RecoveryHistoryList
-        history={state.history}
-        onOpenItem={onOpenHistoryItem}
-      />
+      {state.historyStatus === 'loading' ? (
+        <Card accessibilityLiveRegion="polite">
+          <Text style={styles.muted}>Loading Recovery history...</Text>
+        </Card>
+      ) : state.historyStatus === 'error' ? (
+        <Card accessibilityLiveRegion="polite" style={styles.historyError}>
+          <Text variant="title">History unavailable</Text>
+          <Text style={styles.muted}>
+            {state.historyErrorMessage ?? 'We could not load your recent Recovery history.'}
+          </Text>
+          {onRetryHistory ? (
+            <Button label="Retry history" onPress={onRetryHistory} style={styles.historyButton} />
+          ) : null}
+        </Card>
+      ) : (
+        <>
+          <RecoveryHistoryChart history={state.history} />
+          <RecoveryHistoryList
+            history={state.history}
+            onOpenItem={onOpenHistoryItem}
+          />
+        </>
+      )}
       <SectionHeader
         title="Keep listening to your body"
         subtitle="Recovery is guidance for training decisions, not a medical assessment."
@@ -178,4 +207,8 @@ const styles = StyleSheet.create({
   intro: { color: colors.mutedText, marginTop: -8 },
   backButton: { minWidth: 88, width: 88, paddingHorizontal: 8, paddingVertical: 12 },
   rangeHint: { color: colors.primary, fontWeight: '700' },
+  muted: { color: colors.mutedText },
+  historyError: { gap: 10 },
+  historyButton: { marginTop: 4 },
+  refreshError: { gap: 8 },
 });

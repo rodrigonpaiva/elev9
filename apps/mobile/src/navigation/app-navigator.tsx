@@ -14,6 +14,7 @@ import { CreateProfileScreen } from '../screens/create-profile-screen';
 import { CreateTrainingPlanScreen } from '../screens/create-training-plan-screen';
 import { DailyCheckInHistoryScreen } from '../screens/daily-check-in-history-screen';
 import { DailyCheckInScreen } from '../screens/daily-check-in-screen';
+import { RecoveryScreenContainer } from '../features/recovery';
 import { CoachChatScreen } from '../screens/coach-chat-screen';
 import { CoachDailyBriefingScreen } from '../screens/coach-daily-briefing-screen';
 import { CoachHomeScreen } from '../screens/coach-home-screen';
@@ -90,6 +91,7 @@ export type RootStackParamList = {
       }
     | undefined;
   DailyCheckInHistory: undefined;
+  Recovery: undefined;
   MealDetail: {
     mealId: string;
   };
@@ -298,12 +300,19 @@ export function AppNavigator() {
               component={DailyCheckInHistoryScreen}
               options={{
                 headerShown: true,
-                title: 'Recovery History',
+                title: 'Daily Check-in History',
                 headerStyle: {
                   backgroundColor: '#020617',
                 },
                 headerTintColor: '#f8fafc',
                 headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="Recovery"
+              component={RecoveryScreenContainer}
+              options={{
+                headerShown: false,
               }}
             />
             <Stack.Screen

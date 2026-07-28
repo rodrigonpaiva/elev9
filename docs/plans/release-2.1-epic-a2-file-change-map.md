@@ -77,3 +77,21 @@ Prompt 3 did not alter backend production code, mobile production code, Dashboar
 | 54 | `docs/plans/release-2.1-epic-a2-recovery-intelligence-implementation-plan.md` | UPDATE | Prompt status, decisions and remaining gaps | Feature implementation | Low |
 
 Prompt 4 did not alter API, contracts, API client, Dashboard, navigation, analytics, offline persistence, backend policies, algorithms, dependencies or lockfiles.
+
+## Prompt 5 actual changes
+
+| Order | File or Directory | Action | Reason | Depends On | Risk |
+|---:|---|---|---|---|---|
+| 55 | `apps/mobile/src/features/recovery/hooks/use-recovery-experience.ts` | CREATE | Orchestrate current/history public API resources | Recovery contracts/client | High |
+| 56 | `apps/mobile/src/features/recovery/models/recovery-screen-state-mapper.ts` | CREATE | Pure state composition and safe error mapping | Presentational state | Medium |
+| 57 | `apps/mobile/src/features/recovery/screens/recovery-screen-container.tsx` | CREATE | Connect hook, navigation and callbacks | Recovery screen | High |
+| 58 | `apps/mobile/src/features/recovery/screens/recovery-screen.tsx` | UPDATE | Support partial history loading/error and retry | Hook composition | Medium |
+| 59 | `apps/mobile/src/features/recovery/models/recovery-screen-state.ts` | UPDATE | Represent partial history resource status | UI state model | Medium |
+| 60 | `apps/mobile/src/navigation/app-navigator.tsx` | UPDATE | Register typed `Recovery` route and correct legacy title | Container | High |
+| 61 | `apps/mobile/src/hooks/use-dashboard.ts` | UPDATE | Load public current Recovery for Dashboard card | Current contract | High |
+| 62 | `apps/mobile/src/components/dashboard/recovery-readiness-card.tsx` | UPDATE | Consume backend category/insight and remove thresholds/sourceContext | Dashboard source | High |
+| 63 | `apps/mobile/src/screens/dashboard-screen.tsx` | UPDATE | Navigate Recovery from primary card CTA | Route | Medium |
+| 64 | `apps/mobile/src/features/recovery/**/*.spec.ts` | UPDATE | Integration mapper and partial failure coverage | Hook composition | Medium |
+| 65 | `docs/architecture/release-2.1-epic-a2-mobile-recovery-integration.md` | CREATE | Document integration flow and policies | Implementation | Low |
+
+Prompt 5 did not alter API, contracts, API client, backend, algorithm, analytics, offline persistence, dependencies or lockfiles.

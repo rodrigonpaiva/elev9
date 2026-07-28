@@ -5,6 +5,7 @@ import type {
   CoachDecision,
   CoachIntelligenceAggregate,
   GetTodayDailyCheckInResponse,
+  GetCurrentRecoveryExperienceResponse,
   ProgressSummaryResponse,
   RecoverySnapshot,
   TodayNutrition,
@@ -32,6 +33,7 @@ type ProgressSummary = ProgressSummaryResponse['summary'];
 type DashboardDomain =
   | 'coach'
   | 'recovery'
+  | 'recoveryExperience'
   | 'workout'
   | 'nutrition'
   | 'progress'
@@ -84,6 +86,7 @@ export type UseDashboardResult = {
   recovery: DashboardDomainResult<RecoverySnapshot> & {
     status: RecoveryStatus | null;
   };
+  recoveryExperience: DashboardDomainResult<GetCurrentRecoveryExperienceResponse>;
   workout: DashboardDomainResult<TrainingPlan> & {
     todaysWorkout: TodayWorkout | null;
     plannedWorkoutCount: number;
@@ -111,6 +114,9 @@ export function useDashboard(): UseDashboardResult {
   const [recovery, setRecovery] = useState<DomainState<RecoverySnapshot>>(
     createInitialDomainState(),
   );
+  const [recoveryExperience, setRecoveryExperience] = useState<
+    DomainState<GetCurrentRecoveryExperienceResponse>
+  >(createInitialDomainState());
   const [workout, setWorkout] = useState<DomainState<TrainingPlan>>(
     createInitialDomainState(),
   );
@@ -162,6 +168,7 @@ export function useDashboard(): UseDashboardResult {
       const domains: DashboardDomain[] = [
         'coach',
         'recovery',
+        'recoveryExperience',
         'workout',
         'nutrition',
         'progress',
@@ -272,6 +279,10 @@ export function useDashboard(): UseDashboardResult {
     await Promise.all([loadDomain('coach'), coachIntelligenceState.retry()]);
   }, [coachIntelligenceState.retry, loadDomain]);
   const retryRecovery = useCallback(() => loadDomain('recovery'), [loadDomain]);
+  const retryRecoveryExperience = useCallback(
+    () => loadDomain('recoveryExperience'),
+    [loadDomain],
+  );
   const retryWorkout = useCallback(() => loadDomain('workout'), [loadDomain]);
   const retryNutrition = useCallback(
     () => loadDomain('nutrition'),
@@ -311,6 +322,10 @@ export function useDashboard(): UseDashboardResult {
       ...recovery,
       status: recoveryStatus,
       retry: retryRecovery,
+    },
+    recoveryExperience: {
+      ...recoveryExperience,
+      retry: retryRecoveryExperience,
     },
     workout: {
       ...workout,
@@ -357,6 +372,7 @@ export function useDashboard(): UseDashboardResult {
       [
         'coach',
         'recovery',
+        'recoveryExperience',
         'workout',
         'nutrition',
         'progress',
@@ -408,6 +424,14 @@ export function useDashboard(): UseDashboardResult {
             ) as DomainState<RecoverySnapshot>,
         );
         return;
+      case 'recoveryExperience':
+        setRecoveryExperience(
+          (current) =>
+            updater(
+              current as DomainState<TData>,
+            ) as DomainState<GetCurrentRecoveryExperienceResponse>,
+        );
+        return;
       case 'workout':
         setWorkout(
           (current) =>
@@ -445,6 +469,7 @@ export function useDashboard(): UseDashboardResult {
 type DashboardDomainData =
   | CoachDecision
   | RecoverySnapshot
+  | GetCurrentRecoveryExperienceResponse
   | TrainingPlan
   | TodayNutrition
   | ProgressSummary
@@ -467,6 +492,8 @@ async function fetchDashboardDomain(
       return fetchCoachInsight();
     case 'recovery':
       return fetchRecovery();
+    case 'recoveryExperience':
+      return fetchRecoveryExperience();
     case 'workout':
       return fetchWorkout();
     case 'nutrition':
@@ -502,6 +529,10 @@ async function fetchRecovery(): Promise<RecoverySnapshot | null> {
 
     throw error;
   }
+}
+
+async function fetchRecoveryExperience(): Promise<GetCurrentRecoveryExperienceResponse> {
+  return apiClient.recovery.getCurrentRecoveryExperience();
 }
 
 async function fetchWorkout(): Promise<TrainingPlan | null> {
@@ -578,6 +609,8 @@ function getDomainErrorMessage(
       return error instanceof ApiClientError
         ? 'Try again in a moment.'
         : 'Try again in a moment.';
+    case 'recoveryExperience':
+      return 'Try again in a moment.';
     case 'workout':
       return 'Workout unavailable.';
     case 'nutrition':

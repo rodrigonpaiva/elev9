@@ -11,6 +11,9 @@ export type RecoveryScreenAvailableState = {
   trend: RecoveryExperienceTrend;
   selectedRange: 7;
   isRefreshing: boolean;
+  historyStatus: 'loading' | 'available' | 'error';
+  historyErrorMessage?: string;
+  currentErrorMessage?: string;
 };
 
 export type RecoveryScreenState =
@@ -20,4 +23,3 @@ export type RecoveryScreenState =
   | { status: 'not_available'; isRefreshing: boolean }
   | { status: 'processing_failed'; isRefreshing: boolean }
   | { status: 'error'; message?: string; isRetrying: boolean };
-

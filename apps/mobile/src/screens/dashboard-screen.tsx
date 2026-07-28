@@ -170,6 +170,10 @@ export function DashboardScreen({
     navigation.navigate('CoachDailyBriefing');
   }, [navigation]);
 
+  const handleOpenRecovery = useCallback(() => {
+    navigation.navigate('Recovery');
+  }, [navigation]);
+
   const handleCoachCta = useCallback(() => {
     switch (dashboard.coach.actionTarget) {
       case 'workout':
@@ -264,6 +268,7 @@ export function DashboardScreen({
             onCoachCta={handleCoachCta}
             onCreateNutritionProfile={handleCreateNutritionProfile}
             onOpenHistory={onOpenHistory}
+            onOpenRecovery={handleOpenRecovery}
             onOpenNutritionOverview={handleOpenNutritionOverview}
             onOpenWeeklyReview={handleOpenWeeklyReview}
             onStartWorkout={handleStartWorkout}
@@ -296,6 +301,7 @@ function DashboardCards({
   onCoachCta,
   onCreateNutritionProfile,
   onOpenHistory,
+  onOpenRecovery,
   onOpenNutritionOverview,
   onOpenWeeklyReview,
   onStartWorkout,
@@ -306,6 +312,7 @@ function DashboardCards({
   onCoachCta: () => void;
   onCreateNutritionProfile: () => void;
   onOpenHistory?: () => void;
+  onOpenRecovery: () => void;
   onOpenNutritionOverview: () => void;
   onOpenWeeklyReview: () => void;
   onStartWorkout: () => void;
@@ -328,10 +335,11 @@ function DashboardCards({
         supportingEvidenceSummary={dashboard.coach.supportingEvidenceSummary}
       />
       <RecoveryReadinessCard
-        errorMessage={dashboard.recovery.errorMessage}
-        isLoading={dashboard.recovery.isLoading}
-        onRetry={() => void dashboard.recovery.retry()}
-        recoverySnapshot={dashboard.recovery.data}
+        errorMessage={dashboard.recoveryExperience.errorMessage}
+        isLoading={dashboard.recoveryExperience.isLoading}
+        onRetry={() => void dashboard.recoveryExperience.retry()}
+        onOpenRecovery={onOpenRecovery}
+        recoveryExperience={dashboard.recoveryExperience.data}
       />
       <TodaysWorkoutCard
         errorMessage={dashboard.workout.errorMessage}
