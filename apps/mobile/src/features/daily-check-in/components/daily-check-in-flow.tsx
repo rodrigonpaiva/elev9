@@ -9,6 +9,7 @@ import {
 } from '../models/daily-check-in-form-state';
 import { useDailyCheckInForm } from '../hooks/use-daily-check-in-form';
 import { DailyCheckInError } from './daily-check-in-error';
+import { DailyCheckInPending } from './daily-check-in-pending';
 import { DailyCheckInQuestion } from './daily-check-in-question';
 import { DailyCheckInReview } from './daily-check-in-review';
 import { DailyCheckInSuccess } from './daily-check-in-success';
@@ -20,17 +21,25 @@ import type { SubmitDailyCheckInRequest } from '@elev9/types';
 import type { DailyCheckInSubmit } from '../hooks/use-daily-check-in-form';
 import type { DailyCheckInAnalytics } from '../hooks/use-daily-check-in-analytics';
 import type { DailyCheckInAnalyticsErrorCategory } from '../models/daily-check-in-analytics';
+import type {
+  DailyCheckInDraft,
+  DailyCheckInOfflineState,
+} from '../offline/daily-check-in-storage.types';
 
 export type DailyCheckInFlowProps = {
   mode?: DailyCheckInMode;
-  initialValues?: SubmitDailyCheckInRequest;
+  initialValues?: DailyCheckInDraft;
   onSubmit: DailyCheckInSubmit;
   onClose: () => void;
   onDone: () => void;
   onDirtyChange?: (isDirty: boolean) => void;
+  onDraftChange?: (values: DailyCheckInDraft) => void;
   analytics?: DailyCheckInAnalytics;
   analyticsErrorCategory?: DailyCheckInAnalyticsErrorCategory;
   entryPoint?: 'dashboard' | 'other';
+  offlineState?: DailyCheckInOfflineState;
+  onSyncPending?: () => void;
+  onDiscardPending?: () => void;
 };
 
 export function DailyCheckInFlow({
@@ -43,6 +52,10 @@ export function DailyCheckInFlow({
   analytics,
   analyticsErrorCategory = 'unknown',
   entryPoint = 'other',
+  onDraftChange,
+  offlineState = 'idle',
+  onSyncPending,
+  onDiscardPending,
 }: DailyCheckInFlowProps) {
   const form = useDailyCheckInForm({ initialValues, onSubmit });
   const progress = getDailyCheckInProgress(form.step);
@@ -64,6 +77,20 @@ export function DailyCheckInFlow({
   useEffect(() => {
     onDirtyChange?.(form.isDirty && form.status !== 'success');
   }, [form.isDirty, form.status, onDirtyChange]);
+
+  useEffect(() => {
+    if (form.status !== 'success' && form.status !== 'queued') {
+      onDraftChange?.(form.values);
+    }
+  }, [form.status, form.values, onDraftChange]);
+
+  const { markSuccess } = form;
+
+  useEffect(() => {
+    if (form.status === 'queued' && offlineState === 'synced') {
+      markSuccess();
+    }
+  }, [form.status, markSuccess, offlineState]);
 
   const handleClose = () => {
     analytics?.exited(
@@ -98,6 +125,16 @@ export function DailyCheckInFlow({
   const handleRetry = () => {
     analytics?.retrySelected(mode, analyticsErrorCategory);
     void form.submit();
+  };
+
+  const handleReviewPending = () => {
+    form.retry();
+    form.goToStep(DAILY_CHECK_IN_REVIEW_STEP);
+  };
+
+  const handleDiscardPending = () => {
+    onDiscardPending?.();
+    form.retry();
   };
 
   const handleSubmit = () => {
@@ -146,6 +183,14 @@ export function DailyCheckInFlow({
 
         {form.status === 'success' ? (
           <DailyCheckInSuccess isEdit={mode === 'edit'} onDone={handleDone} />
+        ) : form.status === 'queued' ? (
+          <DailyCheckInPending
+            hasFailed={offlineState === 'failed'}
+            isSyncing={offlineState === 'syncing'}
+            onDiscard={handleDiscardPending}
+            onRetry={() => onSyncPending?.()}
+            onReview={handleReviewPending}
+          />
         ) : form.status === 'error' ? (
           <DailyCheckInError
             message={form.errorMessage ?? 'Please try again.'}

@@ -25,6 +25,7 @@ import {
   type CoachUnifiedCoachIntelligence,
 } from './coach';
 import { useCoachIntelligence } from './coach/use-coach-intelligence';
+import { getDailyCheckInOfflineState } from '../features/daily-check-in/offline/daily-check-in-storage';
 
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
 type ProgressSummary = ProgressSummaryResponse['summary'];
@@ -91,6 +92,7 @@ export type UseDashboardResult = {
   progress: DashboardDomainResult<ProgressSummary>;
   dailyCheckIn: DashboardDomainResult<GetTodayDailyCheckInResponse> & {
     completedToday: boolean;
+    offlineState: 'idle' | 'queued' | 'syncing' | 'failed' | 'synced';
   };
   refresh: () => Promise<void>;
 };
@@ -121,6 +123,9 @@ export function useDashboard(): UseDashboardResult {
   const [dailyCheckIn, setDailyCheckIn] = useState<
     DomainState<GetTodayDailyCheckInResponse>
   >(createInitialDomainState());
+  const [dailyCheckInOfflineState, setDailyCheckInOfflineState] = useState<
+    'idle' | 'queued' | 'syncing' | 'failed' | 'synced'
+  >('idle');
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -179,6 +184,10 @@ export function useDashboard(): UseDashboardResult {
           : null,
       );
 
+      setDailyCheckInOfflineState(
+        await getDailyCheckInOfflineState().catch(() => 'idle'),
+      );
+
       results.forEach((result, index) => {
         applyDomainResult(domains[index], result);
       });
@@ -226,27 +235,32 @@ export function useDashboard(): UseDashboardResult {
   }, [coachIntelligenceState.refresh, loadDashboardData]);
   const coachDisplay = useMemo(() => {
     if (coachIntelligenceState.mode === 'error' && !coachIntelligence) {
-      return {
-        badgeLabel: 'Coach Insight',
-        recommendedAction: 'Open Coach',
-        ctaLabel: 'Open Coach',
-        actionTarget: 'coach' as const,
-        currentFocus: null,
-        currentRiskLabel: null,
-        confidenceLabel: null,
-        supportingEvidenceSummary: '',
-      };
+      return withDailyCheckInOfflineDisplay(
+        {
+          badgeLabel: 'Coach Insight',
+          recommendedAction: 'Open Coach',
+          ctaLabel: 'Open Coach',
+          actionTarget: 'coach' as const,
+          currentFocus: null,
+          currentRiskLabel: null,
+          confidenceLabel: null,
+          supportingEvidenceSummary: '',
+        },
+        dailyCheckInOfflineState,
+      );
     }
 
     return resolveCoachInsightDisplay(
       coach.data,
       todaysWorkout,
       coachIntelligence,
+      dailyCheckInOfflineState,
     );
   }, [
     coach.data,
     coachIntelligence,
     coachIntelligenceState.mode,
+    dailyCheckInOfflineState,
     todaysWorkout,
   ]);
 
@@ -264,10 +278,12 @@ export function useDashboard(): UseDashboardResult {
     [loadDomain],
   );
   const retryProgress = useCallback(() => loadDomain('progress'), [loadDomain]);
-  const retryDailyCheckIn = useCallback(
-    () => loadDomain('dailyCheckIn'),
-    [loadDomain],
-  );
+  const retryDailyCheckIn = useCallback(async () => {
+    await loadDomain('dailyCheckIn');
+    setDailyCheckInOfflineState(
+      await getDailyCheckInOfflineState().catch(() => 'idle'),
+    );
+  }, [loadDomain]);
 
   return {
     isLoading:
@@ -313,6 +329,7 @@ export function useDashboard(): UseDashboardResult {
     dailyCheckIn: {
       ...dailyCheckIn,
       completedToday: dailyCheckIn.data?.completedToday ?? false,
+      offlineState: dailyCheckInOfflineState,
       retry: retryDailyCheckIn,
     },
     refresh,
@@ -634,9 +651,10 @@ function resolveCoachInsightDisplay(
   coachDecision: CoachDecision | null,
   workout: TodayWorkout | null,
   intelligence: CoachUnifiedCoachIntelligence | null,
+  offlineState: 'idle' | 'queued' | 'syncing' | 'failed' | 'synced' = 'idle',
 ): CoachDisplay {
   if (!coachDecision) {
-    return {
+    const emptyDisplay = {
       badgeLabel: 'Coach Insight',
       recommendedAction: 'Open Coach',
       ctaLabel: 'Open Coach',
@@ -646,6 +664,8 @@ function resolveCoachInsightDisplay(
       confidenceLabel: null,
       supportingEvidenceSummary: '',
     };
+
+    return withDailyCheckInOfflineDisplay(emptyDisplay, offlineState);
   }
 
   const recommendation = intelligence?.topRecommendation ?? null;
@@ -664,24 +684,52 @@ function resolveCoachInsightDisplay(
     fallbackSummary: coachDecision.summary,
   });
 
-  return {
-    badgeLabel: getCoachBadgeLabel(
-      intelligence?.primaryExpert ??
-        mapCoachPriorityToExpert(coachDecision.priority),
-      insight.currentRisk,
-    ),
-    recommendedAction,
-    ctaLabel: getCoachCtaLabel(actionTarget),
-    actionTarget,
-    currentFocus: insight.currentFocus
-      ? getCoachFocusLabel(insight.currentFocus)
-      : null,
-    currentRiskLabel: insight.currentRisk ? insight.currentRisk.title : null,
-    confidenceLabel: insight.confidence
-      ? getCoachConfidenceLabel(insight.confidence.level)
-      : null,
-    supportingEvidenceSummary: insight.supportingEvidenceSummary,
-  };
+  return withDailyCheckInOfflineDisplay(
+    {
+      badgeLabel: getCoachBadgeLabel(
+        intelligence?.primaryExpert ??
+          mapCoachPriorityToExpert(coachDecision.priority),
+        insight.currentRisk,
+      ),
+      recommendedAction,
+      ctaLabel: getCoachCtaLabel(actionTarget),
+      actionTarget,
+      currentFocus: insight.currentFocus
+        ? getCoachFocusLabel(insight.currentFocus)
+        : null,
+      currentRiskLabel: insight.currentRisk ? insight.currentRisk.title : null,
+      confidenceLabel: insight.confidence
+        ? getCoachConfidenceLabel(insight.confidence.level)
+        : null,
+      supportingEvidenceSummary: insight.supportingEvidenceSummary,
+    },
+    offlineState,
+  );
+}
+
+function withDailyCheckInOfflineDisplay(
+  display: CoachDisplay,
+  offlineState: 'idle' | 'queued' | 'syncing' | 'failed' | 'synced',
+): CoachDisplay {
+  if (offlineState === 'queued' || offlineState === 'syncing') {
+    return {
+      ...display,
+      recommendedAction: 'Daily check-in waiting to sync',
+      ctaLabel: 'Daily check-in waiting to sync',
+      actionTarget: 'check_in',
+    };
+  }
+
+  if (offlineState === 'failed') {
+    return {
+      ...display,
+      recommendedAction: 'Daily check-in needs attention',
+      ctaLabel: 'Daily check-in needs attention',
+      actionTarget: 'check_in',
+    };
+  }
+
+  return display;
 }
 
 function getCoachRecommendedAction(

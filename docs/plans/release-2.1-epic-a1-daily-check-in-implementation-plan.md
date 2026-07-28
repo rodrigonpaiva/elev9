@@ -298,3 +298,15 @@ Prompt 5 validation: `npm exec nx test mobile -- --runInBand` passed with 10 sui
 - Added privacy, provider-failure, error-mapping, and analytics boundary tests.
 - Created `docs/analytics/release-2.1-epic-a1-daily-check-in-event-taxonomy.md`.
 - External provider activation, consent, retention enforcement, offline queueing, and E2E remain future work.
+
+## Offline Resilience — Prompt 8
+
+The mobile implementation now has a Daily Check-in-specific offline boundary, without introducing a global sync framework or a new dependency. `AsyncStorageDailyCheckInStorage` persists only a partial four-signal draft or one complete pending submission, each with versioned technical metadata and conservative TTLs (24 hours for drafts, 72 hours for pending submissions). It does not persist `localDate`, timezone, Recovery, tokens, or user identity.
+
+`DailyCheckInSyncService` remains a transport adapter: the backend continues to decide the local day, create/update policy, Recovery and canonical completion. A pending item is replaced by the latest local intent, retries are serialized, and successful submission is reconciled with `today` and Recovery before local data is cleared. Temporary network/server errors remain queued; authentication, validation, profile and Recovery-processing errors require manual intervention.
+
+The state model is `idle → draft → submitting → queued/syncing → synced|failed`. Foreground, initial screen load and manual retry are supported. No connectivity library or true background execution was present, so automatic reconnect retry is not claimed; AppState foreground is the supported lifecycle trigger. Logout clears the namespaced draft and pending item before the authenticated session is discarded.
+
+The Dashboard presents queued/failed as distinct from `completedToday`; pending local data never becomes canonical success. Product analytics reuses the Prompt 7 allowlisted noop boundary and records only transport behavior (`queued`, `sync_started`, `sync_succeeded`, `sync_failed`, `pending_discarded`).
+
+The remaining operational limitation is account isolation with fixed namespaced keys: logout cleanup is mandatory and implemented, but a future multi-account storage abstraction should provide a stronger pseudonymous session namespace before enabling long-lived local persistence.

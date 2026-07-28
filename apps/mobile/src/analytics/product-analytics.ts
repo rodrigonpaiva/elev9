@@ -74,6 +74,28 @@ export type ProductAnalyticsEventMap = {
     elapsedMs: number;
     flowSessionId: string;
   };
+  daily_check_in_draft_restored: {
+    source: 'draft' | 'pending';
+  };
+  daily_check_in_queued: {
+    trigger: 'manual' | 'initial_load';
+  };
+  daily_check_in_sync_started: {
+    trigger: 'manual' | 'foreground' | 'connectivity' | 'initial_load';
+    attemptNumber: number;
+  };
+  daily_check_in_sync_succeeded: {
+    trigger: 'manual' | 'foreground' | 'connectivity' | 'initial_load';
+    attemptNumber: number;
+  };
+  daily_check_in_sync_failed: {
+    trigger: 'manual' | 'foreground' | 'connectivity' | 'initial_load';
+    attemptNumber: number;
+    errorCategory: string;
+  };
+  daily_check_in_pending_discarded: {
+    source: 'draft' | 'pending';
+  };
 };
 
 export type ProductAnalyticsEventName = keyof ProductAnalyticsEventMap;
@@ -149,6 +171,12 @@ const PRODUCT_ANALYTICS_ALLOWED_PROPERTIES: {
     'elapsedMs',
     'flowSessionId',
   ],
+  daily_check_in_draft_restored: ['source'],
+  daily_check_in_queued: ['trigger'],
+  daily_check_in_sync_started: ['trigger', 'attemptNumber'],
+  daily_check_in_sync_succeeded: ['trigger', 'attemptNumber'],
+  daily_check_in_sync_failed: ['trigger', 'attemptNumber', 'errorCategory'],
+  daily_check_in_pending_discarded: ['source'],
 };
 
 type ProductAnalyticsProvider = ProductAnalytics & {

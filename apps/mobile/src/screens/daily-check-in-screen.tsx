@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,9 +13,14 @@ import {
   useDailyCheckInAnalytics,
   mapDailyCheckInError,
   mapDailyCheckInAnalyticsError,
+  useDailyCheckInOffline,
   type DailyCheckInSubmit,
 } from '../features/daily-check-in';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { apiClient } from '../api/client';
+import { useAuth } from '../auth/auth-provider';
+import { isTemporaryDailyCheckInSyncError } from '../features/daily-check-in/offline/daily-check-in-sync-machine';
+import { classifySyncError } from '../features/daily-check-in/offline/daily-check-in-sync-service';
 
 export type DailyCheckInScreenProps = {
   onSubmit?: DailyCheckInSubmit;
@@ -28,10 +33,31 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<DailyCheckInRoute>();
   const initialValues = route.params?.initialValues;
+  const { status: authStatus } = useAuth();
   const [isDirty, setIsDirty] = useState(Boolean(initialValues));
   const dailyCheckIn = useDailyCheckIn();
   const analytics = useDailyCheckInAnalytics();
   const entryPoint = route.params?.entryPoint ?? 'other';
+  const syncApi = useMemo(
+    () => ({
+      submitDailyCheckIn: apiClient.progress.submitDailyCheckIn,
+      getTodayDailyCheckIn: apiClient.progress.getTodayDailyCheckIn,
+      getTodayRecovery: apiClient.recovery.getTodayRecovery,
+    }),
+    [],
+  );
+  const offline = useDailyCheckInOffline({
+    api: syncApi,
+    authStatus,
+    onSynced: dailyCheckIn.refresh,
+  });
+  const { clearDraft, pending } = offline;
+
+  useEffect(() => {
+    if (!dailyCheckIn.isLoading && !dailyCheckIn.dailyCheckIn && !pending) {
+      void clearDraft();
+    }
+  }, [clearDraft, dailyCheckIn.dailyCheckIn, dailyCheckIn.isLoading, pending]);
 
   useEffect(() => {
     if (dailyCheckIn.isLoading || dailyCheckIn.error) {
@@ -52,9 +78,12 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
       const mode = dailyCheckIn.mode;
       const attemptNumber = analytics.submitStarted(mode);
 
+      await offline.enqueue(values);
+
       if (onSubmit) {
         try {
           await onSubmit(values);
+          await offline.clearAfterSuccess();
           analytics.submitSucceeded(mode, attemptNumber);
           return;
         } catch (error) {
@@ -65,14 +94,19 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
 
       try {
         await dailyCheckIn.submit(values);
+        await offline.clearAfterSuccess();
         analytics.submitSucceeded(mode, attemptNumber);
       } catch (error) {
         const mappedError = mapDailyCheckInError(error);
-        analytics.submitFailed(
-          mode,
-          attemptNumber,
-          mapDailyCheckInAnalyticsError(mappedError.code),
-        );
+        const category = mapDailyCheckInAnalyticsError(mappedError.code);
+
+        if (isTemporaryDailyCheckInSyncError(classifySyncError(error))) {
+          analytics.submitFailed(mode, attemptNumber, category);
+          return 'queued';
+        }
+
+        await offline.markFailed(category);
+        analytics.submitFailed(mode, attemptNumber, category);
         throw error;
       }
     },
@@ -81,6 +115,7 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
       dailyCheckIn.error?.code,
       dailyCheckIn.mode,
       dailyCheckIn.submit,
+      offline,
       onSubmit,
     ],
   );
@@ -125,7 +160,13 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
     return unsubscribe;
   }, [isDirty, navigation]);
 
-  if (dailyCheckIn.isLoading && !dailyCheckIn.dailyCheckIn) {
+  const effectiveInitialValues =
+    offline.pending?.payload ??
+    (dailyCheckIn.dailyCheckIn
+      ? dailyCheckIn.initialValues
+      : (offline.draft?.values ?? initialValues));
+
+  if (dailyCheckIn.isLoading || offline.isHydrating) {
     return <DailyCheckInLoading />;
   }
 
@@ -140,18 +181,23 @@ export function DailyCheckInScreen({ onSubmit }: DailyCheckInScreenProps = {}) {
 
   return (
     <DailyCheckInFlow
-      initialValues={dailyCheckIn.initialValues}
+      initialValues={effectiveInitialValues}
       mode={dailyCheckIn.mode}
       onClose={confirmExit}
       onDone={() => navigation.goBack()}
       onDirtyChange={setIsDirty}
       analytics={analytics}
       analyticsErrorCategory={
-        dailyCheckIn.error
+        offline.errorCategory ??
+        (dailyCheckIn.error
           ? mapDailyCheckInAnalyticsError(dailyCheckIn.error.code)
-          : 'unknown'
+          : 'unknown')
       }
       entryPoint={entryPoint}
+      offlineState={offline.state}
+      onDiscardPending={() => void offline.discard('pending')}
+      onDraftChange={offline.saveDraft}
+      onSyncPending={() => void offline.sync('manual')}
       onSubmit={submit}
     />
   );

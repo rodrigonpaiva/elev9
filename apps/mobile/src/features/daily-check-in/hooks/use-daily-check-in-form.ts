@@ -17,12 +17,14 @@ import {
   type DailyCheckInFormState,
 } from '../models/daily-check-in-form-state';
 
+export type DailyCheckInSubmitResult = 'synced' | 'queued';
+
 export type DailyCheckInSubmit = (
   values: SubmitDailyCheckInRequest,
-) => Promise<void> | void;
+) => Promise<DailyCheckInSubmitResult | void> | DailyCheckInSubmitResult | void;
 
 export type UseDailyCheckInFormOptions = {
-  initialValues?: SubmitDailyCheckInRequest;
+  initialValues?: DailyCheckInDraft;
   onSubmit: DailyCheckInSubmit;
 };
 
@@ -103,10 +105,10 @@ export function useDailyCheckInForm({
     }));
 
     try {
-      await onSubmit(state.values);
+      const result = await onSubmit(state.values);
       setState((current) => ({
         ...current,
-        status: 'success',
+        status: result === 'queued' ? 'queued' : 'success',
         errorMessage: null,
       }));
     } catch {
@@ -130,6 +132,14 @@ export function useDailyCheckInForm({
     setState(createDailyCheckInFormState(initialValues));
   }, [initialValues]);
 
+  const markSuccess = useCallback(() => {
+    setState((current) => ({
+      ...current,
+      status: 'success',
+      errorMessage: null,
+    }));
+  }, []);
+
   const draft = useMemo<DailyCheckInDraft>(
     () => ({ ...state.values }),
     [state.values],
@@ -149,5 +159,6 @@ export function useDailyCheckInForm({
     submit,
     retry,
     reset,
+    markSuccess,
   };
 }

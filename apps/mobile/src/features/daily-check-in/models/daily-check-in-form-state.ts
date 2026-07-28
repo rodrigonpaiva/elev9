@@ -2,7 +2,12 @@ import type { SubmitDailyCheckInRequest } from '@elev9/types';
 
 export type DailyCheckInField = keyof SubmitDailyCheckInRequest;
 export type DailyCheckInMode = 'create' | 'edit';
-export type DailyCheckInStatus = 'idle' | 'submitting' | 'success' | 'error';
+export type DailyCheckInStatus =
+  | 'idle'
+  | 'submitting'
+  | 'success'
+  | 'queued'
+  | 'error';
 
 export type DailyCheckInDraft = Partial<SubmitDailyCheckInRequest>;
 
@@ -19,7 +24,7 @@ export const DAILY_CHECK_IN_MIN = 1;
 export const DAILY_CHECK_IN_MAX = 5;
 
 export function createDailyCheckInFormState(
-  initialValues?: SubmitDailyCheckInRequest,
+  initialValues?: DailyCheckInDraft,
 ): DailyCheckInFormState {
   return {
     step: 0,

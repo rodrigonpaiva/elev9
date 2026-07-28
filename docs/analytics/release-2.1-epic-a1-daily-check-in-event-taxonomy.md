@@ -21,19 +21,25 @@ Events use lowercase `snake_case`, are independent of UI copy and component name
 
 ## Event Catalog
 
-| Event                             | Trigger                                                         | Owner            | Required properties                                                                | Forbidden properties                            |
-| --------------------------------- | --------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `daily_check_in_cta_viewed`       | Dashboard has resolved data and displays the Daily Check-in CTA | Mobile Dashboard | `completionState`, `entryPoint`                                                    | Health signals, identity, Recovery/Coach values |
-| `daily_check_in_cta_selected`     | User selects the Dashboard Daily Check-in CTA                   | Mobile Dashboard | `completionState`, `entryPoint`                                                    | Health signals, identity, Recovery/Coach values |
-| `daily_check_in_started`          | Today's state has loaded and create/edit mode is known          | Mobile flow      | `mode`, `entryPoint`, `flowSessionId`                                              | Health signals, dates, timezone, identity       |
-| `daily_check_in_step_viewed`      | A flow step becomes visible for the first time in the visit     | Mobile flow      | `mode`, `step`, `stepIndex`, `totalSteps`, `flowSessionId`                         | Selected value, answer, health signal           |
-| `daily_check_in_step_completed`   | User advances from a question                                   | Mobile flow      | `mode`, `step`, `stepIndex`, `totalSteps`, `flowSessionId`                         | Selected value, answer, health signal           |
-| `daily_check_in_submit_started`   | A submit request begins                                         | Mobile flow      | `mode`, `attemptNumber`, `flowSessionId`                                           | Payload, signal values, IDs                     |
-| `daily_check_in_submit_succeeded` | API submission resolves successfully                            | Mobile flow      | `mode`, `attemptNumber`, `durationMs`, `flowSessionId`                             | Check-in response, Recovery, scores, dates      |
-| `daily_check_in_submit_failed`    | API submission rejects                                          | Mobile flow      | `mode`, `attemptNumber`, `durationMs`, `errorCategory`, `flowSessionId`            | Raw error, status, response, stack, payload     |
-| `daily_check_in_retry_selected`   | User selects retry after a failed submit                        | Mobile flow      | `mode`, `previousErrorCategory`, `attemptNumber`, `flowSessionId`                  | Raw error, payload, health values               |
-| `daily_check_in_success_viewed`   | Success state becomes visible                                   | Mobile flow      | `mode`, `flowSessionId`                                                            | Check-in response, scores, Coach content        |
-| `daily_check_in_exited`           | User closes the flow while the lifecycle state is reliable      | Mobile flow      | `mode`, `lastStep`, `completed`, `hadUnsavedChanges`, `elapsedMs`, `flowSessionId` | Draft, answers, payload, identity               |
+| Event                              | Trigger                                                         | Owner            | Required properties                                                                | Forbidden properties                            |
+| ---------------------------------- | --------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `daily_check_in_cta_viewed`        | Dashboard has resolved data and displays the Daily Check-in CTA | Mobile Dashboard | `completionState`, `entryPoint`                                                    | Health signals, identity, Recovery/Coach values |
+| `daily_check_in_cta_selected`      | User selects the Dashboard Daily Check-in CTA                   | Mobile Dashboard | `completionState`, `entryPoint`                                                    | Health signals, identity, Recovery/Coach values |
+| `daily_check_in_started`           | Today's state has loaded and create/edit mode is known          | Mobile flow      | `mode`, `entryPoint`, `flowSessionId`                                              | Health signals, dates, timezone, identity       |
+| `daily_check_in_step_viewed`       | A flow step becomes visible for the first time in the visit     | Mobile flow      | `mode`, `step`, `stepIndex`, `totalSteps`, `flowSessionId`                         | Selected value, answer, health signal           |
+| `daily_check_in_step_completed`    | User advances from a question                                   | Mobile flow      | `mode`, `step`, `stepIndex`, `totalSteps`, `flowSessionId`                         | Selected value, answer, health signal           |
+| `daily_check_in_submit_started`    | A submit request begins                                         | Mobile flow      | `mode`, `attemptNumber`, `flowSessionId`                                           | Payload, signal values, IDs                     |
+| `daily_check_in_submit_succeeded`  | API submission resolves successfully                            | Mobile flow      | `mode`, `attemptNumber`, `durationMs`, `flowSessionId`                             | Check-in response, Recovery, scores, dates      |
+| `daily_check_in_submit_failed`     | API submission rejects                                          | Mobile flow      | `mode`, `attemptNumber`, `durationMs`, `errorCategory`, `flowSessionId`            | Raw error, status, response, stack, payload     |
+| `daily_check_in_retry_selected`    | User selects retry after a failed submit                        | Mobile flow      | `mode`, `previousErrorCategory`, `attemptNumber`, `flowSessionId`                  | Raw error, payload, health values               |
+| `daily_check_in_success_viewed`    | Success state becomes visible                                   | Mobile flow      | `mode`, `flowSessionId`                                                            | Check-in response, scores, Coach content        |
+| `daily_check_in_exited`            | User closes the flow while the lifecycle state is reliable      | Mobile flow      | `mode`, `lastStep`, `completed`, `hadUnsavedChanges`, `elapsedMs`, `flowSessionId` | Draft, answers, payload, identity               |
+| `daily_check_in_draft_restored`    | A valid local draft or pending intent is restored               | Mobile flow      | `source`                                                                           | Draft values, payload, storage keys             |
+| `daily_check_in_queued`            | A submission intent is persisted locally                        | Mobile flow      | `trigger`                                                                          | Payload, answers, identity                      |
+| `daily_check_in_sync_started`      | A pending intent begins a sync attempt                          | Mobile sync      | `trigger`, `attemptNumber`                                                         | Payload, answers, storage keys                  |
+| `daily_check_in_sync_succeeded`    | A pending intent is confirmed and reconciled                    | Mobile sync      | `trigger`, `attemptNumber`                                                         | Payload, Recovery, dates                        |
+| `daily_check_in_sync_failed`       | A sync attempt remains queued or becomes failed                 | Mobile sync      | `trigger`, `attemptNumber`, `errorCategory`                                        | Raw error, payload, answers                     |
+| `daily_check_in_pending_discarded` | User explicitly discards a local item                           | Mobile flow      | `source`                                                                           | Draft values, payload, identity                 |
 
 `stepIndex` is zero-based and `totalSteps` is five: energy, sleep quality, muscle soreness, motivation, and review. Review uses `daily_check_in_step_viewed`; no separate review event is emitted.
 
@@ -52,6 +58,8 @@ Events use lowercase `snake_case`, are independent of UI copy and component name
 | `elapsedMs`       | Monotonic client duration from flow start to exit | Non-negative integer                                                                                         |
 | `errorCategory`   | Safe UI-level error class                         | `network`, `authentication`, `profile_unavailable`, `validation`, `recovery_processing`, `server`, `unknown` |
 | `flowSessionId`   | Ephemeral visit correlation key                   | Random client-generated string                                                                               |
+| `source`          | Local item restored or discarded                  | `draft`, `pending`                                                                                           |
+| `trigger`         | Safe sync trigger                                 | `manual`, `foreground`, `connectivity`, `initial_load`                                                       |
 
 ## Event Owners
 
@@ -75,6 +83,10 @@ The mobile analytics controller uses `performance.now()` when available and fall
 - Submit duration: submit request start → response or failure.
 - Retries create a new submit attempt and duration; the original failure remains a separate event.
 - Backgrounding does not create completion or exit automatically. No offline persistence or timer survives unmount.
+
+## Offline Extension
+
+Offline events use the same allowlist and noop provider as the online funnel. They describe transport state only; they never contain the four check-in values, local dates, timezone, Recovery, or identity. A queued event is not a successful submission event.
 
 ## Error Categories
 

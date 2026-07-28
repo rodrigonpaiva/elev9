@@ -17,6 +17,7 @@ import {
   getAccessToken,
   setAccessToken,
 } from '../storage/token-storage';
+import { clearDailyCheckInOfflineStorage } from '../features/daily-check-in/offline/daily-check-in-storage';
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -93,8 +94,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
         try {
           await clearAccessToken();
         } finally {
-          setAccessTokenState(null);
-          setStatus('unauthenticated');
+          try {
+            await clearDailyCheckInOfflineStorage();
+          } finally {
+            setAccessTokenState(null);
+            setStatus('unauthenticated');
+          }
         }
       },
     }),
