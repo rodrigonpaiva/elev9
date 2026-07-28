@@ -65,3 +65,15 @@ Actions are intentionally prospective. This Prompt 1 created no production code,
 | 49 | `docs/architecture/release-2.1-epic-a2-recovery-contracts-and-client.md` | CREATE | Document contract boundary and client behavior | Implementation | Low |
 
 Prompt 3 did not alter backend production code, mobile production code, Dashboard, navigation, analytics, offline storage, lockfiles or dependencies.
+
+## Prompt 4 actual changes
+
+| Order | File or Directory | Action | Reason | Depends On | Risk |
+|---:|---|---|---|---|---|
+| 50 | `apps/mobile/src/features/recovery/` | CREATE | Isolated state-driven Recovery experience, components, helpers and fixtures | Shared contracts | Medium |
+| 51 | `apps/mobile/src/features/recovery/screens/recovery-screen.tsx` | CREATE | State-injected Recovery screen; route integration remains for Prompt 5 | Shared contracts | Medium |
+| 52 | `apps/mobile/src/features/recovery/**/*.spec.ts` | CREATE | Presentation, state, date and accessibility-text coverage | Feature models/helpers | Medium |
+| 53 | `docs/product/release-2.1-epic-a2-mobile-recovery-experience.md` | CREATE | Product/UI architecture and state documentation | Mobile feature | Low |
+| 54 | `docs/plans/release-2.1-epic-a2-recovery-intelligence-implementation-plan.md` | UPDATE | Prompt status, decisions and remaining gaps | Feature implementation | Low |
+
+Prompt 4 did not alter API, contracts, API client, Dashboard, navigation, analytics, offline persistence, backend policies, algorithms, dependencies or lockfiles.

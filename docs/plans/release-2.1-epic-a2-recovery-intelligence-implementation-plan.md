@@ -32,6 +32,30 @@ flowchart TD
   J --> K[Deterministic Coach and Training]
 ```
 
+## Prompt 4 Status
+
+- Prompt 1 — completed
+- Prompt 2 — completed
+- Prompt 3 — completed
+- Prompt 4 — completed
+- Prompt 5 — next
+
+### Mobile UI decisions
+
+- `RecoveryScreen` foi criada como feature isolada e orientada por `RecoveryScreenState`.
+- O MVP apresenta sete dias; não há fetch nem seleção de ranges adicionais neste prompt.
+- Categoria, freshness, impacts, trend e insight são apresentados a partir dos contratos compartilhados; nenhuma regra é calculada no mobile.
+- A visualização de histórico usa barras simples e alternativa textual, sem nova biblioteca de charts.
+- A tela “Recovery History” existente permanece isolada porque hoje exibe histórico de Daily Check-in; a correção de rota/título fica reservada à integração do Prompt 5.
+- Callbacks de refresh, retry, Daily Check-in, history item, range e insight action estão preparados para injeção.
+
+### Prompt 4 tests and gaps
+
+- Fixtures públicas para available, stale e legacy.
+- Testes unitários de copy, acessibilidade textual, datas locais e screen state.
+- Build mobile aprovado; render tests não existem no workspace e não foi instalada biblioteca para criá-los.
+- Restam API integration, navigation, Dashboard, analytics, offline read cache e validação física.
+
 ## Backend Work
 
 ### 1. Define safe Recovery presentation model
