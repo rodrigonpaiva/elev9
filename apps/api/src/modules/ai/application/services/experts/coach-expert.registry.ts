@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 
 import type { AgentContextDomain, AgentIntent } from '../agent/agent.types';
 import type { CoachExpert, CoachExpertCapability } from './coach-expert.types';
@@ -24,7 +24,9 @@ const DEFAULT_COACH_EXPERTS: readonly CoachExpert[] = Object.freeze([
 export class CoachExpertRegistry {
   private readonly experts = new Map<string, CoachExpert>();
 
-  constructor(initialExperts: readonly CoachExpert[] = DEFAULT_COACH_EXPERTS) {
+  constructor(
+    @Optional() initialExperts: readonly CoachExpert[] = DEFAULT_COACH_EXPERTS,
+  ) {
     this.registerExperts(...initialExperts);
   }
 

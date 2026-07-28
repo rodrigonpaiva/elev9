@@ -314,3 +314,9 @@ The remaining operational limitation is account isolation with fixed namespaced 
 ## Final Production Certification — Prompt 9
 
 The final audit at commit `e4ae424` found no functional or privacy blocker in the implemented A1 path. The verdict is `CERTIFIED_WITH_CONDITIONS`: automated API/mobile/build evidence passes, but Mongo-backed E2E cannot initialize in the sandbox (`listen EPERM`/MongoMemoryServer code 48), and physical-device/manual validation remains outstanding. Conditions are recorded in `docs/audits/release-2.1-epic-a1-production-certification.md`: external E2E, iOS/Android online/offline/accessibility checks, legacy database duplicate audit, AsyncStorage security review and controlled rollout monitoring.
+
+## External Validation and Rollout Gate — Prompt 10
+
+External-port E2E completed successfully after minimal pre-existing AI module wiring corrections: 16 suites and 55 tests passed. API, mobile, types and API-client builds, API/mobile tests, lint and diff validation also passed. No physical iOS/Android runtime, screen-reader, device-offline, timezone-boundary or populated legacy-database validation was available in this environment. The rollout gate is therefore `ROLLOUT_GATE_PASSED_WITH_RESTRICTIONS`; retain `CERTIFIED_WITH_CONDITIONS` and limit rollout to internal/tightly controlled exposure until those conditions are executed. See `docs/validation/release-2.1-epic-a1-external-validation.md`.
+
+Prompt 10 made only localized wiring fixes in the existing AI module: optional default catalog injection for `CoachExpertRegistry` and `AgentToolRegistryService`, plus registration of existing composition, explainability and persona policy providers. No Daily Check-in domain, contract, mobile, offline or analytics behavior changed.

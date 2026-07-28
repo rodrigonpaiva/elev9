@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 
 import type { AgentContextDomain, AgentIntent } from '../agent.types';
 import type {
@@ -345,6 +345,7 @@ const DEFAULT_AGENT_TOOLS: AgentToolDescriptor[] = [
 @Injectable()
 export class AgentToolRegistryService {
   constructor(
+    @Optional()
     private readonly tools: readonly AgentToolDescriptor[] = DEFAULT_AGENT_TOOLS,
   ) {
     this.validateCatalog(this.tools);

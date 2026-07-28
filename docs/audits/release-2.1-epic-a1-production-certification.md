@@ -201,3 +201,16 @@ Status for every item: **NOT_EXECUTED**.
 - Git status at audit start: clean
 - Final verdict: **CERTIFIED_WITH_CONDITIONS**
 - Production code changes in Prompt 9: none required.
+
+## External Validation and Rollout Gate — Prompt 10
+
+The E2E target was rerun with local-port permission outside the sandbox. MongoMemoryServer initialized successfully and all **16 suites / 55 tests passed**, including the Daily Check-in, AI Coach and Dashboard paths. The initial E2E failure was environmental, but the first permitted run exposed localized Nest wiring defects in the AI module. They were corrected without changing business logic: default catalog constructor parameters were marked optional, and existing composition, explainability and persona policies were registered as providers. The E2E target passed after these corrections.
+
+The required automated validation also passed after the corrections: API 206 suites / 1,333 tests, mobile 15 suites / 73 tests, API/mobile/types/API-client builds, lint and `git diff --check`.
+
+Physical iOS/Android, VoiceOver/TalkBack, real offline close/reopen, timezone-boundary and populated legacy-database validations were **not executed** because no simulator/device or populated external database was available. See [release-2.1-epic-a1-external-validation.md](../validation/release-2.1-epic-a1-external-validation.md).
+
+**Certification status remains:** `CERTIFIED_WITH_CONDITIONS`
+
+**Prompt 10 rollout gate:** `ROLLOUT_GATE_PASSED_WITH_RESTRICTIONS`
+**Maximum supported rollout stage:** internal-only or tightly controlled exposure until physical and manual conditions are completed.

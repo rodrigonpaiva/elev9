@@ -51,10 +51,19 @@ import {
   CoachExpertRoutingPolicy,
   CoachExpertRouterService,
 } from './application/services/experts/coach-expert-router';
-import { CoachExpertCompositionService } from './application/services/experts/composition/coach-expert-composition';
+import {
+  CoachExpertCompositionPolicy,
+  CoachExpertCompositionService,
+} from './application/services/experts/composition/coach-expert-composition';
 import { CoachExpertObservabilityService } from './application/services/experts/observability/coach-expert-observability';
-import { CoachExplainabilityService } from './application/services/explainability/coach-explainability';
-import { CoachPersonaEngineService } from './application/services/persona/coach-persona-engine';
+import {
+  CoachExplainabilityPolicy,
+  CoachExplainabilityService,
+} from './application/services/explainability/coach-explainability';
+import {
+  CoachPersonaEnginePolicy,
+  CoachPersonaEngineService,
+} from './application/services/persona/coach-persona-engine';
 import { CoachIntelligenceConfigService } from './application/services/coach-intelligence/coach-intelligence.config';
 import { CoachIntelligenceContextAssemblerService } from './application/services/coach-intelligence/coach-intelligence.context-assembler.service';
 import { CoachIntelligenceFreshnessPolicy } from './application/services/coach-intelligence/coach-intelligence.policy';
@@ -218,9 +227,12 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
     AgentPlanningEngineService,
     CoachExpertRoutingPolicy,
     CoachExpertRouterService,
+    CoachExpertCompositionPolicy,
     CoachExpertCompositionService,
     CoachExpertObservabilityService,
+    CoachExplainabilityPolicy,
     CoachExplainabilityService,
+    CoachPersonaEnginePolicy,
     CoachPersonaEngineService,
     AgentToolExecutionPolicy,
     AgentToolRegistryService,
