@@ -13,6 +13,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { Text } from '@elev9/ui';
+import type { NutritionAction } from '@elev9/types';
 
 import { productAnalytics } from '../analytics/product-analytics';
 import { CoachInsightCard } from '../components/dashboard/coach-insight-card';
@@ -144,15 +145,33 @@ export function DashboardScreen({
     onOpenTrainingPlan?.();
   }, [onOpenTrainingPlan]);
 
-  const handleCreateNutritionProfile = useCallback(() => {
-    navigation.navigate('CreateNutritionProfile', {
-      prefillGoal: mapTrainingGoalToNutritionGoal(dashboard.workout.data?.goal),
-    });
-  }, [dashboard.workout.data?.goal, navigation]);
-
-  const handleOpenNutritionOverview = useCallback(() => {
-    navigation.navigate('NutritionOverview');
-  }, [navigation]);
+  const handleNutritionAction = useCallback(
+    (action: NutritionAction) => {
+      switch (action.type) {
+        case 'open_profile':
+          navigation.navigate('CreateNutritionProfile');
+          return;
+        case 'create_plan':
+          navigation.navigate('NutritionPlan');
+          return;
+        case 'open_today_meals':
+          navigation.navigate('TodaysMeals');
+          return;
+        case 'log_meal':
+          if (action.mealId) {
+            navigation.navigate('LogMeal', { mealId: action.mealId });
+          } else {
+            navigation.navigate('TodaysMeals');
+          }
+          return;
+        case 'open_hydration':
+        case 'none':
+        default:
+          return;
+      }
+    },
+    [navigation],
+  );
 
   const handleOpenNutritionRecommendations = useCallback(() => {
     navigation.navigate('NutritionRecommendations');
@@ -269,10 +288,9 @@ export function DashboardScreen({
           <DashboardCards
             dashboard={dashboard}
             onCoachCta={handleCoachCta}
-            onCreateNutritionProfile={handleCreateNutritionProfile}
+            onNutritionAction={handleNutritionAction}
             onOpenHistory={onOpenHistory}
             onOpenRecovery={handleOpenRecovery}
-            onOpenNutritionOverview={handleOpenNutritionOverview}
             onOpenWeeklyReview={handleOpenWeeklyReview}
             onStartWorkout={handleStartWorkout}
             onViewAnalytics={handleViewAnalytics}
@@ -284,28 +302,12 @@ export function DashboardScreen({
   );
 }
 
-function mapTrainingGoalToNutritionGoal(
-  goal: 'lose_weight' | 'gain_muscle' | 'maintain' | undefined,
-) {
-  switch (goal) {
-    case 'lose_weight':
-      return 'fat_loss';
-    case 'gain_muscle':
-      return 'muscle_gain';
-    case 'maintain':
-      return 'maintenance';
-    default:
-      return undefined;
-  }
-}
-
 function DashboardCards({
   dashboard,
   onCoachCta,
-  onCreateNutritionProfile,
+  onNutritionAction,
   onOpenHistory,
   onOpenRecovery,
-  onOpenNutritionOverview,
   onOpenWeeklyReview,
   onStartWorkout,
   onViewAnalytics,
@@ -313,10 +315,9 @@ function DashboardCards({
 }: {
   dashboard: UseDashboardResult;
   onCoachCta: () => void;
-  onCreateNutritionProfile: () => void;
+  onNutritionAction: (action: NutritionAction) => void;
   onOpenHistory?: () => void;
   onOpenRecovery: () => void;
-  onOpenNutritionOverview: () => void;
   onOpenWeeklyReview: () => void;
   onStartWorkout: () => void;
   onViewAnalytics: () => void;
@@ -356,18 +357,13 @@ function DashboardCards({
       <TodaysNutritionCard
         errorMessage={dashboard.nutrition.errorMessage}
         isLoading={dashboard.nutrition.isLoading}
-        onCreateNutritionProfile={onCreateNutritionProfile}
-        onOpenNutritionOverview={onOpenNutritionOverview}
+        onAction={onNutritionAction}
         onRetry={() => void dashboard.nutrition.retry()}
         todayNutrition={dashboard.nutrition.data}
-        workout={dashboard.workout.todaysWorkout}
       />
       <WeeklyProgressCard
         errorMessage={dashboard.progress.errorMessage}
         isLoading={dashboard.progress.isLoading}
-        nutritionAdherencePercentage={
-          dashboard.nutrition.data?.progress.adherencePercentage
-        }
         onRetry={() => void dashboard.progress.retry()}
         onOpenWeeklyReview={onOpenWeeklyReview}
         onViewAnalytics={onViewAnalytics}

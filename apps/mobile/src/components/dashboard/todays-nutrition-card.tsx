@@ -1,27 +1,30 @@
 import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import type { TodayNutrition, TodayWorkout } from '@elev9/types';
+import type {
+  NutritionAction,
+  NutritionAvailability,
+  TodayNutrition,
+} from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
+
+import {
+  buildNutritionCardModel,
+  getActionLabel,
+  getAvailabilityMessage,
+  getAvailabilityTitle,
+  type NutritionCardModel,
+} from './todays-nutrition-card-model';
 
 type TodaysNutritionCardProps = {
   todayNutrition: TodayNutrition | null;
-  workout: TodayWorkout | null;
   isLoading: boolean;
   errorMessage?: string | null;
   onRetry: () => void;
-  onCreateNutritionProfile: () => void;
-  onOpenNutritionOverview?: () => void;
+  onAction: (action: NutritionAction) => void;
 };
 
 type BadgeVariant = 'primary' | 'muted' | 'danger';
-type AdherenceLabel =
-  | 'Unavailable'
-  | 'Not Started'
-  | 'Below Range'
-  | 'Within Range'
-  | 'Above Range';
-
 const tokens = {
   card: '#ffffff',
   text: '#111827',
@@ -37,11 +40,9 @@ const tokens = {
 export const TodaysNutritionCard = memo(function TodaysNutritionCard({
   errorMessage,
   isLoading,
-  onCreateNutritionProfile,
-  onOpenNutritionOverview,
   onRetry,
   todayNutrition,
-  workout,
+  onAction,
 }: TodaysNutritionCardProps) {
   const model = useMemo(() => {
     if (!todayNutrition) {
@@ -78,24 +79,36 @@ export const TodaysNutritionCard = memo(function TodaysNutritionCard({
   if (!model) {
     return (
       <View
-        accessibilityLabel="No nutrition plan available. Create your nutrition profile to receive personalized recommendations."
+        accessibilityLabel="Nutrition setup is not available. Open nutrition to continue."
         style={styles.card}
       >
         <View style={styles.emptyContent}>
           <Text style={styles.label}>NUTRITION</Text>
-          <Text style={styles.emptyTitle}>No nutrition plan available.</Text>
+          <Text style={styles.emptyTitle}>Nutrition setup is not ready.</Text>
           <Text style={styles.emptyMessage}>
-            Create your nutrition profile to receive personalized
-            recommendations.
+            Open Nutrition to finish setup and receive daily guidance.
           </Text>
           <Button
-            accessibilityLabel="Create nutrition profile"
-            label="Create Nutrition Profile"
-            onPress={onCreateNutritionProfile}
+            accessibilityLabel="Open nutrition setup"
+            label="Open Nutrition"
+            onPress={() => onAction({ type: 'open_profile' })}
             style={styles.primaryButton}
           />
         </View>
       </View>
+    );
+  }
+
+  if (todayNutrition?.availability !== 'available') {
+    return (
+      <NutritionAvailabilityState
+        action={model.action}
+        availability={todayNutrition?.availability ?? 'not_available'}
+        onAction={onAction}
+        onRetry={onRetry}
+        title={getAvailabilityTitle(todayNutrition?.availability)}
+        message={getAvailabilityMessage(todayNutrition?.availability)}
+      />
     );
   }
 
@@ -112,53 +125,118 @@ export const TodaysNutritionCard = memo(function TodaysNutritionCard({
 
       <View style={styles.caloriesGroup}>
         <Text style={styles.calories}>{model.caloriesLabel}</Text>
-        <Text style={styles.caloriesLabel}>Today&apos;s Target</Text>
+        <Text style={styles.caloriesLabel}>{model.calorieDetailLabel}</Text>
       </View>
 
-      <View
-        accessibilityElementsHidden
-        importantForAccessibility="no"
-        style={styles.macroRow}
-      >
-        {model.macros.map((macro) => (
-          <View key={macro.label} style={styles.macroItem}>
-            <Text style={styles.macroLabel}>{macro.label}</Text>
-            <Text style={styles.macroValue}>{macro.value}</Text>
-          </View>
-        ))}
-      </View>
+      {model.calorieProgress !== null ? (
+        <View
+          accessibilityLabel={`Calorie progress ${model.calorieProgress} percent`}
+          style={styles.progressTrack}
+        >
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${model.calorieProgress}%` },
+            ]}
+          />
+        </View>
+      ) : null}
+
+      {model.macros.length > 0 ? (
+        <View style={styles.macroRow}>
+          {model.macros.map((macro) => (
+            <View key={macro.label} style={styles.macroItem}>
+              <Text style={styles.macroLabel}>{macro.label}</Text>
+              <Text style={styles.macroValue}>{macro.value}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       <View style={styles.mealsSection}>
         <View style={styles.mealMetric}>
-          <Text style={styles.mealLabel}>Meals Remaining</Text>
-          <Text style={styles.mealValue}>{model.mealsRemainingLabel}</Text>
+          <Text style={styles.mealLabel}>Meals</Text>
+          <Text style={styles.mealValue}>{model.mealsLabel}</Text>
         </View>
         <View style={styles.mealDivider} />
         <View style={styles.mealMetric}>
           <Text style={styles.mealLabel}>Next Meal</Text>
           <Text numberOfLines={1} style={styles.mealValue}>
-            {model.nextMealLabel}
+            {model.nextMealLabel ?? 'Not available'}
           </Text>
         </View>
       </View>
 
-      <View style={styles.focusBox}>
-        <Text style={styles.focusLabel}>TODAY&apos;S FOCUS</Text>
-        <Text style={styles.focusText}>{model.focus}</Text>
-      </View>
-
-      {onOpenNutritionOverview ? (
-        <Button
-          accessibilityLabel="Open nutrition overview"
-          label="View Nutrition"
-          onPress={onOpenNutritionOverview}
-          variant="ghost"
-          style={styles.primaryButton}
-        />
+      {model.focusMessage ? (
+        <View style={styles.focusBox}>
+          <Text style={styles.focusLabel}>{model.focusLabel}</Text>
+          <Text style={styles.focusText}>{model.focusMessage}</Text>
+        </View>
       ) : null}
+
+      {model.freshnessLabel ? (
+        <Text
+          accessibilityLabel={model.freshnessLabel}
+          style={styles.freshness}
+        >
+          {model.freshnessLabel}
+        </Text>
+      ) : null}
+
+      <Button
+        accessibilityLabel={getActionLabel(model.action)}
+        label={getActionLabel(model.action)}
+        onPress={() => onAction(model.action)}
+        variant="ghost"
+        style={styles.primaryButton}
+      />
     </View>
   );
 });
+
+function NutritionAvailabilityState({
+  action,
+  availability,
+  message,
+  onAction,
+  onRetry,
+  title,
+}: {
+  action: NutritionAction;
+  availability: NutritionAvailability;
+  message: string;
+  onAction: (action: NutritionAction) => void;
+  onRetry: () => void;
+  title: string;
+}) {
+  const canRetry =
+    availability === 'not_available' || availability === 'processing_failed';
+
+  return (
+    <View accessibilityLabel={`${title}. ${message}`} style={styles.card}>
+      <View style={styles.emptyContent}>
+        <Text style={styles.label}>NUTRITION</Text>
+        <Text style={styles.emptyTitle}>{title}</Text>
+        <Text style={styles.emptyMessage}>{message}</Text>
+        <Button
+          accessibilityLabel={getActionLabel(action)}
+          label={getActionLabel(action)}
+          onPress={() => onAction(action)}
+          style={styles.primaryButton}
+        />
+        {canRetry ? (
+          <Button
+            accessibilityLabel="Retry loading nutrition data"
+            label="Try Again"
+            onPress={onRetry}
+            style={styles.primaryButton}
+            variant="ghost"
+          />
+        ) : null}
+      </View>
+    </View>
+  );
+}
 
 function TodaysNutritionSkeleton() {
   return (
@@ -186,55 +264,6 @@ function TodaysNutritionSkeleton() {
       </View>
     </View>
   );
-}
-
-function buildNutritionCardModel(
-  nutrition: TodayNutrition,
-) {
-  const targets = nutrition.macroTargets;
-  const adherence = {
-    label: {
-      unavailable: 'Unavailable',
-      not_started: 'Not Started',
-      below_range: 'Below Range',
-      within_range: 'Within Range',
-      above_range: 'Above Range',
-    }[nutrition.progress.adherenceStatus] as AdherenceLabel,
-    badgeVariant: {
-      unavailable: 'muted',
-      not_started: 'muted',
-      below_range: 'danger',
-      within_range: 'primary',
-      above_range: 'danger',
-    }[nutrition.progress.adherenceStatus] as BadgeVariant,
-  };
-  const mealsRemaining = nutrition.mealProgress.pending;
-  const nextMealLabel = nutrition.nextMeal
-    ? nutrition.nextMeal.title
-    : 'No meals remaining';
-  const focus = nutrition.focus.message;
-
-  return {
-    adherence,
-    caloriesLabel: `${Math.round(targets.calories)} kcal`,
-    macros: [
-      { label: 'Protein', value: `${Math.round(targets.proteinGrams)}g` },
-      { label: 'Carbs', value: `${Math.round(targets.carbsGrams)}g` },
-      { label: 'Fat', value: `${Math.round(targets.fatGrams)}g` },
-    ],
-    mealsRemainingLabel: `${mealsRemaining} ${
-      mealsRemaining === 1 ? 'meal' : 'meals'
-    } remaining`,
-    nextMealLabel,
-    focus,
-    accessibilityLabel: `Nutrition target ${Math.round(
-      targets.calories,
-    )} calories. Protein ${Math.round(
-      targets.proteinGrams,
-    )} grams. ${mealsRemaining} ${
-      mealsRemaining === 1 ? 'meal' : 'meals'
-    } remaining.`,
-  };
 }
 
 const styles = StyleSheet.create({
@@ -278,6 +307,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
     fontWeight: '600',
+  },
+  progressTrack: {
+    height: 8,
+    overflow: 'hidden',
+    borderRadius: 999,
+    backgroundColor: tokens.softBorder,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: tokens.text,
   },
   macroRow: {
     flexDirection: 'row',
@@ -352,6 +392,12 @@ const styles = StyleSheet.create({
     color: tokens.secondaryText,
     fontSize: 15,
     lineHeight: 21,
+    fontWeight: '600',
+  },
+  freshness: {
+    color: tokens.tertiaryText,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: '600',
   },
   primaryButton: {
