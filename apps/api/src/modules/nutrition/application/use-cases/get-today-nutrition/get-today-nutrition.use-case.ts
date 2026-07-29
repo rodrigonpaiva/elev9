@@ -91,9 +91,14 @@ export class GetTodayNutritionUseCase {
       return {
         todayNutrition: {
           date: today,
+          availability: 'available',
+          freshness: resolveFreshness(nutritionPlan.updatedAt),
+          lastUpdatedAt: resolveLastUpdatedAt({ nutritionPlan, logs }),
+          timezone: 'UTC',
           macroTargets,
           meals: nutritionDay.meals,
           progress: buildProgress({ macroTargets, logs }),
+          mealProgress: buildMealProgress({ meals: nutritionDay.meals, logs }),
           nextMeal: resolveNextMeal({
             meals: nutritionDay.meals,
             logs,
@@ -118,7 +123,10 @@ function buildProgress(input: {
   macroTargets: MacroTargetsProps;
   logs: NutritionLog[];
 }): TodayNutritionProgressOutput {
-  const consumed = input.logs.reduce(
+  const latestLogByMealId = new Map<string, NutritionLog>();
+  for (const log of input.logs) latestLogByMealId.set(log.mealId, log);
+
+  const consumed = [...latestLogByMealId.values()].reduce(
     (accumulator, log) => {
       const actualMacros = log.actualMacros;
 
@@ -154,7 +162,55 @@ function buildProgress(input: {
       consumedCalories: consumed.calories,
       targetCalories: input.macroTargets.calories,
     }),
+    adherenceStatus: classifyAdherence(
+      calculateAdherencePercentage({
+        consumedCalories: consumed.calories,
+        targetCalories: input.macroTargets.calories,
+      }),
+    ),
+    macroProgress: {
+      protein: buildMacroProgress(consumed.proteinGrams, input.macroTargets.proteinGrams),
+      carbs: buildMacroProgress(consumed.carbsGrams, input.macroTargets.carbsGrams),
+      fat: buildMacroProgress(consumed.fatGrams, input.macroTargets.fatGrams),
+    },
   };
+}
+
+function buildMealProgress(input: { meals: Meal[]; logs: NutritionLog[] }) {
+  const latestLogByMealId = new Map<string, NutritionLog>();
+  for (const log of input.logs) latestLogByMealId.set(log.mealId, log);
+  const logs = [...latestLogByMealId.values()];
+  return {
+    plannedCount: input.meals.length,
+    consumedCount: logs.filter((log) => log.status !== 'skipped').length,
+    completedCount: logs.filter((log) => log.status === 'consumed').length,
+    remainingCount: input.meals.filter((meal) => !latestLogByMealId.has(meal.id)).length,
+  };
+}
+
+function buildMacroProgress(consumed: number, target: number) {
+  return { consumed, target, percentage: calculatePercentage(consumed, target) };
+}
+
+function calculatePercentage(consumed: number, target: number): number {
+  if (target <= 0) return 0;
+  return Math.min(100, Math.max(0, Math.round((consumed / target) * 100)));
+}
+
+function classifyAdherence(percentage: number): 'on_track' | 'needs_attention' | 'off_track' {
+  if (percentage >= 80) return 'on_track';
+  if (percentage >= 50) return 'needs_attention';
+  return 'off_track';
+}
+
+function resolveFreshness(updatedAt?: Date): 'current' | 'unknown' {
+  return updatedAt ? 'current' : 'unknown';
+}
+
+function resolveLastUpdatedAt(input: { nutritionPlan: { updatedAt?: Date; createdAt: Date }; logs: NutritionLog[] }): string | null {
+  const timestamps = [input.nutritionPlan.updatedAt ?? input.nutritionPlan.createdAt, ...input.logs.map((log) => log.updatedAt)];
+  const latest = timestamps.reduce((current, value) => value > current ? value : current);
+  return latest.toISOString();
 }
 
 function resolveNextMeal(input: {

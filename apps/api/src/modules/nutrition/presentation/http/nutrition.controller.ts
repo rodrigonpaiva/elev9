@@ -250,10 +250,15 @@ export class NutritionController {
 
       return {
         todayNutrition: {
+          availability: result.todayNutrition.availability,
+          freshness: result.todayNutrition.freshness,
+          lastUpdatedAt: result.todayNutrition.lastUpdatedAt,
+          timezone: result.todayNutrition.timezone,
           date: result.todayNutrition.date,
           macroTargets: result.todayNutrition.macroTargets,
           meals: result.todayNutrition.meals.map(mapMeal),
           progress: result.todayNutrition.progress,
+          mealProgress: result.todayNutrition.mealProgress,
           nextMeal: result.todayNutrition.nextMeal
             ? mapMeal(result.todayNutrition.nextMeal)
             : null,

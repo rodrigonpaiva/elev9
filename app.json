@@ -6,5 +6,10 @@
     "eas": {
       "projectId": "2b4a633a-c694-4832-84c2-17873cfc6591"
     }
+  },
+  "expo": {
+    "android": {
+      "package": "com.rodrigonpaiva.elev9coachapi"
+    }
   }
 }

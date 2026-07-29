@@ -114,6 +114,12 @@ describe('GetTodayNutritionUseCase', () => {
       targetCarbsGrams: 250,
       targetFatGrams: 70,
       adherencePercentage: 0,
+      adherenceStatus: 'off_track',
+      macroProgress: {
+        protein: { consumed: 0, target: 150, percentage: 0 },
+        carbs: { consumed: 0, target: 250, percentage: 0 },
+        fat: { consumed: 0, target: 70, percentage: 0 },
+      },
     });
   });
 

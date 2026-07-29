@@ -426,12 +426,8 @@ function buildNutritionOverviewModel(input: {
 }): NutritionOverviewModel {
   const { todayNutrition, recommendations } = input;
   const targets = todayNutrition.macroTargets;
-  const mealsRemaining = getMealsRemaining(todayNutrition);
-  const mealsCompleted = Math.max(
-    0,
-    todayNutrition.meals.length - mealsRemaining,
-  );
-  const adherence = Math.round(todayNutrition.progress.adherencePercentage);
+  const mealsRemaining = todayNutrition.mealProgress.remainingCount;
+  const mealsCompleted = todayNutrition.mealProgress.completedCount;
   const recommendation = recommendations.find(
     (item) => item.message.trim().length > 0,
   );
@@ -458,7 +454,10 @@ function buildNutritionOverviewModel(input: {
     progress: [
       { label: 'Meals Completed', value: `${mealsCompleted} completed` },
       { label: 'Meals Remaining', value: `${mealsRemaining} remaining` },
-      { label: 'Nutrition Adherence', value: `${adherence}%` },
+      {
+        label: 'Nutrition Adherence',
+        value: todayNutrition.progress.adherenceStatus.replace('_', ' '),
+      },
     ],
     nextMeal: todayNutrition.nextMeal
       ? {
@@ -478,22 +477,6 @@ function buildNutritionOverviewModel(input: {
   };
 }
 
-function getMealsRemaining(nutrition: TodayNutrition): number {
-  if (!nutrition.nextMeal) {
-    return 0;
-  }
-
-  const nextMealIndex = nutrition.meals.findIndex(
-    (meal) => meal.id === nutrition.nextMeal?.id,
-  );
-
-  if (nextMealIndex < 0) {
-    return 1;
-  }
-
-  return Math.max(0, nutrition.meals.length - nextMealIndex);
-}
-
 function getHeroTitle(
   nutrition: TodayNutrition,
   recommendation?: NutritionRecommendation,
@@ -506,7 +489,7 @@ function getHeroTitle(
     return 'Recovery Nutrition Focus';
   }
 
-  if (nutrition.progress.adherencePercentage >= 80) {
+  if (nutrition.progress.adherenceStatus === 'on_track') {
     return 'Nutrition On Track';
   }
 

@@ -83,7 +83,35 @@ export type NutritionProgress = {
   targetCarbsGrams: number;
   targetFatGrams: number;
   adherencePercentage: number;
+  adherenceStatus: 'on_track' | 'needs_attention' | 'off_track';
+  macroProgress: {
+    protein: NutritionMacroProgress;
+    carbs: NutritionMacroProgress;
+    fat: NutritionMacroProgress;
+  };
 };
+
+export type NutritionMacroProgress = {
+  consumed: number;
+  target: number;
+  percentage: number;
+};
+
+export type NutritionMealProgress = {
+  plannedCount: number;
+  consumedCount: number;
+  completedCount: number;
+  remainingCount: number;
+};
+
+export type NutritionAvailability =
+  | 'available'
+  | 'insufficient_data'
+  | 'not_configured'
+  | 'not_available'
+  | 'processing_failed';
+
+export type NutritionFreshness = 'current' | 'stale' | 'legacy' | 'unknown';
 
 export type NutritionLog = {
   id: string;
@@ -98,14 +126,22 @@ export type NutritionLog = {
   updatedAt: string;
 };
 
-export type TodayNutrition = {
+export type NutritionReadModel = {
+  availability: NutritionAvailability;
+  freshness: NutritionFreshness;
+  lastUpdatedAt: string | null;
+  timezone: 'UTC';
   date: string;
   macroTargets: MacroTargets;
   meals: Meal[];
   progress: NutritionProgress;
+  mealProgress: NutritionMealProgress;
   nextMeal: Meal | null;
   nutritionFocus: string;
 };
+
+/** @deprecated Use NutritionReadModel for the canonical current-day contract. */
+export type TodayNutrition = NutritionReadModel;
 
 export type NutritionInfluence =
   | 'LOW_CALORIE_ADHERENCE'

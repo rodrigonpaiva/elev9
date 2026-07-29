@@ -188,12 +188,23 @@ function buildNutritionCardModel(
   workout: TodayWorkout | null,
 ) {
   const targets = nutrition.macroTargets;
-  const adherence = getAdherence(nutrition.progress.adherencePercentage);
-  const mealsRemaining = getMealsRemaining(nutrition);
+  const adherence = {
+    label: {
+      on_track: 'On Track',
+      needs_attention: 'Needs Attention',
+      off_track: 'Off Track',
+    }[nutrition.progress.adherenceStatus] as AdherenceLabel,
+    badgeVariant: {
+      on_track: 'primary',
+      needs_attention: 'muted',
+      off_track: 'danger',
+    }[nutrition.progress.adherenceStatus] as BadgeVariant,
+  };
+  const mealsRemaining = nutrition.mealProgress.remainingCount;
   const nextMealLabel = nutrition.nextMeal
     ? nutrition.nextMeal.title
     : 'No meals remaining';
-  const focus = getNutritionFocus(nutrition, workout);
+  const focus = getNutritionFocus(nutrition);
 
   return {
     adherence,
@@ -218,70 +229,8 @@ function buildNutritionCardModel(
   };
 }
 
-function getAdherence(value: number): {
-  label: AdherenceLabel;
-  badgeVariant: BadgeVariant;
-} {
-  if (value >= 80) {
-    return { label: 'On Track', badgeVariant: 'primary' };
-  }
-
-  if (value >= 50) {
-    return { label: 'Needs Attention', badgeVariant: 'muted' };
-  }
-
-  return { label: 'Off Track', badgeVariant: 'danger' };
-}
-
-function getMealsRemaining(nutrition: TodayNutrition): number {
-  if (!nutrition.nextMeal) {
-    return 0;
-  }
-
-  const nextMealIndex = nutrition.meals.findIndex(
-    (meal) => meal.id === nutrition.nextMeal?.id,
-  );
-
-  if (nextMealIndex < 0) {
-    return 1;
-  }
-
-  return Math.max(0, nutrition.meals.length - nextMealIndex);
-}
-
-function getNutritionFocus(
-  nutrition: TodayNutrition,
-  workout: TodayWorkout | null,
-): string {
-  if (workout && isRecoveryWorkout(workout)) {
-    return 'Prioritize quality meals and hydration.';
-  }
-
-  if (workout?.intensity === 'high') {
-    return 'Increase hydration today.';
-  }
-
-  if (workout?.intensity === 'low') {
-    return 'Focus on recovery nutrition.';
-  }
-
-  if (nutrition.nutritionFocus.trim().length > 0) {
-    return nutrition.nutritionFocus;
-  }
-
-  if (nutrition.nextMeal?.type === 'lunch') {
-    return 'Prioritize protein at lunch.';
-  }
-
-  return 'Spread protein across all meals.';
-}
-
-function isRecoveryWorkout(workout: TodayWorkout): boolean {
-  const descriptor = `${workout.title} ${workout.focus} ${workout.format}`
-    .trim()
-    .toLowerCase();
-
-  return descriptor.includes('recovery') || descriptor.includes('mobility');
+function getNutritionFocus(nutrition: TodayNutrition): string {
+  return nutrition.nutritionFocus;
 }
 
 const styles = StyleSheet.create({

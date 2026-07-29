@@ -34,6 +34,10 @@ type MealDto = {
 
 export class GetTodayNutritionResponseDto {
   todayNutrition!: {
+    availability: 'available';
+    freshness: 'current' | 'stale' | 'legacy' | 'unknown';
+    lastUpdatedAt: string | null;
+    timezone: 'UTC';
     date: string;
     macroTargets: MacroTargetsDto;
     meals: MealDto[];
@@ -47,6 +51,18 @@ export class GetTodayNutritionResponseDto {
       targetCarbsGrams: number;
       targetFatGrams: number;
       adherencePercentage: number;
+      adherenceStatus: 'on_track' | 'needs_attention' | 'off_track';
+      macroProgress: {
+        protein: { consumed: number; target: number; percentage: number };
+        carbs: { consumed: number; target: number; percentage: number };
+        fat: { consumed: number; target: number; percentage: number };
+      };
+    };
+    mealProgress: {
+      plannedCount: number;
+      consumedCount: number;
+      completedCount: number;
+      remainingCount: number;
     };
     nextMeal: MealDto | null;
     nutritionFocus: string;
