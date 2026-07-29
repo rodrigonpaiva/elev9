@@ -4,8 +4,7 @@ import { DailyCheckInRepository } from '../../../../progress/domain/repositories
 import { WorkoutLogRepository } from '../../../../progress/domain/repositories/workout-log.repository';
 import { FitnessProfile } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
-import { NutritionLogRepository } from '../../../../nutrition/domain/repositories/nutrition-log.repository';
-import { NutritionPlanRepository } from '../../../../nutrition/domain/repositories/nutrition-plan.repository';
+import { GoalNutritionSignals } from '../../../../nutrition/application/ports/nutrition-consumer.ports';
 import { RecoverySnapshotRepository } from '../../../../recovery/domain/repositories/recovery-snapshot.repository';
 import { AdaptiveTrainingRecommendationRepository } from '../../../../training/domain/repositories/adaptive-training-recommendation.repository';
 import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
@@ -26,8 +25,11 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
-  let nutritionPlanRepository: jest.Mocked<NutritionPlanRepository>;
-  let nutritionLogRepository: jest.Mocked<NutritionLogRepository>;
+  let nutritionSignalsPort: {
+    getGoalSignals: jest.MockedFunction<
+      (input: { authUserId: string; userProfileId: string; startDate: string; endDate: string }) => Promise<GoalNutritionSignals>
+    >;
+  };
   let recoverySnapshotRepository: jest.Mocked<RecoverySnapshotRepository>;
   let adaptiveTrainingRecommendationRepository: jest.Mocked<AdaptiveTrainingRecommendationRepository>;
   let goalProgressSnapshotRepository: jest.Mocked<GoalProgressSnapshotRepository>;
@@ -44,8 +46,14 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     trainingPlanRepository = buildTrainingPlanRepository();
     workoutLogRepository = buildWorkoutLogRepository();
     dailyCheckInRepository = buildDailyCheckInRepository();
-    nutritionPlanRepository = buildNutritionPlanRepository();
-    nutritionLogRepository = buildNutritionLogRepository();
+    nutritionSignalsPort = {
+      getGoalSignals: jest.fn().mockResolvedValue({
+        availability: 'available',
+        recentLoggedDays: 2,
+        hasActivePlan: true,
+        contractVersion: 'nutrition-consumer-signals-v1',
+      }),
+    };
     recoverySnapshotRepository = buildRecoverySnapshotRepository();
     adaptiveTrainingRecommendationRepository =
       buildAdaptiveTrainingRecommendationRepository();
@@ -60,8 +68,7 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
       trainingPlanRepository,
       workoutLogRepository,
       dailyCheckInRepository,
-      nutritionPlanRepository,
-      nutritionLogRepository,
+      nutritionSignalsPort,
       recoverySnapshotRepository,
       adaptiveTrainingRecommendationRepository,
       goalProgressSnapshotRepository,
@@ -81,8 +88,6 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     arrangeTrainingPlan();
     arrangeWorkoutLogs();
     arrangeDailyCheckIns();
-    arrangeNutritionPlan();
-    arrangeNutritionLogs();
     arrangeRecoverySnapshot();
     arrangeAdaptiveTrainingRecommendation();
     arrangeRecentGoalSnapshots([
@@ -155,10 +160,12 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     dailyCheckInRepository.findManyByUserProfileId.mockResolvedValue([]);
-    nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(null);
-    nutritionLogRepository.findByUserProfileIdAndDateRange.mockResolvedValue(
-      [],
-    );
+    nutritionSignalsPort.getGoalSignals.mockResolvedValue({
+      availability: 'not_configured',
+      recentLoggedDays: 0,
+      hasActivePlan: false,
+      contractVersion: 'nutrition-consumer-signals-v1',
+    });
     recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
       null,
     );
@@ -174,10 +181,12 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
     dailyCheckInRepository.findManyByUserProfileId.mockResolvedValue([]);
-    nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(null);
-    nutritionLogRepository.findByUserProfileIdAndDateRange.mockResolvedValue(
-      [],
-    );
+    nutritionSignalsPort.getGoalSignals.mockResolvedValue({
+      availability: 'not_configured',
+      recentLoggedDays: 0,
+      hasActivePlan: false,
+      contractVersion: 'nutrition-consumer-signals-v1',
+    });
     recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue(
       null,
     );
@@ -363,47 +372,6 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
     ]);
   }
 
-  function arrangeNutritionPlan() {
-    nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue({
-      id: 'nutrition_123',
-      userProfileId: 'profile_123',
-      nutritionProfileId: 'nutrition_profile_123',
-      fitnessProfileId: 'fitness_123',
-      status: 'active',
-      weekStartDate: '2026-06-01',
-      weekEndDate: '2026-06-07',
-      macroTargets: {
-        calories: 2400,
-        proteinGrams: 160,
-        carbsGrams: 280,
-        fatGrams: 70,
-      },
-      days: [
-        {
-          meals: [{}, {}] as never[],
-          dayIndex: 1,
-          date: '2026-06-01',
-          dailyMacroTargets: {
-            calories: 2400,
-            proteinGrams: 160,
-            carbsGrams: 280,
-            fatGrams: 70,
-          },
-        },
-      ],
-      generatedBy: 'deterministic',
-      createdAt: new Date('2026-06-01T00:00:00.000Z'),
-      sourceContext: undefined,
-    } as never);
-  }
-
-  function arrangeNutritionLogs() {
-    nutritionLogRepository.findByUserProfileIdAndDateRange.mockResolvedValue([
-      { id: 'nutrition_log_1', date: '2026-06-03' } as NutritionLog,
-      { id: 'nutrition_log_2', date: '2026-06-02' } as NutritionLog,
-    ]);
-  }
-
   function arrangeRecoverySnapshot() {
     recoverySnapshotRepository.findLatestByUserProfileId.mockResolvedValue({
       readinessScore: 68,
@@ -520,25 +488,6 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
       findLatestByUserProfileId: jest.fn(),
       findManyByUserProfileId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<DailyCheckInRepository>;
-  }
-
-  function buildNutritionPlanRepository() {
-    return {
-      findById: jest.fn(),
-      findActiveByUserProfileId: jest.fn().mockResolvedValue(null),
-      create: jest.fn(),
-      replaceActiveByUserProfileId: jest.fn(),
-      replaceMeal: jest.fn(),
-    } as unknown as jest.Mocked<NutritionPlanRepository>;
-  }
-
-  function buildNutritionLogRepository() {
-    return {
-      create: jest.fn(),
-      findByUserProfileIdAndDate: jest.fn(),
-      findByUserProfileIdAndDateRange: jest.fn().mockResolvedValue([]),
-      findByMealId: jest.fn(),
-    } as unknown as jest.Mocked<NutritionLogRepository>;
   }
 
   function buildRecoverySnapshotRepository() {

@@ -17,13 +17,9 @@ import {
   DailyCheckInRepository,
 } from '../../../../progress/domain/repositories/daily-check-in.repository';
 import {
-  NUTRITION_LOG_REPOSITORY,
-  NutritionLogRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-log.repository';
-import {
-  NUTRITION_PLAN_REPOSITORY,
-  NutritionPlanRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-plan.repository';
+  NUTRITION_GOAL_SIGNALS_PORT,
+  GoalNutritionSignals,
+} from '../../../../nutrition/application/ports/nutrition-consumer.ports';
 import {
   RECOVERY_SNAPSHOT_REPOSITORY,
   RecoverySnapshotRepository,
@@ -38,7 +34,6 @@ import {
 } from '../../../../training/domain/repositories/training-plan.repository';
 import { calculateStreak } from '../../../../progress/application/use-cases/get-progress-summary/calculate-streak';
 import { DailyCheckIn } from '../../../../progress/domain/entities/daily-check-in.entity';
-import { NutritionLog } from '../../../../nutrition/domain/entities/nutrition-log.entity';
 import { WorkoutLog } from '../../../../progress/domain/entities/workout-log.entity';
 import { FitnessGoal } from '../../../../fitness/domain/entities/fitness-profile.entity';
 import { Goal } from '../../../domain/entities/goal.entity';
@@ -80,10 +75,10 @@ export class BuildGoalProgressSnapshotUseCase {
     private readonly workoutLogRepository: WorkoutLogRepository,
     @Inject(DAILY_CHECK_IN_REPOSITORY)
     private readonly dailyCheckInRepository: DailyCheckInRepository,
-    @Inject(NUTRITION_PLAN_REPOSITORY)
-    private readonly nutritionPlanRepository: NutritionPlanRepository,
-    @Inject(NUTRITION_LOG_REPOSITORY)
-    private readonly nutritionLogRepository: NutritionLogRepository,
+    @Inject(NUTRITION_GOAL_SIGNALS_PORT)
+    private readonly nutritionSignalsPort: {
+      getGoalSignals(input: { authUserId: string; userProfileId: string; startDate: string; endDate: string }): Promise<GoalNutritionSignals>;
+    },
     @Inject(RECOVERY_SNAPSHOT_REPOSITORY)
     private readonly recoverySnapshotRepository: RecoverySnapshotRepository,
     @Inject(ADAPTIVE_TRAINING_RECOMMENDATION_REPOSITORY)
@@ -159,16 +154,12 @@ export class BuildGoalProgressSnapshotUseCase {
         await this.dailyCheckInRepository.findManyByUserProfileId(
           userProfile.id,
         );
-      const recentNutritionLogs =
-        await this.nutritionLogRepository.findByUserProfileIdAndDateRange(
-          userProfile.id,
-          recentWindow.startDate,
-          recentWindow.endDate,
-        );
-      const activeNutritionPlan =
-        await this.nutritionPlanRepository.findActiveByUserProfileId(
-          userProfile.id,
-        );
+      const nutritionSignals = await this.nutritionSignalsPort.getGoalSignals({
+        authUserId,
+        userProfileId: userProfile.id,
+        startDate: recentWindow.startDate,
+        endDate: recentWindow.endDate,
+      });
       const recoverySnapshot =
         await this.recoverySnapshotRepository.findLatestByUserProfileId(
           userProfile.id,
@@ -198,8 +189,7 @@ export class BuildGoalProgressSnapshotUseCase {
         recentWorkoutLogs,
         orderedWorkoutLogs,
         recentCheckIns,
-        recentNutritionLogs,
-        activeNutritionPlan,
+        nutritionSignals,
         recoverySnapshot,
         previousSnapshots,
       });
@@ -269,8 +259,7 @@ export class BuildGoalProgressSnapshotUseCase {
     recentWorkoutLogs: WorkoutLog[];
     orderedWorkoutLogs: WorkoutLog[];
     recentCheckIns: DailyCheckIn[];
-    recentNutritionLogs: NutritionLog[];
-    activeNutritionPlan: { days?: Array<{ meals?: Array<unknown> }> } | null;
+    nutritionSignals: GoalNutritionSignals;
     recoverySnapshot: { readinessScore: number; fatigueScore: number } | null;
     previousSnapshots: { progressPercentage: number }[];
   }): {
@@ -286,8 +275,8 @@ export class BuildGoalProgressSnapshotUseCase {
     const adherenceScore = this.calculateAdherenceScore({
       recentWorkoutLogsCount: input.recentWorkoutLogs.length,
       recentCheckInsCount: input.recentCheckIns.length,
-      recentNutritionLogsCount: input.recentNutritionLogs.length,
-      hasActiveNutritionPlan: Boolean(input.activeNutritionPlan),
+      recentNutritionLogsCount: input.nutritionSignals.recentLoggedDays,
+      hasActiveNutritionPlan: input.nutritionSignals.hasActivePlan,
     });
     const consistencyScore = this.calculateConsistencyScore({
       workoutLogs: input.orderedWorkoutLogs,

@@ -60,7 +60,7 @@ export type NutritionPlan = {
   status: 'active' | 'archived' | 'replaced';
   weekStartDate: string;
   weekEndDate: string;
-  macroTargets: MacroTargets;
+  macroTargets: MacroTargets | null;
   days: NutritionDay[];
   generatedBy: 'deterministic';
   sourceContext?: {
@@ -216,18 +216,18 @@ export type NutritionReadModel = {
   lastUpdatedAt: string | null;
   timezone: 'UTC';
   date: string;
-  macroTargets: MacroTargets;
+  macroTargets: MacroTargets | null;
   meals: Meal[];
-  progress: NutritionProgress;
+  progress: NutritionProgress | null;
   targets: MacroTargets | null;
   calories: NutritionCalorieProgress | null;
   macros: NutritionMacroProgress[];
-  mealProgress: NutritionMealProgress;
+  mealProgress: NutritionMealProgress | null;
   nextMeal: Meal | null;
-  focus: NutritionFocus;
-  insight: NutritionInsight;
+  focus: NutritionFocus | null;
+  insight: NutritionInsight | null;
   /** @deprecated Use focus. */
-  nutritionFocus: string;
+  nutritionFocus: string | null;
 };
 
 /** @deprecated Use NutritionReadModel for the canonical current-day contract. */
@@ -323,7 +323,7 @@ export type GetCurrentNutritionPlanResponse = {
 };
 
 export type GetTodayNutritionResponse = {
-  todayNutrition: TodayNutrition;
+  todayNutrition: NutritionReadModel;
 };
 
 export type ReplaceMealRequest = {

@@ -62,38 +62,32 @@ describe('GetTodayNutritionUseCase', () => {
     });
   });
 
-  it('fails when user profile does not exist', async () => {
+  it('returns not_configured when user profile does not exist', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);
 
-    await expect(
-      useCase.execute({ authUserId: 'auth_user_123' }),
-    ).rejects.toMatchObject({
-      code: GET_TODAY_NUTRITION_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-    });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
+
+    expect(result.todayNutrition.availability).toBe('not_configured');
   });
 
-  it('fails when active nutrition plan does not exist', async () => {
+  it('returns not_configured when active nutrition plan does not exist', async () => {
     arrangeUserProfile();
     nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(null);
 
-    await expect(
-      useCase.execute({ authUserId: 'auth_user_123' }),
-    ).rejects.toMatchObject({
-      code: GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_PLAN_NOT_FOUND,
-    });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
+
+    expect(result.todayNutrition.availability).toBe('not_configured');
   });
 
-  it('fails when active plan does not contain today', async () => {
+  it('returns insufficient_data when active plan does not contain today', async () => {
     arrangeUserProfile();
     nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(
       buildNutritionPlan({ days: [] }),
     );
 
-    await expect(
-      useCase.execute({ authUserId: 'auth_user_123' }),
-    ).rejects.toMatchObject({
-      code: GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_DAY_NOT_FOUND,
-    });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
+
+    expect(result.todayNutrition.availability).toBe('insufficient_data');
   });
 
   it('returns zero progress while nutrition logs do not exist', async () => {

@@ -196,8 +196,6 @@ export class RecoveryExpert extends BaseCoachExpert {
     const trend = this.buildTrendAssessment(latestSnapshot, recoveryHistory);
     const nutritionSupport = this.buildNutritionSupport({
       healthContext,
-      todayNutrition: context.todayNutrition,
-      nutritionLogs: context.nutritionLogs,
     });
     const goalAlignment = this.resolveGoalAlignment(
       healthContext,
@@ -256,8 +254,6 @@ export class RecoveryExpert extends BaseCoachExpert {
       nutritionSupport,
       goalAlignment,
       healthContext,
-      todayNutrition: context.todayNutrition,
-      nutritionLogs: context.nutritionLogs,
       snapshot: latestSnapshot,
       recoveryHistory,
     });
@@ -590,8 +586,6 @@ export class RecoveryExpert extends BaseCoachExpert {
       }),
       nutritionSupport: this.buildNutritionSupport({
         healthContext,
-        todayNutrition: undefined,
-        nutritionLogs: undefined,
       }),
       goalAlignment: this.resolveGoalAlignment(healthContext, undefined),
       recommendations: Object.freeze([
@@ -612,8 +606,6 @@ export class RecoveryExpert extends BaseCoachExpert {
         snapshot: undefined,
         nutritionSupport: this.buildNutritionSupport({
           healthContext,
-          todayNutrition: undefined,
-          nutritionLogs: undefined,
         }),
         readiness: {
           score: null,
@@ -714,126 +706,17 @@ export class RecoveryExpert extends BaseCoachExpert {
 
   private buildNutritionSupport(input: {
     healthContext: UserHealthContext;
-    todayNutrition: CoachExpertContext['todayNutrition'];
-    nutritionLogs: CoachExpertContext['nutritionLogs'];
   }): RecoveryAnalysis['nutritionSupport'] {
-    const healthContext = input.healthContext;
-    const todayNutrition = input.todayNutrition ?? null;
-    const nutritionLogs = [...(input.nutritionLogs ?? [])];
-
-    if (!healthContext.nutritionProfile) {
-      return Object.freeze({
-        level: 'UNKNOWN',
-        summary:
-          'Nutrition support cannot be evaluated without a nutrition profile.',
-        factors: Object.freeze(['missing_nutrition_profile']),
-        metadata: Object.freeze({}),
-      });
-    }
-
-    const nutritionPlan = healthContext.nutritionProfile;
-    const nutritionSummary = [
-      `goal=${nutritionPlan.goal}`,
-      `meals_per_day=${nutritionPlan.mealsPerDay}`,
-      `dietary_restrictions=${nutritionPlan.dietaryRestrictions.length}`,
-      `allergies=${nutritionPlan.allergies.length}`,
-    ];
-
-    const readinessScore = healthContext.recoverySnapshot?.readinessScore;
-    const fatigueScore = healthContext.recoverySnapshot?.fatigueScore;
-    const factors: string[] = [];
-    let level: RecoveryNutritionSupportLevel = 'PARTIAL';
-
-    if (!healthContext.recoverySnapshot) {
-      level = 'UNKNOWN';
-      factors.push('missing_current_recovery_snapshot');
-    }
-
-    if (todayNutrition) {
-      const adherence = todayNutrition.progress.adherencePercentage;
-      const proteinTarget = todayNutrition.progress.targetProteinGrams || 1;
-      const caloriesTarget = todayNutrition.progress.targetCalories || 1;
-      const proteinAdherence =
-        todayNutrition.progress.consumedProteinGrams / proteinTarget;
-      const calorieAdherence =
-        todayNutrition.progress.consumedCalories / caloriesTarget;
-      const skippedMeals = nutritionLogs.filter(
-        (log) => log.status === 'skipped',
-      ).length;
-      const partialMeals = nutritionLogs.filter(
-        (log) => log.status === 'partial',
-      ).length;
-
-      nutritionSummary.push(
-        `adherence=${adherence}`,
-        `skipped_meals=${skippedMeals}`,
-        `partial_meals=${partialMeals}`,
-      );
-
-      if (
-        adherence >= 90 &&
-        proteinAdherence >= 0.85 &&
-        calorieAdherence >= 0.85 &&
-        skippedMeals === 0
-      ) {
-        level = 'SUPPORTIVE';
-        factors.push('strong_today_nutrition_adherence');
-      } else if (
-        adherence >= 70 &&
-        proteinAdherence >= 0.7 &&
-        skippedMeals === 0
-      ) {
-        level = level === 'UNKNOWN' ? 'PARTIAL' : level;
-        factors.push('adequate_today_nutrition_adherence');
-      } else if (adherence < 60 || skippedMeals > 0) {
-        level = 'INSUFFICIENT';
-        factors.push('weak_today_nutrition_adherence');
-      } else {
-        factors.push('moderate_today_nutrition_adherence');
-      }
-    } else {
-      factors.push('missing_today_nutrition');
-      nutritionSummary.push('adherence=unknown');
-    }
-
-    if (
-      typeof readinessScore === 'number' &&
-      readinessScore >= 75 &&
-      typeof fatigueScore === 'number' &&
-      fatigueScore <= 35
-    ) {
-      level = 'SUPPORTIVE';
-      factors.push('high_readiness');
-    }
-
-    if (
-      typeof readinessScore === 'number' &&
-      readinessScore < 55 &&
-      (typeof fatigueScore !== 'number' || fatigueScore >= 50)
-    ) {
-      level = 'INSUFFICIENT';
-      factors.push('low_recovery_readiness');
-    }
-
-    if (
-      healthContext.latestCheckIn &&
-      (healthContext.latestCheckIn.sleepQuality <= 2 ||
-        healthContext.latestCheckIn.muscleSoreness >= 4)
-    ) {
-      level = level === 'SUPPORTIVE' ? 'PARTIAL' : 'INSUFFICIENT';
-      factors.push('poor_sleep_or_soreness');
-    }
-
+    const nutrition = input.healthContext.nutritionContext;
     return Object.freeze({
-      level,
-      summary: nutritionSummary.join('; '),
-      factors: Object.freeze([...new Set(factors)]),
-      metadata: Object.freeze({
-        nutritionProfileAvailable: true,
-        nutritionPlanAvailable: Boolean(healthContext.nutritionProfile.goal),
-        todayNutritionAvailable: Boolean(todayNutrition),
-        nutritionLogCount: nutritionLogs.length,
-      }),
+      level: nutrition?.availability === 'available' ? 'PARTIAL' : 'UNKNOWN',
+      summary: nutrition
+        ? `availability=${nutrition.availability}; freshness=${nutrition.freshness}`
+        : 'Nutrition context is unavailable.',
+      factors: Object.freeze([
+        nutrition ? 'canonical_nutrition_context' : 'nutrition_context_unavailable',
+      ]),
+      metadata: Object.freeze({ source: 'nutrition_read_model' }),
     });
   }
 
@@ -1449,8 +1332,6 @@ export class RecoveryExpert extends BaseCoachExpert {
     nutritionSupport: RecoveryAnalysis['nutritionSupport'];
     goalAlignment: RecoveryGoalAlignment;
     healthContext: UserHealthContext;
-    todayNutrition?: CoachExpertContext['todayNutrition'];
-    nutritionLogs?: CoachExpertContext['nutritionLogs'];
     snapshot: RecoverySnapshotLike;
     recoveryHistory: readonly RecoverySnapshotLike[];
   }): string[] {
@@ -1482,16 +1363,6 @@ export class RecoveryExpert extends BaseCoachExpert {
 
     if (input.healthContext.goal) {
       signals.push(`fitness_goal=${input.healthContext.goal}`);
-    }
-
-    if (input.todayNutrition) {
-      signals.push(
-        `nutrition_adherence=${input.todayNutrition.progress.adherencePercentage}`,
-      );
-    }
-
-    if (input.nutritionLogs?.length) {
-      signals.push(`nutrition_log_count=${input.nutritionLogs.length}`);
     }
 
     return signals;

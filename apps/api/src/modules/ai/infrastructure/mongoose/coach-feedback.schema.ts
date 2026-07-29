@@ -49,10 +49,6 @@ export class CoachFeedbackSchemaClass {
       muscleSoreness: number;
       motivationLevel: number;
     };
-    nutritionProfile?: {
-      goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
-      mealsPerDay: number;
-    };
   };
   createdAt!: Date;
   updatedAt!: Date;
@@ -127,10 +123,6 @@ export const CoachFeedbackSchema = new Schema<CoachFeedbackSchemaClass>(
           sleepQuality: { type: Number, required: false },
           muscleSoreness: { type: Number, required: false },
           motivationLevel: { type: Number, required: false },
-        },
-        nutritionProfile: {
-          goal: { type: String, required: false },
-          mealsPerDay: { type: Number, required: false },
         },
         coachDecisionId: { type: String, required: false },
         coachDecisionPriority: { type: String, required: false },

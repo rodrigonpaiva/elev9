@@ -22,7 +22,6 @@ describe('CoachExplainabilityService', () => {
         healthContext: buildHealthContext({
           latestCheckIn: true,
           recentWorkoutLogs: 1,
-          nutritionProfile: true,
           currentStreak: 6,
           adherenceScore: 84,
         }),
@@ -45,7 +44,7 @@ describe('CoachExplainabilityService', () => {
         }),
       ]),
     );
-    expect(explanation.confidenceExplanation.confidence).toBe('HIGH');
+    expect(explanation.confidenceExplanation.confidence).toBe('MEDIUM');
   });
 
   it('builds a multi-expert explanation with conflict attribution', () => {
@@ -68,7 +67,6 @@ describe('CoachExplainabilityService', () => {
         healthContext: buildHealthContext({
           latestCheckIn: true,
           recentWorkoutLogs: 2,
-          nutritionProfile: true,
           recoverySnapshot: true,
           currentStreak: 8,
           adherenceScore: 92,
@@ -120,7 +118,6 @@ describe('CoachExplainabilityService', () => {
         healthContext: buildHealthContext({
           latestCheckIn: true,
           recentWorkoutLogs: 1,
-          nutritionProfile: true,
         }),
       }),
     );
@@ -153,7 +150,6 @@ describe('CoachExplainabilityService', () => {
         healthContext: buildHealthContext({
           latestCheckIn: false,
           recentWorkoutLogs: 0,
-          nutritionProfile: false,
           goal: false,
           currentStreak: 0,
           adherenceScore: 0,
@@ -410,7 +406,6 @@ function buildHealthContext(
   overrides: Partial<{
     latestCheckIn: boolean;
     recentWorkoutLogs: number;
-    nutritionProfile: boolean;
     recoverySnapshot: boolean;
     currentStreak: number;
     adherenceScore: number;
@@ -455,17 +450,6 @@ function buildHealthContext(
             formulaVersion: 'recovery-v1',
             createdAt: new Date('2026-07-07T09:00:00.000Z'),
           } as never),
-    nutritionProfile:
-      overrides.nutritionProfile === false
-        ? undefined
-        : {
-            goal: 'muscle_gain',
-            mealsPerDay: 4,
-            dietaryRestrictions: [],
-            allergies: [],
-            dislikedFoods: [],
-            preferredFoods: [],
-          },
     recentWorkoutLogs: Array.from({
       length: overrides.recentWorkoutLogs ?? 2,
     }).map((_, index) => ({

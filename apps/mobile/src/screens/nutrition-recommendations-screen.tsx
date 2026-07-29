@@ -17,7 +17,7 @@ import type {
   NutritionRecommendation,
   ProgressSummaryResponse,
   RecoverySnapshot,
-  TodayNutrition,
+  NutritionReadModel,
   TodayWorkout,
   TrainingPlanResponse,
 } from '@elev9/types';
@@ -31,7 +31,7 @@ type ProgressSummary = ProgressSummaryResponse['summary'];
 
 type RecommendationsState = {
   recommendations: NutritionRecommendation[];
-  todayNutrition: TodayNutrition | null;
+  todayNutrition: NutritionReadModel | null;
   nutritionPlan: NutritionPlan | null;
   recoverySnapshot: RecoverySnapshot | null;
   trainingPlan: TrainingPlan | null;
@@ -496,7 +496,7 @@ function buildRecommendationsModel(
 }
 
 function buildRecommendedActions(input: {
-  todayNutrition: TodayNutrition | null;
+  todayNutrition: NutritionReadModel | null;
   onTodaysMeals: () => void;
   onNutritionPlan: () => void;
   onHistory: () => void;
@@ -599,7 +599,7 @@ function getExpectedBenefit(state: RecommendationsState): string {
 }
 
 function getContextSignals(input: {
-  todayNutrition: TodayNutrition | null;
+  todayNutrition: NutritionReadModel | null;
   recoverySnapshot: RecoverySnapshot | null;
   progressSummary: ProgressSummary | null;
   workout: TodayWorkout | null;
@@ -690,7 +690,7 @@ function resolveTodaysWorkout(
   };
 }
 
-function getMealsRemaining(nutrition: TodayNutrition | null): number {
+function getMealsRemaining(nutrition: NutritionReadModel | null): number {
   if (!nutrition?.nextMeal) {
     return 0;
   }

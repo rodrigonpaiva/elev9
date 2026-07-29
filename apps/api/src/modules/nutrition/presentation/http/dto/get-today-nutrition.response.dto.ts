@@ -34,12 +34,17 @@ type MealDto = {
 
 export class GetTodayNutritionResponseDto {
   todayNutrition!: {
-    availability: 'available';
+    availability:
+      | 'available'
+      | 'not_configured'
+      | 'insufficient_data'
+      | 'not_available'
+      | 'processing_failed';
     freshness: 'current' | 'stale' | 'legacy' | 'unknown';
     lastUpdatedAt: string | null;
     timezone: 'UTC';
     date: string;
-    macroTargets: MacroTargetsDto;
+    macroTargets: MacroTargetsDto | null;
     targets: MacroTargetsDto | null;
     meals: MealDto[];
     progress: {
@@ -90,7 +95,7 @@ export class GetTodayNutritionResponseDto {
           state: string;
         };
       };
-    };
+    } | null;
     calories: {
       consumed: number;
       target: number | null;
@@ -104,7 +109,7 @@ export class GetTodayNutritionResponseDto {
         | 'near_target'
         | 'target_reached'
         | 'above_target';
-    };
+    } | null;
     macros: Array<{
       nutrient: 'protein' | 'carbohydrates' | 'fat';
       consumed: number;
@@ -133,7 +138,7 @@ export class GetTodayNutritionResponseDto {
       consumedCount: number;
       completedCount: number;
       remainingCount: number;
-    };
+    } | null;
     nextMeal: MealDto | null;
     focus: {
       kind: string;
@@ -141,14 +146,14 @@ export class GetTodayNutritionResponseDto {
       message: string;
       priority: 'low' | 'medium' | 'high';
       action: Record<string, unknown>;
-    };
+    } | null;
     insight: {
       kind: string;
       title: string;
       message: string;
       action: Record<string, unknown>;
-    };
+    } | null;
     actions: Array<Record<string, unknown>>;
-    nutritionFocus: string;
+    nutritionFocus: string | null;
   };
 }

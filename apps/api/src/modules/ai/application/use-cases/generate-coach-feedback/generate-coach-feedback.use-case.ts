@@ -125,7 +125,6 @@ export class GenerateCoachFeedbackUseCase {
         ...(personalizationPrompt
           ? { personalization: personalizationPrompt }
           : {}),
-        nutritionProfile: healthContext.nutritionProfile,
       });
 
       await this.coachFeedbackRepository.create({
@@ -319,10 +318,6 @@ export class GenerateCoachFeedbackUseCase {
       muscleSoreness: number;
       motivationLevel: number;
     };
-    nutritionProfile?: {
-      goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
-      mealsPerDay: number;
-    };
   } {
     const adaptiveTrainingRecommendation =
       healthContext.adaptiveTrainingRecommendation;
@@ -433,12 +428,6 @@ export class GenerateCoachFeedbackUseCase {
             sleepQuality: healthContext.latestCheckIn.sleepQuality,
             muscleSoreness: healthContext.latestCheckIn.muscleSoreness,
             motivationLevel: healthContext.latestCheckIn.motivationLevel,
-          }
-        : undefined,
-      nutritionProfile: healthContext.nutritionProfile
-        ? {
-            goal: healthContext.nutritionProfile.goal,
-            mealsPerDay: healthContext.nutritionProfile.mealsPerDay,
           }
         : undefined,
     };

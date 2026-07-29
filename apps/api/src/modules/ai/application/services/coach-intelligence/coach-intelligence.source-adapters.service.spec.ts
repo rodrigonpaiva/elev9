@@ -54,6 +54,12 @@ describe('CoachIntelligenceSourceAdaptersService', () => {
     getTodayNutritionUseCase = {
       execute: jest.fn(),
     };
+    const nutritionContextPort = {
+      execute: jest.fn().mockResolvedValue({
+        todayNutrition: null,
+        availability: 'not_available',
+      }),
+    };
     getNutritionRecommendationsUseCase = {
       execute: jest.fn(),
     };
@@ -124,10 +130,7 @@ describe('CoachIntelligenceSourceAdaptersService', () => {
       getCurrentCoachDecisionUseCase as never,
       getMyTrainingPlanUseCase as never,
       getCurrentAdaptiveTrainingUseCase as never,
-      getCurrentNutritionPlanUseCase as never,
-      getTodayNutritionUseCase as never,
-      getNutritionRecommendationsUseCase as never,
-      nutritionLogRepository as never,
+      nutritionContextPort as never,
       getCurrentRecoveryUseCase as never,
       getRecoveryHistoryUseCase as never,
       getCurrentGoalUseCase as never,
@@ -227,9 +230,6 @@ describe('CoachIntelligenceSourceAdaptersService', () => {
     ).toHaveBeenCalledWith({
       authUserId: 'auth_123',
     });
-    expect(
-      nutritionLogRepository.findByUserProfileIdAndDate,
-    ).toHaveBeenCalledWith('profile_123', '2026-07-13');
   });
 
   function mockSourceDependencies(): void {

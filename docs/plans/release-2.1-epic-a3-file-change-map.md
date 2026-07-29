@@ -110,3 +110,68 @@ Snapshot persistence, backfill, historical plan versioning, persistent history c
 | `docs/plans/release-2.1-epic-a3-file-change-map.md` | modified | planning | Adds Prompt 8 file classification and explicit deferred migrations | No runtime impact | Documentation review | Existing Prompt 1–7 history preserved |
 
 No application or persistence source was changed in Prompt 8. The audit found real legacy callers whose removal would require a coordinated migration and therefore left them intact, registered, and blocked from being treated as canonical. No files were removed, no lockfile or `.vscode/settings.json` was changed, and no unrelated working-tree changes were present at audit start.
+
+## Prompt 8B — Nutrition Legacy Runtime Migration
+
+| File | Status | Layer | Responsibility / change | Impact / risk | Tests | Legacy / privacy / compatibility |
+| --- | --- | --- | --- | --- | --- | --- |
+| `apps/api/src/modules/nutrition/application/ports/nutrition-consumer.ports.ts` | created | Nutrition application | Provides canonical Coach, Training, Goals and Notifications projections | Removes external persistence coupling; medium | API build; targeted tests pending | Allowlisted projections; no raw payload |
+| `apps/api/src/modules/nutrition/application/ports/nutrition-boundaries.spec.ts` | created | architecture tests | Prevents external Nutrition repository imports | Low runtime risk | Targeted API test pending | Static boundary guard |
+| `apps/api/src/modules/nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.use-case.ts` | modified | Nutrition application | Normalizes missing profile/plan/day to canonical availability | Changes old 404 behavior intentionally; medium | Existing tests require migration | No sensitive telemetry |
+| `apps/api/src/modules/nutrition/nutrition.module.ts` | modified | module boundary | Registers ports and removes repository token exports | Reduces bypass surface; medium | API build | Internal repositories remain private |
+| `apps/api/src/modules/ai/application/services/context-builder/build-user-health-context.service.ts` | modified | Health Context | Removes Nutrition profile repository access | Partial-context behavior preserved; medium | Full API suite currently failing on legacy fixtures | Minimal canonical context |
+| `apps/api/src/modules/ai/application/services/chat/coach-chat-context-loader.service.ts` | modified | Coach | Uses canonical Nutrition port and removes raw log lookup | Medium migration risk | Full API suite currently failing on constructor fixtures | Raw contract fields still pending removal |
+| `apps/api/src/modules/ai/application/services/coach-intelligence/coach-intelligence.source-adapters.service.ts` | modified | Coach | Uses canonical Nutrition port and removes raw mapping helpers | Medium | API build passes | Canonical source path |
+| `apps/api/src/modules/ai/application/services/agent/tools/agent-tool-executor.service.ts` | modified | Agent tools | Uses canonical Coach Nutrition port | Low | Legacy tests require port mocks | No raw plan returned |
+| `apps/api/src/modules/ai/application/services/experts/nutrition/nutrition-expert.service.ts` | modified | Coach Expert | Removes active raw fallback; unavailable canonical context is deterministic | Medium; dead legacy helper types remain | Targeted tests pending | LLM remains disabled |
+| `apps/api/src/modules/training/application/use-cases/build-adaptive-training-recommendation/build-adaptive-training-recommendation.use-case.ts` | modified | Training | Uses minimal Nutrition signals port | Medium behavior parity risk | Fixtures require port migration |
+| `apps/api/src/modules/goals/application/use-cases/build-goal-progress-snapshot/build-goal-progress-snapshot.use-case.ts` | modified | Goals | Uses minimal Nutrition signals port | Medium behavior parity risk | Fixtures require port migration |
+| `apps/api/src/modules/notifications/application/use-cases/build-notification-decision/build-notification-decision.use-case.ts` | modified | Notifications | Uses canonical Nutrition notification signal | Medium behavior parity risk | Fixtures require port migration |
+| `apps/api/src/modules/ai/application/use-cases/build-coach-decision/build-coach-decision.use-case.ts` | modified | Coach decision | Removes direct Nutrition recommendation repository dependency | Medium | Targeted tests pending |
+| `packages/types/src/nutrition/index.ts` | modified | shared contract | Makes unavailable read-model components nullable | Additive state semantics; medium | Types/API build |
+| `packages/types/src/ai/coach-intelligence.ts` | modified | shared contract | Replaces one internal `TodayNutrition` annotation with `NutritionReadModel` | Low | Types build |
+| `apps/mobile/src/hooks/coach/coach-intelligence.ts` | modified | Mobile contract | Replaces one internal alias annotation | Low | Mobile validation pending |
+| `docs/architecture/release-2.1-epic-a3-nutrition-legacy-runtime-migration.md` | created | documentation | Records migration, ports, remaining conditions and diagrams | None | Documentation review |
+
+## Prompt 8B.3 — Canonical test migration
+
+| File/group | Status | Layer | Responsibility / change | Impact / risk | Tests | Compatibility / privacy |
+|---|---|---|---|---|---|---|
+| `apps/api/src/modules/ai/presentation/http/ai.controller.spec.ts` | modified | tests | Removed raw Nutrition context fixture/assertion | Low; canonical response shape preserved | API suite | No raw payload |
+| `apps/api/src/modules/dashboard/application/use-cases/get-home-dashboard/get-home-dashboard.use-case.spec.ts` | modified | tests | Updated guidance expectations to canonical availability behavior | Low; no production change | API suite | No local Nutrition derivation |
+| `apps/api/src/modules/ai/application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case.spec.ts` | modified | tests | Removed raw Nutrition generator expectations | Low | API suite | Feedback remains minimized |
+| `apps/api/src/modules/ai/application/services/coach-feedback/coach-feedback-generator.service.spec.ts` | modified | tests | Removed five legacy Nutrition feedback tests | Low; behavior intentionally retired from this owner | API suite | No Nutrition payload |
+| `apps/api/src/modules/ai/application/services/llm/ai-prompt-builder.service.spec.ts` | modified | tests | Removed raw profile fixtures and prompt expectations | Low | API suite | LLM remains disabled |
+| Coach debug, memory and explainability specs | modified | tests | Removed raw Nutrition summaries and updated safe metadata | Low | API suite | No detailed Nutrition memory |
+| Recovery Expert specs | modified | tests | Removed raw Nutrition fixtures and assertions | Low | API suite | Recovery no longer reinterprets Nutrition |
+| Nutrition Expert spec | modified | tests | Asserts canonical boundary metadata and canonical calorie text | Low | API suite | No recalculation |
+| `docs/architecture/release-2.1-epic-a3-nutrition-legacy-register.md` | modified | governance | Records zero active legacy test fixtures and P1 runtime legacy | None | Documentation review | Alias remains compatibility-only |
+| `docs/architecture/release-2.1-epic-a3-nutrition-legacy-runtime-migration.md` | modified | documentation | Records root-cause migration and final validation | None | Documentation review | E2E condition explicit |
+| implementation plan and file change map | modified | planning | Marks Prompt 8B.3 complete with E2E condition | None | `git diff --check` | Prompt 9 remains pending |
+| `docs/architecture/release-2.1-epic-a3-nutrition-integration-audit.md` | intentionally unchanged | architecture | Original Prompt 8 audit retained as historical evidence | None | N/A | Superseded status documented in migration doc |
+| `docs/architecture/release-2.1-epic-a3-nutrition-legacy-register.md` | modified | architecture governance | Updates migrated and remaining legacy statuses | None | Documentation review | P1 residuals explicit |
+| `docs/plans/release-2.1-epic-a3-nutrition-intelligence-implementation-plan.md` | modified | planning | Adds Prompt 8B as not completed; Prompt 9 remains pending | None | Documentation review | Honest status |
+
+Preexisting changes from Prompts 1–7 and Prompt 8 remain grouped above; no commit was created. Test fixtures and raw Coach compatibility contracts are intentionally deferred because they still require coordinated migration.
+
+## Prompt 8B.1 completion pass
+
+| File/group | Status | Layer | Responsibility | Change | Impact | Risk | Tests | Compatibility |
+|---|---|---|---|---|---|---|---|---|
+| API fixtures and expectations | modified | tests | canonical consumer contracts | Migrated Health Context, Coach Decision, Training, Goals, Notifications, Nutrition Expert and onboarding expectations | Removes stale repository/404 assumptions | Low | API suite | Preserved runtime semantics |
+| Mobile Nutrition read types | modified | Mobile | canonical type consumption | Replaced internal alias type consumers with `NutritionReadModel` | Removes internal alias consumers | Low | Mobile suite/build | Alias retained at compatibility boundary |
+| E2E target | inspected_only | validation | end-to-end confidence | Executed; blocked by MongoMemoryServer port permission | No runtime change | Environment | `ENVIRONMENT_BLOCKED` | Test configuration unchanged |
+| Migration documentation | modified | documentation | status governance | Recorded green suites and remaining conditions | Explicit certification state | Low | `git diff --check` | Prompt 9 remains pending |
+
+## Prompt 8B.2 cleanup pass
+
+| File/group | Status | Layer | Responsibility | Change | Impact | Risk | Tests | Compatibility / legacy |
+|---|---|---|---|---|---|---|---|---|
+| `apps/api/src/modules/ai/application/services/experts/nutrition/nutrition-expert.service.ts` | modified | Coach Expert | canonical deterministic response | Replaced raw helper tree and fallback with `CoachNutritionContext`-only flow | Removes second interpretation | Medium | API build; targeted tests require fixture migration | No raw runtime fields |
+| Coach context contracts and loaders | modified | Coach runtime | context transport | Removed raw profile/plan/log fields and spreads | Reduces payload and bypass surface | Medium | API build; legacy fixture failures recorded | Canonical context only |
+| Recovery/Dashboard nutrition consumers | modified | consumers | presentation/cross-domain context | Removed local Nutrition calculations | Nutrition remains sole semantic owner | Medium | API build; historical expectations require migration | Behavior intentionally canonical |
+| Feedback/debug persistence contracts | modified | AI persistence/API | safe feedback context | Removed new raw Nutrition field mapping/schema | Prevents new sensitive payloads | Medium | API build; old fixtures require migration | Historical DB fields are compatibility-only |
+| `apps/api/src/modules/nutrition/application/ports/nutrition-boundaries.spec.ts` | modified | architecture tests | regression prevention | Added raw import/field and alias scans | Prevents boundary regression | Low | Targeted boundary test | Internal `TodayNutrition` zero |
+| `packages/types/src/ai/coach-intelligence.d.ts` and Nutrition Expert types | modified | shared contracts | generated/strict declarations | Removed stale raw Nutrition declarations | Aligns source and declarations | Low | Types/API build | Public alias remains isolated |
+| `docs/architecture/release-2.1-epic-a3-nutrition-legacy-runtime-migration.md` | modified | documentation | migration record | Added 8B.2 status and validation conditions | Certification evidence | None | `git diff --check` | Prompt 9 pending |
+| `docs/architecture/release-2.1-epic-a3-nutrition-legacy-register.md` | modified | governance | legacy register | Recorded zero P1 runtime legacy and remaining test/persistence conditions | Explicit removal status | None | documentation review | No new consumers |

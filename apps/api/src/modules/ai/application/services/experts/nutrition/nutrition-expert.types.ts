@@ -1,17 +1,9 @@
 import type {
-  MealType,
-  MealLogStatus,
-} from '../../../../../nutrition/domain/entities/meal.entity';
-import type { NutritionLog } from '../../../../../nutrition/domain/entities/nutrition-log.entity';
-import type { NutritionPlan } from '../../../../../nutrition/domain/entities/nutrition-plan.entity';
-import type { MacroTargetsProps } from '../../../../../nutrition/domain/value-objects/macro-targets.value-object';
-import type {
   CoachExpertContribution,
   CoachExpertContext,
   CoachExpertRequest,
   CoachExpertResult,
 } from '../coach-expert.types';
-import type { UserHealthContext } from '../../context-builder/build-user-health-context.service';
 import type { CoachNutritionContext } from '../../context-builder/coach-nutrition-context.types';
 
 export type NutritionExplainabilityFact =
@@ -117,10 +109,10 @@ export type MacroAssessment = {
 
 export type MealAssessmentItem = {
   mealId: string;
-  mealType: MealType;
+  mealType: string;
   title: string;
   status: MealAssessmentStatus;
-  logStatus?: MealLogStatus;
+  logStatus?: string;
   summary: string;
   metadata: Readonly<Record<string, unknown>>;
 };
@@ -162,9 +154,6 @@ export type NutritionAnalysis = {
   confidence: NutritionConfidence;
   priority: NutritionPriority;
   signals: readonly string[];
-  nutritionProfilePresent: boolean;
-  nutritionPlanPresent: boolean;
-  todayNutritionPresent: boolean;
   trainingScheduledToday: boolean;
   restrictionConflicts: number;
   allergyConflicts: number;
@@ -192,37 +181,3 @@ export type NutritionExpertContribution = {
 export type NutritionExpertRequest = CoachExpertRequest;
 
 export type NutritionExpertContext = CoachExpertContext;
-
-export type NutritionExpertAnalysis = {
-  request: NutritionExpertRequest;
-  context: NutritionExpertContext;
-  healthContext: UserHealthContext;
-  analysis: NutritionAnalysis;
-  contribution: NutritionExpertContribution;
-  result: CoachExpertResult;
-};
-
-export type NutritionMealSnapshot = {
-  mealId: string;
-  mealType: MealType;
-  title: string;
-  estimatedMacros: MacroTargetsProps;
-  status: MealAssessmentStatus;
-  logStatus?: MealLogStatus;
-};
-
-export type NutritionMacroSnapshot = {
-  consumed: number;
-  target: number;
-  ratio: number | null;
-  status: MacroAssessmentStatus;
-};
-
-export type NutritionPlanSnapshot = Pick<
-  NutritionPlan,
-  'id' | 'weekStartDate' | 'weekEndDate' | 'macroTargets' | 'generatedBy'
-> & {
-  status: NutritionPlan['status'];
-};
-
-export type NutritionGoalSignal = 'fat_loss' | 'muscle_gain' | 'maintenance';

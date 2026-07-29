@@ -6,18 +6,7 @@ import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
 } from '../../../../fitness/domain/repositories/fitness-profile.repository';
-import {
-  NUTRITION_LOG_REPOSITORY,
-  NutritionLogRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-log.repository';
-import {
-  NUTRITION_PLAN_REPOSITORY,
-  NutritionPlanRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-plan.repository';
-import {
-  NUTRITION_RECOMMENDATION_REPOSITORY,
-  NutritionRecommendationRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-recommendation.repository';
+import { TrainingNutritionSignals } from '../../../../nutrition/application/ports/nutrition-consumer.ports';
 import {
   WORKOUT_LOG_REPOSITORY,
   WorkoutLogRepository,
@@ -45,9 +34,11 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
   let recoverySnapshotRepository: jest.Mocked<RecoverySnapshotRepository>;
-  let nutritionPlanRepository: jest.Mocked<NutritionPlanRepository>;
-  let nutritionLogRepository: jest.Mocked<NutritionLogRepository>;
-  let nutritionRecommendationRepository: jest.Mocked<NutritionRecommendationRepository>;
+  let nutritionSignalsPort: {
+    getTrainingSignals: jest.MockedFunction<
+      (input: { authUserId: string }) => Promise<TrainingNutritionSignals>
+    >;
+  };
   let adaptiveTrainingRecommendationRepository: jest.Mocked<AdaptiveTrainingRecommendationRepository>;
   let adaptiveTrainingRecommendationCalculatorService: jest.Mocked<AdaptiveTrainingRecommendationCalculatorService>;
   let adaptiveTrainingDateService: jest.Mocked<AdaptiveTrainingDateService>;
@@ -88,24 +79,13 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
       upsertDailySnapshot: jest.fn(),
     };
 
-    nutritionPlanRepository = {
-      findById: jest.fn(),
-      findActiveByUserProfileId: jest.fn(),
-      create: jest.fn(),
-      replaceActiveByUserProfileId: jest.fn(),
-      replaceMeal: jest.fn(),
-    };
-
-    nutritionLogRepository = {
-      create: jest.fn(),
-      findByUserProfileIdAndDate: jest.fn(),
-      findByUserProfileIdAndDateRange: jest.fn(),
-      findByMealId: jest.fn(),
-    };
-
-    nutritionRecommendationRepository = {
-      create: jest.fn(),
-      findManyByUserProfileId: jest.fn(),
+    nutritionSignalsPort = {
+      getTrainingSignals: jest.fn().mockResolvedValue({
+        availability: 'available',
+        freshness: 'current',
+        adherencePercentage: 50,
+        contractVersion: 'nutrition-consumer-signals-v1',
+      }),
     };
 
     adaptiveTrainingRecommendationRepository = {
@@ -131,9 +111,7 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
       trainingPlanRepository,
       workoutLogRepository,
       recoverySnapshotRepository,
-      nutritionPlanRepository,
-      nutritionLogRepository,
-      nutritionRecommendationRepository,
+      nutritionSignalsPort,
       adaptiveTrainingRecommendationRepository,
       adaptiveTrainingRecommendationCalculatorService,
       adaptiveTrainingDateService,
@@ -172,7 +150,7 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
         currentStreak: 3,
         missedWorkouts: 1,
         recentWorkoutLoad: 100,
-        nutritionAdherence: 34,
+        nutritionAdherence: 82,
       }),
     );
     expect(
@@ -193,10 +171,9 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
           currentStreak: 3,
           missedWorkouts: 1,
           recentWorkoutLoad: 100,
-          nutritionAdherence: 34,
+          nutritionAdherence: 82,
           recentWorkoutLogsCount: 3,
           trainingPlanId: 'training_123',
-          nutritionRecommendationId: 'nutrition_recommendation_123',
           formulaVersion: 'adaptive-training-deterministic-v1',
           generatedAt: '2026-06-02T10:00:00.000Z',
         }),
@@ -286,10 +263,12 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
       [],
     );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
-    nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(null);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [],
-    );
+    nutritionSignalsPort.getTrainingSignals.mockResolvedValue({
+      availability: 'not_configured',
+      freshness: 'unknown',
+      adherencePercentage: null,
+      contractVersion: 'nutrition-consumer-signals-v1',
+    });
     arrangeCalculatorResult();
     adaptiveTrainingRecommendationRepository.upsertDailyRecommendation.mockResolvedValue(
       buildAdaptiveRecommendation(),
@@ -400,7 +379,6 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
         'generatedAt',
         'missedWorkouts',
         'nutritionAdherence',
-        'nutritionRecommendationId',
         'readinessScore',
         'recentWorkoutLoad',
         'recentWorkoutLogsCount',
@@ -606,63 +584,21 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
   }
 
   function arrangeNutritionPlanAndLogs(): void {
-    nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue({
-      id: 'nutrition_plan_123',
-      userProfileId: 'profile_123',
-      nutritionProfileId: 'nutrition_profile_123',
-      fitnessProfileId: 'fitness_123',
-      status: 'active',
-      weekStartDate: '2026-06-01',
-      weekEndDate: '2026-06-07',
-      macroTargets: {
-        calories: 2200,
-        proteinGrams: 150,
-        carbsGrams: 250,
-        fatGrams: 70,
-      },
-      days: [
-        {
-          date: '2026-06-02',
-          dayIndex: 1,
-          dailyMacroTargets: {
-            calories: 2200,
-            proteinGrams: 150,
-            carbsGrams: 250,
-            fatGrams: 70,
-          },
-          meals: [],
-        },
-      ],
-      generatedBy: 'deterministic',
-      sourceContext: {},
-      createdAt: new Date('2026-06-01T10:00:00.000Z'),
-      updatedAt: new Date('2026-06-01T10:00:00.000Z'),
-    } as never);
-
-    nutritionLogRepository.findByUserProfileIdAndDate.mockResolvedValue([
-      buildNutritionLog('breakfast', 500),
-      buildNutritionLog('lunch', 250),
-    ] as never);
+    nutritionSignalsPort.getTrainingSignals.mockResolvedValue({
+      availability: 'available',
+      freshness: 'current',
+      adherencePercentage: 34,
+      contractVersion: 'nutrition-consumer-signals-v1',
+    });
   }
 
   function arrangeNutritionRecommendation(): void {
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [
-        {
-          id: 'nutrition_recommendation_123',
-          userProfileId: 'profile_123',
-          message: 'Stay consistent.',
-          recommendations: ['Choose protein first.'],
-          influences: ['HIGH_ADHERENCE'],
-          generatorVersion: 'nutrition-deterministic-v1',
-          contextSnapshot: {
-            adherenceScore: 82,
-            goal: 'muscle_gain',
-          },
-          createdAt: new Date('2026-06-02T09:00:00.000Z'),
-        } as never,
-      ],
-    );
+    nutritionSignalsPort.getTrainingSignals.mockResolvedValue({
+      availability: 'available',
+      freshness: 'current',
+      adherencePercentage: 82,
+      contractVersion: 'nutrition-consumer-signals-v1',
+    });
   }
 
   function arrangeCalculatorResult() {
@@ -707,26 +643,6 @@ describe('BuildAdaptiveTrainingRecommendationUseCase', () => {
       date,
       createdAt: new Date(`${date}T12:00:00.000Z`),
       updatedAt: new Date(`${date}T12:00:00.000Z`),
-    };
-  }
-
-  function buildNutritionLog(mealId: string, calories: number) {
-    return {
-      id: `nutrition_log_${mealId}`,
-      userProfileId: 'profile_123',
-      nutritionPlanId: 'nutrition_plan_123',
-      mealId,
-      date: '2026-06-02',
-      mealType: mealId === 'breakfast' ? 'breakfast' : 'lunch',
-      status: 'consumed',
-      actualMacros: {
-        calories,
-        proteinGrams: calories === 500 ? 35 : 20,
-        carbsGrams: calories === 500 ? 55 : 25,
-        fatGrams: calories === 500 ? 15 : 8,
-      },
-      createdAt: new Date('2026-06-02T12:00:00.000Z'),
-      updatedAt: new Date('2026-06-02T12:00:00.000Z'),
     };
   }
 

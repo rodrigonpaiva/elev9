@@ -11,7 +11,7 @@ import type {
   PersonalizationSnapshot,
   ProgressSummaryResponse,
   RecoverySnapshot,
-  TodayNutrition,
+  NutritionReadModel,
   TodayWorkout,
 } from '@elev9/types';
 
@@ -301,7 +301,7 @@ type CoachIntelligenceInput = {
   personalizationSnapshot?: PersonalizationSnapshot | null;
   recoverySnapshot?: RecoverySnapshot | null;
   progressSummary?: ProgressSummary | null;
-  nutrition?: TodayNutrition | null;
+  nutrition?: NutritionReadModel | null;
   workout?: TodayWorkout | null;
   chatHistory?: CoachChatHistoryMessage[];
 };
@@ -790,7 +790,8 @@ function resolveParticipatingExperts(
     experts.add('Workout');
   }
 
-  if (input.nutrition) {
+  const nutritionProgress = input.nutrition?.progress;
+  if (input.nutrition && nutritionProgress) {
     experts.add('Nutrition');
   }
 
@@ -937,7 +938,8 @@ function buildEvidence(
     );
   }
 
-  if (input.nutrition) {
+  const nutritionProgress = input.nutrition?.progress;
+  if (input.nutrition && nutritionProgress) {
     evidence.push(
       createEvidence({
         id: `${input.nutrition.date}:nutrition`,
@@ -945,14 +947,14 @@ function buildEvidence(
         source: 'Nutrition',
         expert: 'Nutrition',
         importance: getNutritionImportance(
-          input.nutrition.progress.adherencePercentage,
+          nutritionProgress.adherencePercentage,
         ),
         confidence: confidenceFromScore(
-          input.nutrition.progress.adherencePercentage,
+          nutritionProgress.adherencePercentage,
         ),
         availability: 'AVAILABLE',
         title: 'Nutrition adherence',
-        detail: `${Math.round(input.nutrition.progress.adherencePercentage)}% adherence`,
+        detail: `${Math.round(nutritionProgress.adherencePercentage)}% adherence`,
         metadata: {
           nutritionFocus: input.nutrition.nutritionFocus,
           mealCount: input.nutrition.meals.length,
@@ -1217,7 +1219,7 @@ function buildRisks(
     }
   }
 
-  if (input.nutrition && input.nutrition.progress.adherencePercentage < 75) {
+  if (input.nutrition?.progress && input.nutrition.progress.adherencePercentage < 75) {
     risks.push({
       level:
         input.nutrition.progress.adherencePercentage < 55 ? 'HIGH' : 'MEDIUM',
@@ -1354,7 +1356,7 @@ function buildKeyFindings(
     });
   }
 
-  if (input.nutrition && input.nutrition.progress.adherencePercentage < 75) {
+  if (input.nutrition?.progress && input.nutrition.progress.adherencePercentage < 75) {
     findings.push({
       code: 'NUTRITION_INCONSISTENCY',
       title: 'Nutrition inconsistency',

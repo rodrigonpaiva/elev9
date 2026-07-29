@@ -7,9 +7,6 @@ import type { AgentPolicyEvaluation } from '../agent/policies/agent-policy.types
 import type { UserHealthContext } from '../context-builder/build-user-health-context.service';
 import type { CoachNutritionContext } from '../context-builder/coach-nutrition-context.types';
 import type { RecoverySnapshot } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
-import type { NutritionLog } from '../../../../nutrition/domain/entities/nutrition-log.entity';
-import type { NutritionPlan } from '../../../../nutrition/domain/entities/nutrition-plan.entity';
-import type { GetTodayNutritionOutput } from '../../../../nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.output';
 import type { HabitSnapshot } from '../../../../habits/domain/entities/habit-snapshot.entity';
 import type { HabitPromptPayload } from '../../../../../shared/mappers';
 import type {
@@ -80,10 +77,7 @@ export type CoachExpertContext = {
   goalContext?: CoachChatGoalContext;
   progress?: CoachChatProgressContext;
   recoveryHistory?: readonly RecoverySnapshot[];
-  nutritionPlan?: NutritionPlan;
-  todayNutrition?: GetTodayNutritionOutput['todayNutrition'];
-  nutritionLogs?: readonly NutritionLog[];
-  /** Canonical Nutrition projection. Legacy fields remain for compatibility. */
+  /** Canonical Nutrition projection. */
   nutritionContext?: CoachNutritionContext;
   habit?: HabitPromptPayload;
   habitHistory?: readonly HabitSnapshot[];

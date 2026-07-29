@@ -18,10 +18,6 @@ export type GetCoachFeedbackDebugHistoryOutput = {
         muscleSoreness: number;
         motivationLevel: number;
       };
-      nutritionProfile?: {
-        goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
-        mealsPerDay: number;
-      };
     };
     createdAt: string;
   }>;

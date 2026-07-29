@@ -59,10 +59,7 @@ export class GetTodayNutritionUseCase {
         await this.userProfileRepository.findByAuthUserId(authUserId);
 
       if (!userProfile) {
-        throw new GetTodayNutritionError(
-          GET_TODAY_NUTRITION_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          'User profile not found.',
-        );
+        return { todayNutrition: buildUnavailableTodayNutrition('not_configured') };
       }
 
       const nutritionPlan =
@@ -71,21 +68,22 @@ export class GetTodayNutritionUseCase {
         );
 
       if (!nutritionPlan) {
-        throw new GetTodayNutritionError(
-          GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_PLAN_NOT_FOUND,
-          'Active nutrition plan not found.',
-        );
+        return { todayNutrition: buildUnavailableTodayNutrition('not_configured') };
       }
 
       const today = toUtcDateString(new Date());
       const nutritionDay = nutritionPlan.days.find((day) => day.date === today);
 
       if (!nutritionDay) {
-        throw new GetTodayNutritionError(
-          GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_DAY_NOT_FOUND,
-          'Active nutrition plan does not contain today.',
-          { date: today },
-        );
+        return {
+          todayNutrition: buildUnavailableTodayNutrition(
+            'insufficient_data',
+            today,
+            resolveFreshness(nutritionPlan.updatedAt),
+            nutritionPlan.updatedAt?.toISOString() ??
+              nutritionPlan.createdAt.toISOString(),
+          ),
+        };
       }
 
       const macroTargets = nutritionDay.dailyMacroTargets;
@@ -150,6 +148,33 @@ export class GetTodayNutritionUseCase {
       );
     }
   }
+}
+
+function buildUnavailableTodayNutrition(
+  availability: 'not_configured' | 'insufficient_data',
+  date = toUtcDateString(new Date()),
+  freshness: 'current' | 'unknown' = 'unknown',
+  lastUpdatedAt: string | null = null,
+): GetTodayNutritionOutput['todayNutrition'] {
+  return {
+    availability,
+    freshness,
+    lastUpdatedAt,
+    timezone: 'UTC',
+    date,
+    macroTargets: null,
+    meals: [],
+    progress: null,
+    targets: null,
+    calories: null,
+    macros: [],
+    mealProgress: null,
+    nextMeal: null,
+    focus: null,
+    insight: null,
+    actions: [],
+    nutritionFocus: null,
+  };
 }
 
 function toNutritionSafeErrorCode(

@@ -3,7 +3,7 @@ import type { Goal, GoalAchievement, GoalForecast, GoalMilestone, GoalProgressSn
 import type { BehavioralPattern, PersonalizationSnapshot, UserBehaviorProfile } from '../personalization';
 import type { ConsistencySummary, HabitRiskSignal, HabitSnapshot } from '../habits';
 import type { NotificationDecision, NotificationEngagementSummary } from '../notifications';
-import type { NutritionPlan, NutritionRecommendation, TodayNutrition } from '../nutrition';
+import type { NutritionReadModel } from '../nutrition';
 import type { RecoverySnapshot } from '../recovery';
 import type { DailyCheckIn, ProgressSummaryResponse } from '../progress';
 export type CoachExpertName = 'Workout' | 'Nutrition' | 'Recovery' | 'Goal' | 'Habit' | 'Progress' | 'Motivation';
@@ -228,9 +228,7 @@ export interface CoachTrainingSection {
     adaptiveTrainingRecommendation: AdaptiveTrainingRecommendation | null;
 }
 export interface CoachNutritionSection {
-    todayNutrition: TodayNutrition | null;
-    nutritionPlan: NutritionPlan | null;
-    nutritionRecommendation: NutritionRecommendation | null;
+    nutritionContext: NutritionReadModel | null;
 }
 export interface CoachRecoverySection {
     recoverySnapshot: RecoverySnapshot | null;

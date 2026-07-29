@@ -8,7 +8,7 @@ import type {
   GetCurrentRecoveryExperienceResponse,
   ProgressSummaryResponse,
   RecoverySnapshot,
-  TodayNutrition,
+  NutritionReadModel,
   TodayWorkout,
   TrainingPlanResponse,
 } from '@elev9/types';
@@ -91,7 +91,7 @@ export type UseDashboardResult = {
     todaysWorkout: TodayWorkout | null;
     plannedWorkoutCount: number;
   };
-  nutrition: DashboardDomainResult<TodayNutrition>;
+  nutrition: DashboardDomainResult<NutritionReadModel>;
   progress: DashboardDomainResult<ProgressSummary>;
   dailyCheckIn: DashboardDomainResult<GetTodayDailyCheckInResponse> & {
     completedToday: boolean;
@@ -120,7 +120,7 @@ export function useDashboard(): UseDashboardResult {
   const [workout, setWorkout] = useState<DomainState<TrainingPlan>>(
     createInitialDomainState(),
   );
-  const [nutrition, setNutrition] = useState<DomainState<TodayNutrition>>(
+  const [nutrition, setNutrition] = useState<DomainState<NutritionReadModel>>(
     createInitialDomainState(),
   );
   const [progress, setProgress] = useState<DomainState<ProgressSummary>>(
@@ -443,7 +443,7 @@ export function useDashboard(): UseDashboardResult {
           (current) =>
             updater(
               current as DomainState<TData>,
-            ) as DomainState<TodayNutrition>,
+            ) as DomainState<NutritionReadModel>,
         );
         return;
       case 'progress':
@@ -471,7 +471,7 @@ type DashboardDomainData =
   | RecoverySnapshot
   | GetCurrentRecoveryExperienceResponse
   | TrainingPlan
-  | TodayNutrition
+  | NutritionReadModel
   | ProgressSummary
   | GetTodayDailyCheckInResponse
   | null;
@@ -548,7 +548,7 @@ async function fetchWorkout(): Promise<TrainingPlan | null> {
   }
 }
 
-async function fetchNutrition(): Promise<TodayNutrition | null> {
+async function fetchNutrition(): Promise<NutritionReadModel | null> {
   try {
     const response = await apiClient.nutrition.getTodayNutrition();
     return response.todayNutrition ?? null;

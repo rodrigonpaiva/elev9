@@ -43,8 +43,6 @@ export class CoachConversationMemorySummarizer {
     const latestUserMessage = this.findLatestUserMessage(messages);
     const concern = this.resolveConcern(latestUserMessage?.content ?? '');
     const recoveryTrend = this.resolveRecoveryTrend(input.healthContext);
-    const nutritionGoal = input.healthContext.nutritionProfile?.goal ?? 'none';
-    const mealsPerDay = input.healthContext.nutritionProfile?.mealsPerDay ?? 0;
     const workoutCount = input.healthContext.recentWorkoutLogs.length;
     const coachDecisionSummary = input.coachDecision
       ? this.buildCoachDecisionSummary(input.coachDecision)
@@ -63,7 +61,6 @@ export class CoachConversationMemorySummarizer {
       `goal=${this.normalizeValue(input.healthContext.goal ?? 'unknown')}`,
       `fatigue=${input.healthContext.fatigueLevel}`,
       `recovery=${recoveryTrend}`,
-      `nutrition=${nutritionGoal}${nutritionGoal !== 'none' ? `/${mealsPerDay} meals` : ''}`,
       `workout_continuity=streak:${input.healthContext.currentStreak}, recent_workouts:${workoutCount}`,
       ...(coachDecisionSummary ? [coachDecisionSummary] : []),
       ...(notificationSummary ? [notificationSummary] : []),

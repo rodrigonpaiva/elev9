@@ -1,10 +1,10 @@
-import type { TodayNutrition } from '@elev9/types';
+import type { NutritionReadModel } from '@elev9/types';
 
 import { buildNutritionCardModel } from './todays-nutrition-card-model';
 
 function createNutrition(
-  overrides: Partial<TodayNutrition> = {},
-): TodayNutrition {
+  overrides: Partial<NutritionReadModel> = {},
+): NutritionReadModel {
   return {
     availability: 'available',
     freshness: 'current',

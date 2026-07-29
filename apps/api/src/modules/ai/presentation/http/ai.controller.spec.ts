@@ -832,14 +832,6 @@ describe('AiController', () => {
         motivationLevel: 5,
         createdAt: new Date('2026-05-04T09:00:00.000Z'),
       },
-      nutritionProfile: {
-        goal: 'muscle_gain',
-        mealsPerDay: 4,
-        dietaryRestrictions: [],
-        allergies: [],
-        dislikedFoods: [],
-        preferredFoods: ['rice', 'eggs'],
-      },
       recentWorkoutLogs: [],
       generatedAt: new Date('2026-05-04T10:00:00.000Z'),
     });
@@ -865,19 +857,11 @@ describe('AiController', () => {
         motivationLevel: 5,
         createdAt: '2026-05-04T09:00:00.000Z',
       },
-      nutritionProfile: {
-        goal: 'muscle_gain',
-        mealsPerDay: 4,
-        dietaryRestrictions: [],
-        allergies: [],
-        dislikedFoods: [],
-        preferredFoods: ['rice', 'eggs'],
-      },
       generatedAt: '2026-05-04T10:00:00.000Z',
     });
   });
 
-  it('omits nutritionProfile in AI context when absent', async () => {
+  it('omits Nutrition context in AI context when absent', async () => {
     buildUserHealthContextService.build.mockResolvedValue({
       authUserId: 'auth_user_123',
       adherenceScore: 0,
@@ -898,7 +882,7 @@ describe('AiController', () => {
       },
     });
 
-    expect(result.nutritionProfile).toBeUndefined();
+    expect(result.nutritionContext).toBeUndefined();
   });
 
   it('uses the same auth guard on AI routes', () => {

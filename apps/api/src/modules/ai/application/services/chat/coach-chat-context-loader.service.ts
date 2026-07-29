@@ -6,12 +6,10 @@ import {
   NotificationReadModelMapper,
   PersonalizationReadModelMapper,
 } from '../../../../../shared/mappers';
-import { GetCurrentNutritionPlanUseCase } from '../../../../nutrition/application/use-cases/get-current-nutrition-plan/get-current-nutrition-plan.use-case';
-import { GetTodayNutritionUseCase } from '../../../../nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.use-case';
 import {
-  NUTRITION_LOG_REPOSITORY,
-  NutritionLogRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-log.repository';
+  NUTRITION_COACH_CONTEXT_PORT,
+  NutritionCoachContextPort,
+} from '../../../../nutrition/application/ports/nutrition-consumer.ports';
 import { GetDailyCheckInHistoryUseCase } from '../../../../progress/application/use-cases/get-daily-check-in-history/get-daily-check-in-history.use-case';
 import { GetProgressSummaryUseCase } from '../../../../progress/application/use-cases/get-progress-summary/get-progress-summary.use-case';
 import { GetWorkoutHistoryUseCase } from '../../../../progress/application/use-cases/get-workout-history/get-workout-history.use-case';
@@ -74,13 +72,11 @@ export class CoachChatContextLoaderService {
     private readonly getCurrentPersonalizationUseCase: GetCurrentPersonalizationUseCase,
     private readonly getUserBehaviorProfileUseCase: GetUserBehaviorProfileUseCase,
     private readonly getBehavioralPatternsUseCase: GetBehavioralPatternsUseCase,
-    private readonly getCurrentNutritionPlanUseCase: GetCurrentNutritionPlanUseCase,
-    private readonly getTodayNutritionUseCase: GetTodayNutritionUseCase,
     private readonly getDailyCheckInHistoryUseCase: GetDailyCheckInHistoryUseCase,
     private readonly getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
     private readonly getProgressSummaryUseCase: GetProgressSummaryUseCase,
-    @Inject(NUTRITION_LOG_REPOSITORY)
-    private readonly nutritionLogRepository: NutritionLogRepository,
+    @Inject(NUTRITION_COACH_CONTEXT_PORT)
+    private readonly nutritionContextPort: NutritionCoachContextPort,
   ) {}
 
   async resolveUserProfileId(authUserId: string): Promise<string> {
@@ -190,7 +186,6 @@ export class CoachChatContextLoaderService {
     const nutrition = shouldLoadNutrition
       ? await this.resolveNutrition({
           authUserId,
-          userProfileId,
         })
       : undefined;
     const progress = shouldLoadProgress
@@ -208,15 +203,6 @@ export class CoachChatContextLoaderService {
       healthContext,
       ...(goalContext ? { goalContext } : {}),
       ...(recoveryHistory ? { recoveryHistory } : {}),
-      ...(nutrition?.nutritionPlan
-        ? { nutritionPlan: nutrition.nutritionPlan }
-        : {}),
-      ...(nutrition?.todayNutrition
-        ? { todayNutrition: nutrition.todayNutrition }
-        : {}),
-      ...(nutrition?.nutritionLogs
-        ? { nutritionLogs: nutrition.nutritionLogs }
-        : {}),
       ...(healthContext.nutritionContext
         ? { nutritionContext: healthContext.nutritionContext }
         : {}),
@@ -340,38 +326,12 @@ export class CoachChatContextLoaderService {
 
   private async resolveNutrition(input: {
     authUserId: string;
-    userProfileId: string;
   }) {
-    const today = new Date().toISOString().slice(0, 10);
+    const result = await this.nutritionContextPort.execute({
+      authUserId: input.authUserId,
+    });
 
-    const [nutritionPlanResult, todayNutritionResult, nutritionLogsResult] =
-      await Promise.allSettled([
-        this.getCurrentNutritionPlanUseCase.execute({
-          authUserId: input.authUserId,
-        }),
-        this.getTodayNutritionUseCase.execute({
-          authUserId: input.authUserId,
-        }),
-        this.nutritionLogRepository.findByUserProfileIdAndDate(
-          input.userProfileId,
-          today,
-        ),
-      ]);
-
-    return {
-      nutritionPlan:
-        nutritionPlanResult.status === 'fulfilled'
-          ? nutritionPlanResult.value.nutritionPlan
-          : undefined,
-      todayNutrition:
-        todayNutritionResult.status === 'fulfilled'
-          ? todayNutritionResult.value.todayNutrition
-          : undefined,
-      nutritionLogs:
-        nutritionLogsResult.status === 'fulfilled'
-          ? nutritionLogsResult.value
-          : undefined,
-    };
+    return { nutritionContext: result.todayNutrition };
   }
 
   private async resolveCoachDecision(authUserId: string) {

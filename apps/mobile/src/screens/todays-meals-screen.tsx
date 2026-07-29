@@ -14,7 +14,7 @@ import { ApiClientError } from '@elev9/api-client';
 import type {
   Meal,
   NutritionRecommendation,
-  TodayNutrition,
+  NutritionReadModel,
 } from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
@@ -63,7 +63,7 @@ const tokens = {
 export function TodaysMealsScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [todayNutrition, setTodayNutrition] = useState<TodayNutrition | null>(
+  const [todayNutrition, setTodayNutrition] = useState<NutritionReadModel | null>(
     null,
   );
   const [recommendations, setRecommendations] = useState<
@@ -406,7 +406,7 @@ function TodaysMealsStateView({
 }
 
 function buildTodaysMealsModel(input: {
-  todayNutrition: TodayNutrition;
+  todayNutrition: NutritionReadModel;
   recommendations: NutritionRecommendation[];
 }): TodaysMealsModel {
   const { todayNutrition, recommendations } = input;
@@ -448,7 +448,7 @@ function buildTodaysMealsModel(input: {
 
 function buildMealTimelineItem(
   meal: Meal,
-  nutrition: TodayNutrition,
+  nutrition: NutritionReadModel,
 ): MealTimelineItem {
   const status = getMealTimelineStatus(meal, nutrition);
   const badgeVariant = getBadgeVariant(status);
@@ -468,7 +468,7 @@ function buildMealTimelineItem(
 
 function getMealTimelineStatus(
   meal: Meal,
-  nutrition: TodayNutrition,
+  nutrition: NutritionReadModel,
 ): MealTimelineStatus {
   if (nutrition.nextMeal?.id === meal.id) {
     return 'Next';
@@ -504,7 +504,7 @@ function getBadgeVariant(status: MealTimelineStatus): BadgeVariant {
 }
 
 function getHeroMessage(
-  nutrition: TodayNutrition,
+  nutrition: NutritionReadModel,
   completedMeals: number,
   remainingMeals: number,
 ): string {
@@ -520,7 +520,7 @@ function getHeroMessage(
 }
 
 function getCoachNutritionNote(
-  nutrition: TodayNutrition,
+  nutrition: NutritionReadModel,
   recommendations: NutritionRecommendation[],
 ): string {
   const recommendation = recommendations

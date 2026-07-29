@@ -102,88 +102,15 @@ export class DashboardAdaptiveSignalsService {
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>,
     recoveryTrend: GetHomeDashboardOutput['dashboard']['recovery']['recoveryTrend'],
   ): GetHomeDashboardOutput['dashboard']['nutritionGuidance'] {
-    const latestCheckIn = healthContext.latestCheckIn;
-    const nutritionProfile = healthContext.nutritionProfile;
-    const hasLowSleep = latestCheckIn ? latestCheckIn.sleepQuality <= 2 : false;
-    const hasHighSoreness = latestCheckIn
-      ? latestCheckIn.muscleSoreness >= 4
-      : false;
-    const hasLowMotivation = latestCheckIn
-      ? latestCheckIn.motivationLevel <= 2
-      : false;
-    const hasHighMotivation = latestCheckIn
-      ? latestCheckIn.motivationLevel >= 4
-      : false;
-    const hasLowMealFrequency = nutritionProfile
-      ? nutritionProfile.mealsPerDay <= 2
-      : false;
-    const hasLowConsistencySignal =
-      hasLowMealFrequency ||
-      hasLowMotivation ||
-      healthContext.adherenceScore < 50;
-
-    if (
-      healthContext.fatigueLevel === 'HIGH' ||
-      recoveryTrend === 'needs_recovery' ||
-      hasLowSleep ||
-      hasHighSoreness
-    ) {
-      const signals = this.collectSignals([
-        healthContext.fatigueLevel === 'HIGH' ? 'high_fatigue' : null,
-        hasLowSleep ? 'poor_sleep' : null,
-        hasHighSoreness ? 'high_soreness' : null,
-        recoveryTrend === 'needs_recovery' ? 'needs_recovery_trend' : null,
-      ]);
-
-      return {
-        priority: 'recovery',
-        message: 'Focus on recovery meals and hydration today.',
-        signals,
-      };
-    }
-
-    if (
-      nutritionProfile?.goal === 'muscle_gain' &&
-      healthContext.fatigueLevel === 'LOW' &&
-      hasHighMotivation
-    ) {
-      const signals = this.collectSignals([
-        'muscle_gain_goal',
-        'high_motivation',
-        'low_fatigue',
-      ]);
-
-      return {
-        priority: 'performance',
-        message:
-          "Support today's training with consistent meals around your session.",
-        signals,
-      };
-    }
-
-    if (hasLowConsistencySignal) {
-      const signals = this.collectSignals([
-        hasLowMealFrequency ? 'low_meal_frequency' : null,
-        hasLowMotivation ? 'low_motivation' : null,
-        healthContext.adherenceScore < 50 ? 'low_consistency' : null,
-      ]);
-
-      return {
-        priority: 'consistency',
-        message:
-          'Keep your meals consistent today to support recovery and routine.',
-        signals,
-      };
-    }
-
+    void recoveryTrend;
+    const nutrition = healthContext.nutritionContext;
     return {
-      priority: 'consistency',
-      message: nutritionProfile
-        ? "Stay consistent with your meals to support today's training rhythm."
-        : 'Keep your nutrition routine consistent today.',
-      signals: nutritionProfile
-        ? ['consistent_meal_rhythm']
-        : ['general_consistency'],
+      priority: nutrition?.focus?.priority === 'high' ? 'performance' : 'consistency',
+      message:
+        nutrition?.focus?.message ??
+        nutrition?.insight?.message ??
+        'Keep your nutrition routine consistent today.',
+      signals: nutrition ? ['canonical_nutrition_context'] : ['nutrition_unavailable'],
     };
   }
 

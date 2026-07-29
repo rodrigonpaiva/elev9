@@ -9,9 +9,9 @@ import {
   WorkoutLogRepository,
 } from '../../../../progress/domain/repositories/workout-log.repository';
 import {
-  NUTRITION_RECOMMENDATION_REPOSITORY,
-  NutritionRecommendationRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-recommendation.repository';
+  NUTRITION_NOTIFICATION_SIGNALS_PORT,
+  NotificationNutritionSignals,
+} from '../../../../nutrition/application/ports/nutrition-consumer.ports';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
@@ -78,7 +78,6 @@ import { BuildNotificationDecisionOutput } from './build-notification-decision.o
 
 const RECENT_WINDOW_DAYS = 7;
 const RECENT_ENGAGEMENT_EVENT_LIMIT = 20;
-const RECENT_NUTRITION_RECOMMENDATION_LIMIT = 1;
 const DEFAULT_NEUTRAL_SCORE = 50;
 const MILESTONE_CLOSE_THRESHOLD = 10;
 const NOTIFICATION_ENGINE_CALCULATOR_VERSION = 'notification-engine-v1';
@@ -118,8 +117,10 @@ export class BuildNotificationDecisionUseCase {
     private readonly goalProgressSnapshotRepository: GoalProgressSnapshotRepository,
     @Inject(GOAL_MILESTONE_REPOSITORY)
     private readonly goalMilestoneRepository: GoalMilestoneRepository,
-    @Inject(NUTRITION_RECOMMENDATION_REPOSITORY)
-    private readonly nutritionRecommendationRepository: NutritionRecommendationRepository,
+    @Inject(NUTRITION_NOTIFICATION_SIGNALS_PORT)
+    private readonly nutritionSignalsPort: {
+      getNotificationSignals(input: { authUserId: string }): Promise<NotificationNutritionSignals>;
+    },
     @Inject(FITNESS_PROFILE_REPOSITORY)
     private readonly fitnessProfileRepository: FitnessProfileRepository,
     @Inject(TRAINING_PLAN_REPOSITORY)
@@ -193,11 +194,9 @@ export class BuildNotificationDecisionUseCase {
       const goalMilestones = activeGoal
         ? await this.goalMilestoneRepository.findManyByGoalId(activeGoal.id)
         : [];
-      const latestNutritionRecommendation =
-        await this.nutritionRecommendationRepository.findManyByUserProfileId(
-          userProfile.id,
-          RECENT_NUTRITION_RECOMMENDATION_LIMIT,
-        );
+      const nutritionSignals = await this.nutritionSignalsPort.getNotificationSignals({
+        authUserId,
+      });
       const fitnessProfile =
         await this.fitnessProfileRepository.findActiveByUserProfileId(
           userProfile.id,
@@ -231,7 +230,7 @@ export class BuildNotificationDecisionUseCase {
         hasActiveTrainingPlan: Boolean(activeTrainingPlan),
       });
       const nutritionAdherence = this.resolveNutritionAdherence(
-        latestNutritionRecommendation[0]?.contextSnapshot?.adherenceScore,
+        nutritionSignals.adherencePercentage ?? undefined,
       );
       const goalProgressTrend = goalProgressSnapshot?.trend.value;
       const goalAchievementReached = Boolean(

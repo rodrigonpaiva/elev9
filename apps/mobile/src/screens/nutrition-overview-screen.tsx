@@ -8,7 +8,7 @@ import { ApiClientError } from '@elev9/api-client';
 import type {
   GetCurrentNutritionPlanResponse,
   NutritionRecommendation,
-  TodayNutrition,
+  NutritionReadModel,
 } from '@elev9/types';
 import { Button, Text } from '@elev9/ui';
 
@@ -18,7 +18,7 @@ import type { RootStackParamList } from '../navigation/app-navigator';
 type NutritionPlan = GetCurrentNutritionPlanResponse['nutritionPlan'];
 
 type NutritionState = {
-  todayNutrition: TodayNutrition | null;
+  todayNutrition: NutritionReadModel | null;
   nutritionPlan: NutritionPlan | null;
   recommendations: NutritionRecommendation[];
 };
@@ -420,7 +420,7 @@ function NutritionOverviewStateView({
 }
 
 function buildNutritionOverviewModel(input: {
-  todayNutrition: TodayNutrition;
+  todayNutrition: NutritionReadModel;
 }): NutritionOverviewModel {
   const { todayNutrition } = input;
   const targets = todayNutrition.macroTargets;
@@ -473,7 +473,7 @@ function buildNutritionOverviewModel(input: {
 }
 
 function getHeroTitle(
-  nutrition: TodayNutrition,
+  nutrition: NutritionReadModel,
 ): string {
   if (nutrition.progress.adherenceStatus === 'within_range') {
     return 'Nutrition On Track';
@@ -482,20 +482,20 @@ function getHeroTitle(
   return 'Nutrition Focus Today';
 }
 
-function getHeroMessage(nutrition: TodayNutrition): string {
+function getHeroMessage(nutrition: NutritionReadModel): string {
   return nutrition.insight.message;
 }
 
-function getCoachInsight(nutrition: TodayNutrition): string {
+function getCoachInsight(nutrition: NutritionReadModel): string {
   return nutrition.insight.message;
 }
 
-function formatAdherenceStatus(status: TodayNutrition['progress']['adherenceStatus']): string {
+function formatAdherenceStatus(status: NonNullable<NutritionReadModel['progress']>['adherenceStatus']): string {
   return status.replace('_', ' ');
 }
 
 function getMealTimeLabel(
-  type: TodayNutrition['meals'][number]['type'],
+  type: NonNullable<NutritionReadModel['meals']>[number]['type'],
 ): string | null {
   switch (type) {
     case 'breakfast':

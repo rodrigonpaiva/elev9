@@ -297,9 +297,7 @@ function buildAggregateFixture(): CoachIntelligenceAggregate {
         availability: sectionAvailability.nutrition,
         freshness: sectionFreshness.nutrition,
         data: {
-          todayNutrition: null,
-          nutritionPlan: null,
-          nutritionRecommendation: null,
+          nutritionContext: null,
         },
         warnings: [],
       },

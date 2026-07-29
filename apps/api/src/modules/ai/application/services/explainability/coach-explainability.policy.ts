@@ -178,21 +178,6 @@ export class CoachExplainabilityPolicy {
 
     evidences.push(
       this.createEvidence({
-        type: 'NUTRITION_PROFILE',
-        source: 'HEALTH_CONTEXT',
-        importance: input.healthContext.nutritionProfile ? 'HIGH' : 'MEDIUM',
-        confidence: input.healthContext.nutritionProfile ? 'HIGH' : 'UNKNOWN',
-        availability: input.healthContext.nutritionProfile
-          ? 'AVAILABLE'
-          : 'MISSING',
-        metadata: {
-          hasNutritionProfile: Boolean(input.healthContext.nutritionProfile),
-        },
-      }),
-    );
-
-    evidences.push(
-      this.createEvidence({
         type: 'GOAL_PROGRESS',
         source: 'HEALTH_CONTEXT',
         importance:
@@ -651,7 +636,7 @@ export class CoachExplainabilityPolicy {
       );
     }
 
-    if (!input.healthContext.nutritionProfile) {
+    if (!input.healthContext.nutritionContext) {
       missingEvidence.push(
         this.createMissingEvidence({
           type: 'NUTRITION_PROFILE_MISSING',

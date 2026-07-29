@@ -1163,14 +1163,8 @@ export class AgentRuntimeService {
       ...(input.context.recoveryHistory
         ? { recoveryHistory: input.context.recoveryHistory }
         : {}),
-      ...(input.context.nutritionPlan
-        ? { nutritionPlan: input.context.nutritionPlan }
-        : {}),
-      ...(input.context.todayNutrition
-        ? { todayNutrition: input.context.todayNutrition }
-        : {}),
-      ...(input.context.nutritionLogs
-        ? { nutritionLogs: input.context.nutritionLogs }
+      ...(input.context.nutritionContext
+        ? { nutritionContext: input.context.nutritionContext }
         : {}),
       ...(input.context.habit ? { habit: input.context.habit } : {}),
       ...(input.context.habitHistory

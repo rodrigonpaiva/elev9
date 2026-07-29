@@ -26,11 +26,6 @@ import {
 } from '../../../../progress/domain/services/clock.service';
 import { PlatformDateService } from '../../../../../shared/date/platform-date.service';
 import {
-  NUTRITION_PROFILE_REPOSITORY,
-  NutritionProfileRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-profile.repository';
-import { NutritionProfile } from '../../../../nutrition/domain/entities/nutrition-profile.entity';
-import {
   RECOVERY_SNAPSHOT_REPOSITORY,
   RecoverySnapshotRepository,
 } from '../../../../recovery/domain/repositories/recovery-snapshot.repository';
@@ -81,15 +76,6 @@ export type UserHealthContextTodayWorkout = {
 };
 
 export type FatigueLevel = 'LOW' | 'MODERATE' | 'HIGH';
-
-export type UserHealthContextNutritionProfile = {
-  goal: 'fat_loss' | 'maintenance' | 'muscle_gain';
-  mealsPerDay: number;
-  dietaryRestrictions: string[];
-  allergies: string[];
-  dislikedFoods: string[];
-  preferredFoods: string[];
-};
 
 export type UserHealthContextRecoverySnapshot = {
   date: string;
@@ -146,7 +132,6 @@ export type UserHealthContext = {
   recoveryInfluences?: RecoveryInfluence[];
   recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
   recommendedIntensity?: RecoverySnapshot['recommendedIntensity'];
-  nutritionProfile?: UserHealthContextNutritionProfile;
   /** Canonical Nutrition facts for Coach consumers. */
   nutritionContext?: CoachNutritionContext;
   recentWorkoutLogs: WorkoutLog[];
@@ -180,8 +165,6 @@ export class BuildUserHealthContextService {
     private readonly dailyCheckInRepository: DailyCheckInRepository,
     @Inject(WORKOUT_LOG_REPOSITORY)
     private readonly workoutLogRepository: WorkoutLogRepository,
-    @Inject(NUTRITION_PROFILE_REPOSITORY)
-    private readonly nutritionProfileRepository: NutritionProfileRepository,
     @Inject(RECOVERY_SNAPSHOT_REPOSITORY)
     private readonly recoverySnapshotRepository: RecoverySnapshotRepository,
     private readonly getCurrentAdaptiveTrainingUseCase: GetCurrentAdaptiveTrainingUseCase,
@@ -233,10 +216,6 @@ export class BuildUserHealthContextService {
         );
       const fitnessProfile =
         await this.fitnessProfileRepository.findActiveByUserProfileId(
-          userProfile.id,
-        );
-      const nutritionProfile =
-        await this.nutritionProfileRepository.findActiveByUserProfileId(
           userProfile.id,
         );
       const nutritionContext = await this.resolveNutritionContext(authUserId);
@@ -300,16 +279,6 @@ export class BuildUserHealthContextService {
           ? this.mapRecoveryTrend(recoverySnapshot.recoveryTrend)
           : undefined,
         recommendedIntensity: recoverySnapshot?.recommendedIntensity,
-        nutritionProfile: nutritionProfile
-          ? {
-              goal: nutritionProfile.goal,
-              mealsPerDay: nutritionProfile.mealsPerDay,
-              dietaryRestrictions: nutritionProfile.dietaryRestrictions ?? [],
-              allergies: nutritionProfile.allergies ?? [],
-              dislikedFoods: nutritionProfile.dislikedFoods ?? [],
-              preferredFoods: nutritionProfile.preferredFoods ?? [],
-            }
-          : undefined,
         nutritionContext,
       };
 
@@ -397,22 +366,16 @@ export class BuildUserHealthContextService {
 
     let fitnessProfile: FitnessProfile | null = null;
     let latestCheckIn: DailyCheckIn | null = null;
-    let nutritionProfile: NutritionProfile | null = null;
     let recoverySnapshot: RecoverySnapshot | null = null;
 
     if (shouldLoadFitnessProfile) {
-      [fitnessProfile, latestCheckIn, nutritionProfile, recoverySnapshot] =
+      [fitnessProfile, latestCheckIn, recoverySnapshot] =
         await Promise.all([
           this.fitnessProfileRepository.findActiveByUserProfileId(
             userProfile.id,
           ),
           shouldLoadRecovery
             ? this.dailyCheckInRepository.findLatestByUserProfileId(
-                userProfile.id,
-              )
-            : Promise.resolve(null),
-          shouldLoadNutrition
-            ? this.nutritionProfileRepository.findActiveByUserProfileId(
                 userProfile.id,
               )
             : Promise.resolve(null),
@@ -423,14 +386,9 @@ export class BuildUserHealthContextService {
             : Promise.resolve(null),
         ]);
     } else {
-      [latestCheckIn, nutritionProfile, recoverySnapshot] = await Promise.all([
+      [latestCheckIn, recoverySnapshot] = await Promise.all([
         shouldLoadRecovery
           ? this.dailyCheckInRepository.findLatestByUserProfileId(
-              userProfile.id,
-            )
-          : Promise.resolve(null),
-        shouldLoadNutrition
-          ? this.nutritionProfileRepository.findActiveByUserProfileId(
               userProfile.id,
             )
           : Promise.resolve(null),
@@ -480,17 +438,6 @@ export class BuildUserHealthContextService {
       context.recoveryExperience = await this.resolveRecoveryExperience({
         authUserId,
       });
-    }
-
-    if (nutritionProfile) {
-      context.nutritionProfile = {
-        goal: nutritionProfile.goal,
-        mealsPerDay: nutritionProfile.mealsPerDay,
-        dietaryRestrictions: nutritionProfile.dietaryRestrictions ?? [],
-        allergies: nutritionProfile.allergies ?? [],
-        dislikedFoods: nutritionProfile.dislikedFoods ?? [],
-        preferredFoods: nutritionProfile.preferredFoods ?? [],
-      };
     }
 
     if (shouldLoadNutrition) {

@@ -224,14 +224,6 @@ export class AiEvaluationRunnerService {
         motivationLevel: 4,
         createdAt: now,
       },
-      nutritionProfile: {
-        goal: 'muscle_gain',
-        mealsPerDay: 4,
-        dietaryRestrictions: [],
-        allergies: [],
-        dislikedFoods: [],
-        preferredFoods: ['protein'],
-      },
     };
   }
 

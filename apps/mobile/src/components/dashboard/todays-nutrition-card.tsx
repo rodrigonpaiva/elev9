@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import type {
   NutritionAction,
   NutritionAvailability,
-  TodayNutrition,
+  NutritionReadModel,
 } from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
@@ -17,7 +17,7 @@ import {
 } from './todays-nutrition-card-model';
 
 type TodaysNutritionCardProps = {
-  todayNutrition: TodayNutrition | null;
+  todayNutrition: NutritionReadModel | null;
   isLoading: boolean;
   errorMessage?: string | null;
   onRetry: () => void;

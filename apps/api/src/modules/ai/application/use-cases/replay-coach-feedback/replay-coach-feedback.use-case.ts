@@ -161,16 +161,6 @@ export class ReplayCoachFeedbackUseCase {
       hasTrainingPlan: snapshot.hasTrainingPlan,
       fatigueLevel: snapshot.fatigueLevel,
       latestCheckIn: snapshot.latestCheckIn,
-      nutritionProfile: snapshot.nutritionProfile
-        ? {
-            goal: snapshot.nutritionProfile.goal,
-            mealsPerDay: snapshot.nutritionProfile.mealsPerDay,
-            dietaryRestrictions: [],
-            allergies: [],
-            dislikedFoods: [],
-            preferredFoods: [],
-          }
-        : undefined,
     };
   }
 

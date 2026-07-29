@@ -170,6 +170,12 @@ describe('CoachChatContextLoaderService', () => {
     nutritionLogRepository = {
       findByUserProfileIdAndDate: jest.fn(),
     };
+    const nutritionContextPort = {
+      execute: jest.fn().mockResolvedValue({
+        todayNutrition: null,
+        availability: 'not_available',
+      }),
+    };
 
     service = new CoachChatContextLoaderService(
       userProfileRepository as unknown as UserProfileRepository,
@@ -189,12 +195,10 @@ describe('CoachChatContextLoaderService', () => {
       getCurrentPersonalizationUseCase as unknown as GetCurrentPersonalizationUseCase,
       getUserBehaviorProfileUseCase as unknown as GetUserBehaviorProfileUseCase,
       getBehavioralPatternsUseCase as unknown as GetBehavioralPatternsUseCase,
-      getCurrentNutritionPlanUseCase as unknown as GetCurrentNutritionPlanUseCase,
-      getTodayNutritionUseCase as unknown as GetTodayNutritionUseCase,
       getDailyCheckInHistoryUseCase as unknown as GetDailyCheckInHistoryUseCase,
       getWorkoutHistoryUseCase as unknown as GetWorkoutHistoryUseCase,
       getProgressSummaryUseCase as unknown as GetProgressSummaryUseCase,
-      nutritionLogRepository as unknown as NutritionLogRepository,
+      nutritionContextPort as unknown as NutritionCoachContextPort,
     );
   });
 
@@ -206,7 +210,21 @@ describe('CoachChatContextLoaderService', () => {
       goal: 'muscle_gain',
       fatigueLevel: 'LOW',
       recoveryTrend: 'improving',
-      nutritionProfile: { goal: 'muscle_gain', mealsPerDay: 4 },
+      nutritionContext: {
+        source: 'nutrition_read_model',
+        contractVersion: 'nutrition-read-model-v1',
+        availability: 'available',
+        freshness: 'current',
+        lastUpdatedAt: '2026-07-07T08:00:00.000Z',
+        timezone: 'UTC',
+        calories: null,
+        macros: [],
+        meals: null,
+        adherenceStatus: 'within_range',
+        focus: null,
+        insight: null,
+        actions: [{ type: 'none' }],
+      },
       recentWorkoutLogs: [],
       currentStreak: 3,
     } as never);
@@ -581,9 +599,9 @@ describe('CoachChatContextLoaderService', () => {
     expect(result.progress?.workoutHistory).toHaveLength(1);
     expect(result.progress?.dailyCheckInHistory).toHaveLength(1);
     expect(result.coachDecision).toMatchObject({ priority: 'training' });
-    expect(result.nutritionPlan).toMatchObject({ id: 'nutrition_plan_123' });
-    expect(result.todayNutrition).toMatchObject({ date: '2026-07-07' });
-    expect(result.nutritionLogs).toEqual([]);
+    expect(result.nutritionContext).toMatchObject({
+      availability: 'available',
+    });
     expect(result.notification).toMatchObject({
       current: { type: 'coach_nudge', suppressed: false },
     });

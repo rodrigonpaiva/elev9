@@ -45,14 +45,6 @@ describe('AiPromptBuilder', () => {
           motivationLevel: 3,
           createdAt: new Date('2026-05-18T09:00:00.000Z'),
         },
-        nutritionProfile: {
-          goal: 'muscle_gain',
-          mealsPerDay: 4,
-          dietaryRestrictions: ['gluten_free'],
-          allergies: ['peanuts'],
-          dislikedFoods: ['broccoli'],
-          preferredFoods: ['rice', 'eggs'],
-        },
       },
       conversationHistory: [
         {
@@ -76,7 +68,7 @@ describe('AiPromptBuilder', () => {
     expect(prompt.promptVersion).toBe('coach-chat-prompt-v1');
     expect(joined).toContain('Do not make medical claims');
     expect(joined).toContain('fatigue level: HIGH');
-    expect(joined).toContain('nutrition goal: muscle_gain');
+    expect(joined).toContain('nutrition context: unavailable');
     expect(joined).toContain('recent workout logs');
     expect(joined).toContain('What should I train?');
     expect(joined).not.toContain('auth_user_123');
@@ -310,14 +302,6 @@ describe('AiPromptBuilder', () => {
           motivationLevel: 3,
           createdAt: new Date('2026-05-18T09:00:00.000Z'),
         },
-        nutritionProfile: {
-          goal: 'muscle_gain',
-          mealsPerDay: 4,
-          dietaryRestrictions: ['gluten_free'],
-          allergies: ['peanuts'],
-          dislikedFoods: ['broccoli'],
-          preferredFoods: ['rice', 'eggs'],
-        },
       },
       conversationHistory: [
         {
@@ -340,7 +324,7 @@ describe('AiPromptBuilder', () => {
     expect(snapshot.context).toEqual({
       fatigueLevel: 'HIGH',
       recoveryTrend: 'needs_recovery',
-      hasNutritionProfile: true,
+      hasNutritionProfile: false,
       hasLatestCheckIn: true,
       recentWorkoutCount: 1,
       recentConversationMessages: 1,
@@ -378,19 +362,11 @@ describe('AiPromptBuilder', () => {
           motivationLevel: 3,
           createdAt: new Date('2026-05-18T09:00:00.000Z'),
         },
-        nutritionProfile: {
-          goal: 'muscle_gain',
-          mealsPerDay: 4,
-          dietaryRestrictions: ['gluten_free'],
-          allergies: ['peanuts'],
-          dislikedFoods: ['broccoli'],
-          preferredFoods: ['rice', 'eggs'],
-        },
       },
       conversationHistory: [],
       conversationMemory: {
         summary:
-          'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
+          'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
         metadata: {
           generatedFromMessageCount: 4,
           version: 'memory-v1',
@@ -423,19 +399,11 @@ describe('AiPromptBuilder', () => {
           motivationLevel: 3,
           createdAt: new Date('2026-05-18T09:00:00.000Z'),
         },
-        nutritionProfile: {
-          goal: 'muscle_gain',
-          mealsPerDay: 4,
-          dietaryRestrictions: ['gluten_free'],
-          allergies: ['peanuts'],
-          dislikedFoods: ['broccoli'],
-          preferredFoods: ['rice', 'eggs'],
-        },
       },
       conversationHistory: [],
       conversationMemory: {
         summary:
-          'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
+          'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
         metadata: {
           generatedFromMessageCount: 4,
           version: 'memory-v1',
@@ -454,7 +422,7 @@ describe('AiPromptBuilder', () => {
       version: 'memory-v1',
       generatedFromMessageCount: 4,
       summaryPreview:
-        'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
+        'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
     });
   });
 
@@ -485,14 +453,6 @@ describe('AiPromptBuilder', () => {
           muscleSoreness: 4,
           motivationLevel: 3,
           createdAt: new Date('2026-05-18T09:00:00.000Z'),
-        },
-        nutritionProfile: {
-          goal: 'muscle_gain',
-          mealsPerDay: 4,
-          dietaryRestrictions: ['gluten_free'],
-          allergies: ['peanuts'],
-          dislikedFoods: ['broccoli'],
-          preferredFoods: ['rice', 'eggs'],
         },
       },
       conversationHistory: [],

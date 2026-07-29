@@ -23,11 +23,7 @@ import type {
   NotificationDecision,
   NotificationEngagementSummary,
 } from '../notifications';
-import type {
-  NutritionPlan,
-  NutritionRecommendation,
-  TodayNutrition,
-} from '../nutrition';
+import type { NutritionReadModel } from '../nutrition';
 import type { RecoverySnapshot } from '../recovery';
 import type { DailyCheckInSummary, ProgressSummaryResponse } from '../progress';
 
@@ -384,9 +380,7 @@ export interface CoachTrainingSection {
 }
 
 export interface CoachNutritionSection {
-  todayNutrition: TodayNutrition | null;
-  nutritionPlan: NutritionPlan | null;
-  nutritionRecommendation: NutritionRecommendation | null;
+  nutritionContext: NutritionReadModel | null;
 }
 
 export interface CoachRecoverySection {

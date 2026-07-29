@@ -167,15 +167,6 @@ export class AgentContextOrchestratorService {
       ...(input.loadedContext.recoveryHistory
         ? { recoveryHistory: input.loadedContext.recoveryHistory }
         : {}),
-      ...(input.loadedContext.nutritionPlan
-        ? { nutritionPlan: input.loadedContext.nutritionPlan }
-        : {}),
-      ...(input.loadedContext.todayNutrition
-        ? { todayNutrition: input.loadedContext.todayNutrition }
-        : {}),
-      ...(input.loadedContext.nutritionLogs
-        ? { nutritionLogs: input.loadedContext.nutritionLogs }
-        : {}),
       ...(input.loadedContext.nutritionContext
         ? { nutritionContext: input.loadedContext.nutritionContext }
         : {}),

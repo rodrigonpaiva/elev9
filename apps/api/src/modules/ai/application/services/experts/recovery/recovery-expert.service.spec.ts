@@ -37,21 +37,11 @@ describe('RecoveryExpert', () => {
         reasoning: 'Stable workload.',
         influences: [],
       },
-      nutritionProfile: {
-        goal: 'muscle_gain',
-        mealsPerDay: 4,
-        dietaryRestrictions: [],
-        allergies: [],
-        dislikedFoods: [],
-        preferredFoods: ['rice'],
-      },
       recentWorkoutLogs: [buildWorkoutLog()],
     });
     const context = buildContext({
       request,
       healthContext,
-      todayNutrition: buildTodayNutrition(100),
-      nutritionLogs: [buildNutritionLog('consumed')],
       recoveryHistory: [
         buildRecoverySnapshot({
           readinessScore: 82,
@@ -67,26 +57,26 @@ describe('RecoveryExpert', () => {
     const result = expert.analyze(request, loadedContext);
 
     expect(loadedContext.runtimeMetadata.recoveryExpert).toMatchObject({
-      recoveryStatus: 'OPTIMAL',
+      recoveryStatus: 'GOOD',
       readinessLevel: 'HIGH',
       trend: 'IMPROVING',
       trainingImpact: 'FULL_SESSION',
       confidence: 'HIGH',
     });
-    expect(result.summary).toContain('status=OPTIMAL');
+    expect(result.summary).toContain('status=GOOD');
     expect(result.metadata).toMatchObject({
       priority: 'LOW',
       confidence: 'HIGH',
       analysis: expect.objectContaining({
-        recoveryStatus: 'OPTIMAL',
+        recoveryStatus: 'GOOD',
         trend: expect.objectContaining({ trend: 'IMPROVING' }),
-        nutritionSupport: expect.objectContaining({ level: 'SUPPORTIVE' }),
+        nutritionSupport: expect.objectContaining({ level: 'UNKNOWN' }),
         goalAlignment: 'strength',
       }),
     });
     expect(result.contributions[1]).toMatchObject({
       type: 'CONTRIBUTION',
-      summary: 'Maintain recovery routine.',
+      summary: 'Prioritize hydration.',
     });
   });
 
@@ -120,21 +110,8 @@ describe('RecoveryExpert', () => {
           reasoning: 'Current recovery does not support intensity.',
           influences: [],
         },
-        nutritionProfile: {
-          goal: 'maintenance',
-          mealsPerDay: 4,
-          dietaryRestrictions: [],
-          allergies: [],
-          dislikedFoods: [],
-          preferredFoods: [],
-        },
         recentWorkoutLogs: [buildWorkoutLog()],
       }),
-      todayNutrition: buildTodayNutrition(72),
-      nutritionLogs: [
-        buildNutritionLog('consumed'),
-        buildNutritionLog('partial'),
-      ],
       recoveryHistory: [
         buildRecoverySnapshot({
           readinessScore: 46,
@@ -153,9 +130,7 @@ describe('RecoveryExpert', () => {
     expect(result.metadata.analysis.trainingImpact.impact).toBe(
       'REDUCED_INTENSITY',
     );
-    expect(result.metadata.analysis.nutritionSupport.level).toBe(
-      'INSUFFICIENT',
-    );
+    expect(result.metadata.analysis.nutritionSupport.level).toBe('UNKNOWN');
     expect(
       result.metadata.analysis.recommendations.map(
         (recommendation) => recommendation.code,
@@ -256,21 +231,8 @@ describe('RecoveryExpert', () => {
           recoveryTrend: 'declining',
           recommendedIntensity: 'recovery',
         }),
-        nutritionProfile: {
-          goal: 'fat_loss',
-          mealsPerDay: 3,
-          dietaryRestrictions: [],
-          allergies: [],
-          dislikedFoods: [],
-          preferredFoods: [],
-        },
         recentWorkoutLogs: [],
       }),
-      todayNutrition: buildTodayNutrition(38),
-      nutritionLogs: [
-        buildNutritionLog('skipped'),
-        buildNutritionLog('skipped'),
-      ],
       recoveryHistory: [
         buildRecoverySnapshot({
           readinessScore: 30,
@@ -332,18 +294,8 @@ describe('RecoveryExpert', () => {
           reasoning: 'Steady workload.',
           influences: [],
         },
-        nutritionProfile: {
-          goal: 'fat_loss',
-          mealsPerDay: 3,
-          dietaryRestrictions: [],
-          allergies: [],
-          dislikedFoods: [],
-          preferredFoods: [],
-        },
         recentWorkoutLogs: [],
       }),
-      todayNutrition: buildTodayNutrition(84),
-      nutritionLogs: [buildNutritionLog('consumed')],
       recoveryHistory: [],
     });
 
@@ -485,14 +437,6 @@ function buildHealthContext(
     recoveryInfluences: [],
     recoveryTrend: undefined,
     recommendedIntensity: undefined,
-    nutritionProfile: {
-      goal: 'maintenance',
-      mealsPerDay: 3,
-      dietaryRestrictions: [],
-      allergies: [],
-      dislikedFoods: [],
-      preferredFoods: [],
-    },
     recentWorkoutLogs: [],
     generatedAt: new Date('2026-07-07T07:30:00.000Z'),
     ...overrides,
@@ -542,47 +486,6 @@ function buildRecoverySnapshot(
       } as never),
     createdAt: overrides.createdAt ?? new Date('2026-07-07T07:30:00.000Z'),
   };
-}
-
-function buildTodayNutrition(adherencePercentage: number) {
-  return {
-    date: '2026-07-07',
-    macroTargets: {
-      calories: 2200,
-      proteinGrams: 150,
-      carbsGrams: 240,
-      fatGrams: 70,
-    },
-    meals: [],
-    progress: {
-      consumedCalories: adherencePercentage >= 100 ? 2200 : 1600,
-      consumedProteinGrams: adherencePercentage >= 100 ? 150 : 110,
-      consumedCarbsGrams: adherencePercentage >= 100 ? 240 : 170,
-      consumedFatGrams: adherencePercentage >= 100 ? 70 : 52,
-      targetCalories: 2200,
-      targetProteinGrams: 150,
-      targetCarbsGrams: 240,
-      targetFatGrams: 70,
-      adherencePercentage,
-    },
-    nextMeal: null,
-    nutritionFocus: 'Focus on recovery nutrition consistency.',
-  } as never;
-}
-
-function buildNutritionLog(status: 'consumed' | 'partial' | 'skipped') {
-  return {
-    id: `nutrition_log_${status}`,
-    userProfileId: 'profile_123',
-    nutritionPlanId: 'nutrition_plan_123',
-    mealId: `meal_${status}`,
-    date: '2026-07-07',
-    mealType: 'breakfast',
-    status,
-    actualMacros: undefined,
-    createdAt: new Date('2026-07-07T08:00:00.000Z'),
-    updatedAt: new Date('2026-07-07T08:00:00.000Z'),
-  } as never;
 }
 
 function buildWorkoutLog() {

@@ -19,10 +19,7 @@ import type {
 } from './coach-intelligence.types';
 import { CoachIntelligenceFreshnessPolicy } from './coach-intelligence.policy';
 import type { CoachIntelligenceAvailabilityReasonCode } from '@elev9/types';
-import type {
-  NutritionLog as CoachNutritionLog,
-  RecoverySnapshot as CoachRecoverySnapshot,
-} from '@elev9/types';
+import type { RecoverySnapshot as CoachRecoverySnapshot } from '@elev9/types';
 import type {
   Goal as CoachGoal,
   GoalAchievement as CoachGoalAchievement,
@@ -51,19 +48,12 @@ import {
 import { TrainingPlan } from '../../../../training/domain/entities/training-plan.entity';
 import { AdaptiveTrainingRecommendation } from '../../../../training/domain/entities/adaptive-training-recommendation.entity';
 import { GetCurrentAdaptiveTrainingUseCase } from '../../../../training/application/use-cases/get-current-adaptive-training/get-current-adaptive-training.use-case';
-import { Meal } from '../../../../nutrition/domain/entities/meal.entity';
-import { NutritionPlan } from '../../../../nutrition/domain/entities/nutrition-plan.entity';
-import { NutritionRecommendation } from '../../../../nutrition/domain/entities/nutrition-recommendation.entity';
-import type { NutritionLog as NutritionLogEntity } from '../../../../nutrition/domain/entities/nutrition-log.entity';
 import type { RecoverySnapshot as RecoverySnapshotEntity } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
 import { GetMyTrainingPlanUseCase } from '../../../../training/application/use-cases/get-my-training-plan/get-my-training-plan.use-case';
-import { GetCurrentNutritionPlanUseCase } from '../../../../nutrition/application/use-cases/get-current-nutrition-plan/get-current-nutrition-plan.use-case';
-import { GetTodayNutritionUseCase } from '../../../../nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.use-case';
-import { GetNutritionRecommendationsUseCase } from '../../../../nutrition/application/use-cases/get-nutrition-recommendations/get-nutrition-recommendations.use-case';
 import {
-  NUTRITION_LOG_REPOSITORY,
-  NutritionLogRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-log.repository';
+  NUTRITION_COACH_CONTEXT_PORT,
+  NutritionCoachContextPort,
+} from '../../../../nutrition/application/ports/nutrition-consumer.ports';
 import type { HabitSnapshot } from '../../../../habits/domain/entities/habit-snapshot.entity';
 import type { NotificationDecisionJSON } from '../../../../notifications/domain/entities/notification-decision.entity';
 import { GetCurrentGoalUseCase } from '../../../../goals/application/use-cases/get-current-goal/get-current-goal.use-case';
@@ -127,11 +117,8 @@ export class CoachIntelligenceSourceAdaptersService {
     private readonly getCurrentCoachDecisionUseCase: GetCurrentCoachDecisionUseCase,
     private readonly getMyTrainingPlanUseCase: GetMyTrainingPlanUseCase,
     private readonly getCurrentAdaptiveTrainingUseCase: GetCurrentAdaptiveTrainingUseCase,
-    private readonly getCurrentNutritionPlanUseCase: GetCurrentNutritionPlanUseCase,
-    private readonly getTodayNutritionUseCase: GetTodayNutritionUseCase,
-    private readonly getNutritionRecommendationsUseCase: GetNutritionRecommendationsUseCase,
-    @Inject(NUTRITION_LOG_REPOSITORY)
-    private readonly nutritionLogRepository: NutritionLogRepository,
+    @Inject(NUTRITION_COACH_CONTEXT_PORT)
+    private readonly nutritionContextPort: NutritionCoachContextPort,
     private readonly getCurrentRecoveryUseCase: GetCurrentRecoveryUseCase,
     private readonly getRecoveryHistoryUseCase: GetRecoveryHistoryUseCase,
     private readonly getCurrentGoalUseCase: GetCurrentGoalUseCase,
@@ -270,16 +257,6 @@ export class CoachIntelligenceSourceAdaptersService {
       ...(recovery.history && recovery.history.length > 0
         ? { recoveryHistory: Object.freeze([...recovery.history]) }
         : {}),
-      ...(nutrition.context?.nutritionPlan
-        ? { nutritionPlan: nutrition.context.nutritionPlan }
-        : {}),
-      ...(nutrition.context?.todayNutrition
-        ? { todayNutrition: nutrition.context.todayNutrition }
-        : {}),
-      ...(nutrition.context?.nutritionLogs &&
-      nutrition.context.nutritionLogs.length > 0
-        ? { nutritionLogs: Object.freeze([...nutrition.context.nutritionLogs]) }
-        : {}),
       ...(healthContext.nutritionContext
         ? { nutritionContext: healthContext.nutritionContext }
         : {}),
@@ -375,7 +352,7 @@ export class CoachIntelligenceSourceAdaptersService {
   }): Promise<
     CoachIntelligenceSectionLoadResult<
       CoachIntelligenceSourceLoadResult['sections']['training']['data']
-    >
+  >
   > {
     return this.loadSection({
       sectionName: 'training',
@@ -438,109 +415,43 @@ export class CoachIntelligenceSourceAdaptersService {
     healthContext: Awaited<ReturnType<BuildUserHealthContextService['build']>>;
     generatedAt: string;
   }): Promise<
-    CoachIntelligenceSectionLoadResultWithExtras<
-      CoachIntelligenceSourceLoadResult['sections']['nutrition']['data'],
-      {
-        logs?: readonly CoachNutritionLog[];
-        context?: Readonly<{
-          nutritionPlan?: NutritionPlan;
-          todayNutrition?: CoachChatLoadedContext['todayNutrition'];
-          nutritionLogs?: readonly NutritionLogEntity[];
-        }>;
-      }
+    CoachIntelligenceSectionLoadResult<
+      CoachIntelligenceSourceLoadResult['sections']['nutrition']['data']
     >
   > {
     return this.loadSection({
       sectionName: 'nutrition',
       generatedAt: input.generatedAt,
       run: async () => {
-        const today = this.platformDateService.getTodayDateString(
-          new Date(input.generatedAt),
-        );
-        const [planResult, todayResult, recommendationResult, logsResult] =
-          await Promise.allSettled([
-            this.getCurrentNutritionPlanUseCase.execute({
-              authUserId: input.authUserId,
-            }),
-            this.getTodayNutritionUseCase.execute({
-              authUserId: input.authUserId,
-            }),
-            this.getNutritionRecommendationsUseCase.execute({
-              authUserId: input.authUserId,
-              limit: 1,
-            }),
-            this.nutritionLogRepository.findByUserProfileIdAndDate(
-              input.userProfileId,
-              today,
-            ),
-          ]);
-
-        const nutritionPlan =
-          planResult.status === 'fulfilled'
-            ? this.mapNutritionPlan(planResult.value.nutritionPlan)
+        const nutritionResult = await this.nutritionContextPort.execute({
+          authUserId: input.authUserId,
+        });
+        const nutritionContext =
+          nutritionResult.availability === 'available'
+            ? nutritionResult.todayNutrition
             : null;
-        const todayNutrition =
-          todayResult.status === 'fulfilled'
-            ? todayResult.value.todayNutrition
-            : null;
-        const nutritionRecommendation =
-          recommendationResult.status === 'fulfilled'
-            ? this.mapNutritionRecommendation(
-                recommendationResult.value.recommendations[0] ?? null,
-              )
-            : null;
-        const nutritionLogs =
-          logsResult.status === 'fulfilled'
-            ? logsResult.value.map((log) => this.mapNutritionLog(log))
-            : [];
-        const context = {
-          ...(planResult.status === 'fulfilled'
-            ? { nutritionPlan: planResult.value.nutritionPlan }
-            : {}),
-          ...(todayResult.status === 'fulfilled'
-            ? { todayNutrition: todayResult.value.todayNutrition }
-            : {}),
-          ...(logsResult.status === 'fulfilled'
-            ? { nutritionLogs: logsResult.value }
-            : {}),
-        };
-        const data =
-          nutritionPlan || todayNutrition || nutritionRecommendation
-            ? {
-                nutritionPlan,
-                todayNutrition,
-                nutritionRecommendation,
-              }
-            : null;
+        const data = nutritionContext ? { nutritionContext } : null;
 
         return {
           data,
           sourceTimestamp: this.resolveLatestTimestamp([
-            nutritionPlan?.updatedAt,
-            nutritionPlan?.replacedAt,
-            nutritionPlan?.createdAt,
-            nutritionRecommendation?.createdAt,
-            todayNutrition?.date
-              ? `${todayNutrition.date}T00:00:00.000Z`
+            undefined,
+            nutritionContext?.date
+              ? `${nutritionContext.date}T00:00:00.000Z`
               : undefined,
           ]),
-          fallbackUsed: Boolean(
-            (planResult.status === 'rejected' ||
-              todayResult.status === 'rejected' ||
-              recommendationResult.status === 'rejected') &&
-            data,
-          ),
-          retryable: this.isRetryable([
-            planResult,
-            todayResult,
-            recommendationResult,
-          ]),
-          reasonCode: this.resolveAvailabilityReasonCode({
-            data,
-            rejected: [planResult, todayResult, recommendationResult],
-          }),
-          logs: Object.freeze([...nutritionLogs]),
-          context,
+          fallbackUsed: nutritionResult.availability !== 'available',
+          retryable:
+            nutritionResult.availability === 'not_available' ||
+            nutritionResult.availability === 'processing_failed',
+          reasonCode:
+            nutritionResult.availability === 'available'
+              ? 'READY'
+              : nutritionResult.availability === 'not_configured'
+                ? 'MISSING_CONTEXT'
+                : nutritionResult.availability === 'insufficient_data'
+                  ? 'PARTIAL_FAILURE'
+                  : 'SOURCE_UNAVAILABLE',
         };
       },
     });
@@ -1434,76 +1345,6 @@ export class CoachIntelligenceSourceAdaptersService {
     };
   }
 
-  private mapNutritionPlan(nutritionPlan: NutritionPlan | null): {
-    id: string;
-    userProfileId: string;
-    nutritionProfileId: string;
-    fitnessProfileId: string;
-    status: 'active' | 'archived' | 'replaced';
-    weekStartDate: string;
-    weekEndDate: string;
-    macroTargets: NutritionPlan['macroTargets'];
-    days: NutritionPlan['days'];
-    generatedBy: 'deterministic';
-    sourceContext?: NutritionPlan['sourceContext'];
-    createdAt: string;
-    updatedAt?: string;
-    replacedAt?: string;
-  } | null {
-    if (!nutritionPlan) {
-      return null;
-    }
-
-    return {
-      id: nutritionPlan.id,
-      userProfileId: nutritionPlan.userProfileId,
-      nutritionProfileId: nutritionPlan.nutritionProfileId,
-      fitnessProfileId: nutritionPlan.fitnessProfileId,
-      status: nutritionPlan.status,
-      weekStartDate: nutritionPlan.weekStartDate,
-      weekEndDate: nutritionPlan.weekEndDate,
-      macroTargets: nutritionPlan.macroTargets,
-      days: [...nutritionPlan.days],
-      generatedBy: nutritionPlan.generatedBy,
-      sourceContext: nutritionPlan.sourceContext,
-      createdAt: this.normalizeDateValue(nutritionPlan.createdAt) ?? '',
-      ...(nutritionPlan.updatedAt
-        ? { updatedAt: this.normalizeDateValue(nutritionPlan.updatedAt) }
-        : {}),
-      ...(nutritionPlan.replacedAt
-        ? { replacedAt: this.normalizeDateValue(nutritionPlan.replacedAt) }
-        : {}),
-    };
-  }
-
-  private mapNutritionRecommendation(
-    recommendation: NutritionRecommendation | null,
-  ): {
-    id?: string;
-    userProfileId?: string;
-    message: string;
-    recommendations: string[];
-    influences: NutritionRecommendation['influences'];
-    generatorVersion: string;
-    contextSnapshot: NutritionRecommendation['contextSnapshot'];
-    createdAt?: string;
-  } | null {
-    if (!recommendation) {
-      return null;
-    }
-
-    return {
-      id: recommendation.id,
-      userProfileId: recommendation.userProfileId,
-      message: recommendation.message,
-      recommendations: [...recommendation.recommendations],
-      influences: [...recommendation.influences],
-      generatorVersion: recommendation.generatorVersion,
-      contextSnapshot: recommendation.contextSnapshot,
-      createdAt: this.normalizeDateValue(recommendation.createdAt) ?? '',
-    };
-  }
-
   private mapRecoverySnapshot(
     snapshot: RecoverySnapshotEntity | null,
   ): CoachRecoverySnapshot | null {
@@ -1536,21 +1377,6 @@ export class CoachIntelligenceSourceAdaptersService {
         generatedAt: this.normalizeDateValue(input.snapshot.createdAt) ?? '',
       },
       createdAt: this.normalizeDateValue(input.snapshot.createdAt) ?? '',
-    };
-  }
-
-  private mapNutritionLog(log: NutritionLogEntity): CoachNutritionLog {
-    return {
-      id: log.id,
-      userProfileId: log.userProfileId,
-      nutritionPlanId: log.nutritionPlanId,
-      mealId: log.mealId,
-      date: log.date,
-      mealType: log.mealType,
-      status: log.status,
-      ...(log.actualMacros ? { actualMacros: log.actualMacros } : {}),
-      createdAt: this.normalizeDateValue(log.createdAt) ?? '',
-      updatedAt: this.normalizeDateValue(log.updatedAt) ?? '',
     };
   }
 

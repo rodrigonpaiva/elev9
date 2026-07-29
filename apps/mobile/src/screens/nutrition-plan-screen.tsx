@@ -17,7 +17,7 @@ import type {
   NutritionDay,
   NutritionPlan,
   NutritionRecommendation,
-  TodayNutrition,
+  NutritionReadModel,
 } from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
@@ -30,7 +30,7 @@ type BadgeVariant = 'primary' | 'muted' | 'danger';
 
 type NutritionPlanState = {
   nutritionPlan: NutritionPlan | null;
-  todayNutrition: TodayNutrition | null;
+  todayNutrition: NutritionReadModel | null;
   recommendations: NutritionRecommendation[];
 };
 
@@ -565,7 +565,7 @@ function NutritionPlanStateView({
 
 function buildPlanModel(input: {
   nutritionPlan: NutritionPlan;
-  todayNutrition: TodayNutrition | null;
+  todayNutrition: NutritionReadModel | null;
   recommendations: NutritionRecommendation[];
   selectedDate: string | null;
 }): PlanModel | null {
@@ -622,7 +622,7 @@ function buildPlanModel(input: {
 
 function buildDayItem(
   day: NutritionDay,
-  todayNutrition: TodayNutrition | null,
+  todayNutrition: NutritionReadModel | null,
 ): DayItem {
   const isToday = day.date === todayNutrition?.date;
   const status = getDayStatus(day, todayNutrition);
@@ -639,7 +639,7 @@ function buildDayItem(
 function buildMealItem(
   meal: Meal,
   dayDate: string,
-  todayNutrition: TodayNutrition | null,
+  todayNutrition: NutritionReadModel | null,
 ): MealItem {
   const status = getMealStatus(meal, dayDate, todayNutrition);
 
@@ -652,7 +652,7 @@ function buildMealItem(
 
 function getDayStatus(
   day: NutritionDay,
-  todayNutrition: TodayNutrition | null,
+  todayNutrition: NutritionReadModel | null,
 ): DayStatus {
   if (day.date === todayNutrition?.date) {
     return 'active';
@@ -666,7 +666,7 @@ function getDayStatus(
 function getMealStatus(
   meal: Meal,
   dayDate: string,
-  todayNutrition: TodayNutrition | null,
+  todayNutrition: NutritionReadModel | null,
 ): MealStatusLabel {
   if (meal.status === 'replaced') {
     return 'Replaced';
@@ -711,7 +711,7 @@ function getBadgeVariant(status: MealStatusLabel): BadgeVariant {
 
 function getInitialSelectedDate(
   nutritionPlan: NutritionPlan,
-  todayNutrition: TodayNutrition | null,
+  todayNutrition: NutritionReadModel | null,
 ): string {
   return (
     nutritionPlan.days.find((day) => day.date === todayNutrition?.date)?.date ??
@@ -743,7 +743,7 @@ function getHeroSubtitle(
 
 function getWeeklyFocus(
   recommendations: NutritionRecommendation[],
-  todayNutrition: TodayNutrition | null,
+  todayNutrition: NutritionReadModel | null,
 ): string {
   const recommendation = recommendations
     .flatMap((item) => item.recommendations)
@@ -767,7 +767,7 @@ function getWeeklyFocus(
 function getCoachGuidance(
   nutritionPlan: NutritionPlan,
   selectedDay: NutritionDay,
-  todayNutrition: TodayNutrition | null,
+  todayNutrition: NutritionReadModel | null,
 ): string {
   if (selectedDay.date === todayNutrition?.date && todayNutrition.nextMeal) {
     return `${todayNutrition.nextMeal.title} is the next useful step in today's plan.`;

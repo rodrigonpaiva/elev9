@@ -12,7 +12,7 @@ import { AdaptiveTrainingRecommendationRepository } from '../../../../training/d
 import { GoalRepository } from '../../../../goals/domain/repositories/goal.repository';
 import { GoalProgressSnapshotRepository } from '../../../../goals/domain/repositories/goal-progress-snapshot.repository';
 import { GoalMilestoneRepository } from '../../../../goals/domain/repositories/goal-milestone.repository';
-import { NutritionRecommendationRepository } from '../../../../nutrition/domain/repositories/nutrition-recommendation.repository';
+import { NotificationNutritionSignals } from '../../../../nutrition/application/ports/nutrition-consumer.ports';
 import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
 import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
 import { WorkoutLogRepository } from '../../../../progress/domain/repositories/workout-log.repository';
@@ -32,7 +32,11 @@ describe('BuildNotificationDecisionUseCase', () => {
   let goalRepository: jest.Mocked<GoalRepository>;
   let goalProgressSnapshotRepository: jest.Mocked<GoalProgressSnapshotRepository>;
   let goalMilestoneRepository: jest.Mocked<GoalMilestoneRepository>;
-  let nutritionRecommendationRepository: jest.Mocked<NutritionRecommendationRepository>;
+  let nutritionSignalsPort: {
+    getNotificationSignals: jest.MockedFunction<
+      (input: { authUserId: string }) => Promise<NotificationNutritionSignals>
+    >;
+  };
   let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
@@ -58,8 +62,13 @@ describe('BuildNotificationDecisionUseCase', () => {
     goalRepository = buildGoalRepository();
     goalProgressSnapshotRepository = buildGoalProgressSnapshotRepository();
     goalMilestoneRepository = buildGoalMilestoneRepository();
-    nutritionRecommendationRepository =
-      buildNutritionRecommendationRepository();
+    nutritionSignalsPort = {
+      getNotificationSignals: jest.fn().mockResolvedValue({
+        availability: 'available',
+        adherencePercentage: 50,
+        contractVersion: 'nutrition-consumer-signals-v1',
+      }),
+    };
     fitnessProfileRepository = buildFitnessProfileRepository();
     trainingPlanRepository = buildTrainingPlanRepository();
     workoutLogRepository = buildWorkoutLogRepository();
@@ -97,7 +106,7 @@ describe('BuildNotificationDecisionUseCase', () => {
       goalRepository,
       goalProgressSnapshotRepository,
       goalMilestoneRepository,
-      nutritionRecommendationRepository,
+      nutritionSignalsPort,
       fitnessProfileRepository,
       trainingPlanRepository,
       workoutLogRepository,
@@ -644,9 +653,6 @@ describe('BuildNotificationDecisionUseCase', () => {
     goalRepository.findActiveByUserProfileId.mockResolvedValue(null);
     goalProgressSnapshotRepository.findLatestByGoalId.mockResolvedValue(null);
     goalMilestoneRepository.findManyByGoalId.mockResolvedValue([]);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [],
-    );
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
     trainingPlanRepository.findActiveByFitnessProfileId.mockResolvedValue(null);
     workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
@@ -786,15 +792,11 @@ describe('BuildNotificationDecisionUseCase', () => {
   }
 
   function arrangeNutritionRecommendation(adherenceScore: number) {
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [
-        {
-          contextSnapshot: {
-            adherenceScore,
-          },
-        },
-      ] as never,
-    );
+    nutritionSignalsPort.getNotificationSignals.mockResolvedValue({
+      availability: 'available',
+      adherencePercentage: adherenceScore,
+      contractVersion: 'nutrition-consumer-signals-v1',
+    });
   }
 
   function arrangeTrainingPlanAndActivity(input: {
@@ -940,13 +942,6 @@ describe('BuildNotificationDecisionUseCase', () => {
       createMany: jest.fn(),
       markAchieved: jest.fn(),
     } as unknown as jest.Mocked<GoalMilestoneRepository>;
-  }
-
-  function buildNutritionRecommendationRepository() {
-    return {
-      create: jest.fn(),
-      findManyByUserProfileId: jest.fn(),
-    } as unknown as jest.Mocked<NutritionRecommendationRepository>;
   }
 
   function buildFitnessProfileRepository() {

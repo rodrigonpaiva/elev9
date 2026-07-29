@@ -3,7 +3,7 @@ import type {
   NutritionAvailability,
   NutritionFreshness,
   NutritionMacroProgress,
-  TodayNutrition,
+  NutritionReadModel,
 } from '@elev9/types';
 
 export type NutritionCardModel = {
@@ -30,8 +30,9 @@ export type NutritionCardModel = {
 };
 
 export function buildNutritionCardModel(
-  nutrition: TodayNutrition,
+  nutrition: NutritionReadModel,
 ): NutritionCardModel {
+  const adherenceStatus = nutrition.progress?.adherenceStatus ?? 'unavailable';
   const adherence = {
     label: {
       unavailable: 'Unavailable',
@@ -40,7 +41,7 @@ export function buildNutritionCardModel(
       within_range: 'Within Range',
       above_range: 'Above Range',
     }[
-      nutrition.progress.adherenceStatus
+      adherenceStatus
     ] as NutritionCardModel['adherence']['label'],
     badgeVariant: {
       unavailable: 'muted',
@@ -49,7 +50,7 @@ export function buildNutritionCardModel(
       within_range: 'primary',
       above_range: 'danger',
     }[
-      nutrition.progress.adherenceStatus
+      adherenceStatus
     ] as NutritionCardModel['adherence']['badgeVariant'],
   };
   const calories = nutrition.calories;
@@ -59,7 +60,9 @@ export function buildNutritionCardModel(
   const macros = nutrition.macros
     .filter((macro) => macro.target !== null)
     .map(formatMacro);
-  const mealsLabel = `${meals.completed} / ${meals.planned} completed`;
+  const mealsLabel = meals
+    ? `${meals.completed} / ${meals.planned} completed`
+    : 'Meal progress unavailable';
   const calorieProgress =
     calories?.percentage === null || calories?.percentage === undefined
       ? null

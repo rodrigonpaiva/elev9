@@ -667,7 +667,7 @@ export class CoachIntelligenceAggregationService {
       return 'RECOVERY';
     }
 
-    if (healthContext.nutritionProfile) {
+    if (healthContext.nutritionContext) {
       return 'NUTRITION';
     }
 

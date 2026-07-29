@@ -13,9 +13,9 @@ import {
   GoalRepository,
 } from '../../../../../goals/domain/repositories/goal.repository';
 import {
-  NUTRITION_PLAN_REPOSITORY,
-  NutritionPlanRepository,
-} from '../../../../../nutrition/domain/repositories/nutrition-plan.repository';
+  NUTRITION_COACH_CONTEXT_PORT,
+  NutritionCoachContextPort,
+} from '../../../../../nutrition/application/ports/nutrition-consumer.ports';
 import {
   RECOVERY_SNAPSHOT_REPOSITORY,
   RecoverySnapshotRepository,
@@ -24,7 +24,6 @@ import {
   ADAPTIVE_TRAINING_RECOMMENDATION_REPOSITORY,
   AdaptiveTrainingRecommendationRepository,
 } from '../../../../../training/domain/repositories/adaptive-training-recommendation.repository';
-import { NutritionPlan } from '../../../../../nutrition/domain/entities/nutrition-plan.entity';
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
@@ -57,8 +56,8 @@ export class AgentToolExecutorService {
     private readonly userProfileRepository: UserProfileRepository,
     @Inject(ADAPTIVE_TRAINING_RECOMMENDATION_REPOSITORY)
     private readonly adaptiveTrainingRecommendationRepository: AdaptiveTrainingRecommendationRepository,
-    @Inject(NUTRITION_PLAN_REPOSITORY)
-    private readonly nutritionPlanRepository: NutritionPlanRepository,
+    @Inject(NUTRITION_COACH_CONTEXT_PORT)
+    private readonly nutritionContextPort: NutritionCoachContextPort,
     @Inject(RECOVERY_SNAPSHOT_REPOSITORY)
     private readonly recoverySnapshotRepository: RecoverySnapshotRepository,
     @Inject(GOAL_REPOSITORY)
@@ -395,17 +394,16 @@ export class AgentToolExecutorService {
     data: unknown;
     metadata: Record<string, unknown>;
   }> {
-    const nutritionPlan =
-      await this.nutritionPlanRepository.findActiveByUserProfileId(
-        input.request.sessionMetadata.userProfileId,
-      );
+    const nutritionContext = await this.nutritionContextPort.execute({
+      authUserId: input.request.sessionMetadata.authUserId,
+    });
 
-    if (!nutritionPlan) {
+    if (nutritionContext.availability !== 'available') {
       return {
-        summary: 'No active nutrition plan was found.',
+        summary: 'Nutrition context is not available.',
         data: null,
         metadata: {
-          source: 'nutrition-plan-repository',
+          source: 'nutrition-application-port',
           readOnly: true,
           emptyResult: true,
         },
@@ -414,11 +412,9 @@ export class AgentToolExecutorService {
 
     return {
       summary: 'Loaded nutrition context.',
-      data: {
-        nutritionPlan: this.normalizeNutritionPlan(nutritionPlan),
-      },
+      data: { availability: nutritionContext.availability },
       metadata: {
-        source: 'nutrition-plan-repository',
+        source: 'nutrition-application-port',
         readOnly: true,
         emptyResult: false,
       },
@@ -571,37 +567,6 @@ export class AgentToolExecutorService {
       status: userProfile.status,
       createdAt: userProfile.createdAt.toISOString(),
       updatedAt: userProfile.updatedAt.toISOString(),
-    };
-  }
-
-  private normalizeNutritionPlan(plan: NutritionPlan): Record<string, unknown> {
-    return {
-      id: plan.id,
-      userProfileId: plan.userProfileId,
-      nutritionProfileId: plan.nutritionProfileId,
-      fitnessProfileId: plan.fitnessProfileId,
-      status: plan.status,
-      weekStartDate: plan.weekStartDate,
-      weekEndDate: plan.weekEndDate,
-      macroTargets: plan.macroTargets,
-      dayCount: plan.days.length,
-      daysPreview: plan.days.slice(0, 2).map((day) => ({
-        date: day.date,
-        dayIndex: day.dayIndex,
-        mealCount: day.meals.length,
-        meals: day.meals.map((meal) => ({
-          id: meal.id,
-          type: meal.type,
-          title: meal.title,
-          status: meal.status,
-        })),
-        dailyMacroTargets: day.dailyMacroTargets,
-      })),
-      generatedBy: plan.generatedBy,
-      ...(plan.sourceContext ? { sourceContext: plan.sourceContext } : {}),
-      createdAt: plan.createdAt.toISOString(),
-      ...(plan.updatedAt ? { updatedAt: plan.updatedAt.toISOString() } : {}),
-      ...(plan.replacedAt ? { replacedAt: plan.replacedAt.toISOString() } : {}),
     };
   }
 

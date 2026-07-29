@@ -43,6 +43,13 @@ import { NutritionController } from './presentation/http/nutrition.controller';
 import { NutritionObservabilityService } from './application/services/nutrition-observability.service';
 import { NutritionHistoryProjectionService } from './application/services/nutrition-history-projection.service';
 import { NutritionHistoryQueryService } from './application/services/nutrition-history-query.service';
+import {
+  NUTRITION_COACH_CONTEXT_PORT,
+  NUTRITION_GOAL_SIGNALS_PORT,
+  NUTRITION_NOTIFICATION_SIGNALS_PORT,
+  NUTRITION_TRAINING_SIGNALS_PORT,
+  NutritionConsumerProjectionService,
+} from './application/ports/nutrition-consumer.ports';
 
 @Module({
   imports: [
@@ -84,6 +91,7 @@ import { NutritionHistoryQueryService } from './application/services/nutrition-h
     NutritionObservabilityService,
     NutritionHistoryProjectionService,
     NutritionHistoryQueryService,
+    NutritionConsumerProjectionService,
     {
       provide: NUTRITION_PROFILE_REPOSITORY,
       useClass: MongooseNutritionProfileRepository,
@@ -102,15 +110,27 @@ import { NutritionHistoryQueryService } from './application/services/nutrition-h
     },
   ],
   exports: [
-    NUTRITION_PROFILE_REPOSITORY,
-    NUTRITION_PLAN_REPOSITORY,
-    NUTRITION_LOG_REPOSITORY,
-    NUTRITION_RECOMMENDATION_REPOSITORY,
     GetCurrentNutritionPlanUseCase,
     GetNutritionRecommendationsUseCase,
     GetTodayNutritionUseCase,
     NutritionObservabilityService,
     NutritionHistoryQueryService,
+    {
+      provide: NUTRITION_COACH_CONTEXT_PORT,
+      useExisting: NutritionConsumerProjectionService,
+    },
+    {
+      provide: NUTRITION_TRAINING_SIGNALS_PORT,
+      useExisting: NutritionConsumerProjectionService,
+    },
+    {
+      provide: NUTRITION_GOAL_SIGNALS_PORT,
+      useExisting: NutritionConsumerProjectionService,
+    },
+    {
+      provide: NUTRITION_NOTIFICATION_SIGNALS_PORT,
+      useExisting: NutritionConsumerProjectionService,
+    },
   ],
 })
 export class NutritionModule {}

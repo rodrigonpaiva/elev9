@@ -41,16 +41,21 @@ export type NutritionMacroProgressOutput = {
 
 export type GetTodayNutritionOutput = {
   todayNutrition: {
-    availability: 'available';
+    availability:
+      | 'available'
+      | 'not_configured'
+      | 'insufficient_data'
+      | 'not_available'
+      | 'processing_failed';
     freshness: 'current' | 'stale' | 'legacy' | 'unknown';
     lastUpdatedAt: string | null;
     timezone: 'UTC';
     date: string;
-    macroTargets: MacroTargetsProps;
+    macroTargets: MacroTargetsProps | null;
     meals: Meal[];
-    progress: TodayNutritionProgressOutput;
+    progress: TodayNutritionProgressOutput | null;
     targets: MacroTargetsProps | null;
-    calories: NutritionEngineCalorieProgress;
+    calories: NutritionEngineCalorieProgress | null;
     macros: NutritionEngineMacroProgress[];
     mealProgress: {
       planned: number;
@@ -64,11 +69,11 @@ export type GetTodayNutritionOutput = {
       consumedCount: number;
       completedCount: number;
       remainingCount: number;
-    };
+    } | null;
     nextMeal: Meal | null;
-    focus: NutritionEngineFocus;
-    insight: NutritionEngineInsight;
+    focus: NutritionEngineFocus | null;
+    insight: NutritionEngineInsight | null;
     actions: NutritionEngineAction[];
-    nutritionFocus: string;
+    nutritionFocus: string | null;
   };
 };

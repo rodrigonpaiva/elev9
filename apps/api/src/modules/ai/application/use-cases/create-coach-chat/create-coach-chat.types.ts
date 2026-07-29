@@ -1,5 +1,4 @@
 import type { CoachConversationMemory } from '../../../domain/entities/coach-conversation-memory.entity';
-import type { GetTodayNutritionOutput } from '../../../../nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.output';
 import type { GetDailyCheckInHistoryOutput } from '../../../../progress/application/use-cases/get-daily-check-in-history/get-daily-check-in-history.output';
 import type { GetProgressSummaryOutput } from '../../../../progress/application/use-cases/get-progress-summary/get-progress-summary.output';
 import type { GetWorkoutHistoryOutput } from '../../../../progress/application/use-cases/get-workout-history/get-workout-history.output';
@@ -25,8 +24,6 @@ import type { GoalAchievement } from '../../../../goals/domain/entities/goal-ach
 import type { GoalForecast } from '../../../../goals/domain/entities/goal-forecast.entity';
 import type { GoalMilestone } from '../../../../goals/domain/entities/goal-milestone.entity';
 import type { GoalProgressSnapshot } from '../../../../goals/domain/entities/goal-progress-snapshot.entity';
-import type { NutritionLog } from '../../../../nutrition/domain/entities/nutrition-log.entity';
-import type { NutritionPlan } from '../../../../nutrition/domain/entities/nutrition-plan.entity';
 import type { RecoverySnapshot } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
 import type { HabitSnapshot } from '../../../../habits/domain/entities/habit-snapshot.entity';
 import type { CoachConversation } from '../../../domain/entities/coach-conversation.entity';
@@ -41,9 +38,6 @@ export type CoachChatLoadedContext = {
   goalContext?: CoachChatGoalContext;
   progress?: CoachChatProgressContext;
   recoveryHistory?: readonly RecoverySnapshot[];
-  nutritionPlan?: NutritionPlan;
-  todayNutrition?: GetTodayNutritionOutput['todayNutrition'];
-  nutritionLogs?: readonly NutritionLog[];
   /** Canonical Nutrition projection for Coach consumers. */
   nutritionContext?: CoachNutritionContext;
   coachDecision?: CoachDecisionReadModelPayload;

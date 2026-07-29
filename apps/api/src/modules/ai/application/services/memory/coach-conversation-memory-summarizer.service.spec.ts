@@ -40,14 +40,6 @@ describe('CoachConversationMemorySummarizer', () => {
           motivationLevel: 3,
           createdAt: new Date('2026-05-18T09:00:00.000Z'),
         },
-        nutritionProfile: {
-          goal: 'muscle_gain',
-          mealsPerDay: 4,
-          dietaryRestrictions: ['gluten_free'],
-          allergies: ['peanuts'],
-          dislikedFoods: ['broccoli'],
-          preferredFoods: ['rice', 'eggs'],
-        },
       } as never,
       conversationMessages: [
         {
@@ -65,7 +57,7 @@ describe('CoachConversationMemorySummarizer', () => {
 
     expect(result).toEqual({
       summary:
-        'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:6, recent_workouts:1; user_concern=recovery',
+        'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; workout_continuity=streak:6, recent_workouts:1; user_concern=recovery',
       metadata: {
         generatedFromMessageCount: 2,
         version: 'memory-v1',
@@ -117,14 +109,6 @@ describe('CoachConversationMemorySummarizer', () => {
           muscleSoreness: 4,
           motivationLevel: 3,
           createdAt: new Date('2026-05-18T09:00:00.000Z'),
-        },
-        nutritionProfile: {
-          goal: 'muscle_gain',
-          mealsPerDay: 4,
-          dietaryRestrictions: ['gluten_free'],
-          allergies: ['peanuts'],
-          dislikedFoods: ['broccoli'],
-          preferredFoods: ['rice', 'eggs'],
         },
       } as never,
       conversationMessages: [

@@ -276,7 +276,7 @@ export class AiPromptBuilder {
       context: {
         fatigueLevel: input.healthContext.fatigueLevel,
         recoveryTrend,
-        hasNutritionProfile: Boolean(input.healthContext.nutritionProfile),
+        hasNutritionProfile: Boolean(input.healthContext.nutritionContext),
         hasLatestCheckIn: Boolean(input.healthContext.latestCheckIn),
         recentWorkoutCount: input.healthContext.recentWorkoutLogs.length,
         recentConversationMessages: input.conversationHistory.length,
@@ -304,7 +304,6 @@ export class AiPromptBuilder {
   private buildContextBlock(healthContext: UserHealthContext): string {
     const recoveryTrend = this.resolveRecoveryTrend(healthContext);
     const checkIn = healthContext.latestCheckIn;
-    const nutrition = healthContext.nutritionProfile;
     const workoutLogs = healthContext.recentWorkoutLogs.slice(-5);
 
     return [
@@ -319,18 +318,7 @@ export class AiPromptBuilder {
       checkIn
         ? `- latest check-in: energy ${checkIn.energyLevel}/5, sleep ${checkIn.sleepQuality}/5, soreness ${checkIn.muscleSoreness}/5, motivation ${checkIn.motivationLevel}/5`
         : '- latest check-in: unavailable',
-      nutrition
-        ? [
-            `- nutrition goal: ${nutrition.goal}`,
-            `- meals per day: ${nutrition.mealsPerDay}`,
-            `- dietary restrictions: ${this.formatList(
-              nutrition.dietaryRestrictions,
-            )}`,
-            `- allergies: ${this.formatList(nutrition.allergies)}`,
-            `- disliked foods: ${this.formatList(nutrition.dislikedFoods)}`,
-            `- preferred foods: ${this.formatList(nutrition.preferredFoods)}`,
-          ].join('\n')
-        : '- nutrition profile: unavailable',
+      `- nutrition context: ${healthContext.nutritionContext?.availability ?? 'unavailable'}`,
       this.buildWorkoutLogBlock(workoutLogs),
     ].join('\n');
   }
