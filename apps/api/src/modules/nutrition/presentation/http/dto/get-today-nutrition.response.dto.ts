@@ -40,6 +40,7 @@ export class GetTodayNutritionResponseDto {
     timezone: 'UTC';
     date: string;
     macroTargets: MacroTargetsDto;
+    targets: MacroTargetsDto | null;
     meals: MealDto[];
     progress: {
       consumedCalories: number;
@@ -51,20 +52,103 @@ export class GetTodayNutritionResponseDto {
       targetCarbsGrams: number;
       targetFatGrams: number;
       adherencePercentage: number;
-      adherenceStatus: 'on_track' | 'needs_attention' | 'off_track';
+      adherenceStatus:
+        | 'unavailable'
+        | 'not_started'
+        | 'below_range'
+        | 'within_range'
+        | 'above_range';
       macroProgress: {
-        protein: { consumed: number; target: number; percentage: number };
-        carbs: { consumed: number; target: number; percentage: number };
-        fat: { consumed: number; target: number; percentage: number };
+        protein: {
+          nutrient: 'protein' | 'carbohydrates' | 'fat';
+          consumed: number;
+          target: number | null;
+          remaining: number | null;
+          percentage: number | null;
+          rawPercentage: number | null;
+          unit: 'g';
+          state: string;
+        };
+        carbs: {
+          nutrient: 'protein' | 'carbohydrates' | 'fat';
+          consumed: number;
+          target: number | null;
+          remaining: number | null;
+          percentage: number | null;
+          rawPercentage: number | null;
+          unit: 'g';
+          state: string;
+        };
+        fat: {
+          nutrient: 'protein' | 'carbohydrates' | 'fat';
+          consumed: number;
+          target: number | null;
+          remaining: number | null;
+          percentage: number | null;
+          rawPercentage: number | null;
+          unit: 'g';
+          state: string;
+        };
       };
     };
+    calories: {
+      consumed: number;
+      target: number | null;
+      remaining: number | null;
+      excess: number | null;
+      percentage: number | null;
+      rawPercentage: number | null;
+      state:
+        | 'not_started'
+        | 'in_progress'
+        | 'near_target'
+        | 'target_reached'
+        | 'above_target';
+    };
+    macros: Array<{
+      nutrient: 'protein' | 'carbohydrates' | 'fat';
+      consumed: number;
+      target: number | null;
+      remaining: number | null;
+      percentage: number | null;
+      rawPercentage: number | null;
+      unit: 'g';
+      state:
+        | 'unavailable'
+        | 'not_started'
+        | 'in_progress'
+        | 'near_target'
+        | 'target_reached'
+        | 'above_target';
+    }>;
     mealProgress: {
+      planned: number;
+      available: number;
+      completed: number;
+      pending: number;
+      completionPercentage: number | null;
+      nextMealId: string | null;
+      additionalLoggedCount: number;
       plannedCount: number;
       consumedCount: number;
       completedCount: number;
       remainingCount: number;
     };
     nextMeal: MealDto | null;
+    focus: {
+      kind: string;
+      title: string;
+      message: string;
+      priority: 'low' | 'medium' | 'high';
+      action: Record<string, unknown>;
+    };
+    insight: {
+      kind: string;
+      title: string;
+      message: string;
+      action: Record<string, unknown>;
+    };
+    actions: Array<Record<string, unknown>>;
     nutritionFocus: string;
   };
 }

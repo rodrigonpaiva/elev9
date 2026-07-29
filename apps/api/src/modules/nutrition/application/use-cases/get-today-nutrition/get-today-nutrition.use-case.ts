@@ -4,8 +4,6 @@ import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
 } from '../../../../users/domain/repositories/user-profile.repository';
-import { Meal } from '../../../domain/entities/meal.entity';
-import { NutritionLog } from '../../../domain/entities/nutrition-log.entity';
 import {
   NUTRITION_LOG_REPOSITORY,
   NutritionLogRepository,
@@ -14,7 +12,8 @@ import {
   NUTRITION_PLAN_REPOSITORY,
   NutritionPlanRepository,
 } from '../../../domain/repositories/nutrition-plan.repository';
-import { MacroTargetsProps } from '../../../domain/value-objects/macro-targets.value-object';
+import { calculateNutritionDeterministicState } from '../../services/nutrition-deterministic-engine.service';
+import { NutritionLog } from '../../../domain/entities/nutrition-log.entity';
 import {
   GET_TODAY_NUTRITION_ERROR_CODES,
   GetTodayNutritionError,
@@ -87,6 +86,11 @@ export class GetTodayNutritionUseCase {
         userProfile.id,
         today,
       );
+      const deterministicState = calculateNutritionDeterministicState({
+        meals: nutritionDay.meals,
+        logs,
+        macroTargets,
+      });
 
       return {
         todayNutrition: {
@@ -96,14 +100,17 @@ export class GetTodayNutritionUseCase {
           lastUpdatedAt: resolveLastUpdatedAt({ nutritionPlan, logs }),
           timezone: 'UTC',
           macroTargets,
+          targets: macroTargets,
           meals: nutritionDay.meals,
-          progress: buildProgress({ macroTargets, logs }),
-          mealProgress: buildMealProgress({ meals: nutritionDay.meals, logs }),
-          nextMeal: resolveNextMeal({
-            meals: nutritionDay.meals,
-            logs,
-          }),
-          nutritionFocus: buildNutritionFocus(nutritionPlan.sourceContext),
+          progress: buildProgress(deterministicState),
+          calories: deterministicState.calorieProgress,
+          macros: deterministicState.macros,
+          mealProgress: deterministicState.mealProgress,
+          nextMeal: deterministicState.nextMeal,
+          focus: deterministicState.focus,
+          insight: deterministicState.insight,
+          actions: [deterministicState.focus.action, deterministicState.insight.action],
+          nutritionFocus: deterministicState.focus.message,
         },
       };
     } catch (error) {
@@ -119,88 +126,28 @@ export class GetTodayNutritionUseCase {
   }
 }
 
-function buildProgress(input: {
-  macroTargets: MacroTargetsProps;
-  logs: NutritionLog[];
-}): TodayNutritionProgressOutput {
-  const latestLogByMealId = new Map<string, NutritionLog>();
-  for (const log of input.logs) latestLogByMealId.set(log.mealId, log);
-
-  const consumed = [...latestLogByMealId.values()].reduce(
-    (accumulator, log) => {
-      const actualMacros = log.actualMacros;
-
-      if (!actualMacros || log.status === 'skipped') {
-        return accumulator;
-      }
-
-      return {
-        calories: accumulator.calories + actualMacros.calories,
-        proteinGrams: accumulator.proteinGrams + actualMacros.proteinGrams,
-        carbsGrams: accumulator.carbsGrams + actualMacros.carbsGrams,
-        fatGrams: accumulator.fatGrams + actualMacros.fatGrams,
-      };
-    },
-    {
-      calories: 0,
-      proteinGrams: 0,
-      carbsGrams: 0,
-      fatGrams: 0,
-    },
-  );
-
+function buildProgress(input: ReturnType<typeof calculateNutritionDeterministicState>): TodayNutritionProgressOutput {
+  const consumed = input.consumed;
+  const protein = input.macros.find((macro) => macro.nutrient === 'protein')!;
+  const carbs = input.macros.find((macro) => macro.nutrient === 'carbohydrates')!;
+  const fat = input.macros.find((macro) => macro.nutrient === 'fat')!;
   return {
     consumedCalories: consumed.calories,
     consumedProteinGrams: consumed.proteinGrams,
     consumedCarbsGrams: consumed.carbsGrams,
     consumedFatGrams: consumed.fatGrams,
-    targetCalories: input.macroTargets.calories,
-    targetProteinGrams: input.macroTargets.proteinGrams,
-    targetCarbsGrams: input.macroTargets.carbsGrams,
-    targetFatGrams: input.macroTargets.fatGrams,
-    adherencePercentage: calculateAdherencePercentage({
-      consumedCalories: consumed.calories,
-      targetCalories: input.macroTargets.calories,
-    }),
-    adherenceStatus: classifyAdherence(
-      calculateAdherencePercentage({
-        consumedCalories: consumed.calories,
-        targetCalories: input.macroTargets.calories,
-      }),
-    ),
+    targetCalories: input.calorieProgress.target ?? 0,
+    targetProteinGrams: protein?.target ?? 0,
+    targetCarbsGrams: carbs?.target ?? 0,
+    targetFatGrams: fat?.target ?? 0,
+    adherencePercentage: input.calorieProgress.percentage ?? 0,
+    adherenceStatus: input.adherenceStatus,
     macroProgress: {
-      protein: buildMacroProgress(consumed.proteinGrams, input.macroTargets.proteinGrams),
-      carbs: buildMacroProgress(consumed.carbsGrams, input.macroTargets.carbsGrams),
-      fat: buildMacroProgress(consumed.fatGrams, input.macroTargets.fatGrams),
+      protein,
+      carbs,
+      fat,
     },
   };
-}
-
-function buildMealProgress(input: { meals: Meal[]; logs: NutritionLog[] }) {
-  const latestLogByMealId = new Map<string, NutritionLog>();
-  for (const log of input.logs) latestLogByMealId.set(log.mealId, log);
-  const logs = [...latestLogByMealId.values()];
-  return {
-    plannedCount: input.meals.length,
-    consumedCount: logs.filter((log) => log.status !== 'skipped').length,
-    completedCount: logs.filter((log) => log.status === 'consumed').length,
-    remainingCount: input.meals.filter((meal) => !latestLogByMealId.has(meal.id)).length,
-  };
-}
-
-function buildMacroProgress(consumed: number, target: number) {
-  return { consumed, target, percentage: calculatePercentage(consumed, target) };
-}
-
-function calculatePercentage(consumed: number, target: number): number {
-  if (target <= 0) return 0;
-  return Math.min(100, Math.max(0, Math.round((consumed / target) * 100)));
-}
-
-function classifyAdherence(percentage: number): 'on_track' | 'needs_attention' | 'off_track' {
-  if (percentage >= 80) return 'on_track';
-  if (percentage >= 50) return 'needs_attention';
-  return 'off_track';
 }
 
 function resolveFreshness(updatedAt?: Date): 'current' | 'unknown' {
@@ -213,48 +160,6 @@ function resolveLastUpdatedAt(input: { nutritionPlan: { updatedAt?: Date; create
   return latest.toISOString();
 }
 
-function resolveNextMeal(input: {
-  meals: Meal[];
-  logs: NutritionLog[];
-}): Meal | null {
-  const loggedMealIds = new Set(input.logs.map((log) => log.mealId));
-
-  return input.meals.find((meal) => !loggedMealIds.has(meal.id)) ?? null;
-}
-
-function calculateAdherencePercentage(input: {
-  consumedCalories: number;
-  targetCalories: number;
-}): number {
-  if (input.targetCalories <= 0) {
-    return 0;
-  }
-
-  return Math.min(
-    100,
-    Math.round((input.consumedCalories / input.targetCalories) * 100),
-  );
-}
-
-function buildNutritionFocus(
-  sourceContext:
-    | {
-        goalAdjustment?: number;
-      }
-    | undefined,
-): string {
-  const goalAdjustment = sourceContext?.goalAdjustment;
-
-  if (typeof goalAdjustment === 'number' && goalAdjustment < 0) {
-    return 'Focus on a controlled calorie deficit while keeping protein consistent.';
-  }
-
-  if (typeof goalAdjustment === 'number' && goalAdjustment > 0) {
-    return 'Focus on a clean calorie surplus and consistent protein across meals.';
-  }
-
-  return 'Focus on consistency and balanced meals across the day.';
-}
 
 function toUtcDateString(date: Date): string {
   return date.toISOString().slice(0, 10);

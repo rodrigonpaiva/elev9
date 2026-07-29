@@ -2,8 +2,8 @@
 
 | Prompt | Scope | Status |
 |---|---|---|
-| Prompt 1 — Domain Audit & Canonical Nutrition Model | Audit ownership and establish the current Nutrition read model | **completed** |
-| Prompt 2 — Deterministic Nutrition Engine | Harden deterministic calculations and rules | pending |
+| Prompt 1 — Domain Audit & Canonical Nutrition Model | Audit ownership and establish the current Nutrition read model | **completed with conditions** |
+| Prompt 2 — Deterministic Nutrition Engine | Harden deterministic calculations and rules | **completed** |
 | Prompt 3 — Dashboard Nutrition Experience | Productize Dashboard consumption of canonical Nutrition | pending |
 | Prompt 4 — Coach Nutrition Intelligence | Route Health Context and Coach through canonical Nutrition | pending |
 | Prompt 5 — Nutrition Analytics & Observability | Add privacy-safe operational/product observability | pending |

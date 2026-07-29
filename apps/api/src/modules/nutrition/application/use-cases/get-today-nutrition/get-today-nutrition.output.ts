@@ -1,5 +1,13 @@
 import { Meal } from '../../../domain/entities/meal.entity';
 import { MacroTargetsProps } from '../../../domain/value-objects/macro-targets.value-object';
+import {
+  NutritionEngineAction,
+  NutritionEngineAdherenceStatus,
+  NutritionEngineCalorieProgress,
+  NutritionEngineFocus,
+  NutritionEngineInsight,
+  NutritionEngineMacroProgress,
+} from '../../services/nutrition-deterministic-engine.service';
 
 export type TodayNutritionProgressOutput = {
   consumedCalories: number;
@@ -11,7 +19,8 @@ export type TodayNutritionProgressOutput = {
   targetCarbsGrams: number;
   targetFatGrams: number;
   adherencePercentage: number;
-  adherenceStatus: 'on_track' | 'needs_attention' | 'off_track';
+  adherenceStatus: NutritionEngineAdherenceStatus;
+  legacyAdherenceStatus?: 'on_track' | 'needs_attention' | 'off_track';
   macroProgress: {
     protein: NutritionMacroProgressOutput;
     carbs: NutritionMacroProgressOutput;
@@ -20,9 +29,14 @@ export type TodayNutritionProgressOutput = {
 };
 
 export type NutritionMacroProgressOutput = {
+  nutrient: NutritionEngineMacroProgress['nutrient'];
   consumed: number;
-  target: number;
-  percentage: number;
+  target: number | null;
+  remaining: number | null;
+  percentage: number | null;
+  rawPercentage: number | null;
+  unit: 'g';
+  state: NutritionEngineMacroProgress['state'];
 };
 
 export type GetTodayNutritionOutput = {
@@ -35,13 +49,26 @@ export type GetTodayNutritionOutput = {
     macroTargets: MacroTargetsProps;
     meals: Meal[];
     progress: TodayNutritionProgressOutput;
+    targets: MacroTargetsProps | null;
+    calories: NutritionEngineCalorieProgress;
+    macros: NutritionEngineMacroProgress[];
     mealProgress: {
+      planned: number;
+      available: number;
+      completed: number;
+      pending: number;
+      completionPercentage: number | null;
+      nextMealId: string | null;
+      additionalLoggedCount: number;
       plannedCount: number;
       consumedCount: number;
       completedCount: number;
       remainingCount: number;
     };
     nextMeal: Meal | null;
+    focus: NutritionEngineFocus;
+    insight: NutritionEngineInsight;
+    actions: NutritionEngineAction[];
     nutritionFocus: string;
   };
 };

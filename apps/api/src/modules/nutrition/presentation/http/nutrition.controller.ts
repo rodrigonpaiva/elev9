@@ -256,12 +256,18 @@ export class NutritionController {
           timezone: result.todayNutrition.timezone,
           date: result.todayNutrition.date,
           macroTargets: result.todayNutrition.macroTargets,
+          targets: result.todayNutrition.targets,
           meals: result.todayNutrition.meals.map(mapMeal),
           progress: result.todayNutrition.progress,
+          calories: result.todayNutrition.calories,
+          macros: result.todayNutrition.macros,
           mealProgress: result.todayNutrition.mealProgress,
           nextMeal: result.todayNutrition.nextMeal
             ? mapMeal(result.todayNutrition.nextMeal)
             : null,
+          focus: result.todayNutrition.focus,
+          insight: result.todayNutrition.insight,
+          actions: result.todayNutrition.actions,
           nutritionFocus: result.todayNutrition.nutritionFocus,
         },
       };

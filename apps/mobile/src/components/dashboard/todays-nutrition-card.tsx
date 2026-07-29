@@ -15,7 +15,12 @@ type TodaysNutritionCardProps = {
 };
 
 type BadgeVariant = 'primary' | 'muted' | 'danger';
-type AdherenceLabel = 'On Track' | 'Needs Attention' | 'Off Track';
+type AdherenceLabel =
+  | 'Unavailable'
+  | 'Not Started'
+  | 'Below Range'
+  | 'Within Range'
+  | 'Above Range';
 
 const tokens = {
   card: '#ffffff',
@@ -43,8 +48,8 @@ export const TodaysNutritionCard = memo(function TodaysNutritionCard({
       return null;
     }
 
-    return buildNutritionCardModel(todayNutrition, workout);
-  }, [todayNutrition, workout]);
+    return buildNutritionCardModel(todayNutrition);
+  }, [todayNutrition]);
 
   if (isLoading) {
     return <TodaysNutritionSkeleton />;
@@ -185,26 +190,29 @@ function TodaysNutritionSkeleton() {
 
 function buildNutritionCardModel(
   nutrition: TodayNutrition,
-  workout: TodayWorkout | null,
 ) {
   const targets = nutrition.macroTargets;
   const adherence = {
     label: {
-      on_track: 'On Track',
-      needs_attention: 'Needs Attention',
-      off_track: 'Off Track',
+      unavailable: 'Unavailable',
+      not_started: 'Not Started',
+      below_range: 'Below Range',
+      within_range: 'Within Range',
+      above_range: 'Above Range',
     }[nutrition.progress.adherenceStatus] as AdherenceLabel,
     badgeVariant: {
-      on_track: 'primary',
-      needs_attention: 'muted',
-      off_track: 'danger',
+      unavailable: 'muted',
+      not_started: 'muted',
+      below_range: 'danger',
+      within_range: 'primary',
+      above_range: 'danger',
     }[nutrition.progress.adherenceStatus] as BadgeVariant,
   };
-  const mealsRemaining = nutrition.mealProgress.remainingCount;
+  const mealsRemaining = nutrition.mealProgress.pending;
   const nextMealLabel = nutrition.nextMeal
     ? nutrition.nextMeal.title
     : 'No meals remaining';
-  const focus = getNutritionFocus(nutrition);
+  const focus = nutrition.focus.message;
 
   return {
     adherence,
@@ -227,10 +235,6 @@ function buildNutritionCardModel(
       mealsRemaining === 1 ? 'meal' : 'meals'
     } remaining.`,
   };
-}
-
-function getNutritionFocus(nutrition: TodayNutrition): string {
-  return nutrition.nutritionFocus;
 }
 
 const styles = StyleSheet.create({

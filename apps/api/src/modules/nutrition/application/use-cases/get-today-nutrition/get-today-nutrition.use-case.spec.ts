@@ -114,11 +114,20 @@ describe('GetTodayNutritionUseCase', () => {
       targetCarbsGrams: 250,
       targetFatGrams: 70,
       adherencePercentage: 0,
-      adherenceStatus: 'off_track',
+      adherenceStatus: 'not_started',
       macroProgress: {
-        protein: { consumed: 0, target: 150, percentage: 0 },
-        carbs: { consumed: 0, target: 250, percentage: 0 },
-        fat: { consumed: 0, target: 70, percentage: 0 },
+        protein: {
+          nutrient: 'protein', consumed: 0, target: 150, remaining: 150,
+          percentage: 0, rawPercentage: 0, unit: 'g', state: 'not_started',
+        },
+        carbs: {
+          nutrient: 'carbohydrates', consumed: 0, target: 250, remaining: 250,
+          percentage: 0, rawPercentage: 0, unit: 'g', state: 'not_started',
+        },
+        fat: {
+          nutrient: 'fat', consumed: 0, target: 70, remaining: 70,
+          percentage: 0, rawPercentage: 0, unit: 'g', state: 'not_started',
+        },
       },
     });
   });
@@ -252,12 +261,8 @@ describe('GetTodayNutritionUseCase', () => {
 
     const muscleGain = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(fatLoss.todayNutrition.nutritionFocus).toContain(
-      'controlled calorie deficit',
-    );
-    expect(muscleGain.todayNutrition.nutritionFocus).toContain(
-      'clean calorie surplus',
-    );
+    expect(fatLoss.todayNutrition.focus.kind).toBe('log_meal');
+    expect(muscleGain.todayNutrition.insight.kind).toBe('next_meal_available');
   });
 
   function arrangeUserProfile(): void {

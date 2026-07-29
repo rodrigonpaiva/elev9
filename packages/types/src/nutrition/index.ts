@@ -83,7 +83,9 @@ export type NutritionProgress = {
   targetCarbsGrams: number;
   targetFatGrams: number;
   adherencePercentage: number;
-  adherenceStatus: 'on_track' | 'needs_attention' | 'off_track';
+  /** @deprecated Use adherenceStatus for the neutral canonical status. */
+  legacyAdherenceStatus?: 'on_track' | 'needs_attention' | 'off_track';
+  adherenceStatus: NutritionAdherenceStatus;
   macroProgress: {
     protein: NutritionMacroProgress;
     carbs: NutritionMacroProgress;
@@ -91,17 +93,99 @@ export type NutritionProgress = {
   };
 };
 
+export type NutritionAdherenceStatus =
+  | 'unavailable'
+  | 'not_started'
+  | 'below_range'
+  | 'within_range'
+  | 'above_range';
+
 export type NutritionMacroProgress = {
+  nutrient: 'protein' | 'carbohydrates' | 'fat';
   consumed: number;
-  target: number;
-  percentage: number;
+  target: number | null;
+  remaining: number | null;
+  percentage: number | null;
+  rawPercentage: number | null;
+  unit: 'g';
+  state:
+    | 'unavailable'
+    | 'not_started'
+    | 'in_progress'
+    | 'near_target'
+    | 'target_reached'
+    | 'above_target';
 };
 
 export type NutritionMealProgress = {
+  planned: number;
+  available: number;
+  completed: number;
+  pending: number;
+  completionPercentage: number | null;
+  nextMealId: string | null;
+  additionalLoggedCount: number;
+  /** @deprecated Compatibility names retained for current consumers. */
   plannedCount: number;
   consumedCount: number;
   completedCount: number;
   remainingCount: number;
+};
+
+export type NutritionCalorieProgress = {
+  consumed: number;
+  target: number | null;
+  remaining: number | null;
+  excess: number | null;
+  percentage: number | null;
+  rawPercentage: number | null;
+  state:
+    | 'not_started'
+    | 'in_progress'
+    | 'near_target'
+    | 'target_reached'
+    | 'above_target';
+};
+
+export type NutritionAction =
+  | { type: 'open_profile' }
+  | { type: 'create_plan' }
+  | { type: 'open_today_meals' }
+  | { type: 'log_meal'; mealId?: string }
+  | { type: 'open_hydration' }
+  | { type: 'none' };
+
+export type NutritionFocus = {
+  kind:
+    | 'configure_profile'
+    | 'create_plan'
+    | 'log_meal'
+    | 'complete_next_meal'
+    | 'prioritize_protein'
+    | 'maintain_plan'
+    | 'review_targets';
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high';
+  action: NutritionAction;
+};
+
+export type NutritionInsightKind =
+  | 'profile_required'
+  | 'plan_required'
+  | 'meal_logging_required'
+  | 'next_meal_available'
+  | 'protein_progress'
+  | 'calorie_progress'
+  | 'day_on_track'
+  | 'targets_unavailable'
+  | 'insufficient_data';
+
+export type NutritionInsight = {
+  kind: NutritionInsightKind;
+  title: string;
+  message: string;
+  action: NutritionAction;
 };
 
 export type NutritionAvailability =
@@ -135,8 +219,14 @@ export type NutritionReadModel = {
   macroTargets: MacroTargets;
   meals: Meal[];
   progress: NutritionProgress;
+  targets: MacroTargets | null;
+  calories: NutritionCalorieProgress | null;
+  macros: NutritionMacroProgress[];
   mealProgress: NutritionMealProgress;
   nextMeal: Meal | null;
+  focus: NutritionFocus;
+  insight: NutritionInsight;
+  /** @deprecated Use focus. */
   nutritionFocus: string;
 };
 
