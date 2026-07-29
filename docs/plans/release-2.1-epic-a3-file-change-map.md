@@ -147,12 +147,12 @@ No application or persistence source was changed in Prompt 8. The audit found re
 | Nutrition Expert spec | modified | tests | Asserts canonical boundary metadata and canonical calorie text | Low | API suite | No recalculation |
 | `docs/architecture/release-2.1-epic-a3-nutrition-legacy-register.md` | modified | governance | Records zero active legacy test fixtures and P1 runtime legacy | None | Documentation review | Alias remains compatibility-only |
 | `docs/architecture/release-2.1-epic-a3-nutrition-legacy-runtime-migration.md` | modified | documentation | Records root-cause migration and final validation | None | Documentation review | E2E condition explicit |
-| implementation plan and file change map | modified | planning | Marks Prompt 8B.3 complete with E2E condition | None | `git diff --check` | Prompt 9 remains pending |
-| `docs/architecture/release-2.1-epic-a3-nutrition-integration-audit.md` | intentionally unchanged | architecture | Original Prompt 8 audit retained as historical evidence | None | N/A | Superseded status documented in migration doc |
+| implementation plan and file change map | modified | planning | Records Prompt 9 certification with E2E condition | None | `git diff --check` | Rollout remains conditional on compatible E2E |
+| `docs/architecture/release-2.1-epic-a3-nutrition-integration-audit.md` | modified | architecture | Adds Prompt 9 reconciliation to historical audit | None | `git diff --check` | Current P0/P1 status explicit |
 | `docs/architecture/release-2.1-epic-a3-nutrition-legacy-register.md` | modified | architecture governance | Updates migrated and remaining legacy statuses | None | Documentation review | P1 residuals explicit |
-| `docs/plans/release-2.1-epic-a3-nutrition-intelligence-implementation-plan.md` | modified | planning | Adds Prompt 8B as not completed; Prompt 9 remains pending | None | Documentation review | Honest status |
+| `docs/plans/release-2.1-epic-a3-nutrition-intelligence-implementation-plan.md` | modified | planning | Records Prompt 9 certification with conditions | None | Documentation review | E2E condition explicit |
 
-Preexisting changes from Prompts 1–7 and Prompt 8 remain grouped above; no commit was created. Test fixtures and raw Coach compatibility contracts are intentionally deferred because they still require coordinated migration.
+Preexisting changes from Prompts 1–8B.3 remain grouped above; no commit was created. Prompt 9 added certification documentation and status reconciliation only; no new runtime feature was introduced.
 
 ## Prompt 8B.1 completion pass
 
@@ -175,3 +175,11 @@ Preexisting changes from Prompts 1–7 and Prompt 8 remain grouped above; no com
 | `packages/types/src/ai/coach-intelligence.d.ts` and Nutrition Expert types | modified | shared contracts | generated/strict declarations | Removed stale raw Nutrition declarations | Aligns source and declarations | Low | Types/API build | Public alias remains isolated |
 | `docs/architecture/release-2.1-epic-a3-nutrition-legacy-runtime-migration.md` | modified | documentation | migration record | Added 8B.2 status and validation conditions | Certification evidence | None | `git diff --check` | Prompt 9 pending |
 | `docs/architecture/release-2.1-epic-a3-nutrition-legacy-register.md` | modified | governance | legacy register | Recorded zero P1 runtime legacy and remaining test/persistence conditions | Explicit removal status | None | documentation review | No new consumers |
+
+## Prompt 9 certification
+
+| File | Status | Layer | Responsibility | Change | Impact | Risk | Validation | Compatibility / privacy |
+|---|---|---|---|---|---|---|---|---|
+| `docs/architecture/release-2.1-epic-a3-nutrition-certification.md` | created | architecture governance | Official certification record | Documents architecture, evidence, findings, conditions, rollback and rollout decisions | No runtime impact | None | `git diff --check` | No Nutrition payloads |
+| Existing audit, migration and register documents | modified | governance | Final status reconciliation | Records current P0/P1 status and superseded checkpoint findings | Documentation only | Low | `git diff --check` | No contract change |
+| Implementation plan | modified | planning | Epic completion status | Marks Prompt 9 certified with conditions | Documentation only | Low | Documentation review | Alias/data lifecycle conditions retained |

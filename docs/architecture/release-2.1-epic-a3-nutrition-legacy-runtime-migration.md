@@ -101,6 +101,12 @@ Validation status for this pass is conditional: API build passes and boundary te
 
 Prompt 8B.2 is not fully complete until those stale fixtures/assertions are migrated and the API suite returns green. Prompt 9 remains pending.
 
+## Prompt 9 certification reconciliation
+
+The historical checkpoint above is superseded by Prompt 8B.3: the API suite is green at 215 suites / 1,352 tests, Mobile is green at 22 suites / 104 tests, and boundary tests pass. Current source inspection confirms zero active raw Coach/Expert runtime fields, zero external Nutrition repository access and zero internal `TodayNutrition` consumers.
+
+Prompt 9 certification status is `EPIC_A3_CERTIFIED_WITH_CONDITIONS`. P0 and P1 are zero. E2E remains `ENVIRONMENT_BLOCKED` solely because MongoMemoryServer cannot bind `0.0.0.0`; it must be re-run in a compatible CI/host before broad rollout.
+
 ## Prompt 8B.3 — Canonical test migration
 
 The twelve failing API suites were classified as stale fixtures or assertions; no production bug was required. Tests now use canonical projections or assert the intentionally safe absence of Nutrition context in non-Nutrition consumers. Legacy Nutrition feedback tests were removed because that behavior no longer belongs to Coach feedback generation.

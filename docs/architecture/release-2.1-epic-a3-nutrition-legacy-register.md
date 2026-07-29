@@ -44,3 +44,11 @@ P1 active runtime legacy is zero. At the time of the Prompt 8B.2 checkpoint, the
 | Historical persisted feedback fields | compatibility_only | deferred | Existing documents only; no new raw writes |
 
 P1 runtime legacy: zero. P1 legacy test fixtures: zero. E2E remains `ENVIRONMENT_BLOCKED` only because this environment denies MongoMemoryServer port binding.
+
+## Prompt 9 certification status
+
+Architecture certification: `EPIC_A3_CERTIFIED_WITH_CONDITIONS`.
+
+Production readiness: `READY_FOR_PRODUCTION_ROLLOUT_WITH_CONDITIONS`.
+
+P0 = 0 and P1 = 0. The sole rollout condition is re-execution of E2E in an environment that permits MongoMemoryServer port binding. The public `TodayNutrition` alias remains compatibility-only; historical persisted fields remain existing-document compatibility data and are not written by the current runtime.

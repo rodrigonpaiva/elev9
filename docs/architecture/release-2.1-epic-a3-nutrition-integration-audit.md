@@ -186,3 +186,9 @@ Prompt 5/7 telemetry remains allowlisted. No Nutrition payload, values, history 
 The repository is not yet ready for unconditional certification because raw Coach loaders, cross-domain repository consumers and normal-state HTTP compatibility remain. They are explicitly isolated and documented rather than silently treated as canonical.
 
 Prompt 9 must verify removal or application-port migration of these paths, normal-state HTTP normalization, public alias migration, deletion lifecycle and E2E coverage.
+
+## Prompt 9 certification reconciliation
+
+The sections above preserve the original Prompt 8 checkpoint findings. They are superseded for current runtime status by Prompts 8B–8B.3: Health Context, Coach, Training, Goals and Notifications now use canonical application ports; raw Coach/Expert runtime fields and fallbacks were removed; internal `TodayNutrition` usage is zero; and the API/Mobile suites and boundary tests pass.
+
+The current certification records P0 = 0 and P1 = 0. E2E remains `ENVIRONMENT_BLOCKED` because MongoMemoryServer cannot bind in this environment. The public `TodayNutrition` alias remains compatibility-only and historical persisted fields are existing-document compatibility data only.

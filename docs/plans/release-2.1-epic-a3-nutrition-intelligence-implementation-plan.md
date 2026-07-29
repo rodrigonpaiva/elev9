@@ -14,7 +14,7 @@
 | Prompt 8B.1 — Runtime Migration Completion Pass | Green critical suites and close remaining runtime migration conditions | **completed with conditions** |
 | Prompt 8B.2 — Legacy Cleanup & Certification Readiness | Remove remaining raw Coach/Expert runtime artifacts and enforce boundaries | **completed with conditions** |
 | Prompt 8B.3 — Canonical Test Migration & Final Green Suite | Migrate the remaining legacy fixtures/assertions and close the API suite | **completed with conditions** |
-| Prompt 9 — Production Certification | Certify release behavior and readiness | pending |
+| Prompt 9 — Production Certification | Certify release behavior and readiness | **certified with conditions** |
 
 Prompt 7 is completed with conditions because the repository has no immutable daily snapshot or historical plan-version store. The implementation reconstructs only logged days from the plan referenced by their logs, exposes partial/no-data states, and defers snapshots, backfill and historical guidance fidelity.
 
@@ -25,3 +25,5 @@ Prompt 8B is completed with conditions. Runtime raw fields/helpers and external 
 Prompt 8B.2 was completed with conditions at its checkpoint: P1 active runtime legacy was zero, while stale fixtures/assertions remained for Prompt 8B.3.
 
 Prompt 8B.3 — Canonical Test Migration & Final Green Suite is **completed with conditions**. All twelve remaining API suites were migrated from legacy fixtures/assertions; API tests pass at 215 suites / 1,352 tests. Mobile tests/builds, API/API Client builds and boundary tests pass. E2E remains `ENVIRONMENT_BLOCKED` because MongoMemoryServer cannot bind (`listen EPERM`). Prompt 8 is **completed with conditions** and Prompt 9 remains pending.
+
+Prompt 9 — Production Certification is **certified with conditions**. Code and documentation were inspected, critical suites/builds/boundaries passed, P0/P1 findings are zero, and E2E was executed but remains environment-blocked by MongoMemoryServer port binding. Rollout requires E2E re-execution in compatible CI/host, reinforced monitoring and the documented compatibility-only alias/legacy-document conditions.
