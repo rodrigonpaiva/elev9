@@ -33,6 +33,20 @@ export class MongooseNutritionPlanRepository implements NutritionPlanRepository 
     return this.toEntity(document as NutritionPlanDocument);
   }
 
+  async findByIds(nutritionPlanIds: readonly string[]): Promise<NutritionPlan[]> {
+    if (nutritionPlanIds.length === 0) return [];
+
+    const documents = await this.nutritionPlanModel
+      .find({
+        _id: { $in: [...nutritionPlanIds] },
+      })
+      .exec();
+
+    return documents.map((document) =>
+      this.toEntity(document as NutritionPlanDocument),
+    );
+  }
+
   async findActiveByUserProfileId(
     userProfileId: string,
   ): Promise<NutritionPlan | null> {

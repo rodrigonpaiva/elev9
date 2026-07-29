@@ -357,3 +357,108 @@ export type GenerateNutritionRecommendationResponse = {
 export type GetNutritionRecommendationsResponse = {
   recommendations: NutritionRecommendation[];
 };
+
+export type NutritionHistoryAvailability =
+  | 'available'
+  | 'partial'
+  | 'no_data'
+  | 'not_configured'
+  | 'legacy'
+  | 'not_available'
+  | 'processing_failed';
+
+export type NutritionHistoryDataQuality =
+  | 'complete'
+  | 'partial'
+  | 'legacy'
+  | 'unknown';
+
+export type NutritionHistorySource =
+  | 'snapshot'
+  | 'reconstructed'
+  | 'legacy_projection';
+
+export type NutritionHistoryDayReadModel = {
+  date: string;
+  timezone: 'UTC';
+  availability: NutritionHistoryAvailability;
+  dataQuality: NutritionHistoryDataQuality;
+  freshness: NutritionFreshness;
+  calories: NutritionCalorieProgress | null;
+  macros: NutritionMacroProgress[];
+  mealProgress: NutritionMealProgress | null;
+  adherenceStatus: NutritionAdherenceStatus;
+  focus: NutritionFocus | null;
+  insight: NutritionInsight | null;
+  source: NutritionHistorySource;
+  contractVersion: 'nutrition-history-v1';
+};
+
+export type NutritionHistoryDaySummary = Pick<
+  NutritionHistoryDayReadModel,
+  'date' | 'availability' | 'dataQuality' | 'adherenceStatus'
+> & {
+  calories: Pick<NutritionCalorieProgress, 'state' | 'percentage'> | null;
+  meals: Pick<NutritionMealProgress, 'completed' | 'planned'> | null;
+};
+
+export type NutritionHistoryPage = {
+  items: NutritionHistoryDaySummary[];
+  pageInfo: {
+    nextCursor: string | null;
+    hasNextPage: boolean;
+  };
+  period: {
+    from: string;
+    to: string;
+    timezone: 'UTC';
+  };
+  contractVersion: 'nutrition-history-v1';
+};
+
+export type NutritionTrendSeriesPoint = {
+  date: string;
+  value: number | null;
+};
+
+export type NutritionTrendSeries = {
+  unit: 'percentage' | 'meals';
+  points: NutritionTrendSeriesPoint[];
+};
+
+export type NutritionAdherenceDistribution = {
+  notStarted: number;
+  belowRange: number;
+  withinRange: number;
+  aboveRange: number;
+  unavailable: number;
+};
+
+export type NutritionTrendReadModel = {
+  period: {
+    from: string;
+    to: string;
+    timezone: 'UTC';
+  };
+  coverage: {
+    expectedDays: number;
+    availableDays: number;
+    partialDays: number;
+    missingDays: number;
+  };
+  calorieProgress: NutritionTrendSeries | null;
+  mealProgress: NutritionTrendSeries | null;
+  adherenceDistribution: NutritionAdherenceDistribution;
+  dataQuality: NutritionHistoryDataQuality;
+  contractVersion: 'nutrition-history-v1';
+};
+
+export type GetNutritionHistoryResponse = NutritionHistoryPage;
+
+export type GetNutritionHistoryDayResponse = {
+  day: NutritionHistoryDayReadModel;
+};
+
+export type GetNutritionTrendsResponse = {
+  trends: NutritionTrendReadModel;
+};

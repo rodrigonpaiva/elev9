@@ -30,7 +30,10 @@ import { LoginScreen } from '../screens/login-screen';
 import { LogMealScreen } from '../screens/log-meal-screen';
 import { MainTabsScreen } from '../screens/main-tabs-screen';
 import { MealDetailScreen } from '../screens/meal-detail-screen';
-import { NutritionHistoryScreen } from '../screens/nutrition-history-screen';
+import {
+  NutritionHistoryDayScreen,
+  NutritionHistoryScreen,
+} from '../screens/nutrition-history-screen';
 import { NutritionOverviewScreen } from '../screens/nutrition-overview-screen';
 import { NutritionPlanScreen } from '../screens/nutrition-plan-screen';
 import { NutritionRecommendationsScreen } from '../screens/nutrition-recommendations-screen';
@@ -104,6 +107,7 @@ export type RootStackParamList = {
   NutritionOverview: undefined;
   NutritionPlan: undefined;
   NutritionHistory: undefined;
+  NutritionHistoryDay: { date: string };
   NutritionRecommendations: undefined;
   TodaysMeals: undefined;
   TrainingAnalytics: undefined;
@@ -365,6 +369,14 @@ export function AppNavigator() {
                 },
                 headerTintColor: '#111827',
                 headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="NutritionHistoryDay"
+              component={NutritionHistoryDayScreen}
+              options={{
+                headerShown: true,
+                title: 'Nutrition Day',
               }}
             />
             <Stack.Screen

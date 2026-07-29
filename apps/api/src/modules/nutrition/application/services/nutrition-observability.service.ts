@@ -26,6 +26,10 @@ export type NutritionTelemetryEvent = Readonly<{
   safeErrorCode?: NutritionSafeErrorCode;
   partialResult?: boolean;
   legacyMappingUsed?: boolean;
+  periodBucket?: '7d' | '30d' | '90d';
+  resultCountBucket?: '0' | '1_10' | '11_50' | 'over_50';
+  dataQuality?: 'complete' | 'partial' | 'legacy' | 'unknown';
+  source?: 'snapshot' | 'reconstructed' | 'legacy_projection';
 }>;
 
 export type NutritionDurationBucket =
@@ -62,6 +66,10 @@ const SAFE_EVENT_KEYS = new Set([
   'safeErrorCode',
   'partialResult',
   'legacyMappingUsed',
+  'periodBucket',
+  'resultCountBucket',
+  'dataQuality',
+  'source',
 ]);
 
 export function toNutritionDurationBucket(
@@ -85,6 +93,10 @@ export function buildNutritionTelemetryEvent(input: {
   safeErrorCode?: NutritionSafeErrorCode;
   partialResult?: boolean;
   legacyMappingUsed?: boolean;
+  periodBucket?: NutritionTelemetryEvent['periodBucket'];
+  resultCountBucket?: NutritionTelemetryEvent['resultCountBucket'];
+  dataQuality?: NutritionTelemetryEvent['dataQuality'];
+  source?: NutritionTelemetryEvent['source'];
 }): NutritionTelemetryEvent {
   const event: NutritionTelemetryEvent = {
     event: input.event,
@@ -104,6 +116,10 @@ export function buildNutritionTelemetryEvent(input: {
     ...(input.legacyMappingUsed !== undefined
       ? { legacyMappingUsed: input.legacyMappingUsed }
       : {}),
+    ...(input.periodBucket ? { periodBucket: input.periodBucket } : {}),
+    ...(input.resultCountBucket ? { resultCountBucket: input.resultCountBucket } : {}),
+    ...(input.dataQuality ? { dataQuality: input.dataQuality } : {}),
+    ...(input.source ? { source: input.source } : {}),
   };
 
   if (!Object.keys(event).every((key) => SAFE_EVENT_KEYS.has(key))) {
@@ -151,6 +167,35 @@ export class NutritionObservabilityService {
     );
   }
 
+  recordHistoryRead(input: {
+    operation:
+      | 'get_nutrition_history'
+      | 'get_nutrition_history_day'
+      | 'get_nutrition_trends';
+    outcome: NutritionTelemetryOutcome;
+    durationMs?: number;
+    resultCount?: number;
+    dataQuality?: NutritionTelemetryEvent['dataQuality'];
+    source?: NutritionTelemetryEvent['source'];
+    safeErrorCode?: NutritionSafeErrorCode;
+  }): void {
+    this.record(
+      buildNutritionTelemetryEvent({
+        event: `nutrition_history_${input.outcome}`,
+        operation: input.operation,
+        outcome: input.outcome,
+        durationMs: input.durationMs,
+        resultCountBucket:
+          input.resultCount === undefined
+            ? undefined
+            : toResultCountBucket(input.resultCount),
+        dataQuality: input.dataQuality,
+        source: input.source,
+        safeErrorCode: input.safeErrorCode,
+      }),
+    );
+  }
+
   getMetricSnapshot(): NutritionMetricSnapshot {
     return Object.freeze(Object.fromEntries(this.counters.entries()));
   }
@@ -172,4 +217,13 @@ export class NutritionObservabilityService {
       // Telemetry is fail-open and cannot affect Nutrition behavior.
     }
   }
+}
+
+function toResultCountBucket(
+  count: number,
+): NutritionTelemetryEvent['resultCountBucket'] {
+  if (count <= 0) return '0';
+  if (count <= 10) return '1_10';
+  if (count <= 50) return '11_50';
+  return 'over_50';
 }

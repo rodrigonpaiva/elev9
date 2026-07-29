@@ -77,3 +77,25 @@ Files intentionally unchanged or deferred for Prompt 4: raw Nutrition plan/log/r
 | `docs/runbooks/release-2.1-epic-a3-nutrition-observability-runbook.md` | created | operations | Safe diagnosis, rollback and privacy incident flow | None | Documentation review |
 
 Dashboards, alert rules, OpenTelemetry exporter, Sentry integration, retention enforcement and external analytics provider are `deferred`: no corresponding versioned infrastructure exists. No preexisting working-tree changes were present before Prompt 5.
+
+## Prompt 7 — Nutrition History & Trends
+
+| File | Status | Layer | Reason / change | Impact / risk | Tests | Privacy / retention / performance / migration |
+| --- | --- | --- | --- | --- | --- | --- |
+| `packages/types/src/nutrition/index.ts` | modified | shared contract | Adds paginated history, daily detail and trend read models | Additive public contract; low | types build, API client build | No telemetry payload; no new retention |
+| `apps/api/src/modules/nutrition/application/services/nutrition-history-projection.service.ts` | created | domain/application projection | Reconstructs logged historical days from their referenced plan and canonical engine | Historical fidelity limited without snapshots; medium | projection unit tests | Values remain domain-owned; bounded projection |
+| `apps/api/src/modules/nutrition/application/services/nutrition-history-query.service.ts` | created | application | Enforces user scope, UTC range, cursor and 90-day limit | New query boundary; medium | query unit tests, API build | No raw logs; bounded queries |
+| `apps/api/src/modules/nutrition/application/services/nutrition-history-*.spec.ts` | created | tests | Covers no-data, coverage denominator, invalid range/cursor and user scope | Low | targeted API tests | Synthetic data only |
+| `apps/api/src/modules/nutrition/domain/repositories/nutrition-plan.repository.ts` | modified | domain port | Adds optional batch historical plan lookup | Compatible fallback retained; low | API build/tests | Avoids N+1 in real adapter |
+| `apps/api/src/modules/nutrition/infrastructure/mongoose/mongoose-nutrition-plan.repository.ts` | modified | persistence | Implements batch `findByIds` for referenced historical plans | One indexed batch query; low | API build/repository tests | No new collection/index |
+| `apps/api/src/modules/nutrition/presentation/http/nutrition.controller.ts` | modified | API | Adds authenticated history list, day detail and trends endpoints | Additive routes; medium | controller tests, API build | Safe DTO boundary, no schemas |
+| `apps/api/src/modules/nutrition/presentation/http/dto/get-nutrition-history.query.dto.ts` | created | API DTO | Defines bounded history query inputs | Low | API build | No sensitive fields |
+| `apps/api/src/modules/nutrition/nutrition.module.ts` | modified | module wiring | Registers history services | No architectural cycle; low | API build |
+| `packages/api-client/src/nutrition-api.ts` | modified | API client | Adds typed history/day/trends methods with encoded query/cursor | Additive client API; low | client build |
+| `apps/mobile/src/screens/nutrition-history-screen.tsx` | modified | Mobile | Replaces legacy plan/recommendation timeline with canonical paginated history and detail | Removes local historical semantics; medium | Mobile build |
+| `apps/mobile/src/navigation/app-navigator.tsx` | modified | navigation | Adds daily historical detail route | Additive route; low | Mobile build |
+| `apps/api/src/modules/nutrition/application/services/nutrition-observability.service.ts` | modified | observability | Adds safe history operation and bucket signals | Low-cardinality, fail-open | API build |
+| `docs/architecture/release-2.1-epic-a3-nutrition-history-and-trends.md` | created | documentation | Records audit, reconstruction decision, contracts, privacy and gaps | None | Documentation review |
+| `docs/plans/release-2.1-epic-a3-nutrition-intelligence-implementation-plan.md` | modified | planning | Marks Prompt 7 completed with conditions; Prompts 8–9 pending | None | Documentation review |
+
+Snapshot persistence, backfill, historical plan versioning, persistent history cache, custom-period UI, chart dependency and historical focus/insight materialization are `deferred`. No unrelated working-tree changes were present before Prompt 7.
