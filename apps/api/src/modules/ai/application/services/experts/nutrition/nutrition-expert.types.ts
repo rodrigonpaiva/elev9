@@ -12,6 +12,23 @@ import type {
   CoachExpertResult,
 } from '../coach-expert.types';
 import type { UserHealthContext } from '../../context-builder/build-user-health-context.service';
+import type { CoachNutritionContext } from '../../context-builder/coach-nutrition-context.types';
+
+export type NutritionExplainabilityFact =
+  | 'availability'
+  | 'freshness'
+  | 'calorie_progress'
+  | 'macro_progress'
+  | 'meal_progress'
+  | 'adherence'
+  | 'focus'
+  | 'insight';
+
+export type NutritionCanonicalResponse = {
+  text: string;
+  factsUsed: readonly NutritionExplainabilityFact[];
+  action: CoachNutritionContext['actions'][number];
+};
 
 export type NutritionStatus =
   | 'ON_TRACK'
@@ -154,6 +171,9 @@ export type NutritionAnalysis = {
   dislikedFoodConflicts: number;
   preferredFoodMatches: number;
   readinessLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
+  canonicalAvailability?: CoachNutritionContext['availability'];
+  canonicalFreshness?: CoachNutritionContext['freshness'];
+  canonicalResponse?: NutritionCanonicalResponse;
 };
 
 export type NutritionExpertContribution = {

@@ -5,6 +5,7 @@ import type {
 } from '../agent/agent.types';
 import type { AgentPolicyEvaluation } from '../agent/policies/agent-policy.types';
 import type { UserHealthContext } from '../context-builder/build-user-health-context.service';
+import type { CoachNutritionContext } from '../context-builder/coach-nutrition-context.types';
 import type { RecoverySnapshot } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
 import type { NutritionLog } from '../../../../nutrition/domain/entities/nutrition-log.entity';
 import type { NutritionPlan } from '../../../../nutrition/domain/entities/nutrition-plan.entity';
@@ -82,6 +83,8 @@ export type CoachExpertContext = {
   nutritionPlan?: NutritionPlan;
   todayNutrition?: GetTodayNutritionOutput['todayNutrition'];
   nutritionLogs?: readonly NutritionLog[];
+  /** Canonical Nutrition projection. Legacy fields remain for compatibility. */
+  nutritionContext?: CoachNutritionContext;
   habit?: HabitPromptPayload;
   habitHistory?: readonly HabitSnapshot[];
   selectionReason: string;

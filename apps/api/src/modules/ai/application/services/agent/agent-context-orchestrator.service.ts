@@ -176,6 +176,9 @@ export class AgentContextOrchestratorService {
       ...(input.loadedContext.nutritionLogs
         ? { nutritionLogs: input.loadedContext.nutritionLogs }
         : {}),
+      ...(input.loadedContext.nutritionContext
+        ? { nutritionContext: input.loadedContext.nutritionContext }
+        : {}),
       ...(input.loadedContext.habitHistory
         ? { habitHistory: input.loadedContext.habitHistory }
         : {}),

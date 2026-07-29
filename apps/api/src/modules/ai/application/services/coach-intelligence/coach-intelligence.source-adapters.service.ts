@@ -280,6 +280,9 @@ export class CoachIntelligenceSourceAdaptersService {
       nutrition.context.nutritionLogs.length > 0
         ? { nutritionLogs: Object.freeze([...nutrition.context.nutritionLogs]) }
         : {}),
+      ...(healthContext.nutritionContext
+        ? { nutritionContext: healthContext.nutritionContext }
+        : {}),
       ...(habits.state.data
         ? {
             habit: {

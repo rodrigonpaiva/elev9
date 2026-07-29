@@ -23,6 +23,8 @@ import type {
   NutritionRiskAssessment,
   NutritionStatus,
   NutritionExpertContribution,
+  NutritionCanonicalResponse,
+  NutritionExplainabilityFact,
 } from './nutrition-expert.types';
 import type {
   Meal,
@@ -32,6 +34,7 @@ import type {
 import type { NutritionLog } from '../../../../../nutrition/domain/entities/nutrition-log.entity';
 import type { NutritionPlan } from '../../../../../nutrition/domain/entities/nutrition-plan.entity';
 import type { UserHealthContext } from '../../context-builder/build-user-health-context.service';
+import type { CoachNutritionContext } from '../../context-builder/coach-nutrition-context.types';
 
 const COACH_EXPERT_VERSION = '1.0.0';
 const NUTRITION_EXPERT_ID = 'NutritionExpert';
@@ -118,7 +121,7 @@ export class NutritionExpert extends BaseCoachExpert {
     input: CoachExpertRequest,
     context: CoachExpertContext,
   ): CoachExpertResult {
-    const analysis = this.buildAnalysis(context);
+    const analysis = this.buildAnalysis(context, input.userMessage);
     const contribution = this.buildContribution(analysis, context);
     const contributions = this.buildContributions(contribution);
 
@@ -140,6 +143,17 @@ export class NutritionExpert extends BaseCoachExpert {
         goalAlignment: contribution.goalAlignment,
         recoverySupport: contribution.recoverySupport,
         confidence: contribution.confidence,
+        ...(analysis.canonicalResponse
+          ? {
+              nutritionBoundary: Object.freeze({
+                source: 'nutrition_read_model',
+                contractVersion: 'nutrition-read-model-v1',
+                factsUsed: analysis.canonicalResponse.factsUsed,
+              }),
+              canonicalAvailability: analysis.canonicalAvailability,
+              canonicalFreshness: analysis.canonicalFreshness,
+            }
+          : {}),
       }),
     };
   }
@@ -154,10 +168,23 @@ export class NutritionExpert extends BaseCoachExpert {
     return result.contributions;
   }
 
-  private buildAnalysis(context: CoachExpertContext): NutritionAnalysis {
+  private buildAnalysis(
+    context: CoachExpertContext,
+    userMessage = '',
+  ): NutritionAnalysis {
     const healthContext = context.healthContext;
 
-    if (context.policyEvaluation?.decision.blocked || !healthContext) {
+    if (context.policyEvaluation?.decision.blocked) {
+      return this.buildBlockedAnalysis(healthContext);
+    }
+
+    const canonicalNutrition =
+      context.nutritionContext ?? healthContext?.nutritionContext;
+    if (canonicalNutrition) {
+      return this.buildCanonicalAnalysis(canonicalNutrition, userMessage);
+    }
+
+    if (!healthContext) {
       return this.buildBlockedAnalysis(healthContext);
     }
 
@@ -292,6 +319,250 @@ export class NutritionExpert extends BaseCoachExpert {
       preferredFoodMatches: conflictAnalysis.preferredFoodMatches,
       readinessLevel,
     });
+  }
+
+  private buildCanonicalAnalysis(
+    nutrition: CoachNutritionContext,
+    userMessage: string,
+  ): NutritionAnalysis {
+    const response = this.buildCanonicalResponse(nutrition, userMessage);
+    const nutritionStatus = this.mapCanonicalStatus(nutrition);
+    const priority = this.mapCanonicalPriority(nutrition);
+    const recommendation = Object.freeze({
+      code: this.mapActionToRecommendationCode(response.action.type),
+      summary: response.text,
+      reason: 'The response is based on the canonical NutritionReadModel.',
+      priority,
+      metadata: Object.freeze({ source: 'nutrition_read_model' }),
+    });
+    const riskAssessment = Object.freeze({
+      level: priority,
+      summary: 'Nutrition risk is represented by the canonical daily state.',
+      factors: Object.freeze([`availability=${nutrition.availability}`]),
+      metadata: Object.freeze({ source: 'nutrition_read_model' }),
+    });
+
+    return Object.freeze({
+      nutritionStatus,
+      macroAssessment: this.buildEmptyMacroAssessment(nutritionStatus),
+      mealAssessment: this.buildEmptyMealAssessment(nutritionStatus),
+      goalAlignment: 'unknown',
+      recoverySupport: Object.freeze({
+        level: 'UNKNOWN',
+        summary: 'Recovery support is not inferred from Nutrition data.',
+        factors: Object.freeze(['canonical_nutrition_boundary']),
+        metadata: Object.freeze({}),
+      }),
+      riskAssessment,
+      recommendations: Object.freeze([recommendation]),
+      confidence: nutrition.availability === 'available' ? 'HIGH' : 'LOW',
+      priority,
+      signals: Object.freeze([
+        'source=nutrition_read_model',
+        `availability=${nutrition.availability}`,
+        `freshness=${nutrition.freshness}`,
+      ]),
+      nutritionProfilePresent: false,
+      nutritionPlanPresent: nutrition.meals !== null,
+      todayNutritionPresent: nutrition.availability === 'available',
+      trainingScheduledToday: false,
+      restrictionConflicts: 0,
+      allergyConflicts: 0,
+      dislikedFoodConflicts: 0,
+      preferredFoodMatches: 0,
+      readinessLevel: 'UNKNOWN',
+      canonicalAvailability: nutrition.availability,
+      canonicalFreshness: nutrition.freshness,
+      canonicalResponse: response,
+    });
+  }
+
+  private buildCanonicalResponse(
+    nutrition: CoachNutritionContext,
+    userMessage: string,
+  ): NutritionCanonicalResponse {
+    const action =
+      nutrition.focus?.action ?? nutrition.insight?.action ?? nutrition.actions[0] ?? { type: 'none' as const };
+    const facts: NutritionExplainabilityFact[] = ['availability', 'freshness'];
+    let text: string;
+
+    if (this.isNutritionSafetyQuestion(userMessage)) {
+      text =
+        'I can explain your current nutrition targets and logged progress, but I cannot prescribe a diet or assess a medical condition. For personalised medical guidance, speak with a qualified healthcare professional.';
+    } else if (nutrition.availability === 'not_configured') {
+      text =
+        nutrition.focus?.message ??
+        'Your nutrition setup is not complete yet. Finish your nutrition profile to start receiving daily targets.';
+      facts.push('focus');
+    } else if (nutrition.availability === 'processing_failed') {
+      text = 'I could not retrieve today’s nutrition progress right now.';
+    } else if (nutrition.availability === 'not_available') {
+      text = 'Today’s nutrition information is temporarily unavailable.';
+    } else if (nutrition.availability === 'insufficient_data') {
+      text =
+        nutrition.focus?.message ??
+        nutrition.insight?.message ??
+        'There is not enough information to summarize today’s nutrition progress.';
+      if (nutrition.focus) facts.push('focus');
+      if (nutrition.insight) facts.push('insight');
+    } else {
+      text = this.buildAvailableCanonicalResponse(nutrition, userMessage, facts);
+    }
+
+    if (nutrition.freshness === 'stale') {
+      text += ' This nutrition summary may not include your latest updates.';
+    } else if (nutrition.freshness === 'legacy') {
+      text += ' Some nutrition information may need to be refreshed.';
+    }
+
+    return Object.freeze({
+      text,
+      factsUsed: Object.freeze([...new Set(facts)]),
+      action,
+    });
+  }
+
+  private buildAvailableCanonicalResponse(
+    nutrition: CoachNutritionContext,
+    userMessage: string,
+    facts: NutritionExplainabilityFact[],
+  ): string {
+    const normalized = userMessage.toLowerCase();
+    const calorie = nutrition.calories;
+    const protein = nutrition.macros.find((macro) => macro.nutrient === 'protein');
+
+    if (normalized.includes('meal') || normalized.includes('refeição')) {
+      facts.push('meal_progress');
+      if (!nutrition.meals) {
+        return 'Meal progress is not available in today’s nutrition data.';
+      }
+      const nextMeal = nutrition.meals.nextMeal
+        ? ` Your next planned meal is ${nutrition.meals.nextMeal.title}.`
+        : '';
+      return `You have completed ${nutrition.meals.completed} of ${nutrition.meals.planned} planned meals.${nextMeal}`;
+    }
+
+    if (normalized.includes('protein') || normalized.includes('proteína')) {
+      facts.push('macro_progress');
+      if (!protein) {
+        return 'Protein progress is not available in today’s nutrition data.';
+      }
+      return protein.target === null
+        ? `You have logged ${protein.consumed} ${protein.unit} of protein, but no protein target is currently configured.`
+        : `You have logged ${protein.consumed} ${protein.unit} of protein toward a target of ${protein.target} ${protein.unit}.`;
+    }
+
+    if (normalized.includes('calorie') || normalized.includes('caloria')) {
+      facts.push('calorie_progress');
+      return this.buildCalorieResponse(calorie);
+    }
+
+    if (normalized.includes('adherence') || normalized.includes('aderência')) {
+      facts.push('adherence');
+      return this.buildAdherenceResponse(nutrition.adherenceStatus);
+    }
+
+    if (normalized.includes('focus') || normalized.includes('agora') || normalized.includes('foco')) {
+      facts.push('focus');
+      return nutrition.focus?.message ?? 'There is no current nutrition focus available.';
+    }
+
+    facts.push('calorie_progress', 'meal_progress');
+    const calorieSummary = calorie ? this.buildCalorieResponse(calorie) : 'Calorie progress is not available.';
+    const mealSummary = nutrition.meals
+      ? ` You have completed ${nutrition.meals.completed} of ${nutrition.meals.planned} planned meals.`
+      : '';
+    return `${calorieSummary}${mealSummary}`;
+  }
+
+  private buildCalorieResponse(
+    calories: CoachNutritionContext['calories'],
+  ): string {
+    if (!calories || calories.target === null) {
+      return 'Calorie progress is available, but no calorie target is currently configured.';
+    }
+    if (calories.state === 'above_target') {
+      return `Your logged intake is above today’s calorie target${calories.excess === null ? '.' : ` by ${calories.excess} calories.`}`;
+    }
+    if (calories.remaining === null) {
+      return `You have logged ${calories.consumed} of ${calories.target} calories today.`;
+    }
+    return `You have ${calories.remaining} calories remaining today.`;
+  }
+
+  private buildAdherenceResponse(
+    status: CoachNutritionContext['adherenceStatus'],
+  ): string {
+    switch (status) {
+      case 'not_started':
+        return 'You have not logged nutrition activity for today yet.';
+      case 'below_range':
+        return 'Your logged intake is currently below your daily target range.';
+      case 'within_range':
+        return 'Your logged intake is currently within your daily target range.';
+      case 'above_range':
+        return 'Your logged intake is currently above your daily target range.';
+      case 'unavailable':
+      default:
+        return 'There is not enough information to assess today’s nutrition progress.';
+    }
+  }
+
+  private mapCanonicalStatus(nutrition: CoachNutritionContext): NutritionStatus {
+    switch (nutrition.availability) {
+      case 'not_configured':
+        return 'NO_PROFILE';
+      case 'insufficient_data':
+        return 'PARTIAL';
+      case 'available':
+        return nutrition.adherenceStatus === 'within_range' ||
+          nutrition.adherenceStatus === 'not_started'
+          ? 'ON_TRACK'
+          : 'PARTIAL';
+      case 'not_available':
+      case 'processing_failed':
+      default:
+        return 'UNKNOWN';
+    }
+  }
+
+  private mapCanonicalPriority(nutrition: CoachNutritionContext): NutritionPriority {
+    if (nutrition.availability === 'processing_failed') return 'HIGH';
+    if (nutrition.availability !== 'available') return 'CRITICAL';
+    return nutrition.focus?.priority === 'high' ? 'HIGH' : 'MEDIUM';
+  }
+
+  private mapActionToRecommendationCode(
+    action: CoachNutritionContext['actions'][number]['type'],
+  ): NutritionRecommendationCode {
+    switch (action) {
+      case 'open_profile':
+        return 'SET_UP_NUTRITION_PROFILE';
+      case 'create_plan':
+        return 'CREATE_OR_REFRESH_NUTRITION_PLAN';
+      case 'log_meal':
+      case 'open_today_meals':
+        return 'COMPLETE_REMAINING_MEALS';
+      case 'none':
+      case 'open_hydration':
+      default:
+        return 'MAINTAIN_CURRENT_PLAN';
+    }
+  }
+
+  private isNutritionSafetyQuestion(userMessage: string): boolean {
+    const normalized = userMessage.toLowerCase();
+    return [
+      'diagnos',
+      'medical',
+      'condition',
+      'allerg',
+      'supplement',
+      'medication',
+      'remédio',
+      'safe food',
+      'lose 10 kg',
+    ].some((term) => normalized.includes(term));
   }
 
   private buildBlockedAnalysis(
@@ -489,8 +760,10 @@ export class NutritionExpert extends BaseCoachExpert {
 
     return Object.freeze({
       expertId: this.metadata.id,
-      summary: this.buildSummary(analysis, primaryRecommendation),
-      analysis,
+      summary:
+        analysis.canonicalResponse?.text ??
+        this.buildSummary(analysis, primaryRecommendation),
+      analysis: this.sanitizeCanonicalAnalysis(analysis),
       recommendations: analysis.recommendations,
       risks: Object.freeze([analysis.riskAssessment]),
       goalAlignment: analysis.goalAlignment,
@@ -546,6 +819,17 @@ export class NutritionExpert extends BaseCoachExpert {
         }),
       }),
     ]);
+  }
+
+  private sanitizeCanonicalAnalysis(
+    analysis: NutritionAnalysis,
+  ): NutritionAnalysis {
+    if (!analysis.canonicalResponse) {
+      return analysis;
+    }
+
+    const { canonicalResponse: _canonicalResponse, ...safeAnalysis } = analysis;
+    return Object.freeze(safeAnalysis);
   }
 
   private buildSummary(

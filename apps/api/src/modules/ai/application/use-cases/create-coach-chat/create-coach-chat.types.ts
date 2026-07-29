@@ -8,6 +8,7 @@ import type {
   AiPromptBuilderConversationMessage,
 } from '../../services/llm/ai-prompt-builder.service';
 import type { UserHealthContext } from '../../services/context-builder/build-user-health-context.service';
+import type { CoachNutritionContext } from '../../services/context-builder/coach-nutrition-context.types';
 import type {
   CoachDecisionReadModelPayload,
   HabitMemoryPayload,
@@ -43,6 +44,8 @@ export type CoachChatLoadedContext = {
   nutritionPlan?: NutritionPlan;
   todayNutrition?: GetTodayNutritionOutput['todayNutrition'];
   nutritionLogs?: readonly NutritionLog[];
+  /** Canonical Nutrition projection for Coach consumers. */
+  nutritionContext?: CoachNutritionContext;
   coachDecision?: CoachDecisionReadModelPayload;
   notification?: NotificationPromptPayload;
   notificationMemory?: NotificationMemoryPayload;

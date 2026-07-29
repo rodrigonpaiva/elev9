@@ -8,6 +8,50 @@ import { NutritionExpert } from './nutrition-expert.service';
 describe('NutritionExpert', () => {
   const expert = new NutritionExpert();
 
+  it('uses canonical values and does not recalculate nutrition facts', () => {
+    const result = expert.analyze(
+      {
+        ...buildRequest(),
+        userMessage: 'How many calories do I have left?',
+      },
+      buildContext({
+        nutritionContext: {
+          source: 'nutrition_read_model',
+          contractVersion: 'nutrition-read-model-v1',
+          availability: 'available',
+          freshness: 'current',
+          lastUpdatedAt: '2026-07-07T12:00:00.000Z',
+          timezone: 'UTC',
+          calories: {
+            consumed: 1500,
+            target: 2000,
+            remaining: 300,
+            excess: null,
+            state: 'in_progress',
+          },
+          macros: [],
+          meals: null,
+          adherenceStatus: 'above_range',
+          focus: null,
+          insight: null,
+          actions: [{ type: 'none' }],
+        },
+      }),
+    );
+
+    expect(result.contributions[0].summary).toContain('300 calories remaining');
+    expect(result.contributions[0].summary).not.toContain('500 calories');
+    expect(result.metadata).toMatchObject({
+      nutritionBoundary: {
+        source: 'nutrition_read_model',
+        factsUsed: ['availability', 'freshness', 'calorie_progress'],
+      },
+      canonicalAvailability: 'available',
+      canonicalFreshness: 'current',
+    });
+    expect(result.metadata.analysis.canonicalResponse).toBeUndefined();
+  });
+
   it('analyzes a complete nutrition day as on-track with strong confidence', () => {
     const result = expert.analyze(
       buildRequest(),
@@ -386,6 +430,9 @@ function buildContext(
     runtimeMetadata: Object.freeze({}),
     ...(overrides.policyEvaluation
       ? { policyEvaluation: overrides.policyEvaluation }
+      : {}),
+    ...(overrides.nutritionContext
+      ? { nutritionContext: overrides.nutritionContext }
       : {}),
   };
 }

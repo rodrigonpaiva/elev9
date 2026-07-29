@@ -63,6 +63,12 @@ import {
 import type { RecoveryCurrentReadModel } from '../../../../recovery/application/read-models/recovery-read-model.types';
 import { GetCurrentRecoveryReadModelUseCase } from '../../../../recovery/application/use-cases/get-current-recovery-read-model/get-current-recovery-read-model.use-case';
 import { RecoveryObservabilityService } from '../../../../recovery/application/services/recovery-observability.service';
+import { GetTodayNutritionUseCase } from '../../../../nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.use-case';
+import {
+  toCoachNutritionContext,
+  unavailableCoachNutritionContext,
+  CoachNutritionContext,
+} from './coach-nutrition-context.types';
 
 export type UserHealthContextTodayWorkout = {
   dayIndex: number;
@@ -140,6 +146,8 @@ export type UserHealthContext = {
   recoveryTrend?: 'improving' | 'stable' | 'needs_recovery';
   recommendedIntensity?: RecoverySnapshot['recommendedIntensity'];
   nutritionProfile?: UserHealthContextNutritionProfile;
+  /** Canonical Nutrition facts for Coach consumers. */
+  nutritionContext?: CoachNutritionContext;
   recentWorkoutLogs: WorkoutLog[];
   generatedAt: Date;
 };
@@ -186,6 +194,8 @@ export class BuildUserHealthContextService {
     private readonly getCurrentRecoveryReadModelUseCase?: GetCurrentRecoveryReadModelUseCase,
     @Optional()
     private readonly recoveryObservability?: RecoveryObservabilityService,
+    @Optional()
+    private readonly getTodayNutritionUseCase?: GetTodayNutritionUseCase,
   ) {}
 
   async build(input: BuildUserHealthContextInput): Promise<UserHealthContext> {
@@ -226,6 +236,7 @@ export class BuildUserHealthContextService {
         await this.nutritionProfileRepository.findActiveByUserProfileId(
           userProfile.id,
         );
+      const nutritionContext = await this.resolveNutritionContext(authUserId);
       const adaptiveTrainingRecommendation =
         await this.resolveAdaptiveTrainingRecommendation({
           authUserId,
@@ -296,6 +307,7 @@ export class BuildUserHealthContextService {
               preferredFoods: nutritionProfile.preferredFoods ?? [],
             }
           : undefined,
+        nutritionContext,
       };
 
       if (!fitnessProfile) {
@@ -478,6 +490,10 @@ export class BuildUserHealthContextService {
       };
     }
 
+    if (shouldLoadNutrition) {
+      context.nutritionContext = await this.resolveNutritionContext(authUserId);
+    }
+
     if (fitnessProfile && shouldLoadFitnessProfile) {
       const adaptiveTrainingRecommendation =
         await this.resolveAdaptiveTrainingRecommendation({
@@ -567,6 +583,23 @@ export class BuildUserHealthContextService {
       recentWorkoutLogs: [],
       generatedAt,
     };
+  }
+
+  private async resolveNutritionContext(
+    authUserId: string,
+  ): Promise<CoachNutritionContext> {
+    if (!this.getTodayNutritionUseCase) {
+      return unavailableCoachNutritionContext();
+    }
+
+    try {
+      const result = await this.getTodayNutritionUseCase.execute({ authUserId });
+      return toCoachNutritionContext(result.todayNutrition);
+    } catch {
+      // Nutrition availability is domain data; transport/application failures
+      // must not make the complete Health Context unavailable.
+      return unavailableCoachNutritionContext();
+    }
   }
 
   private resolveWeeklyFrequency(input: {

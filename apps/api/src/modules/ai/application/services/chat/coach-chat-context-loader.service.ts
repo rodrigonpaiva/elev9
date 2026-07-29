@@ -217,6 +217,9 @@ export class CoachChatContextLoaderService {
       ...(nutrition?.nutritionLogs
         ? { nutritionLogs: nutrition.nutritionLogs }
         : {}),
+      ...(healthContext.nutritionContext
+        ? { nutritionContext: healthContext.nutritionContext }
+        : {}),
       ...(progress ? { progress } : {}),
       coachDecision: CoachDecisionReadModelMapper.toChatPayload(coachDecision),
       notification: notification

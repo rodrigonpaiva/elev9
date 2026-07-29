@@ -9,6 +9,7 @@ import type {
   PersonalizationPromptPayload,
 } from '../../../../../shared/mappers';
 import type { NutritionLog } from '../../../../nutrition/domain/entities/nutrition-log.entity';
+import type { CoachNutritionContext } from '../context-builder/coach-nutrition-context.types';
 import type { NutritionPlan } from '../../../../nutrition/domain/entities/nutrition-plan.entity';
 import type { GetTodayNutritionOutput } from '../../../../nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.output';
 import type { RecoverySnapshot } from '../../../../recovery/domain/entities/recovery-snapshot.entity';
@@ -179,6 +180,8 @@ export type AgentContext = {
   nutritionPlan?: NutritionPlan;
   todayNutrition?: GetTodayNutritionOutput['todayNutrition'];
   nutritionLogs?: readonly NutritionLog[];
+  /** Canonical Nutrition projection; raw Nutrition fields are deprecated. */
+  nutritionContext?: CoachNutritionContext;
   habitHistory?: readonly HabitSnapshot[];
   conversationMemory?: AiPromptBuilderConversationMemory;
   recentMessages: AiPromptBuilderConversationMessage[];

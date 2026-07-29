@@ -12,4 +12,6 @@
 | Prompt 8 — Integration Audit                        | Audit all cross-module Nutrition consumers                     | pending                       |
 | Prompt 9 — Production Certification                 | Certify release behavior and readiness                         | pending                       |
 
-Prompt 3 preserves the existing Dashboard structure and navigation. Dedicated React Native renderer tests and canonical onboarding HTTP states remain conditions; later prompts remain pending.
+Prompt 3 preserves the existing Dashboard structure and navigation. Dedicated React Native renderer tests and canonical onboarding HTTP states remain conditions.
+
+Prompt 4 is **completed with conditions**: Health Context now projects a safe `CoachNutritionContext` from the canonical Nutrition read model, and Nutrition Expert uses that projection for deterministic responses and explainability. Legacy raw Nutrition fields remain temporarily available to preserve compatibility for other Coach consumers; their removal is deferred to Prompt 8. Prompts 5–9 remain pending.
