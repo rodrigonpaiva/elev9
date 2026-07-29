@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
@@ -22,6 +22,10 @@ import {
   GetTodayNutritionOutput,
   TodayNutritionProgressOutput,
 } from './get-today-nutrition.output';
+import {
+  NutritionObservabilityService,
+  NutritionSafeErrorCode,
+} from '../../services/nutrition-observability.service';
 
 @Injectable()
 export class GetTodayNutritionUseCase {
@@ -32,11 +36,14 @@ export class GetTodayNutritionUseCase {
     private readonly nutritionPlanRepository: NutritionPlanRepository,
     @Inject(NUTRITION_LOG_REPOSITORY)
     private readonly nutritionLogRepository: NutritionLogRepository,
+    @Optional()
+    private readonly observability?: NutritionObservabilityService,
   ) {}
 
   async execute(input: {
     authUserId: string;
   }): Promise<GetTodayNutritionOutput> {
+    const startedAt = Date.now();
     const authUserId =
       typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
@@ -92,7 +99,7 @@ export class GetTodayNutritionUseCase {
         macroTargets,
       });
 
-      return {
+      const output: GetTodayNutritionOutput = {
         todayNutrition: {
           date: today,
           availability: 'available',
@@ -113,16 +120,52 @@ export class GetTodayNutritionUseCase {
           nutritionFocus: deterministicState.focus.message,
         },
       };
+      this.observability?.recordTodayRead({
+        outcome: 'success',
+        availability: output.todayNutrition.availability,
+        freshness: output.todayNutrition.freshness,
+        durationMs: Date.now() - startedAt,
+      });
+      return output;
     } catch (error) {
       if (error instanceof GetTodayNutritionError) {
+        this.observability?.recordTodayRead({
+          outcome: error.code === GET_TODAY_NUTRITION_ERROR_CODES.INVALID_SESSION
+            ? 'unauthorized'
+            : 'failure',
+          durationMs: Date.now() - startedAt,
+          safeErrorCode: toNutritionSafeErrorCode(error.code),
+        });
         throw error;
       }
 
+      this.observability?.recordTodayRead({
+        outcome: 'failure',
+        durationMs: Date.now() - startedAt,
+        safeErrorCode: 'NUTRITION_PROCESSING_FAILED',
+      });
       throw new GetTodayNutritionError(
         GET_TODAY_NUTRITION_ERROR_CODES.INTERNAL_ERROR,
         'An unexpected error occurred.',
       );
     }
+  }
+}
+
+function toNutritionSafeErrorCode(
+  errorCode: string,
+): NutritionSafeErrorCode {
+  switch (errorCode) {
+    case GET_TODAY_NUTRITION_ERROR_CODES.INVALID_SESSION:
+      return 'NUTRITION_UNAUTHORIZED';
+    case GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_PLAN_NOT_FOUND:
+      return 'NUTRITION_PLAN_NOT_AVAILABLE';
+    case GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_DAY_NOT_FOUND:
+      return 'NUTRITION_DATA_INSUFFICIENT';
+    case GET_TODAY_NUTRITION_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+      return 'NUTRITION_PROFILE_NOT_CONFIGURED';
+    default:
+      return 'NUTRITION_UNKNOWN_ERROR';
   }
 }
 

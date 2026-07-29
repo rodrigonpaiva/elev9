@@ -60,3 +60,20 @@ Health Context and Nutrition Expert migration, normal-state HTTP compatibility, 
 | `docs/architecture/release-2.1-epic-a3-coach-nutrition-intelligence.md` | created | documentation | Records boundary, deterministic response and remaining migration conditions | None | documentation review |
 
 Files intentionally unchanged or deferred for Prompt 4: raw Nutrition plan/log/recommendation loading in the legacy Coach loaders, other experts that still consume `nutritionProfile`, mobile Coach navigation, LLM flags, Recovery, Training, Notifications, persistence schemas, lockfile and `.vscode/settings.json`.
+
+## Prompt 5 — Nutrition Analytics & Observability
+
+| File | Status | Layer | Reason / change | Impact / risk | Tests | Privacy / retention |
+| --- | --- | --- | --- | --- | --- | --- |
+| `apps/api/src/modules/nutrition/application/services/nutrition-observability.service.ts` | created | backend observability | Allowlisted structured events, bounded duration buckets and low-cardinality counters | Safe operational visibility; low | service tests, API build | No payload or identifiers |
+| `apps/api/src/modules/nutrition/application/use-cases/get-today-nutrition/get-today-nutrition.use-case.ts` | modified | Nutrition application | Records safe success/failure signals around canonical read | Fail-open instrumentation; low | use-case tests, API build | Safe error codes only |
+| `apps/api/src/modules/nutrition/application/services/nutrition-observability.service.spec.ts` | created | tests | Allowlist, privacy, buckets and counter tests | Low | targeted API tests | Synthetic fixtures only |
+| `apps/api/src/modules/nutrition/nutrition.module.ts` | modified | configuration | Registers and exports observability service | No new dependency | API build |
+| `apps/api/src/modules/ai/application/services/context-builder/build-user-health-context.service.ts` | modified | Health Context | Records safe canonical projection outcome | Failure-isolated signal | API tests | No context payload |
+| `apps/mobile/src/analytics/product-analytics.ts` | modified | mobile analytics | Adds typed Nutrition event allowlist | Noop default preserved | analytics tests |
+| `apps/mobile/src/analytics/product-analytics.spec.ts` | modified | tests | Nutrition event and forbidden-field coverage | Low | targeted Mobile tests |
+| `apps/mobile/src/screens/dashboard-screen.tsx` | modified | Dashboard analytics | Tracks controlled exposure, load result, retry and action intent | No semantic change; low | Mobile build/tests |
+| `docs/architecture/release-2.1-epic-a3-nutrition-analytics-and-observability.md` | created | documentation | Architecture, inventory, privacy and gaps | None | Documentation review |
+| `docs/runbooks/release-2.1-epic-a3-nutrition-observability-runbook.md` | created | operations | Safe diagnosis, rollback and privacy incident flow | None | Documentation review |
+
+Dashboards, alert rules, OpenTelemetry exporter, Sentry integration, retention enforcement and external analytics provider are `deferred`: no corresponding versioned infrastructure exists. No preexisting working-tree changes were present before Prompt 5.

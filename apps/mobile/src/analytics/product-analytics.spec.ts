@@ -53,6 +53,43 @@ describe('Product analytics boundary', () => {
     expect(provider.track).toHaveBeenCalledTimes(6);
   });
 
+  it('accepts Nutrition telemetry with only operational dimensions', () => {
+    const provider = { track: jest.fn() };
+    const analytics = createProductAnalytics(provider, true);
+
+    analytics.track('nutrition_dashboard_card_viewed', {
+      screen: 'dashboard',
+      component: 'nutrition_card',
+      availability: 'available',
+      freshness: 'current',
+      source: 'canonical_read_model',
+    });
+    analytics.track('nutrition_dashboard_action_selected', {
+      actionType: 'open_today_meals',
+      navigationDestination: 'today_meals',
+      outcome: 'accepted',
+    });
+
+    expect(provider.track).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects Nutrition payload and identity properties', () => {
+    const provider = { track: jest.fn() };
+    const analytics = createProductAnalytics(provider, true);
+
+    analytics.track('nutrition_dashboard_card_viewed', {
+      screen: 'dashboard',
+      component: 'nutrition_card',
+      availability: 'available',
+      freshness: 'current',
+      source: 'canonical_read_model',
+      calories: 1_420,
+      userId: 'user-1',
+    } as never);
+
+    expect(provider.track).not.toHaveBeenCalled();
+  });
+
   it('drops sensitive Recovery properties even when supplied by an untyped caller', () => {
     const provider = { track: jest.fn() };
     const analytics = createProductAnalytics(provider, true);

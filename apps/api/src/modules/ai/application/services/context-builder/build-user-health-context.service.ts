@@ -69,6 +69,7 @@ import {
   unavailableCoachNutritionContext,
   CoachNutritionContext,
 } from './coach-nutrition-context.types';
+import { NutritionObservabilityService } from '../../../../nutrition/application/services/nutrition-observability.service';
 
 export type UserHealthContextTodayWorkout = {
   dayIndex: number;
@@ -196,6 +197,8 @@ export class BuildUserHealthContextService {
     private readonly recoveryObservability?: RecoveryObservabilityService,
     @Optional()
     private readonly getTodayNutritionUseCase?: GetTodayNutritionUseCase,
+    @Optional()
+    private readonly nutritionObservability?: NutritionObservabilityService,
   ) {}
 
   async build(input: BuildUserHealthContextInput): Promise<UserHealthContext> {
@@ -594,10 +597,20 @@ export class BuildUserHealthContextService {
 
     try {
       const result = await this.getTodayNutritionUseCase.execute({ authUserId });
-      return toCoachNutritionContext(result.todayNutrition);
+      const context = toCoachNutritionContext(result.todayNutrition);
+      this.nutritionObservability?.recordCoachContext({
+        outcome: 'success',
+        availability: context.availability,
+        freshness: context.freshness,
+      });
+      return context;
     } catch {
       // Nutrition availability is domain data; transport/application failures
       // must not make the complete Health Context unavailable.
+      this.nutritionObservability?.recordCoachContext({
+        outcome: 'failure',
+        safeErrorCode: 'NUTRITION_CONTEXT_UNAVAILABLE',
+      });
       return unavailableCoachNutritionContext();
     }
   }

@@ -4,6 +4,36 @@ import type {
 } from '../features/daily-check-in/models/daily-check-in-analytics';
 
 export type ProductAnalyticsEventMap = {
+  nutrition_dashboard_card_viewed: {
+    screen: 'dashboard';
+    component: 'nutrition_card';
+    availability: 'available' | 'insufficient_data' | 'not_configured' | 'not_available' | 'processing_failed';
+    freshness: 'current' | 'stale' | 'legacy' | 'unknown';
+    source: 'canonical_read_model';
+  };
+  nutrition_dashboard_load_result: {
+    outcome: 'success' | 'failure';
+    availability: 'available' | 'insufficient_data' | 'not_configured' | 'not_available' | 'processing_failed';
+    freshness: 'current' | 'stale' | 'legacy' | 'unknown';
+    source: 'canonical_read_model';
+    safeErrorCode?: 'NUTRITION_LOAD_FAILED' | 'NUTRITION_CONTRACT_INVALID';
+  };
+  nutrition_dashboard_refresh_result: {
+    refreshType: 'dashboard_refresh' | 'manual_refresh' | 'retry';
+    outcome: 'success' | 'failure';
+    availability?: 'available' | 'insufficient_data' | 'not_configured' | 'not_available' | 'processing_failed';
+    freshness?: 'current' | 'stale' | 'legacy' | 'unknown';
+    safeErrorCode?: 'NUTRITION_LOAD_FAILED' | 'NUTRITION_CONTRACT_INVALID';
+  };
+  nutrition_dashboard_retry_selected: {
+    source: 'dashboard_nutrition_card';
+    previousOutcome: 'failure' | 'not_available' | 'processing_failed';
+  };
+  nutrition_dashboard_action_selected: {
+    actionType: 'open_profile' | 'create_plan' | 'open_today_meals' | 'log_meal' | 'open_hydration' | 'none' | 'unknown';
+    navigationDestination: 'nutrition_profile' | 'nutrition_plan' | 'today_meals' | 'log_meal' | 'hydration' | 'none' | 'unavailable';
+    outcome: 'accepted' | 'unavailable';
+  };
   recovery_dashboard_cta_selected: {
     entryPoint: 'dashboard';
   };
@@ -153,6 +183,33 @@ export const PRODUCT_ANALYTICS_FORBIDDEN_PROPERTIES = [
 const PRODUCT_ANALYTICS_ALLOWED_PROPERTIES: {
   [EventName in ProductAnalyticsEventName]: readonly string[];
 } = {
+  nutrition_dashboard_card_viewed: [
+    'screen',
+    'component',
+    'availability',
+    'freshness',
+    'source',
+  ],
+  nutrition_dashboard_load_result: [
+    'outcome',
+    'availability',
+    'freshness',
+    'source',
+    'safeErrorCode',
+  ],
+  nutrition_dashboard_refresh_result: [
+    'refreshType',
+    'outcome',
+    'availability',
+    'freshness',
+    'safeErrorCode',
+  ],
+  nutrition_dashboard_retry_selected: ['source', 'previousOutcome'],
+  nutrition_dashboard_action_selected: [
+    'actionType',
+    'navigationDestination',
+    'outcome',
+  ],
   recovery_dashboard_cta_selected: ['entryPoint'],
   recovery_screen_viewed: ['entryPoint'],
   recovery_refresh_requested: ['trigger'],

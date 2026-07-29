@@ -40,6 +40,7 @@ import {
   NutritionProfileSchema,
 } from './infrastructure/mongoose/nutrition-profile.schema';
 import { NutritionController } from './presentation/http/nutrition.controller';
+import { NutritionObservabilityService } from './application/services/nutrition-observability.service';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { NutritionController } from './presentation/http/nutrition.controller';
     GenerateNutritionRecommendationUseCase,
     LogMealUseCase,
     ReplaceMealUseCase,
+    NutritionObservabilityService,
     {
       provide: NUTRITION_PROFILE_REPOSITORY,
       useClass: MongooseNutritionProfileRepository,
@@ -103,6 +105,7 @@ import { NutritionController } from './presentation/http/nutrition.controller';
     GetCurrentNutritionPlanUseCase,
     GetNutritionRecommendationsUseCase,
     GetTodayNutritionUseCase,
+    NutritionObservabilityService,
   ],
 })
 export class NutritionModule {}
