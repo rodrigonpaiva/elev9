@@ -99,3 +99,14 @@ Dashboards, alert rules, OpenTelemetry exporter, Sentry integration, retention e
 | `docs/plans/release-2.1-epic-a3-nutrition-intelligence-implementation-plan.md` | modified | planning | Marks Prompt 7 completed with conditions; Prompts 8–9 pending | None | Documentation review |
 
 Snapshot persistence, backfill, historical plan versioning, persistent history cache, custom-period UI, chart dependency and historical focus/insight materialization are `deferred`. No unrelated working-tree changes were present before Prompt 7.
+
+## Prompt 8 — Nutrition Integration Audit & Legacy Consolidation
+
+| File | Status | Layer | Reason / change | Impact / risk | Tests | Compatibility / privacy / legacy |
+| --- | --- | --- | --- | --- | --- | --- |
+| `docs/architecture/release-2.1-epic-a3-nutrition-integration-audit.md` | created | architecture | Records the cross-module reference inventory, ownership map, dependency violations, canonical boundaries and certification conditions | No runtime impact; makes unresolved migration risk explicit | Documentation review; validation commands recorded in final report | No payloads or identifiers; compatibility paths documented |
+| `docs/architecture/release-2.1-epic-a3-nutrition-legacy-register.md` | created | architecture governance | Registers deprecated aliases, raw Coach/AI context paths, direct Training/Goals access, notification inputs and legacy analytics | No runtime impact; prevents silent parallel ownership | Documentation review | Compatibility-only/deferred items have removal conditions |
+| `docs/plans/release-2.1-epic-a3-nutrition-intelligence-implementation-plan.md` | modified | planning | Marks Prompt 8 completed with conditions and keeps Prompt 9 pending | No runtime impact | Documentation review | No contract change |
+| `docs/plans/release-2.1-epic-a3-file-change-map.md` | modified | planning | Adds Prompt 8 file classification and explicit deferred migrations | No runtime impact | Documentation review | Existing Prompt 1–7 history preserved |
+
+No application or persistence source was changed in Prompt 8. The audit found real legacy callers whose removal would require a coordinated migration and therefore left them intact, registered, and blocked from being treated as canonical. No files were removed, no lockfile or `.vscode/settings.json` was changed, and no unrelated working-tree changes were present at audit start.

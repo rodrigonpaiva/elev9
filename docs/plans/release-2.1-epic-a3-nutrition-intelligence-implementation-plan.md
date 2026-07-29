@@ -9,7 +9,9 @@
 | Prompt 5 — Nutrition Analytics & Observability | Add privacy-safe operational/product observability | **completed with conditions** |
 | Prompt 6 — Offline Nutrition Cache | Add offline read/cache behavior | **completed with conditions** |
 | Prompt 7 — Nutrition History & Trends | Add bounded canonical history, detail and deterministic trends | **completed with conditions** |
-| Prompt 8 — Integration Audit | Audit all cross-module Nutrition consumers | pending |
+| Prompt 8 — Integration Audit | Audit all cross-module Nutrition consumers | **completed with conditions** |
 | Prompt 9 — Production Certification | Certify release behavior and readiness | pending |
 
-Prompt 7 is completed with conditions because the repository has no immutable daily snapshot or historical plan-version store. The implementation reconstructs only logged days from the plan referenced by their logs, exposes partial/no-data states, and defers snapshots, backfill and historical guidance fidelity. Prompts 8 and 9 remain pending.
+Prompt 7 is completed with conditions because the repository has no immutable daily snapshot or historical plan-version store. The implementation reconstructs only logged days from the plan referenced by their logs, exposes partial/no-data states, and defers snapshots, backfill and historical guidance fidelity.
+
+Prompt 8 is completed with conditions. The canonical Nutrition application paths and consumer boundaries are documented, while legacy raw Nutrition access remains in Coach/AI, Training and Goals compatibility paths. Those paths are registered for migration and prevent unconditional Prompt 9 readiness. Prompt 9 remains pending.
