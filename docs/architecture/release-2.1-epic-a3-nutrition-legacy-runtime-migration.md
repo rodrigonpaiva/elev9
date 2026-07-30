@@ -107,6 +107,8 @@ The historical checkpoint above is superseded by Prompt 8B.3: the API suite is g
 
 Prompt 9 certification status is `EPIC_A3_CERTIFIED_WITH_CONDITIONS`. P0 and P1 are zero. E2E remains `ENVIRONMENT_BLOCKED` solely because MongoMemoryServer cannot bind `0.0.0.0`; it must be re-run in a compatible CI/host before broad rollout.
 
+Prompt 10 supersedes the operational condition: the sandbox restriction was reproduced, then compatible-host E2E passed 16 suites / 56 tests after registering the four Nutrition consumer-port aliases as providers in `NutritionModule`. P0 and P1 remain zero. The public `TodayNutrition` alias and historical persisted fields remain compatibility-only/deferred and are not active canonical runtime owners.
+
 ## Prompt 8B.3 — Canonical test migration
 
 The twelve failing API suites were classified as stale fixtures or assertions; no production bug was required. Tests now use canonical projections or assert the intentionally safe absence of Nutrition context in non-Nutrition consumers. Legacy Nutrition feedback tests were removed because that behavior no longer belongs to Coach feedback generation.

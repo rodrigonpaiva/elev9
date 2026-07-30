@@ -52,7 +52,7 @@ Missing profile, missing plan and insufficient data are handled as normal domain
 
 ## Performance
 
-The migration removed duplicate consumer repository loads and uses bounded projections, pagination and existing indexes. No speculative optimization was added during certification. The main remaining operational limitation is the environment-blocked E2E setup.
+The migration removed duplicate consumer repository loads and uses bounded projections, pagination and existing indexes. No speculative optimization was added during certification. The remaining operational limitation is external dashboard/alert ownership for broad rollout.
 
 ## Observability
 
@@ -71,12 +71,14 @@ Operational signals cover outcome, availability, freshness, safe error code, con
 | API Client lint | `PASSED` |
 | Types lint | `PASSED` |
 | API lint target | `NOT_CONFIGURED` |
-| E2E | `ENVIRONMENT_BLOCKED` — MongoMemoryServer bind EPERM |
+| E2E | `PASSED` — 16 suites / 56 tests on compatible host after module wiring fix |
 | `git diff --check` | `PASSED` |
 
-## E2E condition
+## Prompt 10 E2E validation
 
-`npm exec nx test:e2e api --skip-nx-cache` was executed. Setup fails before functional assertions because MongoMemoryServer cannot bind `0.0.0.0` (`listen EPERM: operation not permitted`). This is an environment limitation, not an application assertion failure. Re-run in CI or a compatible host before broad rollout.
+The sandbox reproduction remains `ENVIRONMENT_BLOCKED`: `npm exec nx test:e2e api --skip-nx-cache --outputStyle=stream` fails in `beforeAll` with `listen EPERM: operation not permitted 0.0.0.0` before application bootstrap. On a compatible host, MongoMemoryServer started and exposed a real wiring defect: the four Nutrition consumer port aliases were exported but not registered as providers in `NutritionModule`. The minimal provider registration was corrected and the rerun passed 16 suites / 56 tests.
+
+Existing E2E covers authentication, authorization, Coach, Dashboard and persistence-backed wiring. Nutrition Today/History/Trends semantics are covered by targeted application/controller/API-client tests; the repository has no dedicated Nutrition E2E file, so no dedicated route-E2E claim is made.
 
 ## Compatibility
 
@@ -97,14 +99,15 @@ The release is backward-compatible at the public contract boundary. Rollback mus
 
 | ID | Severity | Area | Finding | Required action |
 | --- | --- | --- | --- | --- |
-| F-001 | P2 | E2E | MongoMemoryServer binding is blocked by the environment | Re-run E2E in compatible CI/host |
+| F-001 | resolved | E2E | MongoMemoryServer sandbox bind condition and NutritionModule provider wiring | Compatible-host E2E passed after minimal wiring correction |
 | F-002 | P2 | Tooling | API lint target is not configured in Nx | Configure in a future tooling pass |
 | F-003 | P3 | Compatibility | Public `TodayNutrition` alias remains | Remove after external migration |
 | F-004 | P3 | Persistence | Legacy historical fields may exist in old documents | Retire through a future safe lifecycle migration |
+| F-005 | P1 | Operations | Critical alert backend and external dashboards are not provisioned | Provision, assign owners, and run safe synthetic trigger validation before broad rollout |
 
 ## Conditions
 
-P0 = 0 and P1 = 0. Production rollout is conditional on E2E re-execution in an environment that permits MongoMemoryServer binding, reinforced monitoring, and preservation of the documented compatibility boundaries.
+P0 = 0 and P1 = 0. The compatible-host E2E gate passed. Controlled rollout is approved; broad rollout still requires named operational alert/dashboard ownership and preservation of the documented compatibility boundaries.
 
 ## Certification decision
 
@@ -125,4 +128,34 @@ P0 = 0 and P1 = 0. Production rollout is conditional on E2E re-execution in an e
 - [x] Builds and boundary tests green.
 - [x] E2E executed and classified honestly.
 - [x] P0 and P1 findings are zero.
-- [ ] E2E rerun in a compatible environment before broad rollout.
+- [x] E2E rerun in a compatible environment; 16 suites / 56 tests passed.
+- [x] Compatible-host wiring defect fixed with minimal provider registration.
+- [ ] External dashboards/alert rules and named operational owner verified before broad rollout.
+
+## Prompt 11 operationalization
+
+The repository inventory found safe in-memory Nutrition counters, bounded Coach traces, Nest/request logs, Mobile noop analytics and health endpoints. No metrics exporter, tracing exporter, external dashboard or alert backend is configured. Versioned dashboard/alert definitions, role-based ownership, incident scenarios, rollback approval checklist and an API E2E CI step were added. These definitions are not evidence that an external provider has been provisioned.
+
+Operational decision: `OPERATIONAL_READINESS_APPROVED_WITH_CONDITIONS`.
+
+Production decision: `CONTROLLED_ROLLOUT_ONLY`.
+
+The broad rollout condition remains external dashboard/alert provisioning, named people replacing role owners, and safe synthetic alert validation. Current operational risk is P0 = 0 and P1 = 1 for the absent critical alert gate.
+
+## Prompt 12 external observability provisioning
+
+Prompt 12 inspected the repository, Docker/local configuration, GitHub Actions and all provider/IaC references. No production deployment platform, external observability provider, provider credentials, resource IDs, incident channel or resolved owner was available. No external resource was created or claimed.
+
+The five dashboards and P1/P2 alert rules remain versioned definitions only. Metrics remain bounded in-process, logs remain local/plain-text, and no external ingestion or synthetic alert validation was possible.
+
+Decision:
+
+```text
+OBSERVABILITY_NOT_PROVISIONED
+OPERATIONAL_READINESS_NOT_APPROVED
+CONTROLLED_ROLLOUT_ONLY
+EPIC_A3_CERTIFIED_WITH_CONDITIONS
+EPIC_A3_CLOSED_WITH_OPERATIONAL_CONDITION
+```
+
+The formal sign-off and external handoff requirements are recorded in [release-2.1-epic-a3-broad-rollout-signoff.md](../operations/release-2.1-epic-a3-broad-rollout-signoff.md). Broad rollout remains prohibited until real provider resources, routing, owners, synthetic validation and rollback approval exist.

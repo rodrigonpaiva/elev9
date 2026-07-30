@@ -69,4 +69,4 @@ Telemetry is fail-open and cannot change domain, Dashboard or Coach behavior. `A
 
 ## Tests, risks and next steps
 
-Tests cover event allowlists, duration buckets, bounded counters, mobile Nutrition events, forbidden fields and provider isolation. Remaining work is provider integration, approved retention/SLO baselines, versioned dashboards/alerts and full deletion/consent validation. Prompts 6–9 remain pending.
+Tests cover event allowlists, duration buckets, bounded counters, mobile Nutrition events, forbidden fields and provider isolation. Prompt 11 formalized safe metric/log taxonomy, dashboard and alert definitions, role-based ownership, incident response, rollback checklist and CI E2E gating. External provider integration, approved retention/SLO baselines, dashboard provisioning, alert routing and full deletion/consent validation remain external conditions.

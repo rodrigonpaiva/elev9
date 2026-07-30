@@ -93,6 +93,22 @@ import {
     NutritionHistoryQueryService,
     NutritionConsumerProjectionService,
     {
+      provide: NUTRITION_COACH_CONTEXT_PORT,
+      useExisting: NutritionConsumerProjectionService,
+    },
+    {
+      provide: NUTRITION_TRAINING_SIGNALS_PORT,
+      useExisting: NutritionConsumerProjectionService,
+    },
+    {
+      provide: NUTRITION_GOAL_SIGNALS_PORT,
+      useExisting: NutritionConsumerProjectionService,
+    },
+    {
+      provide: NUTRITION_NOTIFICATION_SIGNALS_PORT,
+      useExisting: NutritionConsumerProjectionService,
+    },
+    {
       provide: NUTRITION_PROFILE_REPOSITORY,
       useClass: MongooseNutritionProfileRepository,
     },

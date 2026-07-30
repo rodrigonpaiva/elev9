@@ -35,6 +35,9 @@ jobs:
       - name: Test API
         run: npm exec nx test api
 
+      - name: Test API E2E
+        run: npm exec nx test:e2e api --skip-nx-cache --outputStyle=stream
+
       - name: Build API
         run: npm exec nx build api
 

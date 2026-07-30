@@ -2,6 +2,8 @@
 
 ## 1. Context and methodology
 
+Prompt 10 closure update: compatible-host API E2E passed 16 suites / 56 tests after a minimal `NutritionModule` provider-registration fix. The sandbox `MongoMemoryServer` bind failure is classified as `SANDBOX_RESTRICTION`, not a remaining application condition. Direct Nutrition route E2E is not separately configured; Today/History/Trends behavior remains covered by targeted application, controller, and API-client validation.
+
 This audit searched `apps/api`, `apps/mobile`, `apps/web`, `packages`, tests and documentation for Nutrition entities, contracts, repositories, endpoints, calculations, cache, analytics and Coach context fields. Nx projects and available targets were inspected with `npm exec nx show projects`; the API and Mobile suites were used as regression baselines.
 
 Occurrences were classified as canonical, authorized consumer, compatibility-only, duplicate, test-only, documentation-only or deferred. Domain and persistence references inside `apps/api/src/modules/nutrition` are intentional. References outside that module are architectural findings unless they are explicit compatibility loaders.

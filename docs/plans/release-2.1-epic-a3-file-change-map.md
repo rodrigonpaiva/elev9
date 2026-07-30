@@ -78,6 +78,10 @@ Files intentionally unchanged or deferred for Prompt 4: raw Nutrition plan/log/r
 
 Dashboards, alert rules, OpenTelemetry exporter, Sentry integration, retention enforcement and external analytics provider are `deferred`: no corresponding versioned infrastructure exists. No preexisting working-tree changes were present before Prompt 5.
 
+## Prompt 12 external provisioning result
+
+No infrastructure or provider resource was added because discovery found no authorized production provider or IaC in the workspace. The new broad-rollout sign-off records the evidence boundary and required external handoff. Broad rollout remains `CONTROLLED_ROLLOUT_ONLY`.
+
 ## Prompt 7 — Nutrition History & Trends
 
 | File | Status | Layer | Reason / change | Impact / risk | Tests | Privacy / retention / performance / migration |
@@ -183,3 +187,23 @@ Preexisting changes from Prompts 1–8B.3 remain grouped above; no commit was cr
 | `docs/architecture/release-2.1-epic-a3-nutrition-certification.md` | created | architecture governance | Official certification record | Documents architecture, evidence, findings, conditions, rollback and rollout decisions | No runtime impact | None | `git diff --check` | No Nutrition payloads |
 | Existing audit, migration and register documents | modified | governance | Final status reconciliation | Records current P0/P1 status and superseded checkpoint findings | Documentation only | Low | `git diff --check` | No contract change |
 | Implementation plan | modified | planning | Epic completion status | Marks Prompt 9 certified with conditions | Documentation only | Low | Documentation review | Alias/data lifecycle conditions retained |
+## Prompt 10 — E2E Validation, Rollout Gate & Epic Closure
+
+| File | Status | Layer | Responsibility / change | Validation |
+|---|---|---|---|---|
+| `apps/api/src/modules/nutrition/nutrition.module.ts` | modified | module wiring | Registers the four exported Nutrition consumer-port aliases with `useExisting` | API build, API suite, compatible-host E2E |
+| `docs/operations/release-2.1-epic-a3-nutrition-rollout-runbook.md` | created | operations | Documents environment, isolation, rollout, monitoring, alerts, rollback and sign-off | Documentation review |
+| Certification, audit, legacy migration and plan documents | modified | governance | Records E2E evidence, resolved condition, residual P2/P3 lifecycle items and closure | `git diff --check` |
+
+No Nutrition contract, endpoint semantics, LLM behavior, persistence migration, or new feature was introduced by Prompt 10.
+
+## Prompt 11 — Production Observability and Operational Ownership
+
+| File | Status | Layer | Responsibility / change | Validation |
+|---|---|---|---|---|
+| `.github/workflows/ci.yml` | modified | CI | Adds the real API E2E target to the existing validation workflow | Workflow review; existing target passed on compatible host |
+| `docs/operations/release-2.1-epic-a3-nutrition-observability.md` | created | operations | Defines safe metrics, logs, dashboards, alerts, ownership, incident response and gate status | Documentation review |
+| `docs/operations/release-2.1-epic-a3-nutrition-rollout-runbook.md` | modified | operations | Adds observability inventory, alert provisioning gate, incidents and CI gate | Documentation review |
+| Certification and implementation plan | modified | governance | Records Prompt 11 decision and remaining external condition | `git diff --check` |
+
+No Nutrition behavior, canonical contract, domain architecture, or LLM behavior was changed.
