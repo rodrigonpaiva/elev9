@@ -10,6 +10,8 @@ import { AppModule } from './app.module';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
+  app.enableShutdownHooks();
+
   app.use(requestCorrelationMiddleware);
   app.use(requestLoggingMiddleware);
   app.enableCors({
