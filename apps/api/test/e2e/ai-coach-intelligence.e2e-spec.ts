@@ -63,9 +63,9 @@ describe('AI Coach Intelligence E2E', () => {
       execute: jest.fn(),
     } as unknown as jest.Mocked<GetCoachIntelligenceUseCase>;
 
-    moduleBuilder.overrideProvider(GetCoachIntelligenceUseCase).useValue(
-      getCoachIntelligenceUseCase,
-    );
+    moduleBuilder
+      .overrideProvider(GetCoachIntelligenceUseCase)
+      .useValue(getCoachIntelligenceUseCase);
     moduleBuilder.overrideProvider(CLOCK).useValue(testClock);
 
     const moduleRef: TestingModule = await moduleBuilder.compile();
@@ -99,11 +99,15 @@ describe('AI Coach Intelligence E2E', () => {
   });
 
   it('rejects unauthenticated requests', async () => {
-    await request(app.getHttpServer()).get('/ai/coach-intelligence').expect(401);
+    await request(app.getHttpServer())
+      .get('/ai/coach-intelligence')
+      .expect(401);
   });
 
   it('returns the canonical aggregate for an authenticated request', async () => {
-    const { token } = await createAuthenticatedUser('coach-intelligence@email.com');
+    const { token } = await createAuthenticatedUser(
+      'coach-intelligence@email.com',
+    );
     const aggregate = buildCoachIntelligenceAggregateFixture();
     getCoachIntelligenceUseCase.execute.mockResolvedValue(aggregate as never);
 
@@ -120,7 +124,9 @@ describe('AI Coach Intelligence E2E', () => {
   });
 
   it('returns partial aggregates as 200 without transforming the payload', async () => {
-    const { token } = await createAuthenticatedUser('coach-intelligence-partial@email.com');
+    const { token } = await createAuthenticatedUser(
+      'coach-intelligence-partial@email.com',
+    );
     const aggregate = {
       ...buildCoachIntelligenceAggregateFixture(),
       availability: {
@@ -148,7 +154,9 @@ describe('AI Coach Intelligence E2E', () => {
   });
 
   it('maps feature disabled to 503', async () => {
-    const { token } = await createAuthenticatedUser('coach-intelligence-disabled@email.com');
+    const { token } = await createAuthenticatedUser(
+      'coach-intelligence-disabled@email.com',
+    );
 
     getCoachIntelligenceUseCase.execute.mockRejectedValue(
       new GetCoachIntelligenceError(
@@ -170,7 +178,9 @@ describe('AI Coach Intelligence E2E', () => {
   });
 
   it('maps unexpected fatal failures to 500', async () => {
-    const { token } = await createAuthenticatedUser('coach-intelligence-fatal@email.com');
+    const { token } = await createAuthenticatedUser(
+      'coach-intelligence-fatal@email.com',
+    );
 
     getCoachIntelligenceUseCase.execute.mockRejectedValue(new Error('boom'));
 
@@ -187,7 +197,9 @@ describe('AI Coach Intelligence E2E', () => {
   });
 
   it('keeps existing AI routes working alongside the new endpoint', async () => {
-    const { token } = await createAuthenticatedUser('coach-intelligence-legacy@email.com');
+    const { token } = await createAuthenticatedUser(
+      'coach-intelligence-legacy@email.com',
+    );
     getCoachIntelligenceUseCase.execute.mockResolvedValue(
       buildCoachIntelligenceAggregateFixture() as never,
     );

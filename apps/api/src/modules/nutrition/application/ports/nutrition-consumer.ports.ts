@@ -9,10 +9,18 @@ import { GetTodayNutritionUseCase } from '../use-cases/get-today-nutrition/get-t
 import { GetTodayNutritionError } from '../use-cases/get-today-nutrition/get-today-nutrition.errors';
 import { GET_TODAY_NUTRITION_ERROR_CODES } from '../use-cases/get-today-nutrition/get-today-nutrition.errors';
 
-export const NUTRITION_COACH_CONTEXT_PORT = Symbol('NUTRITION_COACH_CONTEXT_PORT');
-export const NUTRITION_TRAINING_SIGNALS_PORT = Symbol('NUTRITION_TRAINING_SIGNALS_PORT');
-export const NUTRITION_GOAL_SIGNALS_PORT = Symbol('NUTRITION_GOAL_SIGNALS_PORT');
-export const NUTRITION_NOTIFICATION_SIGNALS_PORT = Symbol('NUTRITION_NOTIFICATION_SIGNALS_PORT');
+export const NUTRITION_COACH_CONTEXT_PORT = Symbol(
+  'NUTRITION_COACH_CONTEXT_PORT',
+);
+export const NUTRITION_TRAINING_SIGNALS_PORT = Symbol(
+  'NUTRITION_TRAINING_SIGNALS_PORT',
+);
+export const NUTRITION_GOAL_SIGNALS_PORT = Symbol(
+  'NUTRITION_GOAL_SIGNALS_PORT',
+);
+export const NUTRITION_NOTIFICATION_SIGNALS_PORT = Symbol(
+  'NUTRITION_NOTIFICATION_SIGNALS_PORT',
+);
 
 export type NutritionConsumerAvailability =
   | 'available'
@@ -23,7 +31,11 @@ export type NutritionConsumerAvailability =
 
 export type NutritionCoachContextPort = {
   execute(input: { authUserId: string }): Promise<{
-    todayNutrition: Awaited<ReturnType<GetTodayNutritionUseCase['execute']>>['todayNutrition'] | null;
+    todayNutrition:
+      | Awaited<
+          ReturnType<GetTodayNutritionUseCase['execute']>
+        >['todayNutrition']
+      | null;
     availability: NutritionConsumerAvailability;
   }>;
 };
@@ -69,31 +81,49 @@ export class NutritionConsumerProjectionService {
     private readonly nutritionLogRepository: NutritionLogRepository,
   ) {}
 
-  async getCoachContext(input: NutritionCoachContextPort['execute'] extends (input: infer T) => unknown ? T : never) {
+  async getCoachContext(
+    input: NutritionCoachContextPort['execute'] extends (
+      input: infer T,
+    ) => unknown
+      ? T
+      : never,
+  ) {
     try {
       const result = await this.getTodayNutritionUseCase.execute(input);
-      return { todayNutrition: result.todayNutrition, availability: 'available' as const };
+      return {
+        todayNutrition: result.todayNutrition,
+        availability: 'available' as const,
+      };
     } catch (error) {
       return { todayNutrition: null, availability: mapTodayError(error) };
     }
   }
 
-  async getTrainingSignals(input: { authUserId: string }): Promise<TrainingNutritionSignals> {
+  async getTrainingSignals(input: {
+    authUserId: string;
+  }): Promise<TrainingNutritionSignals> {
     const context = await this.getCoachContext(input);
     return {
       availability: context.availability,
       freshness: context.todayNutrition?.freshness ?? 'unknown',
-      adherencePercentage: context.todayNutrition?.progress?.adherencePercentage ?? null,
+      adherencePercentage:
+        context.todayNutrition?.progress?.adherencePercentage ?? null,
       contractVersion: 'nutrition-consumer-signals-v1',
     };
   }
 
-  async getGoalSignals(input: { authUserId: string; userProfileId: string; startDate: string; endDate: string }): Promise<GoalNutritionSignals> {
-    const logs = await this.nutritionLogRepository.findByUserProfileIdAndDateRange(
-      input.userProfileId,
-      input.startDate,
-      input.endDate,
-    );
+  async getGoalSignals(input: {
+    authUserId: string;
+    userProfileId: string;
+    startDate: string;
+    endDate: string;
+  }): Promise<GoalNutritionSignals> {
+    const logs =
+      await this.nutritionLogRepository.findByUserProfileIdAndDateRange(
+        input.userProfileId,
+        input.startDate,
+        input.endDate,
+      );
     const dates = new Set(logs.map((log: NutritionLog) => log.date));
     const today = await this.getCoachContext({ authUserId: input.authUserId });
     return {
@@ -104,11 +134,14 @@ export class NutritionConsumerProjectionService {
     };
   }
 
-  async getNotificationSignals(input: { authUserId: string }): Promise<NotificationNutritionSignals> {
+  async getNotificationSignals(input: {
+    authUserId: string;
+  }): Promise<NotificationNutritionSignals> {
     const context = await this.getCoachContext(input);
     return {
       availability: context.availability,
-      adherencePercentage: context.todayNutrition?.progress?.adherencePercentage ?? null,
+      adherencePercentage:
+        context.todayNutrition?.progress?.adherencePercentage ?? null,
       contractVersion: 'nutrition-consumer-signals-v1',
     };
   }

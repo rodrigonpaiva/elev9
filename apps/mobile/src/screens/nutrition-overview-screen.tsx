@@ -121,7 +121,7 @@ export function NutritionOverviewScreen() {
 
   const model = useMemo(
     () =>
-        state.todayNutrition
+      state.todayNutrition
         ? buildNutritionOverviewModel({
             todayNutrition: state.todayNutrition,
           })
@@ -472,9 +472,7 @@ function buildNutritionOverviewModel(input: {
   };
 }
 
-function getHeroTitle(
-  nutrition: NutritionReadModel,
-): string {
+function getHeroTitle(nutrition: NutritionReadModel): string {
   if (nutrition.progress.adherenceStatus === 'within_range') {
     return 'Nutrition On Track';
   }
@@ -490,7 +488,9 @@ function getCoachInsight(nutrition: NutritionReadModel): string {
   return nutrition.insight.message;
 }
 
-function formatAdherenceStatus(status: NonNullable<NutritionReadModel['progress']>['adherenceStatus']): string {
+function formatAdherenceStatus(
+  status: NonNullable<NutritionReadModel['progress']>['adherenceStatus'],
+): string {
   return status.replace('_', ' ');
 }
 

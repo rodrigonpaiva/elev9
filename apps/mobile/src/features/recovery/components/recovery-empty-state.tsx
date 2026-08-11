@@ -28,4 +28,3 @@ const styles = StyleSheet.create({
   message: { color: '#94a3b8' },
   button: { marginTop: 8 },
 });
-

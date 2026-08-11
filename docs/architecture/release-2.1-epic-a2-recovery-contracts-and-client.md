@@ -117,4 +117,3 @@ Foi usada uma fixture type-only no pacote `types` com `satisfies` e `@ts-expect-
 - Analytics e offline read cache.
 - Accessibility de tela/dispositivo.
 - Validação E2E externa.
-

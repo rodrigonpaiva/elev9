@@ -40,18 +40,14 @@ export function buildNutritionCardModel(
       below_range: 'Below Range',
       within_range: 'Within Range',
       above_range: 'Above Range',
-    }[
-      adherenceStatus
-    ] as NutritionCardModel['adherence']['label'],
+    }[adherenceStatus] as NutritionCardModel['adherence']['label'],
     badgeVariant: {
       unavailable: 'muted',
       not_started: 'muted',
       below_range: 'danger',
       within_range: 'primary',
       above_range: 'danger',
-    }[
-      adherenceStatus
-    ] as NutritionCardModel['adherence']['badgeVariant'],
+    }[adherenceStatus] as NutritionCardModel['adherence']['badgeVariant'],
   };
   const calories = nutrition.calories;
   const calorieTarget = calories?.target;

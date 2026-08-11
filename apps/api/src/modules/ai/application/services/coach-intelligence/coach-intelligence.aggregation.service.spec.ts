@@ -41,7 +41,10 @@ const buildHealthContext = (): Record<string, unknown> => ({
 
 describe('CoachIntelligenceAggregationService', () => {
   let configService: { isEnabled: jest.Mock };
-  let contextAssemblerService: { resolveUserProfile: jest.Mock; assemble: jest.Mock };
+  let contextAssemblerService: {
+    resolveUserProfile: jest.Mock;
+    assemble: jest.Mock;
+  };
   let coachExpertRegistry: {
     getExpertsForIntent: jest.Mock;
     getExpertsForDomains: jest.Mock;
@@ -138,7 +141,9 @@ describe('CoachIntelligenceAggregationService', () => {
     });
 
     expect(contextAssemblerService.assemble).not.toHaveBeenCalled();
-    expect(coachIntelligenceObservabilityService.startTrace).not.toHaveBeenCalled();
+    expect(
+      coachIntelligenceObservabilityService.startTrace,
+    ).not.toHaveBeenCalled();
   });
 
   it('builds a deterministic aggregate and records observability', async () => {
@@ -353,7 +358,9 @@ describe('CoachIntelligenceAggregationService', () => {
       }),
     );
     expect(coachExpertObservabilityService.completeTrace).toHaveBeenCalled();
-    expect(coachIntelligenceObservabilityService.completeTrace).toHaveBeenCalled();
+    expect(
+      coachIntelligenceObservabilityService.completeTrace,
+    ).toHaveBeenCalled();
   });
 
   it('normalizes unexpected failures through the aggregate observability layer', async () => {
@@ -598,17 +605,72 @@ function buildAggregate() {
       retryable: false,
       reasonCode: 'READY',
       sections: {
-        insight: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        evidence: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        explainability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        training: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        nutrition: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        recovery: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        goals: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        habits: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        progress: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        personalization: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        notifications: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        insight: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        evidence: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        explainability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        training: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        nutrition: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        recovery: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        goals: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        habits: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        progress: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        personalization: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        notifications: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
       },
     },
     freshness: {
@@ -619,15 +681,24 @@ function buildAggregate() {
       sections: {
         insight: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         evidence: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
-        explainability: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
+        explainability: {
+          status: 'fresh',
+          generatedAt: '2026-07-13T00:00:00.000Z',
+        },
         training: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         nutrition: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         recovery: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         goals: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         habits: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         progress: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
-        personalization: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
-        notifications: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
+        personalization: {
+          status: 'fresh',
+          generatedAt: '2026-07-13T00:00:00.000Z',
+        },
+        notifications: {
+          status: 'fresh',
+          generatedAt: '2026-07-13T00:00:00.000Z',
+        },
       },
     },
     sections: buildSections(),

@@ -71,9 +71,8 @@ export function ReplaceMealScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ReplaceMeal'>>();
   const { mealId } = route.params;
-  const [todayNutrition, setTodayNutrition] = useState<NutritionReadModel | null>(
-    null,
-  );
+  const [todayNutrition, setTodayNutrition] =
+    useState<NutritionReadModel | null>(null);
   const [selectedReason, setSelectedReason] =
     useState<ReplacementReason>('Food unavailable');
   const [selectedAlternativeId, setSelectedAlternativeId] = useState<

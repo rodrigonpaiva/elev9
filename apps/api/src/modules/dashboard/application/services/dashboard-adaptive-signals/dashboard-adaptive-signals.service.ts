@@ -105,12 +105,15 @@ export class DashboardAdaptiveSignalsService {
     void recoveryTrend;
     const nutrition = healthContext.nutritionContext;
     return {
-      priority: nutrition?.focus?.priority === 'high' ? 'performance' : 'consistency',
+      priority:
+        nutrition?.focus?.priority === 'high' ? 'performance' : 'consistency',
       message:
         nutrition?.focus?.message ??
         nutrition?.insight?.message ??
         'Keep your nutrition routine consistent today.',
-      signals: nutrition ? ['canonical_nutrition_context'] : ['nutrition_unavailable'],
+      signals: nutrition
+        ? ['canonical_nutrition_context']
+        : ['nutrition_unavailable'],
     };
   }
 

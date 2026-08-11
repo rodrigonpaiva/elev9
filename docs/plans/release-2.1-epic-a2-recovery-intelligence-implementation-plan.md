@@ -163,17 +163,17 @@ Defer Recovery read cache until the safe read model is stable. If implemented, c
 
 ## Testing Plan
 
-| Layer | Required evidence | Blocking |
-|---|---|---|
-| Domain/application | score unchanged, freshness, breakdown, trend | Yes |
-| Repository | date ordering, uniqueness, legacy shape | Yes |
-| Controller/contracts | safe allowlist, absence, auth | Yes |
-| API client | route/shape/error semantics | Yes |
-| Mobile | overview, factors, empty/stale/error/accessibility | Yes |
-| Dashboard | CTA, refresh, no duplicate interpretation | Yes |
-| Coach/Training | canonical source and freshness compatibility | Yes |
-| E2E | check-in→Recovery→context→Dashboard | Yes for certification |
-| Device/manual | VoiceOver/TalkBack and scaling | Release gate |
+| Layer                | Required evidence                                  | Blocking              |
+| -------------------- | -------------------------------------------------- | --------------------- |
+| Domain/application   | score unchanged, freshness, breakdown, trend       | Yes                   |
+| Repository           | date ordering, uniqueness, legacy shape            | Yes                   |
+| Controller/contracts | safe allowlist, absence, auth                      | Yes                   |
+| API client           | route/shape/error semantics                        | Yes                   |
+| Mobile               | overview, factors, empty/stale/error/accessibility | Yes                   |
+| Dashboard            | CTA, refresh, no duplicate interpretation          | Yes                   |
+| Coach/Training       | canonical source and freshness compatibility       | Yes                   |
+| E2E                  | check-in→Recovery→context→Dashboard                | Yes for certification |
+| Device/manual        | VoiceOver/TalkBack and scaling                     | Release gate          |
 
 ## Documentation Updates
 

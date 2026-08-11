@@ -10,19 +10,19 @@ Occurrences were classified as canonical, authorized consumer, compatibility-onl
 
 ## 2. Official ownership
 
-| Concern | Owner |
-| --- | --- |
-| Profile, plan, targets and logs | NutritionModule |
-| Daily deterministic calculation | NutritionModule |
-| Availability and freshness | NutritionModule |
-| Adherence, focus and insight | NutritionModule |
-| History projection and trends | NutritionModule |
-| Cache eligibility and storage lifecycle | Mobile infrastructure |
-| Coach explanation and policy | Coach |
-| Safe Health projection | Health Context adapter |
-| UI presentation and navigation | Mobile |
-| Analytics transport | Analytics infrastructure |
-| Operational telemetry transport | Observability infrastructure |
+| Concern                                 | Owner                        |
+| --------------------------------------- | ---------------------------- |
+| Profile, plan, targets and logs         | NutritionModule              |
+| Daily deterministic calculation         | NutritionModule              |
+| Availability and freshness              | NutritionModule              |
+| Adherence, focus and insight            | NutritionModule              |
+| History projection and trends           | NutritionModule              |
+| Cache eligibility and storage lifecycle | Mobile infrastructure        |
+| Coach explanation and policy            | Coach                        |
+| Safe Health projection                  | Health Context adapter       |
+| UI presentation and navigation          | Mobile                       |
+| Analytics transport                     | Analytics infrastructure     |
+| Operational telemetry transport         | Observability infrastructure |
 
 No second semantic owner is approved.
 
@@ -110,20 +110,20 @@ Older ADRs, domain blueprints, fixtures and Coach debug/history contracts descri
 
 ## 5. Consumer audit
 
-| Consumer | Contract/boundary | Finding |
-| --- | --- | --- |
-| Dashboard | `NutritionReadModel` through `useDashboard` | Canonical presentation; no new domain calculation found. |
-| Nutrition Overview | `GET /nutrition/today` | Presents canonical progress; still uses deprecated alias typing. |
-| Nutrition History | history list/detail/trends endpoints | Canonical; no current-plan reinterpretation or local trend calculation. |
-| Mobile mutations | command endpoints plus today read | Legitimate command/read split; legacy type names remain. |
-| Health Context | canonical today use case plus legacy profile repository | Canonical projection exists, but raw profile compatibility path remains. |
-| Nutrition Expert | canonical context first, legacy context fallback | Deterministic canonical path exists; fallback still contains raw fields. |
-| Coach chat/runtime | canonical context plus legacy plan/log/profile fields | Duplicate loaders remain compatibility-only. |
-| Training | direct Nutrition plan/log/recommendation repositories | Legacy cross-domain calculation; needs future application-port migration. |
-| Goals | direct Nutrition plan/log repositories | Legacy progress snapshot dependency. |
-| Notifications | Nutrition recommendation and derived adherence inputs | Legacy notification calculation; no new Prompt 8 semantics added. |
-| Recovery | receives legacy health context fields | No new Nutrition ownership introduced; legacy coupling remains. |
-| Web | no active Nutrition runtime consumer found | Documentation/prototype references only. |
+| Consumer           | Contract/boundary                                       | Finding                                                                   |
+| ------------------ | ------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Dashboard          | `NutritionReadModel` through `useDashboard`             | Canonical presentation; no new domain calculation found.                  |
+| Nutrition Overview | `GET /nutrition/today`                                  | Presents canonical progress; still uses deprecated alias typing.          |
+| Nutrition History  | history list/detail/trends endpoints                    | Canonical; no current-plan reinterpretation or local trend calculation.   |
+| Mobile mutations   | command endpoints plus today read                       | Legitimate command/read split; legacy type names remain.                  |
+| Health Context     | canonical today use case plus legacy profile repository | Canonical projection exists, but raw profile compatibility path remains.  |
+| Nutrition Expert   | canonical context first, legacy context fallback        | Deterministic canonical path exists; fallback still contains raw fields.  |
+| Coach chat/runtime | canonical context plus legacy plan/log/profile fields   | Duplicate loaders remain compatibility-only.                              |
+| Training           | direct Nutrition plan/log/recommendation repositories   | Legacy cross-domain calculation; needs future application-port migration. |
+| Goals              | direct Nutrition plan/log repositories                  | Legacy progress snapshot dependency.                                      |
+| Notifications      | Nutrition recommendation and derived adherence inputs   | Legacy notification calculation; no new Prompt 8 semantics added.         |
+| Recovery           | receives legacy health context fields                   | No new Nutrition ownership introduced; legacy coupling remains.           |
+| Web                | no active Nutrition runtime consumer found              | Documentation/prototype references only.                                  |
 
 ## 6. Loaders and repositories
 

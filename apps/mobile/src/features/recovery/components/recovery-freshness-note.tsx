@@ -42,4 +42,3 @@ const styles = StyleSheet.create({
   label: { color: colors.text, fontWeight: '700' },
   timestamp: { color: colors.mutedText, marginTop: 4 },
 });
-

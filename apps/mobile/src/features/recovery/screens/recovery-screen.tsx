@@ -39,7 +39,8 @@ export function RecoveryScreen({
   onSelectHistoryRange,
   onInsightAction,
 }: RecoveryScreenProps) {
-  const isRefreshing = state.status === 'available' ? state.isRefreshing : false;
+  const isRefreshing =
+    state.status === 'available' ? state.isRefreshing : false;
 
   return (
     <Screen
@@ -150,7 +151,11 @@ function AvailableRecoveryContent({
       {state.currentErrorMessage ? (
         <Card accessibilityLiveRegion="polite" style={styles.refreshError}>
           <Text style={styles.muted}>{state.currentErrorMessage}</Text>
-          <Button label="Retry Recovery" onPress={onRetry} style={styles.historyButton} />
+          <Button
+            label="Retry Recovery"
+            onPress={onRetry}
+            style={styles.historyButton}
+          />
         </Card>
       ) : null}
       <RecoveryFreshnessNote
@@ -178,10 +183,15 @@ function AvailableRecoveryContent({
         <Card accessibilityLiveRegion="polite" style={styles.historyError}>
           <Text variant="title">History unavailable</Text>
           <Text style={styles.muted}>
-            {state.historyErrorMessage ?? 'We could not load your recent Recovery history.'}
+            {state.historyErrorMessage ??
+              'We could not load your recent Recovery history.'}
           </Text>
           {onRetryHistory ? (
-            <Button label="Retry history" onPress={onRetryHistory} style={styles.historyButton} />
+            <Button
+              label="Retry history"
+              onPress={onRetryHistory}
+              style={styles.historyButton}
+            />
           ) : null}
         </Card>
       ) : (
@@ -216,7 +226,12 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   headerCopy: { flex: 1, gap: 8 },
   intro: { color: colors.mutedText, marginTop: -8 },
-  backButton: { minWidth: 88, width: 88, paddingHorizontal: 8, paddingVertical: 12 },
+  backButton: {
+    minWidth: 88,
+    width: 88,
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+  },
   rangeHint: { color: colors.primary, fontWeight: '700' },
   muted: { color: colors.mutedText },
   historyError: { gap: 10 },

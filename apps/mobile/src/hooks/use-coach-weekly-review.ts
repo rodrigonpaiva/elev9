@@ -258,7 +258,12 @@ export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
     });
 
     return buildWeeklyReviewModel(state, intelligence, insight);
-  }, [dashboard.coach.data, dashboard.coach.intelligence, dashboard.coach.mode, state]);
+  }, [
+    dashboard.coach.data,
+    dashboard.coach.intelligence,
+    dashboard.coach.mode,
+    state,
+  ]);
   const hasSignals =
     Boolean(state.progressSummary) ||
     Boolean(state.trainingPlan) ||

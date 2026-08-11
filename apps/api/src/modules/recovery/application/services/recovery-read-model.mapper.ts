@@ -72,7 +72,10 @@ export class RecoveryReadModelMapper {
 
   getFreshness(snapshot: RecoverySnapshot): RecoveryReadFreshness {
     const generatedAt = snapshot.sourceContext?.generatedAt;
-    if (!snapshot.sourceContext || Object.keys(snapshot.sourceContext).length === 0) {
+    if (
+      !snapshot.sourceContext ||
+      Object.keys(snapshot.sourceContext).length === 0
+    ) {
       return 'legacy';
     }
     if (!generatedAt) return 'unknown';

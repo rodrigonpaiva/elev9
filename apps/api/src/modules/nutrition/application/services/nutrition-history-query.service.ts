@@ -67,14 +67,18 @@ export class NutritionHistoryQueryService {
     const limit = resolveLimit(input.limit);
     const cursorDate = input.cursor ? decodeCursor(input.cursor) : null;
     if (input.cursor && !cursorDate) {
-      throw new NutritionHistoryQueryError('INVALID_CURSOR', 'Invalid history cursor.');
+      throw new NutritionHistoryQueryError(
+        'INVALID_CURSOR',
+        'Invalid history cursor.',
+      );
     }
     const profile = await this.loadProfile(input.authUserId);
-    const logs = await this.nutritionLogRepository.findByUserProfileIdAndDateRange(
-      profile.id,
-      period.from,
-      period.to,
-    );
+    const logs =
+      await this.nutritionLogRepository.findByUserProfileIdAndDateRange(
+        profile.id,
+        period.from,
+        period.to,
+      );
     const days = await this.projectDates(logs);
     const filtered = days
       .filter((day) => !cursorDate || day.date < cursorDate)
@@ -84,7 +88,10 @@ export class NutritionHistoryQueryService {
 
     const output: NutritionHistoryPage = {
       items: pageItems.map(toSummary),
-      pageInfo: { nextCursor: nextDate ? encodeCursor(nextDate) : null, hasNextPage: Boolean(nextDate) },
+      pageInfo: {
+        nextCursor: nextDate ? encodeCursor(nextDate) : null,
+        hasNextPage: Boolean(nextDate),
+      },
       period: { ...period, timezone: 'UTC' },
       contractVersion: 'nutrition-history-v1',
     };
@@ -93,7 +100,9 @@ export class NutritionHistoryQueryService {
       outcome: 'success',
       durationMs: Date.now() - startedAt,
       resultCount: output.items.length,
-      dataQuality: output.items.some((item) => item.dataQuality === 'partial') ? 'partial' : 'complete',
+      dataQuality: output.items.some((item) => item.dataQuality === 'partial')
+        ? 'partial'
+        : 'complete',
     });
     return output;
   }
@@ -110,7 +119,9 @@ export class NutritionHistoryQueryService {
       input.date,
     );
     const days = await this.projectDates(logs);
-    const output = days[0] ?? this.projection.project({ date: input.date, logs: [], plans: [] });
+    const output =
+      days[0] ??
+      this.projection.project({ date: input.date, logs: [], plans: [] });
     this.observability?.recordHistoryRead({
       operation: 'get_nutrition_history_day',
       outcome: 'success',
@@ -130,11 +141,12 @@ export class NutritionHistoryQueryService {
     const startedAt = Date.now();
     const period = resolvePeriod(input.from, input.to);
     const profile = await this.loadProfile(input.authUserId);
-    const logs = await this.nutritionLogRepository.findByUserProfileIdAndDateRange(
-      profile.id,
-      period.from,
-      period.to,
-    );
+    const logs =
+      await this.nutritionLogRepository.findByUserProfileIdAndDateRange(
+        profile.id,
+        period.from,
+        period.to,
+      );
     const days = await this.projectDates(logs);
     const output = this.projection.buildTrends({ ...period, days });
     this.observability?.recordHistoryRead({
@@ -150,24 +162,38 @@ export class NutritionHistoryQueryService {
   private async loadProfile(authUserId: string) {
     const normalized = typeof authUserId === 'string' ? authUserId.trim() : '';
     if (!normalized) {
-      throw new NutritionHistoryQueryError('INVALID_SESSION', 'Invalid session.');
+      throw new NutritionHistoryQueryError(
+        'INVALID_SESSION',
+        'Invalid session.',
+      );
     }
-    const profile = await this.userProfileRepository.findByAuthUserId(normalized);
+    const profile =
+      await this.userProfileRepository.findByAuthUserId(normalized);
     if (!profile) {
-      throw new NutritionHistoryQueryError('USER_PROFILE_NOT_FOUND', 'User profile not found.');
+      throw new NutritionHistoryQueryError(
+        'USER_PROFILE_NOT_FOUND',
+        'User profile not found.',
+      );
     }
     return profile;
   }
 
-  private async projectDates(logs: Awaited<ReturnType<NutritionLogRepository['findByUserProfileIdAndDateRange']>>) {
+  private async projectDates(
+    logs: Awaited<
+      ReturnType<NutritionLogRepository['findByUserProfileIdAndDateRange']>
+    >,
+  ) {
     const grouped = new Map<string, typeof logs>();
-    for (const log of logs) grouped.set(log.date, [...(grouped.get(log.date) ?? []), log]);
+    for (const log of logs)
+      grouped.set(log.date, [...(grouped.get(log.date) ?? []), log]);
     const planIds = [...new Set(logs.map((log) => log.nutritionPlanId))];
     const plans = this.nutritionPlanRepository.findByIds
       ? await this.nutritionPlanRepository.findByIds(planIds)
-      : (await Promise.all(planIds.map((id) => this.nutritionPlanRepository.findById(id)))).filter(
-          (plan): plan is NonNullable<typeof plan> => Boolean(plan),
-        );
+      : (
+          await Promise.all(
+            planIds.map((id) => this.nutritionPlanRepository.findById(id)),
+          )
+        ).filter((plan): plan is NonNullable<typeof plan> => Boolean(plan));
 
     return [...grouped.entries()].map(([date, dateLogs]) =>
       this.projection.project({ date, logs: dateLogs, plans }),
@@ -175,7 +201,9 @@ export class NutritionHistoryQueryService {
   }
 }
 
-function toSummary(day: NutritionHistoryDayReadModel): NutritionHistoryDaySummary {
+function toSummary(
+  day: NutritionHistoryDayReadModel,
+): NutritionHistoryDaySummary {
   return {
     date: day.date,
     availability: day.availability,
@@ -185,21 +213,33 @@ function toSummary(day: NutritionHistoryDayReadModel): NutritionHistoryDaySummar
       ? { state: day.calories.state, percentage: day.calories.percentage }
       : null,
     meals: day.mealProgress
-      ? { completed: day.mealProgress.completed, planned: day.mealProgress.planned }
+      ? {
+          completed: day.mealProgress.completed,
+          planned: day.mealProgress.planned,
+        }
       : null,
   };
 }
 
-function resolvePeriod(from?: string, to?: string): { from: string; to: string } {
+function resolvePeriod(
+  from?: string,
+  to?: string,
+): { from: string; to: string } {
   const resolvedTo = to ?? utcDateString(new Date());
   const resolvedFrom = from ?? shiftUtcDate(resolvedTo, -29);
   assertDate(resolvedFrom);
   assertDate(resolvedTo);
   if (resolvedFrom > resolvedTo) {
-    throw new NutritionHistoryQueryError('INVALID_DATE_RANGE', 'Invalid history date range.');
+    throw new NutritionHistoryQueryError(
+      'INVALID_DATE_RANGE',
+      'Invalid history date range.',
+    );
   }
   if (countDays(resolvedFrom, resolvedTo) > 90) {
-    throw new NutritionHistoryQueryError('RANGE_TOO_LARGE', 'History range is limited to 90 days.');
+    throw new NutritionHistoryQueryError(
+      'RANGE_TOO_LARGE',
+      'History range is limited to 90 days.',
+    );
   }
   return { from: resolvedFrom, to: resolvedTo };
 }
@@ -207,14 +247,20 @@ function resolvePeriod(from?: string, to?: string): { from: string; to: string }
 function resolveLimit(limit?: number): number {
   if (limit === undefined) return 20;
   if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
-    throw new NutritionHistoryQueryError('INVALID_DATE_RANGE', 'History limit is invalid.');
+    throw new NutritionHistoryQueryError(
+      'INVALID_DATE_RANGE',
+      'History limit is invalid.',
+    );
   }
   return limit;
 }
 
 function assertDate(value: string): void {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new NutritionHistoryQueryError('INVALID_DATE_RANGE', 'History date is invalid.');
+    throw new NutritionHistoryQueryError(
+      'INVALID_DATE_RANGE',
+      'History date is invalid.',
+    );
   }
   const [year, month, day] = value.split('-').map(Number);
   const parsed = new Date(Date.UTC(year, month - 1, day));
@@ -224,7 +270,10 @@ function assertDate(value: string): void {
     parsed.getUTCMonth() !== month - 1 ||
     parsed.getUTCDate() !== day
   ) {
-    throw new NutritionHistoryQueryError('INVALID_DATE_RANGE', 'History date is invalid.');
+    throw new NutritionHistoryQueryError(
+      'INVALID_DATE_RANGE',
+      'History date is invalid.',
+    );
   }
 }
 
@@ -234,8 +283,11 @@ function encodeCursor(date: string): string {
 
 function decodeCursor(cursor: string): string | null {
   try {
-    const parsed: unknown = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
-    if (typeof parsed !== 'object' || parsed === null || !('date' in parsed)) return null;
+    const parsed: unknown = JSON.parse(
+      Buffer.from(cursor, 'base64url').toString('utf8'),
+    );
+    if (typeof parsed !== 'object' || parsed === null || !('date' in parsed))
+      return null;
     const date = (parsed as { date?: unknown }).date;
     if (typeof date !== 'string') return null;
     assertDate(date);
@@ -256,5 +308,11 @@ function shiftUtcDate(date: string, days: number): string {
 }
 
 function countDays(from: string, to: string): number {
-  return Math.floor((Date.parse(`${to}T00:00:00.000Z`) - Date.parse(`${from}T00:00:00.000Z`)) / 86_400_000) + 1;
+  return (
+    Math.floor(
+      (Date.parse(`${to}T00:00:00.000Z`) -
+        Date.parse(`${from}T00:00:00.000Z`)) /
+        86_400_000,
+    ) + 1
+  );
 }

@@ -1,9 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import type {
-  NutritionAvailability,
-  NutritionFreshness,
-} from '@elev9/types';
+import type { NutritionAvailability, NutritionFreshness } from '@elev9/types';
 
 export type NutritionTelemetryOutcome =
   | 'success'
@@ -117,7 +114,9 @@ export function buildNutritionTelemetryEvent(input: {
       ? { legacyMappingUsed: input.legacyMappingUsed }
       : {}),
     ...(input.periodBucket ? { periodBucket: input.periodBucket } : {}),
-    ...(input.resultCountBucket ? { resultCountBucket: input.resultCountBucket } : {}),
+    ...(input.resultCountBucket
+      ? { resultCountBucket: input.resultCountBucket }
+      : {}),
     ...(input.dataQuality ? { dataQuality: input.dataQuality } : {}),
     ...(input.source ? { source: input.source } : {}),
   };

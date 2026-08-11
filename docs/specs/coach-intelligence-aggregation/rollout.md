@@ -81,83 +81,83 @@ If aggregate parity needs more runtime comparison, shadow mode MAY be enabled la
 
 ### Phase 0 - No code
 
-| Item | Definition |
-|---|---|
-| Entry criteria | Specification and technical design approved |
-| Exit criteria | Implementation starts only after the contract and architecture are signed off |
-| Rollback | N/A |
-| Metrics | N/A |
-| Risks | None beyond design disagreement |
+| Item           | Definition                                                                    |
+| -------------- | ----------------------------------------------------------------------------- |
+| Entry criteria | Specification and technical design approved                                   |
+| Exit criteria  | Implementation starts only after the contract and architecture are signed off |
+| Rollback       | N/A                                                                           |
+| Metrics        | N/A                                                                           |
+| Risks          | None beyond design disagreement                                               |
 
 ### Phase 1 - Contracts
 
-| Item | Definition |
-|---|---|
-| Entry criteria | Design approved |
-| Exit criteria | Shared contract exists in `packages/types` and API client can reference it |
-| Rollback | Remove or revert the new contract version |
-| Metrics | Typecheck, contract tests, schema parity |
-| Risks | Contract drift if fields are guessed rather than validated |
+| Item           | Definition                                                                 |
+| -------------- | -------------------------------------------------------------------------- |
+| Entry criteria | Design approved                                                            |
+| Exit criteria  | Shared contract exists in `packages/types` and API client can reference it |
+| Rollback       | Remove or revert the new contract version                                  |
+| Metrics        | Typecheck, contract tests, schema parity                                   |
+| Risks          | Contract drift if fields are guessed rather than validated                 |
 
 ### Phase 2 - Backend Aggregate
 
-| Item | Definition |
-|---|---|
-| Entry criteria | Contract is available |
-| Exit criteria | Backend aggregate returns a stable result in internal tests |
-| Rollback | Disable the aggregate flag and use the legacy compatibility path |
-| Metrics | Backend unit tests, integration tests, deterministic replay parity |
-| Risks | New backend latency or coupling |
+| Item           | Definition                                                         |
+| -------------- | ------------------------------------------------------------------ |
+| Entry criteria | Contract is available                                              |
+| Exit criteria  | Backend aggregate returns a stable result in internal tests        |
+| Rollback       | Disable the aggregate flag and use the legacy compatibility path   |
+| Metrics        | Backend unit tests, integration tests, deterministic replay parity |
+| Risks          | New backend latency or coupling                                    |
 
 ### Phase 3 - Endpoint
 
-| Item | Definition |
-|---|---|
-| Entry criteria | Backend aggregate is stable |
-| Exit criteria | `GET /ai/coach-intelligence` is exposed behind a backend flag |
-| Rollback | Turn off the endpoint flag and preserve the old routes |
-| Metrics | Endpoint success rate, latency, partial failure rate |
-| Risks | Unauthorized access or incorrect auth gating |
+| Item           | Definition                                                    |
+| -------------- | ------------------------------------------------------------- |
+| Entry criteria | Backend aggregate is stable                                   |
+| Exit criteria  | `GET /ai/coach-intelligence` is exposed behind a backend flag |
+| Rollback       | Turn off the endpoint flag and preserve the old routes        |
+| Metrics        | Endpoint success rate, latency, partial failure rate          |
+| Risks          | Unauthorized access or incorrect auth gating                  |
 
 ### Phase 4 - API Client
 
-| Item | Definition |
-|---|---|
-| Entry criteria | Endpoint is available in a safe environment |
-| Exit criteria | `packages/api-client` exposes one canonical aggregate operation |
-| Rollback | Revert to the previous API-client mapping and legacy calls |
-| Metrics | Client tests, request path correctness, typed response usage |
-| Risks | Contract mismatch or accidental duplicate calls |
+| Item           | Definition                                                      |
+| -------------- | --------------------------------------------------------------- |
+| Entry criteria | Endpoint is available in a safe environment                     |
+| Exit criteria  | `packages/api-client` exposes one canonical aggregate operation |
+| Rollback       | Revert to the previous API-client mapping and legacy calls      |
+| Metrics        | Client tests, request path correctness, typed response usage    |
+| Risks          | Contract mismatch or accidental duplicate calls                 |
 
 ### Phase 5 - Mobile
 
-| Item | Definition |
-|---|---|
-| Entry criteria | API client is available and tested |
-| Exit criteria | Migrated Coach surfaces consume the aggregate path |
-| Rollback | Flip the mobile feature flag to the legacy composition path |
-| Metrics | Screen-level regression tests, crash/error rate, loading-state parity |
-| Risks | Rendering regressions or partial-state mismatch |
+| Item           | Definition                                                            |
+| -------------- | --------------------------------------------------------------------- |
+| Entry criteria | API client is available and tested                                    |
+| Exit criteria  | Migrated Coach surfaces consume the aggregate path                    |
+| Rollback       | Flip the mobile feature flag to the legacy composition path           |
+| Metrics        | Screen-level regression tests, crash/error rate, loading-state parity |
+| Risks          | Rendering regressions or partial-state mismatch                       |
 
 ### Phase 6 - Cleanup
 
-| Item | Definition |
-|---|---|
-| Entry criteria | Mobile rollout is stable |
-| Exit criteria | Redundant local composition is removed only where proven safe |
-| Rollback | Keep the legacy code path until removal is explicitly approved |
-| Metrics | Residual legacy usage, bug rate, parity metrics |
-| Risks | Premature deletion of fallback behavior |
+| Item           | Definition                                                     |
+| -------------- | -------------------------------------------------------------- |
+| Entry criteria | Mobile rollout is stable                                       |
+| Exit criteria  | Redundant local composition is removed only where proven safe  |
+| Rollback       | Keep the legacy code path until removal is explicitly approved |
+| Metrics        | Residual legacy usage, bug rate, parity metrics                |
+| Risks          | Premature deletion of fallback behavior                        |
 
 ### Phase 7 - Certification
 
-| Item | Definition |
-|---|---|
-| Entry criteria | Cleanup completed or explicitly deferred |
-| Exit criteria | Final certification document is published and linked |
-| Rollback | Roll back to the previous release if certification criteria fail |
-| Metrics | Full test suite, observability signals, release readiness checklist |
-| Risks | Certification done on incomplete parity evidence |
+| Item           | Definition                                                          |
+| -------------- | ------------------------------------------------------------------- |
+| Entry criteria | Cleanup completed or explicitly deferred                            |
+| Exit criteria  | Final certification document is published and linked                |
+| Rollback       | Roll back to the previous release if certification criteria fail    |
+| Metrics        | Full test suite, observability signals, release readiness checklist |
+| Risks          | Certification done on incomplete parity evidence                    |
 
 ## 5. Rollout Gates
 

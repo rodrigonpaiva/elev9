@@ -96,15 +96,23 @@ export class AsyncStorageRecoveryCache implements RecoveryCache {
     }
   }
 
-  private async readRecord(ownerKey: string): Promise<RecoveryCacheRecord | null> {
+  private async readRecord(
+    ownerKey: string,
+  ): Promise<RecoveryCacheRecord | null> {
     const snapshot = await this.read(ownerKey);
     if (!snapshot) return null;
     return buildRecoveryCacheRecord({ ownerKey, ...snapshot });
   }
 
-  private async write(ownerKey: string, record: RecoveryCacheRecord): Promise<void> {
+  private async write(
+    ownerKey: string,
+    record: RecoveryCacheRecord,
+  ): Promise<void> {
     try {
-      await AsyncStorage.setItem(getRecoveryCacheKey(ownerKey), JSON.stringify(record));
+      await AsyncStorage.setItem(
+        getRecoveryCacheKey(ownerKey),
+        JSON.stringify(record),
+      );
     } catch {
       // Cache write failures never replace a successful network response.
     }
@@ -126,6 +134,8 @@ export function getRecoveryCacheKey(ownerKey: string): string {
 
 export const recoveryCache: RecoveryCache = new AsyncStorageRecoveryCache();
 
-export async function clearRecoveryCacheForOwner(ownerKey: string | null): Promise<void> {
+export async function clearRecoveryCacheForOwner(
+  ownerKey: string | null,
+): Promise<void> {
   if (ownerKey) await recoveryCache.remove(ownerKey);
 }

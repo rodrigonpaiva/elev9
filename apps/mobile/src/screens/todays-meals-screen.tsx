@@ -63,9 +63,8 @@ const tokens = {
 export function TodaysMealsScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [todayNutrition, setTodayNutrition] = useState<NutritionReadModel | null>(
-    null,
-  );
+  const [todayNutrition, setTodayNutrition] =
+    useState<NutritionReadModel | null>(null);
   const [recommendations, setRecommendations] = useState<
     NutritionRecommendation[]
   >([]);

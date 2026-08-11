@@ -12,15 +12,15 @@ The current public endpoints are retained: profile, macro-target calculation, cu
 
 ## Findings and ownership map
 
-| Responsibility | Owner / classification |
-|---|---|
-| Profile, targets, plan, logs, meal replacement | NutritionModule exclusive ownership |
-| Daily consumption, macro progress, meal completion, adherence, next meal, focus | NutritionModule exclusive ownership |
-| Dashboard and Mobile rendering | Consumers; no semantic recalculation after Prompt 1 |
-| API client serialization and TypeScript types | Shared contract consumer |
-| Coach explanation | Consumer of existing Health Context; migration to the canonical read model is a follow-up gap |
-| Training adaptive signals and notification thresholds | Integration consumers; existing duplicate semantic inputs, deferred pending integration audit |
-| Hydration, history, offline cache, analytics, LLM | Deferred to later A3 prompts |
+| Responsibility                                                                  | Owner / classification                                                                        |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Profile, targets, plan, logs, meal replacement                                  | NutritionModule exclusive ownership                                                           |
+| Daily consumption, macro progress, meal completion, adherence, next meal, focus | NutritionModule exclusive ownership                                                           |
+| Dashboard and Mobile rendering                                                  | Consumers; no semantic recalculation after Prompt 1                                           |
+| API client serialization and TypeScript types                                   | Shared contract consumer                                                                      |
+| Coach explanation                                                               | Consumer of existing Health Context; migration to the canonical read model is a follow-up gap |
+| Training adaptive signals and notification thresholds                           | Integration consumers; existing duplicate semantic inputs, deferred pending integration audit |
+| Hydration, history, offline cache, analytics, LLM                               | Deferred to later A3 prompts                                                                  |
 
 ### Priority risks
 

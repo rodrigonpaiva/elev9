@@ -3,7 +3,11 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 export function RecoveryLoadingState() {
   return (
-    <View accessibilityLiveRegion="polite" accessibilityRole="progressbar" style={styles.container}>
+    <View
+      accessibilityLiveRegion="polite"
+      accessibilityRole="progressbar"
+      style={styles.container}
+    >
       <Card style={styles.card}>
         <ActivityIndicator color={colors.primary} />
         <Text style={styles.copy}>Loading your Recovery...</Text>
@@ -14,6 +18,11 @@ export function RecoveryLoadingState() {
 
 const styles = StyleSheet.create({
   container: { gap: 12 },
-  card: { minHeight: 160, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  card: {
+    minHeight: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+  },
   copy: { color: colors.mutedText },
 });

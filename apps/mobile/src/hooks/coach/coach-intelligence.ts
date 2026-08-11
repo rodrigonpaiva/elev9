@@ -949,9 +949,7 @@ function buildEvidence(
         importance: getNutritionImportance(
           nutritionProgress.adherencePercentage,
         ),
-        confidence: confidenceFromScore(
-          nutritionProgress.adherencePercentage,
-        ),
+        confidence: confidenceFromScore(nutritionProgress.adherencePercentage),
         availability: 'AVAILABLE',
         title: 'Nutrition adherence',
         detail: `${Math.round(nutritionProgress.adherencePercentage)}% adherence`,
@@ -1219,7 +1217,10 @@ function buildRisks(
     }
   }
 
-  if (input.nutrition?.progress && input.nutrition.progress.adherencePercentage < 75) {
+  if (
+    input.nutrition?.progress &&
+    input.nutrition.progress.adherencePercentage < 75
+  ) {
     risks.push({
       level:
         input.nutrition.progress.adherencePercentage < 55 ? 'HIGH' : 'MEDIUM',
@@ -1356,7 +1357,10 @@ function buildKeyFindings(
     });
   }
 
-  if (input.nutrition?.progress && input.nutrition.progress.adherencePercentage < 75) {
+  if (
+    input.nutrition?.progress &&
+    input.nutrition.progress.adherencePercentage < 75
+  ) {
     findings.push({
       code: 'NUTRITION_INCONSISTENCY',
       title: 'Nutrition inconsistency',

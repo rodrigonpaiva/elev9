@@ -33,7 +33,10 @@ export function RecoveryInsightCard({
   );
 }
 
-function copyFromKey(key: string, tone: RecoveryExperienceInsight['tone']): string {
+function copyFromKey(
+  key: string,
+  tone: RecoveryExperienceInsight['tone'],
+): string {
   const normalized = key.toLowerCase();
 
   if (normalized.includes('low')) {
@@ -57,4 +60,3 @@ const styles = StyleSheet.create({
   body: { color: colors.mutedText, marginTop: 8 },
   button: { marginTop: 16 },
 });
-

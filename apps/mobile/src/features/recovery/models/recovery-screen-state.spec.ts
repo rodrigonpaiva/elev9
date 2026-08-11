@@ -21,9 +21,13 @@ describe('Recovery screen state fixtures', () => {
   });
 
   it('keeps non-available states explicit', () => {
-    expect(insufficientDataRecoveryScreenFixture.status).toBe('insufficient_data');
+    expect(insufficientDataRecoveryScreenFixture.status).toBe(
+      'insufficient_data',
+    );
     expect(notAvailableRecoveryScreenFixture.status).toBe('not_available');
-    expect(processingFailedRecoveryScreenFixture.status).toBe('processing_failed');
+    expect(processingFailedRecoveryScreenFixture.status).toBe(
+      'processing_failed',
+    );
     expect(errorRecoveryScreenFixture.status).toBe('error');
   });
 });

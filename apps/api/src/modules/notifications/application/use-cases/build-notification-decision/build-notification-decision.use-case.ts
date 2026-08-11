@@ -119,7 +119,9 @@ export class BuildNotificationDecisionUseCase {
     private readonly goalMilestoneRepository: GoalMilestoneRepository,
     @Inject(NUTRITION_NOTIFICATION_SIGNALS_PORT)
     private readonly nutritionSignalsPort: {
-      getNotificationSignals(input: { authUserId: string }): Promise<NotificationNutritionSignals>;
+      getNotificationSignals(input: {
+        authUserId: string;
+      }): Promise<NotificationNutritionSignals>;
     },
     @Inject(FITNESS_PROFILE_REPOSITORY)
     private readonly fitnessProfileRepository: FitnessProfileRepository,
@@ -194,9 +196,10 @@ export class BuildNotificationDecisionUseCase {
       const goalMilestones = activeGoal
         ? await this.goalMilestoneRepository.findManyByGoalId(activeGoal.id)
         : [];
-      const nutritionSignals = await this.nutritionSignalsPort.getNotificationSignals({
-        authUserId,
-      });
+      const nutritionSignals =
+        await this.nutritionSignalsPort.getNotificationSignals({
+          authUserId,
+        });
       const fitnessProfile =
         await this.fitnessProfileRepository.findActiveByUserProfileId(
           userProfile.id,

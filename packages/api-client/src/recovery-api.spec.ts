@@ -33,17 +33,20 @@ describe('Recovery Experience API client', () => {
     });
   });
 
-  it.each([7, 30, 90])('serializes a valid history range: %s days', async (days) => {
-    const request = jest.fn().mockResolvedValue({});
-    const api = createRecoveryApi(buildHttpClient(request));
+  it.each([7, 30, 90])(
+    'serializes a valid history range: %s days',
+    async (days) => {
+      const request = jest.fn().mockResolvedValue({});
+      const api = createRecoveryApi(buildHttpClient(request));
 
-    await api.getRecoveryExperienceHistory({ days });
+      await api.getRecoveryExperienceHistory({ days });
 
-    expect(request).toHaveBeenCalledWith({
-      method: 'GET',
-      path: `/recovery/experience/history?days=${days}`,
-    });
-  });
+      expect(request).toHaveBeenCalledWith({
+        method: 'GET',
+        path: `/recovery/experience/history?days=${days}`,
+      });
+    },
+  );
 
   it.each([0, 91, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
     'rejects invalid history range: %s',

@@ -272,9 +272,15 @@ export class RecoveryController {
 
     switch (error.code) {
       case GET_CURRENT_RECOVERY_READ_MODEL_ERROR_CODES.INVALID_SESSION:
-        throw new UnauthorizedException({ code: error.code, message: error.message });
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+        });
       case GET_CURRENT_RECOVERY_READ_MODEL_ERROR_CODES.USER_PROFILE_NOT_FOUND:
-        throw new NotFoundException({ code: error.code, message: error.message });
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+        });
       case GET_CURRENT_RECOVERY_READ_MODEL_ERROR_CODES.INTERNAL_ERROR:
       default:
         throw new InternalServerErrorException({
@@ -291,11 +297,20 @@ export class RecoveryController {
 
     switch (error.code) {
       case GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.INVALID_SESSION:
-        throw new UnauthorizedException({ code: error.code, message: error.message });
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+        });
       case GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.USER_PROFILE_NOT_FOUND:
-        throw new NotFoundException({ code: error.code, message: error.message });
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+        });
       case GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.INVALID_RANGE:
-        throw new BadRequestException({ code: error.code, message: error.message });
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+        });
       case GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.INTERNAL_ERROR:
       default:
         throw new InternalServerErrorException({

@@ -94,9 +94,8 @@ export function LogMealScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'LogMeal'>>();
   const { mealId } = route.params;
-  const [todayNutrition, setTodayNutrition] = useState<NutritionReadModel | null>(
-    null,
-  );
+  const [todayNutrition, setTodayNutrition] =
+    useState<NutritionReadModel | null>(null);
   const [recommendations, setRecommendations] = useState<
     NutritionRecommendation[]
   >([]);

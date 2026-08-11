@@ -22,4 +22,3 @@ export function availableHistoryPointCount(
 ): number {
   return history.filter((item) => item.availability === 'available').length;
 }
-

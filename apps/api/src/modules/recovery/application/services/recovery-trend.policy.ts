@@ -20,8 +20,12 @@ export class RecoveryTrendPolicy {
     const splitIndex = Math.floor(valid.length / 2);
     const first = valid.slice(0, splitIndex);
     const second = valid.slice(splitIndex);
-    const firstAverage = this.average(first.map((snapshot) => snapshot.readinessScore));
-    const secondAverage = this.average(second.map((snapshot) => snapshot.readinessScore));
+    const firstAverage = this.average(
+      first.map((snapshot) => snapshot.readinessScore),
+    );
+    const secondAverage = this.average(
+      second.map((snapshot) => snapshot.readinessScore),
+    );
     const difference = secondAverage - firstAverage;
 
     return {
@@ -38,7 +42,7 @@ export class RecoveryTrendPolicy {
   private isUsable(snapshot: RecoverySnapshot): boolean {
     return Boolean(
       snapshot.sourceContext?.generatedAt &&
-        Number.isFinite(new Date(snapshot.sourceContext.generatedAt).getTime()),
+      Number.isFinite(new Date(snapshot.sourceContext.generatedAt).getTime()),
     );
   }
 

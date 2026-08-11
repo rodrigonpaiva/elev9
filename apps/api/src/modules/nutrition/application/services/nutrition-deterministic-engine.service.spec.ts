@@ -44,18 +44,28 @@ describe('calculateNutritionDeterministicState', () => {
       meals,
       macroTargets: targets,
       logs: [
-        buildLog('breakfast', 'consumed', {
-          calories: 500,
-          proteinGrams: 30,
-          carbsGrams: 40,
-          fatGrams: 10,
-        }, '2026-06-02T08:00:00.000Z'),
-        buildLog('breakfast', 'consumed', {
-          calories: 2_500,
-          proteinGrams: 180,
-          carbsGrams: 260,
-          fatGrams: 80,
-        }, '2026-06-02T09:00:00.000Z'),
+        buildLog(
+          'breakfast',
+          'consumed',
+          {
+            calories: 500,
+            proteinGrams: 30,
+            carbsGrams: 40,
+            fatGrams: 10,
+          },
+          '2026-06-02T08:00:00.000Z',
+        ),
+        buildLog(
+          'breakfast',
+          'consumed',
+          {
+            calories: 2_500,
+            proteinGrams: 180,
+            carbsGrams: 260,
+            fatGrams: 80,
+          },
+          '2026-06-02T09:00:00.000Z',
+        ),
         buildLog('lunch', 'consumed', {
           calories: -1,
           proteinGrams: 1,
@@ -94,12 +104,14 @@ describe('calculateNutritionDeterministicState', () => {
     const input = {
       meals,
       macroTargets: targets,
-      logs: [buildLog('breakfast', 'partial', {
-        calories: 400,
-        proteinGrams: 30,
-        carbsGrams: 40,
-        fatGrams: 10,
-      })],
+      logs: [
+        buildLog('breakfast', 'partial', {
+          calories: 400,
+          proteinGrams: 30,
+          carbsGrams: 40,
+          fatGrams: 10,
+        }),
+      ],
     } as const;
 
     expect(calculateNutritionDeterministicState(input)).toEqual(

@@ -106,7 +106,10 @@ describe('Recovery cache schema', () => {
     expect(getRecoveryCacheAge(savedAt, now)).toBe('recent');
     expect(getRecoveryCacheAge(savedAt, now + 1)).toBe('old');
     expect(
-      getRecoveryCacheAge(savedAt, Date.parse(savedAt) + RECOVERY_CACHE_HARD_TTL_MS + 1),
+      getRecoveryCacheAge(
+        savedAt,
+        Date.parse(savedAt) + RECOVERY_CACHE_HARD_TTL_MS + 1,
+      ),
     ).toBe('expired');
     expect(getRecoveryCacheAge('not-a-date', now)).toBe('expired');
   });

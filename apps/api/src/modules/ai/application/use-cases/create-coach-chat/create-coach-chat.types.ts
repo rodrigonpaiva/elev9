@@ -17,9 +17,7 @@ import type {
   PersonalizationMemoryPayload,
   PersonalizationPromptPayload,
 } from '../../../../../shared/mappers';
-import type {
-  Goal as GoalEntity,
-} from '../../../../goals/domain/entities/goal.entity';
+import type { Goal as GoalEntity } from '../../../../goals/domain/entities/goal.entity';
 import type { GoalAchievement } from '../../../../goals/domain/entities/goal-achievement.entity';
 import type { GoalForecast } from '../../../../goals/domain/entities/goal-forecast.entity';
 import type { GoalMilestone } from '../../../../goals/domain/entities/goal-milestone.entity';

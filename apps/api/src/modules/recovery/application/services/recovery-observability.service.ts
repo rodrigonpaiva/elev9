@@ -13,11 +13,17 @@ type RecoveryRebuildResult = 'attempt' | 'success' | 'failure';
 export class RecoveryObservabilityService {
   private readonly logger = new Logger(RecoveryObservabilityService.name);
 
-  recordCurrentRequest(result: RecoveryRequestResult, durationMs: number): void {
+  recordCurrentRequest(
+    result: RecoveryRequestResult,
+    durationMs: number,
+  ): void {
     this.record('recovery_current_request', { result, durationMs });
   }
 
-  recordHistoryRequest(result: RecoveryRequestResult, durationMs: number): void {
+  recordHistoryRequest(
+    result: RecoveryRequestResult,
+    durationMs: number,
+  ): void {
     this.record('recovery_history_request', { result, durationMs });
   }
 
@@ -41,7 +47,10 @@ export class RecoveryObservabilityService {
     this.record(`coach_recovery_context_${result}`, {});
   }
 
-  private record(event: string, metadata: Record<string, string | number>): void {
+  private record(
+    event: string,
+    metadata: Record<string, string | number>,
+  ): void {
     this.logger.log({
       event,
       operation: 'recovery',

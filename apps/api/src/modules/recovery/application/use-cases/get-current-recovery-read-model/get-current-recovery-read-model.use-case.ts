@@ -22,7 +22,9 @@ export class GetCurrentRecoveryReadModelUseCase {
     private readonly observability?: RecoveryObservabilityService,
   ) {}
 
-  async execute(input: { authUserId: string }): Promise<RecoveryCurrentReadModel> {
+  async execute(input: {
+    authUserId: string;
+  }): Promise<RecoveryCurrentReadModel> {
     const startedAt = Date.now();
     try {
       const result = await this.getCurrentRecoveryUseCase.execute(input);
@@ -53,7 +55,9 @@ export class GetCurrentRecoveryReadModelUseCase {
             error.message,
           );
         }
-        if (error.code === GET_CURRENT_RECOVERY_ERROR_CODES.USER_PROFILE_NOT_FOUND) {
+        if (
+          error.code === GET_CURRENT_RECOVERY_ERROR_CODES.USER_PROFILE_NOT_FOUND
+        ) {
           throw new GetCurrentRecoveryReadModelError(
             GET_CURRENT_RECOVERY_READ_MODEL_ERROR_CODES.USER_PROFILE_NOT_FOUND,
             error.message,

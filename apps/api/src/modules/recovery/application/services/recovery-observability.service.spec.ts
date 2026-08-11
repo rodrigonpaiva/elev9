@@ -3,7 +3,8 @@ import { RecoveryObservabilityService } from './recovery-observability.service';
 describe('RecoveryObservabilityService', () => {
   it('emits only low-cardinality operational metadata', () => {
     const service = new RecoveryObservabilityService();
-    const logger = (service as unknown as { logger: { log: jest.Mock } }).logger;
+    const logger = (service as unknown as { logger: { log: jest.Mock } })
+      .logger;
     logger.log = jest.fn();
 
     service.recordCurrentRequest('success', 12);
@@ -23,7 +24,8 @@ describe('RecoveryObservabilityService', () => {
 
   it('uses separate technical signals for Coach Recovery outcomes', () => {
     const service = new RecoveryObservabilityService();
-    const logger = (service as unknown as { logger: { log: jest.Mock } }).logger;
+    const logger = (service as unknown as { logger: { log: jest.Mock } })
+      .logger;
     logger.log = jest.fn();
 
     service.recordCoachContext('fallback');

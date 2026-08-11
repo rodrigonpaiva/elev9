@@ -33,7 +33,9 @@ export class CoachIntelligenceContextAssemblerService {
         })
       : await this.sourceAdaptersService.resolveUserProfile({
           authUserId: input.authUserId,
-          ...(input.userProfileId ? { userProfileId: input.userProfileId } : {}),
+          ...(input.userProfileId
+            ? { userProfileId: input.userProfileId }
+            : {}),
         });
 
     const source = await this.sourceAdaptersService.load({

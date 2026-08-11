@@ -491,8 +491,7 @@ describe('GetHomeDashboardUseCase', () => {
         },
         nutritionGuidance: {
           priority: 'consistency',
-          message:
-            'Keep your nutrition routine consistent today.',
+          message: 'Keep your nutrition routine consistent today.',
           signals: ['nutrition_unavailable'],
         },
       },
@@ -556,8 +555,7 @@ describe('GetHomeDashboardUseCase', () => {
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
-      message:
-        'Keep your nutrition routine consistent today.',
+      message: 'Keep your nutrition routine consistent today.',
       signals: ['nutrition_unavailable'],
     });
     expect(
@@ -740,8 +738,7 @@ describe('GetHomeDashboardUseCase', () => {
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
-      message:
-        'Keep your nutrition routine consistent today.',
+      message: 'Keep your nutrition routine consistent today.',
       signals: ['nutrition_unavailable'],
     });
     expect(result.dashboard.coachDecision).toEqual({
@@ -885,8 +882,7 @@ describe('GetHomeDashboardUseCase', () => {
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
-      message:
-        'Keep your nutrition routine consistent today.',
+      message: 'Keep your nutrition routine consistent today.',
       signals: ['nutrition_unavailable'],
     });
   });
@@ -1046,8 +1042,7 @@ describe('GetHomeDashboardUseCase', () => {
 
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
-      message:
-        'Keep your nutrition routine consistent today.',
+      message: 'Keep your nutrition routine consistent today.',
       signals: ['nutrition_unavailable'],
     });
   });

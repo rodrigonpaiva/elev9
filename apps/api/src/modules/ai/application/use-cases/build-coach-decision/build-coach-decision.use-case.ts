@@ -74,7 +74,9 @@ export class BuildCoachDecisionUseCase {
     private readonly workoutLogRepository: WorkoutLogRepository,
     @Inject(NUTRITION_NOTIFICATION_SIGNALS_PORT)
     private readonly nutritionSignalsPort: {
-      getNotificationSignals(input: { authUserId: string }): Promise<NotificationNutritionSignals>;
+      getNotificationSignals(input: {
+        authUserId: string;
+      }): Promise<NotificationNutritionSignals>;
     },
     @Inject(COACH_DECISION_REPOSITORY)
     private readonly coachDecisionRepository: CoachDecisionRepository,
@@ -130,9 +132,10 @@ export class BuildCoachDecisionUseCase {
       const personalizationContext =
         await this.resolvePersonalizationContext(authUserId);
 
-      const nutritionSignals = await this.nutritionSignalsPort.getNotificationSignals({
-        authUserId,
-      });
+      const nutritionSignals =
+        await this.nutritionSignalsPort.getNotificationSignals({
+          authUserId,
+        });
 
       const adaptiveTrainingRecommendation = (
         await this.getCurrentAdaptiveTrainingUseCase.execute({ authUserId })

@@ -27,21 +27,21 @@ Estimativa secundária, sem substituir a classificação oficial: cerca de **52%
 
 ### Comandos executados
 
-| Comando | Resultado | Impacto |
-|---|---|---|
-| `npm exec nx show projects --json` | Passou | Confirmou os seis projetos Nx. |
-| `npm exec nx graph --print` | Falhou | Nx graph server tentou bind em `127.0.0.1:4211` e recebeu `EPERM`; grafo foi inferido apenas de configs/imports já disponíveis. |
-| `npm exec nx test api --outputStyle=stream` | Passou: 202/202 suites, 1318/1318 testes | Forte cobertura unitária/integrada de backend; houve aviso de worker com teardown incompleto. |
-| `npm exec nx test mobile --outputStyle=stream` | Passou: 6/6 suites, 28/28 testes | Cobertura mobile concentrada em hooks/helpers, não em E2E visual. |
-| `npm run lint` | Passou | O script cobre `types` e `api-client`, não todos os apps. |
-| `npm run format:check` | Falhou | 65 arquivos com divergência Prettier. |
-| `npm exec nx test:e2e api --outputStyle=stream` | Falhou: 15 suites, 54 testes | `MongoMemoryServer` não conseguiu bind/abrir portas no sandbox (`EPERM`, código 48); não comprova funcionalidade E2E nem defeito funcional. |
-| `npm exec nx build api --outputStyle=stream` | Passou | API e dependência `types` compilaram. |
-| `npm exec nx build types --outputStyle=stream` | Passou/cache | Contratos TypeScript compilam. |
-| `npm exec nx build api-client --outputStyle=stream` | Passou | Cliente tipado compila. |
-| `npm exec nx build mobile --outputStyle=stream` | Passou | Bundles Android/iOS/Web foram gerados. |
-| `npm exec nx export mobile --outputStyle=stream` | Passou | Export Expo completou. |
-| `npm install` | Não executado | Evitado porque poderia alterar lockfile/node_modules contra a regra de auditoria sem mutação. Dependências já estavam presentes. |
+| Comando                                             | Resultado                                | Impacto                                                                                                                                     |
+| --------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm exec nx show projects --json`                  | Passou                                   | Confirmou os seis projetos Nx.                                                                                                              |
+| `npm exec nx graph --print`                         | Falhou                                   | Nx graph server tentou bind em `127.0.0.1:4211` e recebeu `EPERM`; grafo foi inferido apenas de configs/imports já disponíveis.             |
+| `npm exec nx test api --outputStyle=stream`         | Passou: 202/202 suites, 1318/1318 testes | Forte cobertura unitária/integrada de backend; houve aviso de worker com teardown incompleto.                                               |
+| `npm exec nx test mobile --outputStyle=stream`      | Passou: 6/6 suites, 28/28 testes         | Cobertura mobile concentrada em hooks/helpers, não em E2E visual.                                                                           |
+| `npm run lint`                                      | Passou                                   | O script cobre `types` e `api-client`, não todos os apps.                                                                                   |
+| `npm run format:check`                              | Falhou                                   | 65 arquivos com divergência Prettier.                                                                                                       |
+| `npm exec nx test:e2e api --outputStyle=stream`     | Falhou: 15 suites, 54 testes             | `MongoMemoryServer` não conseguiu bind/abrir portas no sandbox (`EPERM`, código 48); não comprova funcionalidade E2E nem defeito funcional. |
+| `npm exec nx build api --outputStyle=stream`        | Passou                                   | API e dependência `types` compilaram.                                                                                                       |
+| `npm exec nx build types --outputStyle=stream`      | Passou/cache                             | Contratos TypeScript compilam.                                                                                                              |
+| `npm exec nx build api-client --outputStyle=stream` | Passou                                   | Cliente tipado compila.                                                                                                                     |
+| `npm exec nx build mobile --outputStyle=stream`     | Passou                                   | Bundles Android/iOS/Web foram gerados.                                                                                                      |
+| `npm exec nx export mobile --outputStyle=stream`    | Passou                                   | Export Expo completou.                                                                                                                      |
+| `npm install`                                       | Não executado                            | Evitado porque poderia alterar lockfile/node_modules contra a regra de auditoria sem mutação. Dependências já estavam presentes.            |
 
 **Evidence:** `package.json`, `nx.json`, `.github/workflows/ci.yml`, `apps/api/src/app.module.ts`, `apps/api/src/main.ts`, `docker-compose.yml`, `Dockerfile`.
 
@@ -55,33 +55,33 @@ Uma rota, DTO, tela, classe ou spec isolada não foi considerada entrega. Cada c
 
 ## 4. Roadmap Scorecard
 
-| Horizon | Epic | Status | User-visible | Integrated | Tested | Measured | Production-ready | Confidence |
-|---|---|---|---|---|---|---|---|---|
-| H0 | 0.1 Product Governance | PARTIALLY_IMPLEMENTED | Parcial | Parcial | Parcial | Não | Não | High |
-| H0 | 0.2 Core Platform Stabilization | PARTIALLY_IMPLEMENTED | Não aplicável | Parcial | Parcial | Parcial | Não | High |
-| H0 | 0.3 Product Analytics Foundation | SCAFFOLDED | Parcial/técnico | Não | Não comprovado | Não | Não | High |
-| H1 | 1.1 Intelligent Onboarding | PARTIALLY_IMPLEMENTED | Sim | Parcial | Backend sim/mobile parcial | Não | Não | High |
-| H1 | 1.2 Unified Daily Dashboard | INTEGRATED_NOT_VALIDATED | Sim | Sim, com fallback | Sim | Não | Não | High |
-| H1 | 1.3 Complete Training Experience | INTEGRATED_NOT_VALIDATED | Sim | Sim no loop básico | Sim backend | Não | Não | High |
-| H1 | 1.4 Complete Nutrition Experience | INTEGRATED_NOT_VALIDATED | Sim | Sim no loop básico | Sim backend | Não | Não | High |
-| H1 | 1.5 Recovery Experience | PARTIALLY_IMPLEMENTED | Parcial | Parcial | Sim backend | Não | Não | High |
-| H1 | 1.6 Goals and Progress | PARTIALLY_IMPLEMENTED | Parcial | Parcial | Sim backend | Não | Não | High |
-| H2 | 2.1 Intelligent Daily Coaching | PARTIALLY_IMPLEMENTED | Sim | Parcial | Sim unitário | Não | Não | High |
-| H2 | 2.2 Adaptive Training Engine | PARTIALLY_IMPLEMENTED | Sim | Recomendação sim; mutação de plano não comprovada | Sim unitário | Não | Não | High |
-| H2 | 2.3 Adaptive Nutrition Engine | PARTIALLY_IMPLEMENTED | Sim | Recomendação/substituição sim | Sim unitário | Não | Não | High |
-| H2 | 2.4 Cross-Domain Recommendation Engine | INTEGRATED_NOT_VALIDATED | Sim | Backend sim; mobile canônico flag-off | Sim unitário | Não | Não | High |
-| H3 | 3.1 Habit Intelligence | PARTIALLY_IMPLEMENTED | Parcial | Backend read models | Sim backend | Não | Não | High |
-| H3 | 3.2 Progress Intelligence | PARTIALLY_IMPLEMENTED | Parcial | Parcial | Sim backend | Não | Não | Medium |
-| H3 | 3.3 Motivation and Engagement Intelligence | PARTIALLY_IMPLEMENTED | Parcial | Parcial | Sim de especialistas | Não | Não | Medium |
-| H4 | 4.1 Long-Term Coach Memory | PARTIALLY_IMPLEMENTED | Parcial | Histórico/memória técnica; não memória durável controlada | Sim unitário | Não | Não | High |
-| H4 | 4.2 Conversation Experience | PARTIALLY_IMPLEMENTED | Sim | Chat síncrono sim; streaming condicionado | Sim backend/mobile helpers | Não | Não | High |
-| H4 | 4.3 Proactive Coaching | PARTIALLY_IMPLEMENTED | In-app sim | Decisão sim; entrega push não | Sim backend | Não | Não | High |
-| H4 | 4.4 Coach Trust and Explainability | INTEGRATED_NOT_VALIDATED | Sim | Sim no backend/mobile | Sim unitário | Não | Não | High |
-| H5 | 5.1 Health and Wearable Integrations | NOT_STARTED | Não | Não | Não | Não | Não | High |
-| H5 | 5.2 Multimodal Coaching | NOT_STARTED | Não | Não | Não | Não | Não | High |
-| H5 | 5.3 Social and Community | NOT_STARTED | Não | Não | Não | Não | Não | High |
-| H5 | 5.4 Professional Ecosystem | NOT_STARTED | Não | Não | Não | Não | Não | High |
-| H5 | 5.5 Web Platform | SCAFFOLDED | Landing page | Não | Build sim | Não | Não | High |
+| Horizon | Epic                                       | Status                   | User-visible    | Integrated                                                | Tested                     | Measured | Production-ready | Confidence |
+| ------- | ------------------------------------------ | ------------------------ | --------------- | --------------------------------------------------------- | -------------------------- | -------- | ---------------- | ---------- |
+| H0      | 0.1 Product Governance                     | PARTIALLY_IMPLEMENTED    | Parcial         | Parcial                                                   | Parcial                    | Não      | Não              | High       |
+| H0      | 0.2 Core Platform Stabilization            | PARTIALLY_IMPLEMENTED    | Não aplicável   | Parcial                                                   | Parcial                    | Parcial  | Não              | High       |
+| H0      | 0.3 Product Analytics Foundation           | SCAFFOLDED               | Parcial/técnico | Não                                                       | Não comprovado             | Não      | Não              | High       |
+| H1      | 1.1 Intelligent Onboarding                 | PARTIALLY_IMPLEMENTED    | Sim             | Parcial                                                   | Backend sim/mobile parcial | Não      | Não              | High       |
+| H1      | 1.2 Unified Daily Dashboard                | INTEGRATED_NOT_VALIDATED | Sim             | Sim, com fallback                                         | Sim                        | Não      | Não              | High       |
+| H1      | 1.3 Complete Training Experience           | INTEGRATED_NOT_VALIDATED | Sim             | Sim no loop básico                                        | Sim backend                | Não      | Não              | High       |
+| H1      | 1.4 Complete Nutrition Experience          | INTEGRATED_NOT_VALIDATED | Sim             | Sim no loop básico                                        | Sim backend                | Não      | Não              | High       |
+| H1      | 1.5 Recovery Experience                    | PARTIALLY_IMPLEMENTED    | Parcial         | Parcial                                                   | Sim backend                | Não      | Não              | High       |
+| H1      | 1.6 Goals and Progress                     | PARTIALLY_IMPLEMENTED    | Parcial         | Parcial                                                   | Sim backend                | Não      | Não              | High       |
+| H2      | 2.1 Intelligent Daily Coaching             | PARTIALLY_IMPLEMENTED    | Sim             | Parcial                                                   | Sim unitário               | Não      | Não              | High       |
+| H2      | 2.2 Adaptive Training Engine               | PARTIALLY_IMPLEMENTED    | Sim             | Recomendação sim; mutação de plano não comprovada         | Sim unitário               | Não      | Não              | High       |
+| H2      | 2.3 Adaptive Nutrition Engine              | PARTIALLY_IMPLEMENTED    | Sim             | Recomendação/substituição sim                             | Sim unitário               | Não      | Não              | High       |
+| H2      | 2.4 Cross-Domain Recommendation Engine     | INTEGRATED_NOT_VALIDATED | Sim             | Backend sim; mobile canônico flag-off                     | Sim unitário               | Não      | Não              | High       |
+| H3      | 3.1 Habit Intelligence                     | PARTIALLY_IMPLEMENTED    | Parcial         | Backend read models                                       | Sim backend                | Não      | Não              | High       |
+| H3      | 3.2 Progress Intelligence                  | PARTIALLY_IMPLEMENTED    | Parcial         | Parcial                                                   | Sim backend                | Não      | Não              | Medium     |
+| H3      | 3.3 Motivation and Engagement Intelligence | PARTIALLY_IMPLEMENTED    | Parcial         | Parcial                                                   | Sim de especialistas       | Não      | Não              | Medium     |
+| H4      | 4.1 Long-Term Coach Memory                 | PARTIALLY_IMPLEMENTED    | Parcial         | Histórico/memória técnica; não memória durável controlada | Sim unitário               | Não      | Não              | High       |
+| H4      | 4.2 Conversation Experience                | PARTIALLY_IMPLEMENTED    | Sim             | Chat síncrono sim; streaming condicionado                 | Sim backend/mobile helpers | Não      | Não              | High       |
+| H4      | 4.3 Proactive Coaching                     | PARTIALLY_IMPLEMENTED    | In-app sim      | Decisão sim; entrega push não                             | Sim backend                | Não      | Não              | High       |
+| H4      | 4.4 Coach Trust and Explainability         | INTEGRATED_NOT_VALIDATED | Sim             | Sim no backend/mobile                                     | Sim unitário               | Não      | Não              | High       |
+| H5      | 5.1 Health and Wearable Integrations       | NOT_STARTED              | Não             | Não                                                       | Não                        | Não      | Não              | High       |
+| H5      | 5.2 Multimodal Coaching                    | NOT_STARTED              | Não             | Não                                                       | Não                        | Não      | Não              | High       |
+| H5      | 5.3 Social and Community                   | NOT_STARTED              | Não             | Não                                                       | Não                        | Não      | Não              | High       |
+| H5      | 5.4 Professional Ecosystem                 | NOT_STARTED              | Não             | Não                                                       | Não                        | Não      | Não              | High       |
+| H5      | 5.5 Web Platform                           | SCAFFOLDED               | Landing page    | Não                                                       | Build sim                  | Não      | Não              | High       |
 
 ## 5. Detailed Epic Audit
 
@@ -1152,38 +1152,38 @@ Situação → decisão determinística → persistência → leitura in-app →
 
 ## 7. AI Runtime Audit
 
-| Capability | Existe | Conectada | Default | Fallback | Teste | User-visible | Classificação |
-|---|---|---|---|---|---|---|---|
-| Runtime determinístico do Coach | Sim | Sim | Ativo | N/A | Sim | Sim | INTEGRATED_NOT_VALIDATED |
-| OpenAI provider | Sim | Sim no módulo | `AI_LLM_ENABLED=false` | Sim | Simulado/unitário | Somente se habilitado | PARTIALLY_IMPLEMENTED |
-| Responses API/structured output | Parser/provider/config existem | Parcial | Structured true, LLM off | Parser/fallback | Sim | Não comprovado | IMPLEMENTED_NOT_INTEGRATED |
-| Streaming | Rota e serviço existem | Parcial | `AI_LLM_STREAMING_ENABLED=false` | Síncrono | Unitário | Não comprovado | IMPLEMENTED_NOT_INTEGRATED |
-| Tool calling | Registry/executor/policy existem | Não operacional por default | `AI_LLM_TOOL_CALLING_ENABLED=false`, agent tools false | Sem tools | Sim unitário | Não | SCAFFOLDED |
-| Agent runtime | Context, planning, execution, memory, policy, traces existem | Interno | `AI_AGENT_RUNTIME_ENABLED=false` | Chat existente | Sim unitário | Não diretamente | IMPLEMENTED_NOT_INTEGRATED |
-| Specialist routing/composition | Sim | Sim no aggregate/deterministic Coach | Ativo no caminho determinístico | Parcial aggregate legacy | Sim | Indiretamente | INTEGRATED_NOT_VALIDATED |
-| Prompt injection/safety | Sim | Sim no chat/LLM | Ativo | Bloqueia/fallback | Sim | Indiretamente | INTEGRATED_NOT_VALIDATED |
-| Retry/circuit breaker/timeout | Sim | Sim no LLM service | Aplicável quando LLM on | Fallback | Sim unitário | Não | IMPLEMENTED_NOT_INTEGRATED |
-| Prompt version/canary/evaluation | Sim | Interno | Prompt default; canary config default 100 | Previous versions metadata | Sim unitário | Não | IMPLEMENTED_NOT_INTEGRATED |
-| Observability AI | Sim, in-memory | Sim internamente | Noop metric providers | Logs/internal traces | Sim | Não | INTEGRATED_NOT_VALIDATED |
-| Cost tracking | Campos/config existem | Parcial | Custos opcionais ausentes | Limits opcionais | Sim unitário | Não | SCAFFOLDED |
-| Future memory | Serviços/repository | Não ativada como produto | `AI_LLM_MEMORY_ENABLED=false` | Context/session | Sim unitário | Timeline parcial | PARTIALLY_IMPLEMENTED |
+| Capability                       | Existe                                                       | Conectada                            | Default                                                | Fallback                   | Teste             | User-visible          | Classificação              |
+| -------------------------------- | ------------------------------------------------------------ | ------------------------------------ | ------------------------------------------------------ | -------------------------- | ----------------- | --------------------- | -------------------------- |
+| Runtime determinístico do Coach  | Sim                                                          | Sim                                  | Ativo                                                  | N/A                        | Sim               | Sim                   | INTEGRATED_NOT_VALIDATED   |
+| OpenAI provider                  | Sim                                                          | Sim no módulo                        | `AI_LLM_ENABLED=false`                                 | Sim                        | Simulado/unitário | Somente se habilitado | PARTIALLY_IMPLEMENTED      |
+| Responses API/structured output  | Parser/provider/config existem                               | Parcial                              | Structured true, LLM off                               | Parser/fallback            | Sim               | Não comprovado        | IMPLEMENTED_NOT_INTEGRATED |
+| Streaming                        | Rota e serviço existem                                       | Parcial                              | `AI_LLM_STREAMING_ENABLED=false`                       | Síncrono                   | Unitário          | Não comprovado        | IMPLEMENTED_NOT_INTEGRATED |
+| Tool calling                     | Registry/executor/policy existem                             | Não operacional por default          | `AI_LLM_TOOL_CALLING_ENABLED=false`, agent tools false | Sem tools                  | Sim unitário      | Não                   | SCAFFOLDED                 |
+| Agent runtime                    | Context, planning, execution, memory, policy, traces existem | Interno                              | `AI_AGENT_RUNTIME_ENABLED=false`                       | Chat existente             | Sim unitário      | Não diretamente       | IMPLEMENTED_NOT_INTEGRATED |
+| Specialist routing/composition   | Sim                                                          | Sim no aggregate/deterministic Coach | Ativo no caminho determinístico                        | Parcial aggregate legacy   | Sim               | Indiretamente         | INTEGRATED_NOT_VALIDATED   |
+| Prompt injection/safety          | Sim                                                          | Sim no chat/LLM                      | Ativo                                                  | Bloqueia/fallback          | Sim               | Indiretamente         | INTEGRATED_NOT_VALIDATED   |
+| Retry/circuit breaker/timeout    | Sim                                                          | Sim no LLM service                   | Aplicável quando LLM on                                | Fallback                   | Sim unitário      | Não                   | IMPLEMENTED_NOT_INTEGRATED |
+| Prompt version/canary/evaluation | Sim                                                          | Interno                              | Prompt default; canary config default 100              | Previous versions metadata | Sim unitário      | Não                   | IMPLEMENTED_NOT_INTEGRATED |
+| Observability AI                 | Sim, in-memory                                               | Sim internamente                     | Noop metric providers                                  | Logs/internal traces       | Sim               | Não                   | INTEGRATED_NOT_VALIDATED   |
+| Cost tracking                    | Campos/config existem                                        | Parcial                              | Custos opcionais ausentes                              | Limits opcionais           | Sim unitário      | Não                   | SCAFFOLDED                 |
+| Future memory                    | Serviços/repository                                          | Não ativada como produto             | `AI_LLM_MEMORY_ENABLED=false`                          | Context/session            | Sim unitário      | Timeline parcial      | PARTIALLY_IMPLEMENTED      |
 
 **Conclusão:** a IA operacional default é deterministic-first. A arquitetura para OpenAI/agents é real, mas não pode ser descrita como LLM/agent product ativo sem configuração e validação externa.
 
 ## 8. Feature Flag Audit
 
-| Flag | Definição | Default | Capacidade | Ativado | Desativado | Testes | Risco |
-|---|---|---:|---|---|---|---|---|
-| `AI_LLM_ENABLED` | `apps/api/src/modules/ai/application/services/llm/ai-llm-config.service.ts` | `false` | Chamada OpenAI | provider OpenAI exige key | deterministic/fallback | Sim | UI pode chamar AI mas não LLM |
-| `AI_LLM_STREAMING_ENABLED` | mesmo | `false` | streaming | stream | síncrono | Sim | rota existe, feature não |
-| `AI_LLM_STRUCTURED_OUTPUTS_ENABLED` | mesmo | `true` | structured output | parser estruturado | caminho alternativo | Sim | depende de LLM on |
-| `AI_LLM_TOOL_CALLING_ENABLED` | mesmo | `false` | tool calls LLM | tools | sem tools | Sim | não é agent operacional |
-| `AI_LLM_MEMORY_ENABLED` | mesmo | `false` | future LLM memory | memory | sem future memory | Sim | não confundir com history |
-| `AI_COACH_INTELLIGENCE_ENABLED` | `coach-intelligence.config.ts` e mobile hook | `false` | aggregate canônico | `/ai/coach-intelligence` | mobile legacy intelligence/fallback | Sim | caminho canônico não é default |
-| `AI_AGENT_RUNTIME_ENABLED` | `agent-runtime.config.ts` | `false` | runtime agent | agent plan/execute | chat path | Sim | docs citam agent platform sem ativação |
-| `AI_AGENT_TOOLS_ENABLED` | `agent-runtime.config.ts` | `false` | tools agent | registry/executor | sem tools | Sim | dependente de runtime |
-| `EXPO_PUBLIC_AI_COACH_INTELLIGENCE_ENABLED` | `apps/mobile/src/hooks/coach/use-coach-intelligence.ts` | ausente/false | request mobile aggregate | canonical | fallback/local | mobile tests helpers | flag não documentada em env example |
-| `EXPO_PUBLIC_DEMO_MODE` | `apps/mobile/src/screens/login-screen.tsx` | example true; dev sempre true | login/provision demo | demo account/workspace | login normal | cobertura limitada | não deve ser habilitado em produção |
+| Flag                                        | Definição                                                                   |                       Default | Capacidade               | Ativado                   | Desativado                          | Testes               | Risco                                  |
+| ------------------------------------------- | --------------------------------------------------------------------------- | ----------------------------: | ------------------------ | ------------------------- | ----------------------------------- | -------------------- | -------------------------------------- |
+| `AI_LLM_ENABLED`                            | `apps/api/src/modules/ai/application/services/llm/ai-llm-config.service.ts` |                       `false` | Chamada OpenAI           | provider OpenAI exige key | deterministic/fallback              | Sim                  | UI pode chamar AI mas não LLM          |
+| `AI_LLM_STREAMING_ENABLED`                  | mesmo                                                                       |                       `false` | streaming                | stream                    | síncrono                            | Sim                  | rota existe, feature não               |
+| `AI_LLM_STRUCTURED_OUTPUTS_ENABLED`         | mesmo                                                                       |                        `true` | structured output        | parser estruturado        | caminho alternativo                 | Sim                  | depende de LLM on                      |
+| `AI_LLM_TOOL_CALLING_ENABLED`               | mesmo                                                                       |                       `false` | tool calls LLM           | tools                     | sem tools                           | Sim                  | não é agent operacional                |
+| `AI_LLM_MEMORY_ENABLED`                     | mesmo                                                                       |                       `false` | future LLM memory        | memory                    | sem future memory                   | Sim                  | não confundir com history              |
+| `AI_COACH_INTELLIGENCE_ENABLED`             | `coach-intelligence.config.ts` e mobile hook                                |                       `false` | aggregate canônico       | `/ai/coach-intelligence`  | mobile legacy intelligence/fallback | Sim                  | caminho canônico não é default         |
+| `AI_AGENT_RUNTIME_ENABLED`                  | `agent-runtime.config.ts`                                                   |                       `false` | runtime agent            | agent plan/execute        | chat path                           | Sim                  | docs citam agent platform sem ativação |
+| `AI_AGENT_TOOLS_ENABLED`                    | `agent-runtime.config.ts`                                                   |                       `false` | tools agent              | registry/executor         | sem tools                           | Sim                  | dependente de runtime                  |
+| `EXPO_PUBLIC_AI_COACH_INTELLIGENCE_ENABLED` | `apps/mobile/src/hooks/coach/use-coach-intelligence.ts`                     |                 ausente/false | request mobile aggregate | canonical                 | fallback/local                      | mobile tests helpers | flag não documentada em env example    |
+| `EXPO_PUBLIC_DEMO_MODE`                     | `apps/mobile/src/screens/login-screen.tsx`                                  | example true; dev sempre true | login/provision demo     | demo account/workspace    | login normal                        | cobertura limitada   | não deve ser habilitado em produção    |
 
 Parâmetros AI adicionais não são feature flags, mas alteram runtime: provider/model, prompt versions, canary, retries, timeout, circuit threshold, response chars, retention, token/cost limits, agent max steps/tool calls/memory TTL/trace retention. Eles têm defaults no código, mas muitos não aparecem em `.env.example`; isso reduz auditabilidade operacional.
 
@@ -1241,19 +1241,19 @@ Não há conexão comprovada entre acceptance/rejection, alteração de plano, m
 
 ## 12. Production Readiness Audit
 
-| Área | Estado | Evidência/limitação |
-|---|---|---|
-| Security | Parcial | JWT guard, bcrypt, validation, prompt safety existem; sem rate limiting, secret rotation, abuse controls ou privacy controls completos. |
-| Reliability | Parcial | Retry/circuit/fallback de LLM e idempotency/replay existem; sem SLO, external metrics e E2E ambientalmente verde. |
-| Performance | Não comprovada | Sem load test, profiling, latency budget ou cache strategy operacional. |
-| Deployment | Parcial | Dockerfile/Compose e CI build; sem deploy workflow, staging/prod config ou rollback operacional. |
-| Data | Parcial | Mongo persistence, bounded in-memory traces; sem backup, restore, migration/versioning e disaster recovery comprovados. |
-| Privacy | Não comprovada | IA sanitiza metadata; não há política/consent/export/delete de dados de usuário evidenciada. |
-| Observability | Parcial | Correlation logs, health, AI internal traces; no-op metrics e sem sink externo. |
-| Operations | Não pronta | `scripts/docker-smoke.sh` existe mas não é CI; sem incident response/on-call/runbook completo. |
-| Health safety | Não pronta | Não há escalonamento clínico formal para dor, lesão, alergia, alimentação ou crise. |
-| Notifications | Não pronta | In-app planned decisions; sem push provider/device/background delivery. |
-| Validation | Não pronta | Unit tests fortes; E2E bloqueado e sem product analytics/outcome. |
+| Área          | Estado         | Evidência/limitação                                                                                                                     |
+| ------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Security      | Parcial        | JWT guard, bcrypt, validation, prompt safety existem; sem rate limiting, secret rotation, abuse controls ou privacy controls completos. |
+| Reliability   | Parcial        | Retry/circuit/fallback de LLM e idempotency/replay existem; sem SLO, external metrics e E2E ambientalmente verde.                       |
+| Performance   | Não comprovada | Sem load test, profiling, latency budget ou cache strategy operacional.                                                                 |
+| Deployment    | Parcial        | Dockerfile/Compose e CI build; sem deploy workflow, staging/prod config ou rollback operacional.                                        |
+| Data          | Parcial        | Mongo persistence, bounded in-memory traces; sem backup, restore, migration/versioning e disaster recovery comprovados.                 |
+| Privacy       | Não comprovada | IA sanitiza metadata; não há política/consent/export/delete de dados de usuário evidenciada.                                            |
+| Observability | Parcial        | Correlation logs, health, AI internal traces; no-op metrics e sem sink externo.                                                         |
+| Operations    | Não pronta     | `scripts/docker-smoke.sh` existe mas não é CI; sem incident response/on-call/runbook completo.                                          |
+| Health safety | Não pronta     | Não há escalonamento clínico formal para dor, lesão, alergia, alimentação ou crise.                                                     |
+| Notifications | Não pronta     | In-app planned decisions; sem push provider/device/background delivery.                                                                 |
+| Validation    | Não pronta     | Unit tests fortes; E2E bloqueado e sem product analytics/outcome.                                                                       |
 
 **Verdict:** nenhum Epic user-facing deve ser marcado `PRODUCTION_READY`. O máximo defensável para partes técnicas é `INTEGRATED_NOT_VALIDATED`; a agregação/IA pode ser `PRODUCTION_CANDIDATE` apenas para rollout interno controlado, nunca para o produto inteiro.
 
@@ -1334,4 +1334,3 @@ Não recomendo “Coach That Learns” ou “Trusted Personal Coach” agora: me
 4. **Qual é o próximo Epic correto?** **Adaptive Coach.**
 5. **O que não deve ser construído agora?** Wearables, multimodal, social, marketplace/professionals, web parity, agent tools e long-term memory avançada.
 6. **Expandir ou consolidar?** **Consolidar.** O repositório já tem amplitude suficiente; o gargalo é integração, ativação padrão, outcomes, analytics e operação.
-

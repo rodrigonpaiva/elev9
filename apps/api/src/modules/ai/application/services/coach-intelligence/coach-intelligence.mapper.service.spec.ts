@@ -182,7 +182,9 @@ function buildSource() {
 }
 
 function buildPipeline(
-  overrides: Partial<Parameters<CoachIntelligenceMapperService['map']>[0]['pipeline']> = {},
+  overrides: Partial<
+    Parameters<CoachIntelligenceMapperService['map']>[0]['pipeline']
+  > = {},
 ): Parameters<CoachIntelligenceMapperService['map']>[0]['pipeline'] {
   const evidence = {
     type: 'WORKOUT_HISTORY',

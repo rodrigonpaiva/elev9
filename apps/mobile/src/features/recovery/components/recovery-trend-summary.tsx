@@ -14,10 +14,16 @@ export function RecoveryTrendSummary({
 }) {
   return (
     <Card
-      accessibilityLabel={recoveryTrendAccessibilityLabel(trend, availablePointCount)}
+      accessibilityLabel={recoveryTrendAccessibilityLabel(
+        trend,
+        availablePointCount,
+      )}
       style={styles.card}
     >
-      <SectionHeader title="Seven-day trend" subtitle="Your recent Recovery pattern." />
+      <SectionHeader
+        title="Seven-day trend"
+        subtitle="Your recent Recovery pattern."
+      />
       <Text variant="title" style={styles.direction}>
         {trendLabel(trend.direction)}
       </Text>
@@ -35,4 +41,3 @@ const styles = StyleSheet.create({
   direction: { color: colors.primary },
   copy: { color: colors.mutedText },
 });
-

@@ -139,7 +139,9 @@ describe('CoachExpertObservabilityService', () => {
 
   it('prunes traces by retention and max count deterministically', () => {
     process.env.AI_EXPERT_TRACE_MAX_ITEMS = '1';
-    process.env.AI_EXPERT_TRACE_RETENTION_MS = '1';
+    // Keep this scenario focused on max-item pruning. TTL is covered below
+    // with a controlled clock so this test does not depend on wall-clock time.
+    process.env.AI_EXPERT_TRACE_RETENTION_MS = '60000';
 
     const service = new CoachExpertObservabilityService(
       new CoachExpertRetentionPolicy(),

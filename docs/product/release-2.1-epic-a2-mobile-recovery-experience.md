@@ -133,4 +133,3 @@ O Prompt 5 poderá injetar estado e callbacks para conectar API client, navegaç
 - analytics;
 - cache offline de leitura;
 - validação visual em dispositivos físicos.
-

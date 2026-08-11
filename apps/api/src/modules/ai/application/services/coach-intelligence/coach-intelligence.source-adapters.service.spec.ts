@@ -191,9 +191,7 @@ describe('CoachIntelligenceSourceAdaptersService', () => {
       id: 'profile_123',
       name: 'Ada',
     });
-    buildUserHealthContextService.build.mockResolvedValue(
-      buildHealthContext(),
-    );
+    buildUserHealthContextService.build.mockResolvedValue(buildHealthContext());
 
     const result = await service.load({
       authUserId: 'auth_123',
@@ -225,9 +223,7 @@ describe('CoachIntelligenceSourceAdaptersService', () => {
         progress: expect.any(Object),
       }),
     );
-    expect(
-      getMyTrainingPlanUseCase.execute,
-    ).toHaveBeenCalledWith({
+    expect(getMyTrainingPlanUseCase.execute).toHaveBeenCalledWith({
       authUserId: 'auth_123',
     });
   });

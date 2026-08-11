@@ -52,7 +52,11 @@ export class RecoveryFactorBreakdownPolicy {
       ? 'unavailable'
       : input.invert
         ? this.invertedImpact(input.value)
-        : this.directImpact(input.value, input.negativeAtOrBelow, input.positiveAbove);
+        : this.directImpact(
+            input.value,
+            input.negativeAtOrBelow,
+            input.positiveAbove,
+          );
 
     return {
       key: input.key,

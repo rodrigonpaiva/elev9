@@ -11,7 +11,8 @@ import { NutritionLog } from '../../domain/entities/nutrition-log.entity';
 import { NutritionPlan } from '../../domain/entities/nutrition-plan.entity';
 import { calculateNutritionDeterministicState } from './nutrition-deterministic-engine.service';
 
-export const NUTRITION_HISTORY_CONTRACT_VERSION = 'nutrition-history-v1' as const;
+export const NUTRITION_HISTORY_CONTRACT_VERSION =
+  'nutrition-history-v1' as const;
 
 export type NutritionHistoryProjectionInput = {
   date: string;
@@ -21,7 +22,9 @@ export type NutritionHistoryProjectionInput = {
 
 @Injectable()
 export class NutritionHistoryProjectionService {
-  project(input: NutritionHistoryProjectionInput): NutritionHistoryDayReadModel {
+  project(
+    input: NutritionHistoryProjectionInput,
+  ): NutritionHistoryDayReadModel {
     const planIds = new Set(input.logs.map((log) => log.nutritionPlanId));
     const matchingPlans = input.plans.filter((plan) => planIds.has(plan.id));
     const plan = chooseHistoricalPlan(matchingPlans, input.logs);
@@ -125,7 +128,13 @@ export class NutritionHistoryProjectionService {
           }
           return distribution;
         },
-        { notStarted: 0, belowRange: 0, withinRange: 0, aboveRange: 0, unavailable: 0 },
+        {
+          notStarted: 0,
+          belowRange: 0,
+          withinRange: 0,
+          aboveRange: 0,
+          unavailable: 0,
+        },
       ),
       dataQuality: resolveTrendQuality(input.days),
       contractVersion: NUTRITION_HISTORY_CONTRACT_VERSION,
@@ -139,13 +148,19 @@ function chooseHistoricalPlan(
 ): NutritionPlan | null {
   if (plans.length === 0) return null;
   const counts = new Map<string, number>();
-  for (const log of logs) counts.set(log.nutritionPlanId, (counts.get(log.nutritionPlanId) ?? 0) + 1);
-  return [...plans].sort((left, right) => {
-    const countDifference = (counts.get(right.id) ?? 0) - (counts.get(left.id) ?? 0);
-    if (countDifference !== 0) return countDifference;
-    return (right.updatedAt?.getTime() ?? right.createdAt.getTime()) -
-      (left.updatedAt?.getTime() ?? left.createdAt.getTime());
-  })[0] ?? null;
+  for (const log of logs)
+    counts.set(log.nutritionPlanId, (counts.get(log.nutritionPlanId) ?? 0) + 1);
+  return (
+    [...plans].sort((left, right) => {
+      const countDifference =
+        (counts.get(right.id) ?? 0) - (counts.get(left.id) ?? 0);
+      if (countDifference !== 0) return countDifference;
+      return (
+        (right.updatedAt?.getTime() ?? right.createdAt.getTime()) -
+        (left.updatedAt?.getTime() ?? left.createdAt.getTime())
+      );
+    })[0] ?? null
+  );
 }
 
 function emptyDay(

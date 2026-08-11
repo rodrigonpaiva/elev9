@@ -77,7 +77,12 @@ export class BuildGoalProgressSnapshotUseCase {
     private readonly dailyCheckInRepository: DailyCheckInRepository,
     @Inject(NUTRITION_GOAL_SIGNALS_PORT)
     private readonly nutritionSignalsPort: {
-      getGoalSignals(input: { authUserId: string; userProfileId: string; startDate: string; endDate: string }): Promise<GoalNutritionSignals>;
+      getGoalSignals(input: {
+        authUserId: string;
+        userProfileId: string;
+        startDate: string;
+        endDate: string;
+      }): Promise<GoalNutritionSignals>;
     },
     @Inject(RECOVERY_SNAPSHOT_REPOSITORY)
     private readonly recoverySnapshotRepository: RecoverySnapshotRepository,

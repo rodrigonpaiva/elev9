@@ -259,9 +259,7 @@ export class AgentRuntimeService {
 
     const routingReasons: CoachExpertRoutingDecision['routingReasons'] = [
       {
-        code: primaryExpert
-          ? 'PRIMARY_DOMAIN_MATCH'
-          : 'NO_PRIMARY_SELECTED',
+        code: primaryExpert ? 'PRIMARY_DOMAIN_MATCH' : 'NO_PRIMARY_SELECTED',
         ...(primaryExpert ? { expertId: primaryExpert.id } : {}),
       },
     ];

@@ -14,17 +14,17 @@ The proposed target is vendor-neutral and incremental: OpenTelemetry instrumenta
 
 ## 2. Repository state
 
-| Item | Evidence |
-|---|---|
-| Branch | `feat/dashboard-v1` |
-| Commit | `7a088680537d95939b55cd4a4c2bbcc8f5a208ea` |
-| Working tree | Clean at audit start; branch was 32 commits ahead of `origin/feat/dashboard-v1` |
-| Nx projects | `api`, `mobile`, `web`, `api-client`, `types`, `ui` |
-| Package manager | npm (`package-lock.json`, `npm exec nx`) |
-| Runtime | Node 22 Docker image; Nest API; Expo mobile; Next.js web surface |
-| Docker | MongoDB 7 plus API; no observability services |
-| CI | `.github/workflows/ci.yml`, one `validate` job |
-| Production target | `RUNTIME_TARGET_UNDECIDED` |
+| Item              | Evidence                                                                        |
+| ----------------- | ------------------------------------------------------------------------------- |
+| Branch            | `feat/dashboard-v1`                                                             |
+| Commit            | `7a088680537d95939b55cd4a4c2bbcc8f5a208ea`                                      |
+| Working tree      | Clean at audit start; branch was 32 commits ahead of `origin/feat/dashboard-v1` |
+| Nx projects       | `api`, `mobile`, `web`, `api-client`, `types`, `ui`                             |
+| Package manager   | npm (`package-lock.json`, `npm exec nx`)                                        |
+| Runtime           | Node 22 Docker image; Nest API; Expo mobile; Next.js web surface                |
+| Docker            | MongoDB 7 plus API; no observability services                                   |
+| CI                | `.github/workflows/ci.yml`, one `validate` job                                  |
+| Production target | `RUNTIME_TARGET_UNDECIDED`                                                      |
 
 Relevant Nx targets: API `build`, `start`, `start:dev`, `test`, `test:e2e`; Mobile inferred `start`, `serve`, `build`, `export`, `test`, EAS and platform targets; Web `build`, `dev`, `start`, `serve-static`; `types` and `api-client` `build`/`lint`; UI `build` only.
 
@@ -62,31 +62,31 @@ The internal AI trace objects are diagnostic application state, not distributed 
 
 ## 5. Logging assessment
 
-| Area | Mechanism | State | External sink | Privacy | Gap |
-|---|---|---|---|---|---|
-| API requests | `request-logging.middleware.ts`, `console.log` text | `IMPLEMENTED_LOCAL_ONLY` | None | Path query removed; no headers/body | Structured format, release metadata, sink, retention |
-| Correlation | `request-correlation.middleware.ts`, `x-request-id` | `IMPLEMENTED_LOCAL_ONLY` | None | Request ID is potentially high-cardinality and untrusted | Bind to logger/context and propagate downstream |
-| Nest/domain | `Logger` in use cases/services | `IMPLEMENTED_LOCAL_ONLY` | stdout only | Mixed quality; concrete tests show some `userProfileId`, dates, timezone in logs | Repository-wide allowlist/redaction and structured transport |
-| Recovery | `RecoveryObservabilityService` | `IMPLEMENTED_LOCAL_ONLY` | None | Designed to exclude account/health/response data; duration is raw number | Standard schema, bounded duration and export |
-| Nutrition | `NutritionObservabilityService` | `IMPLEMENTED_LOCAL_ONLY` | None | Allowlisted safe codes/buckets; no payloads | Export and central retention |
-| AI safety/LLM | Nest logs for provider/model/fallback/safety outcomes | `IMPLEMENTED_LOCAL_ONLY` | None | Some safe metadata; tests exercise redaction, but logger policy is not global | Enforce no prompt/message/response/body and standardize fields |
-| Mongo | Mongoose connection exists; no query logger | `NOT_PRESENT` for operational logging | None | Safer default; no documents/query params observed | Add safe pool/slow-query signals later, never raw documents |
-| Mobile | No app-wide crash/error logger found | `NOT_PRESENT` | None | Local console/provider not configured | Crash, release, native stack and network visibility |
-| Web | No dedicated client/server logger found | `NOT_PRESENT` | None | Surface appears limited | Add only if web becomes operationally significant |
-| CI | GitHub Actions step output | `IMPLEMENTED_LOCAL_ONLY` | GitHub Actions retention | May include build/test diagnostics | Add release/artifact metadata and telemetry validation only |
+| Area          | Mechanism                                             | State                                 | External sink            | Privacy                                                                          | Gap                                                            |
+| ------------- | ----------------------------------------------------- | ------------------------------------- | ------------------------ | -------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| API requests  | `request-logging.middleware.ts`, `console.log` text   | `IMPLEMENTED_LOCAL_ONLY`              | None                     | Path query removed; no headers/body                                              | Structured format, release metadata, sink, retention           |
+| Correlation   | `request-correlation.middleware.ts`, `x-request-id`   | `IMPLEMENTED_LOCAL_ONLY`              | None                     | Request ID is potentially high-cardinality and untrusted                         | Bind to logger/context and propagate downstream                |
+| Nest/domain   | `Logger` in use cases/services                        | `IMPLEMENTED_LOCAL_ONLY`              | stdout only              | Mixed quality; concrete tests show some `userProfileId`, dates, timezone in logs | Repository-wide allowlist/redaction and structured transport   |
+| Recovery      | `RecoveryObservabilityService`                        | `IMPLEMENTED_LOCAL_ONLY`              | None                     | Designed to exclude account/health/response data; duration is raw number         | Standard schema, bounded duration and export                   |
+| Nutrition     | `NutritionObservabilityService`                       | `IMPLEMENTED_LOCAL_ONLY`              | None                     | Allowlisted safe codes/buckets; no payloads                                      | Export and central retention                                   |
+| AI safety/LLM | Nest logs for provider/model/fallback/safety outcomes | `IMPLEMENTED_LOCAL_ONLY`              | None                     | Some safe metadata; tests exercise redaction, but logger policy is not global    | Enforce no prompt/message/response/body and standardize fields |
+| Mongo         | Mongoose connection exists; no query logger           | `NOT_PRESENT` for operational logging | None                     | Safer default; no documents/query params observed                                | Add safe pool/slow-query signals later, never raw documents    |
+| Mobile        | No app-wide crash/error logger found                  | `NOT_PRESENT`                         | None                     | Local console/provider not configured                                            | Crash, release, native stack and network visibility            |
+| Web           | No dedicated client/server logger found               | `NOT_PRESENT`                         | None                     | Surface appears limited                                                          | Add only if web becomes operationally significant              |
+| CI            | GitHub Actions step output                            | `IMPLEMENTED_LOCAL_ONLY`              | GitHub Actions retention | May include build/test diagnostics                                               | Add release/artifact metadata and telemetry validation only    |
 
 Concrete privacy risk: existing test/runtime logs demonstrate that some domain logs can include direct profile identifiers, local dates and timezone. These are not reproduced here; they are a P1 remediation target before centralized export. No evidence of authorization headers, cookies, tokens, prompts, complete Coach messages, complete LLM responses or nutrition payloads being emitted by the audited observability adapters was found.
 
 ## 6. Metrics assessment
 
-| Area | Producer | State | Export | Cardinality risk | Gap |
-|---|---|---|---|---|---|
-| Nutrition counters | `NutritionObservabilityService` `Map<string, number>` | `IMPLEMENTED_LOCAL_ONLY` | None; snapshot method only | Low bounded dimensions in key; process-local reset | Prometheus/OTel instruments, aggregation and restart semantics |
-| Recovery signals | `RecoveryObservabilityService` logs only | `IMPLEMENTED_NOT_EXPORTED` | None | Raw `durationMs` in log; no metric labels | Histograms/counters with buckets |
-| AI lifecycle/reports | AI observability services in memory | `IMPLEMENTED_LOCAL_ONLY` | None | Risk depends on future dimensions; trace IDs must not become labels | Safe counters, latency/token/cost buckets and export |
-| HTTP | No server metric instrument found | `NOT_PRESENT` | None | N/A | Request count, duration histogram, status and route template |
-| Mongo/runtime | No metrics instrument found | `NOT_PRESENT` | None | N/A | Pool, errors, operation duration, event-loop/memory signals |
-| Product analytics | Typed mobile events | `SCAFFOLDED` | Noop | `flowSessionId` is high-cardinality if exported; keep event correlation out of metric labels | Separate consent/provider decision |
+| Area                 | Producer                                              | State                      | Export                     | Cardinality risk                                                                             | Gap                                                            |
+| -------------------- | ----------------------------------------------------- | -------------------------- | -------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Nutrition counters   | `NutritionObservabilityService` `Map<string, number>` | `IMPLEMENTED_LOCAL_ONLY`   | None; snapshot method only | Low bounded dimensions in key; process-local reset                                           | Prometheus/OTel instruments, aggregation and restart semantics |
+| Recovery signals     | `RecoveryObservabilityService` logs only              | `IMPLEMENTED_NOT_EXPORTED` | None                       | Raw `durationMs` in log; no metric labels                                                    | Histograms/counters with buckets                               |
+| AI lifecycle/reports | AI observability services in memory                   | `IMPLEMENTED_LOCAL_ONLY`   | None                       | Risk depends on future dimensions; trace IDs must not become labels                          | Safe counters, latency/token/cost buckets and export           |
+| HTTP                 | No server metric instrument found                     | `NOT_PRESENT`              | None                       | N/A                                                                                          | Request count, duration histogram, status and route template   |
+| Mongo/runtime        | No metrics instrument found                           | `NOT_PRESENT`              | None                       | N/A                                                                                          | Pool, errors, operation duration, event-loop/memory signals    |
+| Product analytics    | Typed mobile events                                   | `SCAFFOLDED`               | Noop                       | `flowSessionId` is high-cardinality if exported; keep event correlation out of metric labels | Separate consent/provider decision                             |
 
 No metric is scraped, pushed, persisted or externally queryable. IDs, request IDs, dynamic prompt versions, free-form error strings, resource IDs and message text must never be metric labels.
 
@@ -96,13 +96,13 @@ AI and agent services contain bounded in-memory diagnostic trace objects, reques
 
 ## 8. Health assessment
 
-| Endpoint | Current checks | Contract/consumer | State |
-|---|---|---|---|
-| `/health` | Process/controller response only; timestamp | Public stable liveness-style response; CI/runtime can call it | `IMPLEMENTED_LOCAL_ONLY` |
-| `/health/ready` | Mongoose `readyState` and `db.admin().ping()`; 200/503 | Readiness response; Docker currently depends on Mongo health, not API readiness | `IMPLEMENTED_LOCAL_ONLY` |
-| Startup | Nest bootstrap and Mongoose module setup | Docker process startup | `IMPLEMENTED_LOCAL_ONLY` |
-| Shutdown | No explicit graceful-shutdown signal/telemetry found | Not wired to deployment | `NOT_PRESENT` |
-| AI/cache/storage/background | No health endpoints found; LLM disabled by env/defaults | Not consumed by deployment | `NOT_PRESENT` |
+| Endpoint                    | Current checks                                          | Contract/consumer                                                               | State                    |
+| --------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------ |
+| `/health`                   | Process/controller response only; timestamp             | Public stable liveness-style response; CI/runtime can call it                   | `IMPLEMENTED_LOCAL_ONLY` |
+| `/health/ready`             | Mongoose `readyState` and `db.admin().ping()`; 200/503  | Readiness response; Docker currently depends on Mongo health, not API readiness | `IMPLEMENTED_LOCAL_ONLY` |
+| Startup                     | Nest bootstrap and Mongoose module setup                | Docker process startup                                                          | `IMPLEMENTED_LOCAL_ONLY` |
+| Shutdown                    | No explicit graceful-shutdown signal/telemetry found    | Not wired to deployment                                                         | `NOT_PRESENT`            |
+| AI/cache/storage/background | No health endpoints found; LLM disabled by env/defaults | Not consumed by deployment                                                      | `NOT_PRESENT`            |
 
 Checks are safe and intentionally public, but readiness has no explicit timeout beyond Mongo driver behavior, no event-loop/memory pressure signal and no deployment integration evidence. No health changes are proposed in this prompt.
 
@@ -142,14 +142,14 @@ Local Docker is defined for MongoDB and API. Dockerfile builds with Node 22 and 
 
 ## 17. Security and privacy assessment
 
-| Signal | PUBLIC | INTERNAL | CONFIDENTIAL | SENSITIVE_PERSONAL | HEALTH_SENSITIVE | SECRET |
-|---|---:|---:|---:|---:|---:|---:|
-| Logs | health contract only | safe operation/outcome | operational errors after redaction | aggregated/never direct identity | forbidden | forbidden |
-| Metrics | health availability | low-cardinality service data | safe error categories | aggregated only | aggregated only | forbidden |
-| Traces | endpoint names/status | component/duration | safe attributes | no payload; redacted IDs | forbidden | forbidden |
-| Analytics | event names after consent | bounded UX enums | provider metadata | consent + aggregation | forbidden | forbidden |
-| Alerts/dashboards | generic status | operational dimensions | safe codes only | no identity | no health facts | forbidden |
-| Incident notifications | generic impact | safe correlation reference | minimal redacted context | no direct identity | forbidden | forbidden |
+| Signal                 |                    PUBLIC |                     INTERNAL |                       CONFIDENTIAL |               SENSITIVE_PERSONAL | HEALTH_SENSITIVE |    SECRET |
+| ---------------------- | ------------------------: | ---------------------------: | ---------------------------------: | -------------------------------: | ---------------: | --------: |
+| Logs                   |      health contract only |       safe operation/outcome | operational errors after redaction | aggregated/never direct identity |        forbidden | forbidden |
+| Metrics                |       health availability | low-cardinality service data |              safe error categories |                  aggregated only |  aggregated only | forbidden |
+| Traces                 |     endpoint names/status |           component/duration |                    safe attributes |         no payload; redacted IDs |        forbidden | forbidden |
+| Analytics              | event names after consent |             bounded UX enums |                  provider metadata |            consent + aggregation |        forbidden | forbidden |
+| Alerts/dashboards      |            generic status |       operational dimensions |                    safe codes only |                      no identity |  no health facts | forbidden |
+| Incident notifications |            generic impact |   safe correlation reference |           minimal redacted context |               no direct identity |        forbidden | forbidden |
 
 Allowed: operation, outcome, environment, release, service, module, bounded duration bucket, safe error code and request correlation reference. Allowed aggregated only: tenant/user population counts and product funnels. Allowed with redaction: exception class, provider/model identifiers and deployment metadata. Forbidden: tokens, authorization headers, cookies, emails, names, direct IDs, prompts, messages, Coach responses, nutrition/health payloads, secrets, full stack context with sensitive values.
 
@@ -161,14 +161,14 @@ No external retention is configured. AI internal services do have bounded in-mem
 
 ## 19. Cost and cardinality assessment
 
-| Risk | Rating | Driver |
-|---|---|---|
-| Logs | MEDIUM | current volume is stdout-only; central export plus verbose Nest/domain logs can grow quickly |
-| Metrics | HIGH | future IDs/free text/dynamic route labels could multiply series; strict schema required |
-| Traces | MEDIUM | AI/HTTP/Mongo spans are valuable but payloads and unsampled high volume are costly |
-| AI telemetry | HIGH | token/cost/latency volume and accidental payload capture have both cost and privacy impact |
-| Mobile events/crashes | MEDIUM | disabled now; provider, offline queue and release volume unknown |
-| Retention/dashboard queries | UNKNOWN | no backend, volume baseline or retention policy exists |
+| Risk                        | Rating  | Driver                                                                                       |
+| --------------------------- | ------- | -------------------------------------------------------------------------------------------- |
+| Logs                        | MEDIUM  | current volume is stdout-only; central export plus verbose Nest/domain logs can grow quickly |
+| Metrics                     | HIGH    | future IDs/free text/dynamic route labels could multiply series; strict schema required      |
+| Traces                      | MEDIUM  | AI/HTTP/Mongo spans are valuable but payloads and unsampled high volume are costly           |
+| AI telemetry                | HIGH    | token/cost/latency volume and accidental payload capture have both cost and privacy impact   |
+| Mobile events/crashes       | MEDIUM  | disabled now; provider, offline queue and release volume unknown                             |
+| Retention/dashboard queries | UNKNOWN | no backend, volume baseline or retention policy exists                                       |
 
 ## 20. Ownership assessment
 
@@ -176,36 +176,36 @@ No `CODEOWNERS`, on-call roster, incident commander, security contact or release
 
 ## 21. Capability scorecard
 
-| Capability | Current state | Target state | Gap | Risk | Prompt |
-|---|---|---|---|---|---|
-| Structured logging | `IMPLEMENTED_LOCAL_ONLY` | `PRODUCTION_CANDIDATE` | text/console and mixed fields | P1 | 3 |
-| Correlation | `IMPLEMENTED_LOCAL_ONLY` | exported safe context | no propagation/trace link | P1 | 3/5 |
-| Metrics | `IMPLEMENTED_LOCAL_ONLY` for domains | OTLP/Prometheus-compatible | no HTTP/runtime/export | P1 | 4 |
-| Tracing | internal only | OTel spans | no context/export/backend | P1 | 5 |
-| Health | Mongo readiness | deployment-consumed contracts | no runtime/deployment wiring | P2 | 8 |
-| Mongo visibility | readiness only | safe pool/query/error signals | no operational metrics | P1 | 8 |
-| Mobile crash | not present | provider adapter | no crash/release visibility | P1 | 9 |
-| Web visibility | not present | proportional web errors | no integration | P2 | 9 |
-| AI observability | bounded in-memory | safe exported metadata | no external query path | P1 | 10 |
-| Dashboards | documented only | provisioned minimum set | no backend/provisioning | P1 | 6 |
-| Alerting | documented only | routed and tested | no Alertmanager/provider | P1 | 7 |
-| SLOs | candidate SLIs only | baselined SLOs | no baseline/owner | P1 | 7 |
-| Incident response | not found | role/runbooks/escalation | no on-call | P1 | 11 |
-| Retention | AI local TTL only | approved categories | no global policy | P1 | 11 |
-| Privacy | local allowlists | enforced telemetry governance | no consent/access/delete proof | P1 | 11 |
-| CI | tests/builds present | telemetry/privacy validation | no observability gates | P2 | 2/12 |
-| Production backend | none | selected behind OTLP | runtime/provider undecided | P1 | 2/11 |
-| Ownership | unresolved | role-based ownership | no on-call/CODEOWNERS | P1 | 11 |
+| Capability         | Current state                        | Target state                  | Gap                            | Risk | Prompt |
+| ------------------ | ------------------------------------ | ----------------------------- | ------------------------------ | ---- | ------ |
+| Structured logging | `IMPLEMENTED_LOCAL_ONLY`             | `PRODUCTION_CANDIDATE`        | text/console and mixed fields  | P1   | 3      |
+| Correlation        | `IMPLEMENTED_LOCAL_ONLY`             | exported safe context         | no propagation/trace link      | P1   | 3/5    |
+| Metrics            | `IMPLEMENTED_LOCAL_ONLY` for domains | OTLP/Prometheus-compatible    | no HTTP/runtime/export         | P1   | 4      |
+| Tracing            | internal only                        | OTel spans                    | no context/export/backend      | P1   | 5      |
+| Health             | Mongo readiness                      | deployment-consumed contracts | no runtime/deployment wiring   | P2   | 8      |
+| Mongo visibility   | readiness only                       | safe pool/query/error signals | no operational metrics         | P1   | 8      |
+| Mobile crash       | not present                          | provider adapter              | no crash/release visibility    | P1   | 9      |
+| Web visibility     | not present                          | proportional web errors       | no integration                 | P2   | 9      |
+| AI observability   | bounded in-memory                    | safe exported metadata        | no external query path         | P1   | 10     |
+| Dashboards         | documented only                      | provisioned minimum set       | no backend/provisioning        | P1   | 6      |
+| Alerting           | documented only                      | routed and tested             | no Alertmanager/provider       | P1   | 7      |
+| SLOs               | candidate SLIs only                  | baselined SLOs                | no baseline/owner              | P1   | 7      |
+| Incident response  | not found                            | role/runbooks/escalation      | no on-call                     | P1   | 11     |
+| Retention          | AI local TTL only                    | approved categories           | no global policy               | P1   | 11     |
+| Privacy            | local allowlists                     | enforced telemetry governance | no consent/access/delete proof | P1   | 11     |
+| CI                 | tests/builds present                 | telemetry/privacy validation  | no observability gates         | P2   | 2/12   |
+| Production backend | none                                 | selected behind OTLP          | runtime/provider undecided     | P1   | 2/11   |
+| Ownership          | unresolved                           | role-based ownership          | no on-call/CODEOWNERS          | P1   | 11     |
 
 ## 22. Architecture options
 
-| Option | Compatibility/DX | Operations/privacy | Lock-in/cost | Decision |
-|---|---|---|---|---|
-| A Grafana OSS local-first | Strong API/Node/local fit; mobile weak | High local burden; privacy controllable | Low lock-in, infra cost/maintenance | Good local profile, not sole production answer |
-| B OTel vendor-neutral, managed later | Best with runtime uncertainty and Nx/Node | Collector boundary; provider operations deferred | Low lock-in; cost depends on later provider | Recommended foundation |
-| C Sentry-centered | Strong Mobile/Web errors and releases; API metrics/traces less neutral | Simple app UX; provider privacy review required | Higher vendor lock-in and event cost | Separate mobile evaluation, not platform standard |
-| D cloud-native | Could be operationally simple after runtime decision | Cloud-specific controls and residency | Highest lock-in; impossible to choose evidence-free | Defer |
-| E hybrid | Best practical coverage if governed | Two control planes and policy complexity | Moderate cost/lock-in | Recommended deployment shape: B + optional C |
+| Option                               | Compatibility/DX                                                       | Operations/privacy                               | Lock-in/cost                                        | Decision                                          |
+| ------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------- |
+| A Grafana OSS local-first            | Strong API/Node/local fit; mobile weak                                 | High local burden; privacy controllable          | Low lock-in, infra cost/maintenance                 | Good local profile, not sole production answer    |
+| B OTel vendor-neutral, managed later | Best with runtime uncertainty and Nx/Node                              | Collector boundary; provider operations deferred | Low lock-in; cost depends on later provider         | Recommended foundation                            |
+| C Sentry-centered                    | Strong Mobile/Web errors and releases; API metrics/traces less neutral | Simple app UX; provider privacy review required  | Higher vendor lock-in and event cost                | Separate mobile evaluation, not platform standard |
+| D cloud-native                       | Could be operationally simple after runtime decision                   | Cloud-specific controls and residency            | Highest lock-in; impossible to choose evidence-free | Defer                                             |
+| E hybrid                             | Best practical coverage if governed                                    | Two control planes and policy complexity         | Moderate cost/lock-in                               | Recommended deployment shape: B + optional C      |
 
 ## 23. Recommended architecture
 
@@ -282,19 +282,19 @@ P0: security/data exposure. P1: availability or integrity. P2: sustained degrada
 
 ## 36. Prompt execution roadmap
 
-| Prompt | Objective | Dependencies | Main deliverables | Acceptance criteria |
-|---|---|---|---|---|
-| 2 | Base infrastructure/provider boundary | This audit; human approval of local profile | Collector/OTLP contracts, optional Compose profile | local stack optional, no cloud credential |
-| 3 | Structured logging | 2 | logger schema, redaction, correlation | JSON-safe logs and tests |
-| 4 | Metrics | 2–3 | HTTP/domain/runtime instruments | scrape/query smoke, cardinality tests |
-| 5 | Distributed tracing | 2–3 | OTel context, HTTP/Mongo/AI spans | trace propagation and redaction tests |
-| 6 | Dashboards | 4–5 | versioned dashboard specs/provisioning | eight minimum dashboards validated |
-| 7 | Alerting/SLOs | 4–6, baseline | alerts, SLO/error budgets | no raw data, routed test alerts |
-| 8 | Health/runtime signals | 3–5 | safe runtime/Mongo/deployment signals | contracts, timeout/graceful behavior |
-| 9 | Mobile observability | privacy/provider decision | crash/release/network adapter | source maps, privacy and offline tests |
-| 10 | AI observability | 3–5, AI remains disabled by default | safe AI metrics/traces | forbidden payload tests and cost buckets |
-| 11 | Security/retention/operations | all prior; owner decision | retention, access, runbooks, incident roles | governance review and deletion evidence |
-| 12 | Certification | all prior; environment/provider | end-to-end certification report | local/staging/production gates pass |
+| Prompt | Objective                             | Dependencies                                | Main deliverables                                  | Acceptance criteria                       |
+| ------ | ------------------------------------- | ------------------------------------------- | -------------------------------------------------- | ----------------------------------------- |
+| 2      | Base infrastructure/provider boundary | This audit; human approval of local profile | Collector/OTLP contracts, optional Compose profile | local stack optional, no cloud credential |
+| 3      | Structured logging                    | 2                                           | logger schema, redaction, correlation              | JSON-safe logs and tests                  |
+| 4      | Metrics                               | 2–3                                         | HTTP/domain/runtime instruments                    | scrape/query smoke, cardinality tests     |
+| 5      | Distributed tracing                   | 2–3                                         | OTel context, HTTP/Mongo/AI spans                  | trace propagation and redaction tests     |
+| 6      | Dashboards                            | 4–5                                         | versioned dashboard specs/provisioning             | eight minimum dashboards validated        |
+| 7      | Alerting/SLOs                         | 4–6, baseline                               | alerts, SLO/error budgets                          | no raw data, routed test alerts           |
+| 8      | Health/runtime signals                | 3–5                                         | safe runtime/Mongo/deployment signals              | contracts, timeout/graceful behavior      |
+| 9      | Mobile observability                  | privacy/provider decision                   | crash/release/network adapter                      | source maps, privacy and offline tests    |
+| 10     | AI observability                      | 3–5, AI remains disabled by default         | safe AI metrics/traces                             | forbidden payload tests and cost buckets  |
+| 11     | Security/retention/operations         | all prior; owner decision                   | retention, access, runbooks, incident roles        | governance review and deletion evidence   |
+| 12     | Certification                         | all prior; environment/provider             | end-to-end certification report                    | local/staging/production gates pass       |
 
 ## 37. Files created
 
@@ -306,33 +306,33 @@ P0: security/data exposure. P1: availability or integrity. P2: sustained degrada
 
 ## 38. Tests and validation
 
-| Project | Command | Result | Suites | Tests | Notes |
-|---|---|---:|---:|---:|---|
-| api | `npx nx test api --outputStyle=stream` | PASSED | 215 | 1352 | Nx reported a flaky-task notice despite success |
-| mobile | `npx nx test mobile --outputStyle=stream` | PASSED | 22 | 104 | All passed |
-| api | `npx nx run api:test:e2e --skip-nx-cache --outputStyle=stream` | ENVIRONMENT_BLOCKED | 16 failed suites | 56 failed tests | MongoMemoryServer listener failed with sandbox `EPERM`/port conflict; rerun in CI/approved runtime |
-| api | `npx nx build api --outputStyle=stream` | PASSED | N/A | N/A | Cache used for dependent types build |
-| types | `npx nx build types --outputStyle=stream` | PASSED | N/A | N/A | Cache hit |
-| api-client | `npx nx build api-client --outputStyle=stream` | PASSED | N/A | N/A | Cache hit |
-| mobile | `npx nx build mobile --outputStyle=stream` | PASSED | N/A | N/A | Web/Android/iOS export succeeded |
-| types, api-client | `npx nx run-many -t lint -p types,api-client --outputStyle=stream` | PASSED | N/A | N/A | Configured lint targets |
-| repository | `git diff --check` | PASSED | N/A | N/A | No whitespace errors |
+| Project           | Command                                                            |              Result |           Suites |           Tests | Notes                                                                                              |
+| ----------------- | ------------------------------------------------------------------ | ------------------: | ---------------: | --------------: | -------------------------------------------------------------------------------------------------- |
+| api               | `npx nx test api --outputStyle=stream`                             |              PASSED |              215 |            1352 | Nx reported a flaky-task notice despite success                                                    |
+| mobile            | `npx nx test mobile --outputStyle=stream`                          |              PASSED |               22 |             104 | All passed                                                                                         |
+| api               | `npx nx run api:test:e2e --skip-nx-cache --outputStyle=stream`     | ENVIRONMENT_BLOCKED | 16 failed suites | 56 failed tests | MongoMemoryServer listener failed with sandbox `EPERM`/port conflict; rerun in CI/approved runtime |
+| api               | `npx nx build api --outputStyle=stream`                            |              PASSED |              N/A |             N/A | Cache used for dependent types build                                                               |
+| types             | `npx nx build types --outputStyle=stream`                          |              PASSED |              N/A |             N/A | Cache hit                                                                                          |
+| api-client        | `npx nx build api-client --outputStyle=stream`                     |              PASSED |              N/A |             N/A | Cache hit                                                                                          |
+| mobile            | `npx nx build mobile --outputStyle=stream`                         |              PASSED |              N/A |             N/A | Web/Android/iOS export succeeded                                                                   |
+| types, api-client | `npx nx run-many -t lint -p types,api-client --outputStyle=stream` |              PASSED |              N/A |             N/A | Configured lint targets                                                                            |
+| repository        | `git diff --check`                                                 |              PASSED |              N/A |             N/A | No whitespace errors                                                                               |
 
 ## 39. Findings
 
-| ID | Severity | Area | Finding | Required action |
-|---|---|---|---|---|
-| OBS-P1-001 | P1 | Platform | No external metrics/logs/traces backend or exporter | Implement vendor-neutral OTLP boundary |
-| OBS-P1-002 | P1 | Logging/privacy | Request/domain logs are mixed text/object stdout and concrete tests show direct profile/date context | Enforce structured allowlist/redaction before export |
-| OBS-P1-003 | P1 | Tracing | Internal AI traces are not distributed tracing | Add OTel context/spans in Prompt 5 |
-| OBS-P1-004 | P1 | Operations | Dashboards, alerts and incident routing are documentation only | Provision and validate after backend decision |
-| OBS-P1-005 | P1 | Mobile | No crash/error/release provider | Approve and implement separate mobile adapter |
-| OBS-P1-006 | P1 | Governance | Retention, consent, access/delete and ownership are unresolved | Security/Privacy and operational role decisions |
-| OBS-P1-007 | P1 | Runtime | Production target/cloud provider undecided | Keep boundary neutral; decide before staging/production |
-| OBS-P2-001 | P2 | Health | Readiness is Mongo-only and not deployment-consumed; no startup/shutdown/runtime checks | Address in Prompt 8 without changing now |
-| OBS-P2-002 | P2 | CI | No telemetry contract/privacy/security gates | Add after foundation exists |
-| OBS-P2-003 | P2 | Web | No visibility, though current surface is small | Reassess when web becomes production-critical |
-| OBS-P2-004 | P2 | E2E | E2E is blocked by sandbox listener restrictions | Re-run in a network-capable CI/runtime |
+| ID         | Severity | Area            | Finding                                                                                              | Required action                                         |
+| ---------- | -------- | --------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| OBS-P1-001 | P1       | Platform        | No external metrics/logs/traces backend or exporter                                                  | Implement vendor-neutral OTLP boundary                  |
+| OBS-P1-002 | P1       | Logging/privacy | Request/domain logs are mixed text/object stdout and concrete tests show direct profile/date context | Enforce structured allowlist/redaction before export    |
+| OBS-P1-003 | P1       | Tracing         | Internal AI traces are not distributed tracing                                                       | Add OTel context/spans in Prompt 5                      |
+| OBS-P1-004 | P1       | Operations      | Dashboards, alerts and incident routing are documentation only                                       | Provision and validate after backend decision           |
+| OBS-P1-005 | P1       | Mobile          | No crash/error/release provider                                                                      | Approve and implement separate mobile adapter           |
+| OBS-P1-006 | P1       | Governance      | Retention, consent, access/delete and ownership are unresolved                                       | Security/Privacy and operational role decisions         |
+| OBS-P1-007 | P1       | Runtime         | Production target/cloud provider undecided                                                           | Keep boundary neutral; decide before staging/production |
+| OBS-P2-001 | P2       | Health          | Readiness is Mongo-only and not deployment-consumed; no startup/shutdown/runtime checks              | Address in Prompt 8 without changing now                |
+| OBS-P2-002 | P2       | CI              | No telemetry contract/privacy/security gates                                                         | Add after foundation exists                             |
+| OBS-P2-003 | P2       | Web             | No visibility, though current surface is small                                                       | Reassess when web becomes production-critical           |
+| OBS-P2-004 | P2       | E2E             | E2E is blocked by sandbox listener restrictions                                                      | Re-run in a network-capable CI/runtime                  |
 
 ## 40. Risk summary
 

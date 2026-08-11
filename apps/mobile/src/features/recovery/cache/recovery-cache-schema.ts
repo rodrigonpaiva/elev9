@@ -45,9 +45,14 @@ export function buildRecoveryCacheRecord(input: {
     return null;
   }
 
-  const current = input.current === null ? null : sanitizeCurrent(input.current);
-  const history = input.history === null ? null : sanitizeHistory(input.history);
-  if ((input.current !== null && !current) || (input.history !== null && !history)) {
+  const current =
+    input.current === null ? null : sanitizeCurrent(input.current);
+  const history =
+    input.history === null ? null : sanitizeHistory(input.history);
+  if (
+    (input.current !== null && !current) ||
+    (input.history !== null && !history)
+  ) {
     return null;
   }
 
@@ -63,7 +68,9 @@ export function buildRecoveryCacheRecord(input: {
   };
 }
 
-export function parseRecoveryCacheRecord(value: unknown): RecoveryCacheRecord | null {
+export function parseRecoveryCacheRecord(
+  value: unknown,
+): RecoveryCacheRecord | null {
   if (
     !isRecord(value) ||
     !hasOnlyKeys(value, [
@@ -83,9 +90,14 @@ export function parseRecoveryCacheRecord(value: unknown): RecoveryCacheRecord | 
     return null;
   }
 
-  const current = value.current === null ? null : sanitizeCurrent(value.current);
-  const history = value.history === null ? null : sanitizeHistory(value.history);
-  if ((value.current !== null && !current) || (value.history !== null && !history)) {
+  const current =
+    value.current === null ? null : sanitizeCurrent(value.current);
+  const history =
+    value.history === null ? null : sanitizeHistory(value.history);
+  if (
+    (value.current !== null && !current) ||
+    (value.history !== null && !history)
+  ) {
     return null;
   }
 
@@ -226,7 +238,13 @@ function isInsight(value: unknown): boolean {
 function isHistoryItem(value: unknown): boolean {
   return (
     isRecord(value) &&
-    hasOnlyKeys(value, ['localDate', 'score', 'category', 'availability', 'freshness']) &&
+    hasOnlyKeys(value, [
+      'localDate',
+      'score',
+      'category',
+      'availability',
+      'freshness',
+    ]) &&
     typeof value.localDate === 'string' &&
     /^\d{4}-\d{2}-\d{2}$/.test(value.localDate) &&
     typeof value.score === 'number' &&
@@ -264,8 +282,15 @@ function isValidTimestamp(value: string): boolean {
   return Number.isFinite(Date.parse(value));
 }
 
-function isAvailability(value: unknown): value is GetCurrentRecoveryExperienceResponse['availability'] {
-  return ['available', 'not_available', 'insufficient_data', 'processing_failed'].includes(String(value));
+function isAvailability(
+  value: unknown,
+): value is GetCurrentRecoveryExperienceResponse['availability'] {
+  return [
+    'available',
+    'not_available',
+    'insufficient_data',
+    'processing_failed',
+  ].includes(String(value));
 }
 
 function isCategory(value: unknown): value is RecoveryExperienceCategory {
@@ -281,17 +306,31 @@ function isFactorKey(value: unknown): value is RecoveryExperienceFactorKey {
 }
 
 function isImpact(value: unknown): value is RecoveryExperienceFactorImpact {
-  return ['positive', 'neutral', 'negative', 'unavailable'].includes(String(value));
+  return ['positive', 'neutral', 'negative', 'unavailable'].includes(
+    String(value),
+  );
 }
 
 function isTone(value: unknown): value is RecoveryExperienceInsightTone {
-  return ['supportive', 'caution', 'positive', 'neutral'].includes(String(value));
+  return ['supportive', 'caution', 'positive', 'neutral'].includes(
+    String(value),
+  );
 }
 
 function isAction(value: unknown): value is RecoveryExperienceInsightAction {
-  return ['train_as_planned', 'reduce_intensity', 'prioritize_recovery', 'complete_check_in', 'try_again_later'].includes(String(value));
+  return [
+    'train_as_planned',
+    'reduce_intensity',
+    'prioritize_recovery',
+    'complete_check_in',
+    'try_again_later',
+  ].includes(String(value));
 }
 
-function isTrendDirection(value: unknown): value is RecoveryExperienceTrendDirection {
-  return ['improving', 'stable', 'declining', 'insufficient_data'].includes(String(value));
+function isTrendDirection(
+  value: unknown,
+): value is RecoveryExperienceTrendDirection {
+  return ['improving', 'stable', 'declining', 'insufficient_data'].includes(
+    String(value),
+  );
 }

@@ -7,13 +7,23 @@ export type ProductAnalyticsEventMap = {
   nutrition_dashboard_card_viewed: {
     screen: 'dashboard';
     component: 'nutrition_card';
-    availability: 'available' | 'insufficient_data' | 'not_configured' | 'not_available' | 'processing_failed';
+    availability:
+      | 'available'
+      | 'insufficient_data'
+      | 'not_configured'
+      | 'not_available'
+      | 'processing_failed';
     freshness: 'current' | 'stale' | 'legacy' | 'unknown';
     source: 'canonical_read_model';
   };
   nutrition_dashboard_load_result: {
     outcome: 'success' | 'failure';
-    availability: 'available' | 'insufficient_data' | 'not_configured' | 'not_available' | 'processing_failed';
+    availability:
+      | 'available'
+      | 'insufficient_data'
+      | 'not_configured'
+      | 'not_available'
+      | 'processing_failed';
     freshness: 'current' | 'stale' | 'legacy' | 'unknown';
     source: 'canonical_read_model';
     safeErrorCode?: 'NUTRITION_LOAD_FAILED' | 'NUTRITION_CONTRACT_INVALID';
@@ -21,7 +31,12 @@ export type ProductAnalyticsEventMap = {
   nutrition_dashboard_refresh_result: {
     refreshType: 'dashboard_refresh' | 'manual_refresh' | 'retry';
     outcome: 'success' | 'failure';
-    availability?: 'available' | 'insufficient_data' | 'not_configured' | 'not_available' | 'processing_failed';
+    availability?:
+      | 'available'
+      | 'insufficient_data'
+      | 'not_configured'
+      | 'not_available'
+      | 'processing_failed';
     freshness?: 'current' | 'stale' | 'legacy' | 'unknown';
     safeErrorCode?: 'NUTRITION_LOAD_FAILED' | 'NUTRITION_CONTRACT_INVALID';
   };
@@ -30,8 +45,22 @@ export type ProductAnalyticsEventMap = {
     previousOutcome: 'failure' | 'not_available' | 'processing_failed';
   };
   nutrition_dashboard_action_selected: {
-    actionType: 'open_profile' | 'create_plan' | 'open_today_meals' | 'log_meal' | 'open_hydration' | 'none' | 'unknown';
-    navigationDestination: 'nutrition_profile' | 'nutrition_plan' | 'today_meals' | 'log_meal' | 'hydration' | 'none' | 'unavailable';
+    actionType:
+      | 'open_profile'
+      | 'create_plan'
+      | 'open_today_meals'
+      | 'log_meal'
+      | 'open_hydration'
+      | 'none'
+      | 'unknown';
+    navigationDestination:
+      | 'nutrition_profile'
+      | 'nutrition_plan'
+      | 'today_meals'
+      | 'log_meal'
+      | 'hydration'
+      | 'none'
+      | 'unavailable';
     outcome: 'accepted' | 'unavailable';
   };
   recovery_dashboard_cta_selected: {

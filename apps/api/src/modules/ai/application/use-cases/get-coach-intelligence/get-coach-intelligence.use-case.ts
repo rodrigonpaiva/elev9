@@ -31,7 +31,9 @@ export class GetCoachIntelligenceUseCase {
       const result = await this.coachIntelligenceAggregationService.build({
         authUserId,
         ...(input.requestId ? { requestId: input.requestId } : {}),
-        ...(input.conversationId ? { conversationId: input.conversationId } : {}),
+        ...(input.conversationId
+          ? { conversationId: input.conversationId }
+          : {}),
         ...(input.userProfileId ? { userProfileId: input.userProfileId } : {}),
       });
 

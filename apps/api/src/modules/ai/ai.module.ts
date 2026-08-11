@@ -177,7 +177,11 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
       },
     ]),
   ],
-  controllers: [AiController, CoachDecisionController, CoachIntelligenceController],
+  controllers: [
+    AiController,
+    CoachDecisionController,
+    CoachIntelligenceController,
+  ],
   providers: [
     AuthSessionGuard,
     PlatformDateService,

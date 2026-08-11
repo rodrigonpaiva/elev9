@@ -37,15 +37,16 @@ import type {
 const COACH_INTELLIGENCE_SOURCE_VERSION = '1.0.0';
 const COACH_INTELLIGENCE_CONTRACT_VERSION = '1';
 
-const EXPERT_NAME_BY_ID: Readonly<Record<string, CoachExpertName>> = Object.freeze({
-  WorkoutExpert: 'Workout',
-  NutritionExpert: 'Nutrition',
-  RecoveryExpert: 'Recovery',
-  GoalExpert: 'Goal',
-  HabitExpert: 'Habit',
-  ProgressExpert: 'Progress',
-  MotivationExpert: 'Motivation',
-});
+const EXPERT_NAME_BY_ID: Readonly<Record<string, CoachExpertName>> =
+  Object.freeze({
+    WorkoutExpert: 'Workout',
+    NutritionExpert: 'Nutrition',
+    RecoveryExpert: 'Recovery',
+    GoalExpert: 'Goal',
+    HabitExpert: 'Habit',
+    ProgressExpert: 'Progress',
+    MotivationExpert: 'Motivation',
+  });
 
 const PUBLIC_EXPERT_NAMES = new Set<CoachExpertName>([
   'Workout',
@@ -82,12 +83,14 @@ export class CoachIntelligenceMapperService {
     private readonly freshnessPolicy: CoachIntelligenceFreshnessPolicy,
   ) {}
 
-  map(input: CoachIntelligenceBuildResult & {
-    aggregateId: string;
-    requestId: string;
-    sourceVersion?: string;
-    rolloutState?: CoachIntelligenceRolloutState;
-  }): CoachIntelligenceAggregate {
+  map(
+    input: CoachIntelligenceBuildResult & {
+      aggregateId: string;
+      requestId: string;
+      sourceVersion?: string;
+      rolloutState?: CoachIntelligenceRolloutState;
+    },
+  ): CoachIntelligenceAggregate {
     const aggregateId = input.aggregateId;
     const requestId = input.requestId;
     const generatedAt = input.source.generatedAt;
@@ -101,9 +104,11 @@ export class CoachIntelligenceMapperService {
       generatedAt,
       sections: input.source.sections,
     });
-    const featureAvailability = this.freshnessPolicy.resolveFeatureAvailability({
-      sections: input.source.sections,
-    });
+    const featureAvailability = this.freshnessPolicy.resolveFeatureAvailability(
+      {
+        sections: input.source.sections,
+      },
+    );
     const explanation = this.mapExplanation(input);
     const evidence = explanation.evidence;
     const insight = this.buildInsight({
@@ -152,7 +157,9 @@ export class CoachIntelligenceMapperService {
     };
   }
 
-  private buildSections(source: CoachIntelligenceSourceContext): CoachIntelligenceSections {
+  private buildSections(
+    source: CoachIntelligenceSourceContext,
+  ): CoachIntelligenceSections {
     return {
       training: this.mapSectionState(source.sections.training),
       nutrition: this.mapSectionState(source.sections.nutrition),
@@ -213,10 +220,15 @@ export class CoachIntelligenceMapperService {
       riskExplanations: [...riskExplanations],
       confidenceExplanation: {
         confidence: internal.confidenceExplanation.confidence,
-        supportingEvidenceCount: internal.confidenceExplanation.supportingEvidenceCount,
-        supportingExpertCount: internal.confidenceExplanation.supportingExpertCount,
-        missingEvidenceCount: internal.confidenceExplanation.missingEvidenceCount,
-        policyRestrictions: [...internal.confidenceExplanation.policyRestrictions],
+        supportingEvidenceCount:
+          internal.confidenceExplanation.supportingEvidenceCount,
+        supportingExpertCount:
+          internal.confidenceExplanation.supportingExpertCount,
+        missingEvidenceCount:
+          internal.confidenceExplanation.missingEvidenceCount,
+        policyRestrictions: [
+          ...internal.confidenceExplanation.policyRestrictions,
+        ],
         metadata: {
           ...internal.confidenceExplanation.metadata,
         },
@@ -251,7 +263,8 @@ export class CoachIntelligenceMapperService {
         source: expert,
         expert,
         importance: evidence.importance,
-        confidence: evidence.confidence === 'UNKNOWN' ? 'LOW' : evidence.confidence,
+        confidence:
+          evidence.confidence === 'UNKNOWN' ? 'LOW' : evidence.confidence,
         availability: evidence.availability,
         title: this.resolveEvidenceTitle(evidence.type),
         detail: this.resolveEvidenceDetail(evidence, index + 1),
@@ -272,7 +285,10 @@ export class CoachIntelligenceMapperService {
     return {
       code: reason.code,
       title: this.humanize(reason.code),
-      supportingEvidenceIds: this.resolveEvidenceIds(reason.supportingEvidence, evidenceIds),
+      supportingEvidenceIds: this.resolveEvidenceIds(
+        reason.supportingEvidence,
+        evidenceIds,
+      ),
       supportingExperts: this.resolveExpertNames(reason.supportingExperts),
       priority: this.mapPriorityReason(reason.priority),
       reasonCategory: reason.reasonCategory,
@@ -292,7 +308,10 @@ export class CoachIntelligenceMapperService {
   ): CoachIntelligenceAggregate['explainability']['recommendationReasons'][number] {
     return {
       recommendationCode: reason.recommendationCode,
-      supportingEvidenceIds: this.resolveEvidenceIds(reason.supportingEvidence, evidenceIds),
+      supportingEvidenceIds: this.resolveEvidenceIds(
+        reason.supportingEvidence,
+        evidenceIds,
+      ),
       supportingExperts: this.resolveExpertNames(reason.supportingExperts),
       priority: this.mapRecommendationPriority(reason.priority),
       reasonCategory: reason.reasonCategory,
@@ -311,7 +330,10 @@ export class CoachIntelligenceMapperService {
   ): CoachIntelligenceAggregate['explainability']['riskExplanations'][number] {
     return {
       riskLevel: risk.riskLevel,
-      supportingEvidenceIds: this.resolveEvidenceIds(risk.supportingEvidence, evidenceIds),
+      supportingEvidenceIds: this.resolveEvidenceIds(
+        risk.supportingEvidence,
+        evidenceIds,
+      ),
       supportingExperts: this.resolveExpertNames(risk.supportingExperts),
       severity: risk.severity,
       metadata: {
@@ -398,7 +420,11 @@ export class CoachIntelligenceMapperService {
     >,
   ): CoachUnifiedRecommendation {
     const supportingEvidenceIds =
-      this.resolveRecommendationEvidenceIds(recommendation.code, explanation, evidenceIds) ?? [];
+      this.resolveRecommendationEvidenceIds(
+        recommendation.code,
+        explanation,
+        evidenceIds,
+      ) ?? [];
     const expert =
       this.mapExpertIdToName(recommendation.sourceExperts[0] ?? '') ??
       this.resolvePrimaryExpertNameFromExperts(recommendation.sourceExperts) ??
@@ -469,7 +495,9 @@ export class CoachIntelligenceMapperService {
     };
   }
 
-  private mapConfidence(input: CoachIntelligenceBuildResult): CoachUnifiedConfidence {
+  private mapConfidence(
+    input: CoachIntelligenceBuildResult,
+  ): CoachUnifiedConfidence {
     const explanation = input.pipeline.explanation;
     const composition = input.pipeline.composition;
     const supportingExperts = new Set(
@@ -580,7 +608,8 @@ export class CoachIntelligenceMapperService {
         affectedSections: ['insight'],
         retryable: false,
         title: 'No safe recommendation was selected.',
-        detail: 'The current aggregate does not include a safe top recommendation.',
+        detail:
+          'The current aggregate does not include a safe top recommendation.',
         metadata: {
           recommendationCount: input.insight.recommendations.length,
         },
@@ -604,7 +633,9 @@ export class CoachIntelligenceMapperService {
     return Object.freeze([...warnings.values()]);
   }
 
-  private resolvePrimaryExpertName(input: CoachIntelligenceBuildResult): CoachExpertName {
+  private resolvePrimaryExpertName(
+    input: CoachIntelligenceBuildResult,
+  ): CoachExpertName {
     return (
       this.mapExpertIdToName(
         input.pipeline.composition.primaryExpert?.id ??
@@ -665,7 +696,9 @@ export class CoachIntelligenceMapperService {
       (item) => item.recommendationCode === recommendationCode,
     );
 
-    return reason ? this.resolveEvidenceIds(reason.supportingEvidence, evidenceIds) : undefined;
+    return reason
+      ? this.resolveEvidenceIds(reason.supportingEvidence, evidenceIds)
+      : undefined;
   }
 
   private resolveRiskEvidenceIds(
@@ -680,7 +713,9 @@ export class CoachIntelligenceMapperService {
       (item) => item.riskLevel === riskLevel,
     );
 
-    return risk ? this.resolveEvidenceIds(risk.supportingEvidence, evidenceIds) : undefined;
+    return risk
+      ? this.resolveEvidenceIds(risk.supportingEvidence, evidenceIds)
+      : undefined;
   }
 
   private resolveFindingEvidenceIds(
@@ -780,7 +815,9 @@ export class CoachIntelligenceMapperService {
           ? `Most recent workout: ${String(metadata.recentWorkoutDate)}.`
           : 'Recent workout completion was reviewed.';
       case 'RECOVERY_CHECK_IN':
-        return metadata.hasCheckIn ? 'Recovery check-in is available.' : 'Recovery check-in is missing.';
+        return metadata.hasCheckIn
+          ? 'Recovery check-in is available.'
+          : 'Recovery check-in is missing.';
       case 'RECOVERY_SNAPSHOT':
         return metadata.hasRecoverySnapshot
           ? `Readiness score: ${String(metadata.readinessScore ?? 'unknown')}.`
@@ -816,9 +853,7 @@ export class CoachIntelligenceMapperService {
     }
   }
 
-  private mapPriorityReason(
-    priority: string,
-  ): CoachDecisionReason['priority'] {
+  private mapPriorityReason(priority: string): CoachDecisionReason['priority'] {
     switch (priority) {
       case 'CRITICAL':
       case 'HIGH':
@@ -856,7 +891,9 @@ export class CoachIntelligenceMapperService {
       return expertId as CoachExpertName;
     }
 
-    return EXPERT_NAME_BY_ID[expertId] ?? this.resolveExpertByIdPattern(expertId);
+    return (
+      EXPERT_NAME_BY_ID[expertId] ?? this.resolveExpertByIdPattern(expertId)
+    );
   }
 
   private resolveExpertByIdPattern(
@@ -955,7 +992,9 @@ export class CoachIntelligenceMapperService {
     }
   }
 
-  private normalizeAssessmentCode(code: string): CoachUnifiedAssessment['code'] {
+  private normalizeAssessmentCode(
+    code: string,
+  ): CoachUnifiedAssessment['code'] {
     const normalized = code.trim().toUpperCase();
 
     switch (normalized) {
@@ -972,7 +1011,9 @@ export class CoachIntelligenceMapperService {
     }
   }
 
-  private hasFallback(source: CoachIntelligenceSourceContext['sections']): boolean {
+  private hasFallback(
+    source: CoachIntelligenceSourceContext['sections'],
+  ): boolean {
     return Object.values(source).some((section) => section.fallbackUsed);
   }
 
@@ -986,6 +1027,8 @@ export class CoachIntelligenceMapperService {
   }
 
   private readNumber(value: unknown): number | undefined {
-    return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+    return typeof value === 'number' && Number.isFinite(value)
+      ? value
+      : undefined;
   }
 }

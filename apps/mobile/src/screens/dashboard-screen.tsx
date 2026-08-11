@@ -41,7 +41,14 @@ type DashboardState = 'loading' | 'error';
 
 function getNutritionAnalyticsDestination(
   action: NutritionAction,
-): 'nutrition_profile' | 'nutrition_plan' | 'today_meals' | 'log_meal' | 'hydration' | 'none' | 'unavailable' {
+):
+  | 'nutrition_profile'
+  | 'nutrition_plan'
+  | 'today_meals'
+  | 'log_meal'
+  | 'hydration'
+  | 'none'
+  | 'unavailable' {
   switch (action.type) {
     case 'open_profile':
       return 'nutrition_profile';
@@ -158,7 +165,8 @@ export function DashboardScreen({
       return;
     }
 
-    const availability = dashboard.nutrition.data?.availability ?? 'not_available';
+    const availability =
+      dashboard.nutrition.data?.availability ?? 'not_available';
     const freshness = dashboard.nutrition.data?.freshness ?? 'unknown';
     const outcome = dashboard.nutrition.errorMessage ? 'failure' : 'success';
     const resultKey = `${outcome}:${availability}:${freshness}`;
@@ -210,7 +218,8 @@ export function DashboardScreen({
   const handleNutritionAction = useCallback(
     (action: NutritionAction) => {
       const destination = getNutritionAnalyticsDestination(action);
-      const outcome = destination === 'unavailable' ? 'unavailable' : 'accepted';
+      const outcome =
+        destination === 'unavailable' ? 'unavailable' : 'accepted';
       productAnalytics.track('nutrition_dashboard_action_selected', {
         actionType: action.type,
         navigationDestination: destination,

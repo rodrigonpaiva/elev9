@@ -302,9 +302,7 @@ export class RecoveryExpert extends BaseCoachExpert {
       });
     }
 
-    const recoveryStatus = this.mapCanonicalCategoryToStatus(
-      recovery.category,
-    );
+    const recoveryStatus = this.mapCanonicalCategoryToStatus(recovery.category);
     const trend = this.mapCanonicalTrend(recovery.trend);
     const trainingImpact = this.mapCanonicalActionToTrainingImpact(
       recovery.insight.action,
@@ -341,7 +339,8 @@ export class RecoveryExpert extends BaseCoachExpert {
         level: this.mapCanonicalCategoryToReadinessLevel(recovery.category),
         recommendedIntensity: null,
         fatigueScore: recovery.fatigueScore,
-        summary: 'Recovery readiness is provided by the canonical Recovery result.',
+        summary:
+          'Recovery readiness is provided by the canonical Recovery result.',
         metadata: Object.freeze({ recoveryCategory: recovery.category }),
       }),
       trend: Object.freeze({
@@ -370,7 +369,9 @@ export class RecoveryExpert extends BaseCoachExpert {
         `recovery_category=${recovery.category}`,
         `recovery_freshness=${recovery.freshness}`,
         `recovery_availability=${experience.availability}`,
-        ...factorImpacts.map((factor) => `factor_${factor.key}=${factor.impact}`),
+        ...factorImpacts.map(
+          (factor) => `factor_${factor.key}=${factor.impact}`,
+        ),
       ]),
       recoverySnapshotPresent: true,
       recoveryHistoryCount: recoveryHistory.length,
@@ -387,7 +388,9 @@ export class RecoveryExpert extends BaseCoachExpert {
     });
   }
 
-  private mapCanonicalCategoryToStatus(category: RecoveryReadCategory): RecoveryStatus {
+  private mapCanonicalCategoryToStatus(
+    category: RecoveryReadCategory,
+  ): RecoveryStatus {
     switch (category) {
       case 'low':
         return 'POOR';
@@ -430,7 +433,9 @@ export class RecoveryExpert extends BaseCoachExpert {
   }
 
   private mapCanonicalActionToTrainingImpact(
-    action: NonNullable<RecoveryCurrentReadModel['recovery']>['insight']['action'],
+    action: NonNullable<
+      RecoveryCurrentReadModel['recovery']
+    >['insight']['action'],
   ): TrainingImpactAssessment {
     const mapping: Record<
       NonNullable<RecoveryCurrentReadModel['recovery']>['insight']['action'],
@@ -453,7 +458,9 @@ export class RecoveryExpert extends BaseCoachExpert {
   }
 
   private buildCanonicalRecommendation(
-    action: NonNullable<RecoveryCurrentReadModel['recovery']>['insight']['action'],
+    action: NonNullable<
+      RecoveryCurrentReadModel['recovery']
+    >['insight']['action'],
   ): RecoveryRecommendation {
     const mapping: Record<
       NonNullable<RecoveryCurrentReadModel['recovery']>['insight']['action'],
@@ -642,7 +649,10 @@ export class RecoveryExpert extends BaseCoachExpert {
   }
 
   private resolveLatestSnapshot(
-    currentSnapshot: UserHealthContext['recoverySnapshot'] | RecoverySnapshot | undefined,
+    currentSnapshot:
+      | UserHealthContext['recoverySnapshot']
+      | RecoverySnapshot
+      | undefined,
     recoveryHistory: readonly RecoverySnapshotLike[],
   ): RecoverySnapshotLike | undefined {
     if (currentSnapshot) {
@@ -714,7 +724,9 @@ export class RecoveryExpert extends BaseCoachExpert {
         ? `availability=${nutrition.availability}; freshness=${nutrition.freshness}`
         : 'Nutrition context is unavailable.',
       factors: Object.freeze([
-        nutrition ? 'canonical_nutrition_context' : 'nutrition_context_unavailable',
+        nutrition
+          ? 'canonical_nutrition_context'
+          : 'nutrition_context_unavailable',
       ]),
       metadata: Object.freeze({ source: 'nutrition_read_model' }),
     });

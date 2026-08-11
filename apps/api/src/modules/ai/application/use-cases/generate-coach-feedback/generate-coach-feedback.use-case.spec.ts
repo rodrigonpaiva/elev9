@@ -460,8 +460,7 @@ describe('GenerateCoachFeedbackUseCase', () => {
 
   it('does not pass raw Nutrition fields to the generator', async () => {
     buildUserHealthContextService.build.mockResolvedValue(
-      buildHealthContext({
-      }),
+      buildHealthContext({}),
     );
 
     await useCase.execute({

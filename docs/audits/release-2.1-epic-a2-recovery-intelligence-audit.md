@@ -43,45 +43,45 @@ flowchart TD
 
 ## Domain Ownership
 
-| Capability | Owner | Classification | Evidence | Gap |
-|---|---|---|---|---|
-| Daily Check-in write | Progress | CANONICAL | `CreateDailyCheckInUseCase` invokes Recovery | Product read model still absent |
-| Snapshot calculation/persistence | Recovery | CANONICAL | `BuildRecoverySnapshotUseCase`, repository, schema | Internal fields leak through HTTP |
-| Current/today/history selection | Recovery | CANONICAL | `GetTodayRecoveryUseCase`, `GetCurrentRecoveryUseCase`, `GetRecoveryHistoryUseCase` | No public availability/freshness semantics |
-| Health context | AI/Health Context | CANONICAL COMPOSER | `BuildUserHealthContextService` | Active repository fallback remains |
-| Dashboard view | Dashboard | DERIVED_VIEW | `recovery-read-model.mapper.ts` | Uses different category vocabulary |
-| Training decision | Training | CONSUMER | `BuildAdaptiveTrainingRecommendationUseCase` | Active latest-snapshot fallback |
-| Mobile Recovery interpretation | Several mobile screens | DUPLICATED_DOMAIN_LOGIC | local thresholds/copy in dashboard, workout, nutrition and coach hooks | Must be consolidated behind contract |
+| Capability                       | Owner                  | Classification          | Evidence                                                                            | Gap                                        |
+| -------------------------------- | ---------------------- | ----------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------ |
+| Daily Check-in write             | Progress               | CANONICAL               | `CreateDailyCheckInUseCase` invokes Recovery                                        | Product read model still absent            |
+| Snapshot calculation/persistence | Recovery               | CANONICAL               | `BuildRecoverySnapshotUseCase`, repository, schema                                  | Internal fields leak through HTTP          |
+| Current/today/history selection  | Recovery               | CANONICAL               | `GetTodayRecoveryUseCase`, `GetCurrentRecoveryUseCase`, `GetRecoveryHistoryUseCase` | No public availability/freshness semantics |
+| Health context                   | AI/Health Context      | CANONICAL COMPOSER      | `BuildUserHealthContextService`                                                     | Active repository fallback remains         |
+| Dashboard view                   | Dashboard              | DERIVED_VIEW            | `recovery-read-model.mapper.ts`                                                     | Uses different category vocabulary         |
+| Training decision                | Training               | CONSUMER                | `BuildAdaptiveTrainingRecommendationUseCase`                                        | Active latest-snapshot fallback            |
+| Mobile Recovery interpretation   | Several mobile screens | DUPLICATED_DOMAIN_LOGIC | local thresholds/copy in dashboard, workout, nutrition and coach hooks              | Must be consolidated behind contract       |
 
 ## Data Model
 
-| Field | Exists | Source | Canonical | Exposed externally | Risk |
-|---|---|---|---|---|---|
-| `userProfileId` | Yes | entity/schema | Yes internally | Yes | High: unnecessary public identity |
-| `date` | Yes | entity/schema | Yes, local-day string | Yes | Naming differs from A1 `localDate` |
-| `readinessScore` | Yes | calculator | Yes | Yes | Sensitive product data needs safe DTO |
-| `fatigueScore` | Yes | calculator | Yes | Yes | No product explanation contract |
-| `recoveryTrend` | Yes | calculator | Yes | Yes | Semantics need public contract |
-| `recommendedIntensity` | Yes | calculator | Yes | Yes | Mobile reinterprets it in places |
-| `influences` | Yes | calculator | Internal/product bridge | Yes | Labels are internal-ish and lack safe presentation model |
-| `sourceContext` | Yes, optional | build use case | Internal | Yes | High: contains raw signals and internal context |
-| `formulaVersion` | Yes | calculator | Internal provenance | Yes | Not needed by product UI |
-| `generatedBy` | Schema only | persistence | Internal | Not in mapper | Keep internal |
-| `createdAt/updatedAt` | Yes | schema | Technical | Yes, createdAt | Need explicit freshness semantics |
-| `localDate/timezone/status/confidence/explanation` | No | — | Missing | No | Required for A2 product read model |
+| Field                                              | Exists        | Source         | Canonical               | Exposed externally | Risk                                                     |
+| -------------------------------------------------- | ------------- | -------------- | ----------------------- | ------------------ | -------------------------------------------------------- |
+| `userProfileId`                                    | Yes           | entity/schema  | Yes internally          | Yes                | High: unnecessary public identity                        |
+| `date`                                             | Yes           | entity/schema  | Yes, local-day string   | Yes                | Naming differs from A1 `localDate`                       |
+| `readinessScore`                                   | Yes           | calculator     | Yes                     | Yes                | Sensitive product data needs safe DTO                    |
+| `fatigueScore`                                     | Yes           | calculator     | Yes                     | Yes                | No product explanation contract                          |
+| `recoveryTrend`                                    | Yes           | calculator     | Yes                     | Yes                | Semantics need public contract                           |
+| `recommendedIntensity`                             | Yes           | calculator     | Yes                     | Yes                | Mobile reinterprets it in places                         |
+| `influences`                                       | Yes           | calculator     | Internal/product bridge | Yes                | Labels are internal-ish and lack safe presentation model |
+| `sourceContext`                                    | Yes, optional | build use case | Internal                | Yes                | High: contains raw signals and internal context          |
+| `formulaVersion`                                   | Yes           | calculator     | Internal provenance     | Yes                | Not needed by product UI                                 |
+| `generatedBy`                                      | Schema only   | persistence    | Internal                | Not in mapper      | Keep internal                                            |
+| `createdAt/updatedAt`                              | Yes           | schema         | Technical               | Yes, createdAt     | Need explicit freshness semantics                        |
+| `localDate/timezone/status/confidence/explanation` | No            | —              | Missing                 | No                 | Required for A2 product read model                       |
 
 ## Recovery Algorithm
 
 Evidence: `apps/api/src/modules/recovery/application/services/recovery-score-calculator.service.ts`, version `recovery-deterministic-v1`.
 
-| Input | Range | Direction | Weight | Required | Fallback | Consumer |
-|---|---:|---|---:|---|---|---|
-| `sleepQuality` | 1–5 | higher improves readiness; higher lowers fatigue | 30% readiness / 15% fatigue | No | neutral 3 | Recovery, Coach |
-| `energyLevel` | 1–5 | higher improves readiness; higher lowers fatigue | 30% / 20% | No | neutral 3 | Recovery, Coach |
-| `muscleSoreness` | 1–5 | higher reduces readiness; higher increases fatigue | 15% / 30% | No | neutral 3 | Recovery, Coach |
-| `adherenceScore` | 0–100 | higher improves readiness | 15% | No | neutral 50 | Recovery |
-| `recentWorkoutLoad` | 0–100 | higher reduces readiness/increases fatigue | 10% / 35% | No | neutral 50 | Recovery |
-| `motivationLevel` | 1–5 | Does not affect score | — | No | context only | Coach |
+| Input               | Range | Direction                                          |                      Weight | Required | Fallback     | Consumer        |
+| ------------------- | ----: | -------------------------------------------------- | --------------------------: | -------- | ------------ | --------------- |
+| `sleepQuality`      |   1–5 | higher improves readiness; higher lowers fatigue   | 30% readiness / 15% fatigue | No       | neutral 3    | Recovery, Coach |
+| `energyLevel`       |   1–5 | higher improves readiness; higher lowers fatigue   |                   30% / 20% | No       | neutral 3    | Recovery, Coach |
+| `muscleSoreness`    |   1–5 | higher reduces readiness; higher increases fatigue |                   15% / 30% | No       | neutral 3    | Recovery, Coach |
+| `adherenceScore`    | 0–100 | higher improves readiness                          |                         15% | No       | neutral 50   | Recovery        |
+| `recentWorkoutLoad` | 0–100 | higher reduces readiness/increases fatigue         |                   10% / 35% | No       | neutral 50   | Recovery        |
+| `motivationLevel`   |   1–5 | Does not affect score                              |                           — | No       | context only | Coach           |
 
 Streak and missed-workout bonuses/penalties também entram no cálculo. O score é limitado a 0–100; intensidade usa thresholds `39/59/79`; tendência compara o score atual com scores prévios. Não há evidência de inversão incorreta de soreness, mas a regra está duplicada em consumidores móveis.
 
@@ -103,12 +103,12 @@ O backend possui `RecommendedIntensity` (`recovery`, `light`, `moderate`, `hard`
 
 ## Backend APIs
 
-| Method | Route | Purpose | Consumer | Contract | Status |
-|---|---|---|---|---|---|
-| GET | `/recovery/today` | snapshot do dia | Dashboard/consumidores | `GetTodayRecoveryResponse` | CANONICAL, interno demais |
-| GET | `/recovery/current` | snapshot atual | Training/Coach/consumidores | `GetCurrentRecoveryResponse` | CANONICAL, interno demais |
-| GET | `/recovery/history` | snapshots recentes | API consumers | `GetRecoveryHistoryResponse` | CANONICAL, sem produto completo |
-| GET | breakdown/trend/insight | — | — | — | MISSING |
+| Method | Route                   | Purpose            | Consumer                    | Contract                     | Status                          |
+| ------ | ----------------------- | ------------------ | --------------------------- | ---------------------------- | ------------------------------- |
+| GET    | `/recovery/today`       | snapshot do dia    | Dashboard/consumidores      | `GetTodayRecoveryResponse`   | CANONICAL, interno demais       |
+| GET    | `/recovery/current`     | snapshot atual     | Training/Coach/consumidores | `GetCurrentRecoveryResponse` | CANONICAL, interno demais       |
+| GET    | `/recovery/history`     | snapshots recentes | API consumers               | `GetRecoveryHistoryResponse` | CANONICAL, sem produto completo |
+| GET    | breakdown/trend/insight | —                  | —                           | —                            | MISSING                         |
 
 Auth e ownership são resolvidos no servidor por `AuthSessionGuard` e perfil associado ao usuário. O mapper HTTP `mapRecoverySnapshot` expõe `sourceContext` e `userProfileId`, risco HIGH.
 
@@ -166,17 +166,17 @@ Dashboard faz chamadas independentes para dashboard, Recovery, Coach, workout, n
 
 ## Test Inventory
 
-| Area | Evidence | Status |
-|---|---|---|
-| Calculator/freshness/use cases/repository/controller/mapper | `apps/api/src/modules/recovery/**` specs | COVERED |
-| API full suite | 206 suites, 1333 tests passed | COVERED |
-| Mobile Recovery product UI | No dedicated Recovery screen/card spec | NOT_COVERED |
-| Mobile Dashboard/A1 | dashboard and A1 specs | PARTIAL |
-| Contracts/API client | build/type checks and client tests | PARTIAL |
-| Coach/Health Context | API specs and stale tests | PARTIAL |
-| Training | recommendation specs | PARTIAL |
-| Recovery E2E | indirect A1/dashboard E2E only | PARTIAL |
-| Accessibility/device | no executed device evidence | NOT_COVERED |
+| Area                                                        | Evidence                                 | Status      |
+| ----------------------------------------------------------- | ---------------------------------------- | ----------- |
+| Calculator/freshness/use cases/repository/controller/mapper | `apps/api/src/modules/recovery/**` specs | COVERED     |
+| API full suite                                              | 206 suites, 1333 tests passed            | COVERED     |
+| Mobile Recovery product UI                                  | No dedicated Recovery screen/card spec   | NOT_COVERED |
+| Mobile Dashboard/A1                                         | dashboard and A1 specs                   | PARTIAL     |
+| Contracts/API client                                        | build/type checks and client tests       | PARTIAL     |
+| Coach/Health Context                                        | API specs and stale tests                | PARTIAL     |
+| Training                                                    | recommendation specs                     | PARTIAL     |
+| Recovery E2E                                                | indirect A1/dashboard E2E only           | PARTIAL     |
+| Accessibility/device                                        | no executed device evidence              | NOT_COVERED |
 
 ## E2E Coverage
 
@@ -192,59 +192,59 @@ Flags existentes incluem `EXPO_PUBLIC_AI_COACH_INTELLIGENCE_ENABLED`, `AI_LLM_EN
 
 ## Maturity Matrix
 
-| Area | Maturity | Evidence | Main gap |
-|---|---|---|---|
-| Domain | VALIDATED | RecoveryModule/entities/use cases | Safe product ownership boundary |
-| Persistence | VALIDATED | schema, unique index, repository | Legacy inventory |
-| Algorithm | VALIDATED | deterministic-v1 + specs | Product explanation model |
-| Freshness | CONNECTED | stale service + rebuild use cases | Public freshness/availability |
-| History | AVAILABLE_UNPAGED | history use case/API | Product history/trend |
-| Breakdown | RAW_TECHNICAL | influences/sourceContext | Safe factor read model |
-| Contracts | PARTIAL | `packages/types/src/recovery` | Public product contract |
-| API Client | CONNECTED | `recovery-api.ts` | New read models |
-| Current API | CONNECTED | `/today`, `/current` | Safe DTO semantics |
-| History API | CONNECTED | `/history` | Pagination/range/product shape |
-| Mobile UI | PARTIAL | Dashboard card only | Dedicated experience |
-| Dashboard | PARTIAL | live summary | CTA/category/freshness |
-| Coach | CONTEXT_CONNECTED | Health Context | Product-safe explanation |
-| Training | CONNECTED | adaptive use case | Remove/centralize fallback later |
-| Nutrition | NOT_PRESENT | no canonical backend use | Future scope |
-| Analytics | INFRASTRUCTURE_READY | noop typed provider | A2 taxonomy |
-| Offline | NO_CACHE | A1 write resilience only | Read cache future |
-| Accessibility | PARTIAL | card label | Screen/chart tests |
-| Observability | PARTIAL | stale/rebuild logs | Metrics and safe correlation |
-| Tests | PARTIAL | strong backend, weak product UI | Recovery product/E2E tests |
-| E2E | PARTIAL | indirect A1/Dashboard | Recovery contract flow |
-| Rollout | PARTIAL | A1 mechanism | A2 exposure strategy |
+| Area          | Maturity             | Evidence                          | Main gap                         |
+| ------------- | -------------------- | --------------------------------- | -------------------------------- |
+| Domain        | VALIDATED            | RecoveryModule/entities/use cases | Safe product ownership boundary  |
+| Persistence   | VALIDATED            | schema, unique index, repository  | Legacy inventory                 |
+| Algorithm     | VALIDATED            | deterministic-v1 + specs          | Product explanation model        |
+| Freshness     | CONNECTED            | stale service + rebuild use cases | Public freshness/availability    |
+| History       | AVAILABLE_UNPAGED    | history use case/API              | Product history/trend            |
+| Breakdown     | RAW_TECHNICAL        | influences/sourceContext          | Safe factor read model           |
+| Contracts     | PARTIAL              | `packages/types/src/recovery`     | Public product contract          |
+| API Client    | CONNECTED            | `recovery-api.ts`                 | New read models                  |
+| Current API   | CONNECTED            | `/today`, `/current`              | Safe DTO semantics               |
+| History API   | CONNECTED            | `/history`                        | Pagination/range/product shape   |
+| Mobile UI     | PARTIAL              | Dashboard card only               | Dedicated experience             |
+| Dashboard     | PARTIAL              | live summary                      | CTA/category/freshness           |
+| Coach         | CONTEXT_CONNECTED    | Health Context                    | Product-safe explanation         |
+| Training      | CONNECTED            | adaptive use case                 | Remove/centralize fallback later |
+| Nutrition     | NOT_PRESENT          | no canonical backend use          | Future scope                     |
+| Analytics     | INFRASTRUCTURE_READY | noop typed provider               | A2 taxonomy                      |
+| Offline       | NO_CACHE             | A1 write resilience only          | Read cache future                |
+| Accessibility | PARTIAL              | card label                        | Screen/chart tests               |
+| Observability | PARTIAL              | stale/rebuild logs                | Metrics and safe correlation     |
+| Tests         | PARTIAL              | strong backend, weak product UI   | Recovery product/E2E tests       |
+| E2E           | PARTIAL              | indirect A1/Dashboard             | Recovery contract flow           |
+| Rollout       | PARTIAL              | A1 mechanism                      | A2 exposure strategy             |
 
 ## Gap Analysis
 
-| Priority | Gap | Evidence | Required action |
-|---|---|---|---|
-| BLOCKER | Public response exposes raw `sourceContext`/profile ID | `recovery.controller.ts`, `mapRecoverySnapshot` | Safe Recovery read model and DTO |
-| BLOCKER | No canonical product availability/freshness/category semantics | `packages/types/src/recovery/index.ts` | Define backend-owned read contract |
-| HIGH | No breakdown/trend/insight product APIs | recovery controller | Add only required read models |
-| HIGH | No dedicated Recovery screen/route | `app-navigator.tsx`, mobile inventory | Build overview and history experience |
-| HIGH | Mobile thresholds and copy duplicated | Dashboard/workout/nutrition/coach consumers | Centralize behind contract |
-| HIGH | “Recovery History” is check-in history | `daily-check-in-history-screen.tsx` | Rename/split routes safely |
-| MEDIUM | Legacy snapshots not inventoried | schema/no migration found | Compatibility strategy and data audit |
-| MEDIUM | Recovery E2E/product UI/accessibility gaps | test inventory | Add in implementation/validation prompts |
-| MEDIUM | No Recovery read cache | A1 offline feature only | Optional read-only cache after online MVP |
-| FUTURE | Nutrition integration, wearables, adaptive expansion | current architecture | Keep outside A2 MVP |
+| Priority | Gap                                                            | Evidence                                        | Required action                           |
+| -------- | -------------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| BLOCKER  | Public response exposes raw `sourceContext`/profile ID         | `recovery.controller.ts`, `mapRecoverySnapshot` | Safe Recovery read model and DTO          |
+| BLOCKER  | No canonical product availability/freshness/category semantics | `packages/types/src/recovery/index.ts`          | Define backend-owned read contract        |
+| HIGH     | No breakdown/trend/insight product APIs                        | recovery controller                             | Add only required read models             |
+| HIGH     | No dedicated Recovery screen/route                             | `app-navigator.tsx`, mobile inventory           | Build overview and history experience     |
+| HIGH     | Mobile thresholds and copy duplicated                          | Dashboard/workout/nutrition/coach consumers     | Centralize behind contract                |
+| HIGH     | “Recovery History” is check-in history                         | `daily-check-in-history-screen.tsx`             | Rename/split routes safely                |
+| MEDIUM   | Legacy snapshots not inventoried                               | schema/no migration found                       | Compatibility strategy and data audit     |
+| MEDIUM   | Recovery E2E/product UI/accessibility gaps                     | test inventory                                  | Add in implementation/validation prompts  |
+| MEDIUM   | No Recovery read cache                                         | A1 offline feature only                         | Optional read-only cache after online MVP |
+| FUTURE   | Nutrition integration, wearables, adaptive expansion           | current architecture                            | Keep outside A2 MVP                       |
 
 ## Risk Register
 
-| Risk | Probability | Impact | Mitigation | Owner area | Release gate |
-|---|---|---|---|---|---|
-| Raw source context becomes public UI contract | High | High | Safe mapper/DTO, allowlist | Recovery/API | Blocker |
-| Mobile and backend thresholds diverge | High | High | Backend category/intensity semantics | Recovery/Mobile | Blocker |
-| Stale/neutral snapshot misrepresented as current | Medium | High | Availability + freshness contract | Recovery | Blocker |
-| Legacy snapshots lack source metadata | Medium | Medium | Compatibility query/migration plan | Recovery data | High |
-| Recovery history is mislabeled check-in history | High | Medium | Separate routes and contracts | Mobile | High |
-| Charts inaccessible | Medium | Medium | Text summary and screen-reader model | Mobile/UI | High |
-| Request duplication on Dashboard | Medium | Medium | Query ownership and instrumentation | Dashboard | Medium |
-| Raw wellness data in future telemetry | Low | High | Analytics/log allowlists | Analytics | Blocker |
-| Scope expands into Nutrition/wearables/LLM | Medium | High | Explicit non-goals and gates | Product | Medium |
+| Risk                                             | Probability | Impact | Mitigation                           | Owner area      | Release gate |
+| ------------------------------------------------ | ----------- | ------ | ------------------------------------ | --------------- | ------------ |
+| Raw source context becomes public UI contract    | High        | High   | Safe mapper/DTO, allowlist           | Recovery/API    | Blocker      |
+| Mobile and backend thresholds diverge            | High        | High   | Backend category/intensity semantics | Recovery/Mobile | Blocker      |
+| Stale/neutral snapshot misrepresented as current | Medium      | High   | Availability + freshness contract    | Recovery        | Blocker      |
+| Legacy snapshots lack source metadata            | Medium      | Medium | Compatibility query/migration plan   | Recovery data   | High         |
+| Recovery history is mislabeled check-in history  | High        | Medium | Separate routes and contracts        | Mobile          | High         |
+| Charts inaccessible                              | Medium      | Medium | Text summary and screen-reader model | Mobile/UI       | High         |
+| Request duplication on Dashboard                 | Medium      | Medium | Query ownership and instrumentation  | Dashboard       | Medium       |
+| Raw wellness data in future telemetry            | Low         | High   | Analytics/log allowlists             | Analytics       | Blocker      |
+| Scope expands into Nutrition/wearables/LLM       | Medium      | High   | Explicit non-goals and gates         | Product         | Medium       |
 
 ## Proposed Product Requirements
 
@@ -339,4 +339,3 @@ Backend owns thresholds, freshness, availability and explanation semantics. Mobi
 `READY_WITH_BLOCKERS`.
 
 Ownership, deterministic algorithm, persistence, freshness rebuild and internal consumers are sufficiently evidenced. Implementation must not start with mobile UI: the public Recovery boundary is currently too internal and product semantics are inconsistent. The minimum blockers are the safe read model, canonical freshness/category/availability contract, and removal of the misleading/duplicated mobile interpretation paths.
-

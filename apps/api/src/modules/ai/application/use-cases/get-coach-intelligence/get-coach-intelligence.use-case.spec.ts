@@ -124,17 +124,72 @@ function buildAggregate() {
       retryable: false,
       reasonCode: 'READY',
       sections: {
-        insight: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        evidence: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        explainability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        training: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        nutrition: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        recovery: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        goals: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        habits: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        progress: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        personalization: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
-        notifications: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        insight: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        evidence: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        explainability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        training: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        nutrition: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        recovery: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        goals: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        habits: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        progress: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        personalization: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
+        notifications: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
       },
     },
     freshness: {
@@ -145,20 +200,34 @@ function buildAggregate() {
       sections: {
         insight: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         evidence: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
-        explainability: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
+        explainability: {
+          status: 'fresh',
+          generatedAt: '2026-07-13T00:00:00.000Z',
+        },
         training: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         nutrition: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         recovery: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         goals: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         habits: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         progress: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
-        personalization: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
-        notifications: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
+        personalization: {
+          status: 'fresh',
+          generatedAt: '2026-07-13T00:00:00.000Z',
+        },
+        notifications: {
+          status: 'fresh',
+          generatedAt: '2026-07-13T00:00:00.000Z',
+        },
       },
     },
     sections: {
       training: {
-        availability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        availability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
         freshness: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         data: {
           trainingPlan: null,
@@ -167,7 +236,12 @@ function buildAggregate() {
         warnings: [],
       },
       nutrition: {
-        availability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        availability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
         freshness: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         data: {
           todayNutrition: null,
@@ -177,13 +251,23 @@ function buildAggregate() {
         warnings: [],
       },
       recovery: {
-        availability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        availability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
         freshness: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         data: { recoverySnapshot: null },
         warnings: [],
       },
       goals: {
-        availability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        availability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
         freshness: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         data: {
           currentGoal: null,
@@ -195,7 +279,12 @@ function buildAggregate() {
         warnings: [],
       },
       habits: {
-        availability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        availability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
         freshness: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         data: {
           habitSnapshot: null,
@@ -205,7 +294,12 @@ function buildAggregate() {
         warnings: [],
       },
       progress: {
-        availability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        availability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
         freshness: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         data: {
           progressSummary: null,
@@ -214,7 +308,12 @@ function buildAggregate() {
         warnings: [],
       },
       personalization: {
-        availability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        availability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
         freshness: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         data: {
           personalizationSnapshot: null,
@@ -224,7 +323,12 @@ function buildAggregate() {
         warnings: [],
       },
       notifications: {
-        availability: { status: 'available', fallbackUsed: false, retryable: false, reasonCode: 'READY' },
+        availability: {
+          status: 'available',
+          fallbackUsed: false,
+          retryable: false,
+          reasonCode: 'READY',
+        },
         freshness: { status: 'fresh', generatedAt: '2026-07-13T00:00:00.000Z' },
         data: {
           notificationDecision: null,

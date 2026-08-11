@@ -43,4 +43,3 @@ const styles = StyleSheet.create({
   category: { textAlign: 'center' },
   caption: { color: colors.mutedText, textAlign: 'center' },
 });
-

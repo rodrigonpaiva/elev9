@@ -54,9 +54,8 @@ export function MealDetailScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'MealDetail'>>();
   const { mealId } = route.params;
-  const [todayNutrition, setTodayNutrition] = useState<NutritionReadModel | null>(
-    null,
-  );
+  const [todayNutrition, setTodayNutrition] =
+    useState<NutritionReadModel | null>(null);
   const [recommendations, setRecommendations] = useState<
     NutritionRecommendation[]
   >([]);
@@ -423,7 +422,10 @@ function buildMealDetailModel(input: {
   };
 }
 
-function getMealStatus(meal: Meal, nutrition: NutritionReadModel): MealStatusLabel {
+function getMealStatus(
+  meal: Meal,
+  nutrition: NutritionReadModel,
+): MealStatusLabel {
   if (nutrition.nextMeal?.id === meal.id) {
     return 'Next';
   }
@@ -485,7 +487,10 @@ function getCoachNote(
   return "This meal keeps your nutrition consistent with today's plan.";
 }
 
-function getPreparationGuidance(meal: Meal, nutrition: NutritionReadModel): string {
+function getPreparationGuidance(
+  meal: Meal,
+  nutrition: NutritionReadModel,
+): string {
   if (nutrition.nextMeal?.id === meal.id) {
     return 'Keep portions consistent with the plan and hydrate with this meal.';
   }

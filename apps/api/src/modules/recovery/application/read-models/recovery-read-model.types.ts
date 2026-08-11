@@ -4,11 +4,7 @@ export type RecoveryReadAvailability =
   | 'insufficient_data'
   | 'processing_failed';
 
-export type RecoveryReadFreshness =
-  | 'current'
-  | 'stale'
-  | 'legacy'
-  | 'unknown';
+export type RecoveryReadFreshness = 'current' | 'stale' | 'legacy' | 'unknown';
 
 export type RecoveryReadCategory = 'low' | 'moderate' | 'good' | 'high';
 

@@ -9,7 +9,11 @@ import {
   impactLabel,
 } from '../helpers/recovery-copy';
 
-export function RecoveryFactorRow({ factor }: { factor: RecoveryExperienceFactor }) {
+export function RecoveryFactorRow({
+  factor,
+}: {
+  factor: RecoveryExperienceFactor;
+}) {
   return (
     <Card
       accessibilityLabel={recoveryFactorAccessibilityLabel(factor)}
@@ -42,4 +46,3 @@ const styles = StyleSheet.create({
   neutral: { color: colors.mutedText },
   explanation: { color: colors.mutedText, marginTop: 8 },
 });
-

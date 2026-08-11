@@ -33,12 +33,12 @@ Keep Nutrition disabled by default outside the controlled cohort. Enable only fo
 
 ## 7. Rollout stages
 
-| Stage | Entry | Observe | Advance / rollback |
-| --- | --- | --- | --- |
-| 0 — internal | Green release gate and owner sign-off | One observation window | Advance if stable; otherwise disable flag |
-| 1 — controlled cohort | Stage 0 stable | One business window | Advance on stable signals; rollback on trigger |
-| 2 — expanded cohort | Stage 1 stable and support briefed | One full window | Advance or disable flag |
-| 3 — broad | Stage 2 stable and alerts active | Continuous | Roll back flag/configuration on trigger |
+| Stage                 | Entry                                 | Observe                | Advance / rollback                             |
+| --------------------- | ------------------------------------- | ---------------------- | ---------------------------------------------- |
+| 0 — internal          | Green release gate and owner sign-off | One observation window | Advance if stable; otherwise disable flag      |
+| 1 — controlled cohort | Stage 0 stable                        | One business window    | Advance on stable signals; rollback on trigger |
+| 2 — expanded cohort   | Stage 1 stable and support briefed    | One full window        | Advance or disable flag                        |
+| 3 — broad             | Stage 2 stable and alerts active      | Continuous             | Roll back flag/configuration on trigger        |
 
 Do not invent percentage cohorts where the real flag system has no percentage primitive.
 

@@ -18,12 +18,12 @@ Prompt 8 identified active consumers that bypassed Nutrition application boundar
 
 `NutritionConsumerProjectionService` is owned by NutritionModule and exposes the following tokens:
 
-| Port | Consumer | Projection |
-|---|---|---|
-| `NUTRITION_COACH_CONTEXT_PORT` | Coach and Health Context | canonical daily read model and availability |
-| `NUTRITION_TRAINING_SIGNALS_PORT` | Training | availability, freshness and canonical adherence percentage |
-| `NUTRITION_GOAL_SIGNALS_PORT` | Goals | availability, recent logged-day coverage and active-plan signal |
-| `NUTRITION_NOTIFICATION_SIGNALS_PORT` | Notifications and Coach decision | availability and canonical adherence percentage |
+| Port                                  | Consumer                         | Projection                                                      |
+| ------------------------------------- | -------------------------------- | --------------------------------------------------------------- |
+| `NUTRITION_COACH_CONTEXT_PORT`        | Coach and Health Context         | canonical daily read model and availability                     |
+| `NUTRITION_TRAINING_SIGNALS_PORT`     | Training                         | availability, freshness and canonical adherence percentage      |
+| `NUTRITION_GOAL_SIGNALS_PORT`         | Goals                            | availability, recent logged-day coverage and active-plan signal |
+| `NUTRITION_NOTIFICATION_SIGNALS_PORT` | Notifications and Coach decision | availability and canonical adherence percentage                 |
 
 The ports do not expose Mongoose documents, schemas, repositories, plans, profiles, foods or raw logs.
 
@@ -115,16 +115,16 @@ The twelve failing API suites were classified as stale fixtures or assertions; n
 
 Final validation:
 
-| Target | Result |
-| --- | --- |
-| API tests | `PASSED` — 215 suites / 1,352 tests |
-| Mobile tests | `PASSED` — 22 suites / 104 tests |
-| API build | `PASSED` |
-| Mobile build | `PASSED` |
-| API Client build | `PASSED` |
-| API Client and Types lint | `PASSED` |
-| Nutrition boundary tests | `PASSED` |
-| E2E | `ENVIRONMENT_BLOCKED` — MongoMemoryServer `listen EPERM` |
-| `git diff --check` | `PASSED` |
+| Target                    | Result                                                   |
+| ------------------------- | -------------------------------------------------------- |
+| API tests                 | `PASSED` — 215 suites / 1,352 tests                      |
+| Mobile tests              | `PASSED` — 22 suites / 104 tests                         |
+| API build                 | `PASSED`                                                 |
+| Mobile build              | `PASSED`                                                 |
+| API Client build          | `PASSED`                                                 |
+| API Client and Types lint | `PASSED`                                                 |
+| Nutrition boundary tests  | `PASSED`                                                 |
+| E2E                       | `ENVIRONMENT_BLOCKED` — MongoMemoryServer `listen EPERM` |
+| `git diff --check`        | `PASSED`                                                 |
 
 P1 runtime legacy and active legacy test fixtures are now zero. The public `TodayNutrition` alias remains compatibility-only and has zero internal consumers. Prompt 8 is complete with the E2E environmental condition; Prompt 9 remains pending.

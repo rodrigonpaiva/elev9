@@ -85,7 +85,9 @@ describe('AsyncStorageRecoveryCache', () => {
   it('removes corrupted or mismatched-owner records', async () => {
     storage.getItem.mockResolvedValueOnce('{bad json');
     await expect(cache.read(ownerKey)).resolves.toBeNull();
-    expect(storage.removeItem).toHaveBeenCalledWith(getRecoveryCacheKey(ownerKey));
+    expect(storage.removeItem).toHaveBeenCalledWith(
+      getRecoveryCacheKey(ownerKey),
+    );
 
     jest.clearAllMocks();
     storage.getItem.mockResolvedValueOnce(
@@ -98,15 +100,19 @@ describe('AsyncStorageRecoveryCache', () => {
       }),
     );
     await expect(cache.read(ownerKey)).resolves.toBeNull();
-    expect(storage.removeItem).toHaveBeenCalledWith(getRecoveryCacheKey(ownerKey));
+    expect(storage.removeItem).toHaveBeenCalledWith(
+      getRecoveryCacheKey(ownerKey),
+    );
   });
 
   it('isolates storage failures from the Recovery experience', async () => {
-    storage.getItem.mockRejectedValueOnce(new Error('quota')); 
+    storage.getItem.mockRejectedValueOnce(new Error('quota'));
     await expect(cache.read(ownerKey)).resolves.toBeNull();
 
     storage.setItem.mockRejectedValueOnce(new Error('quota'));
-    await expect(cache.writeCurrent(ownerKey, current)).resolves.toBeUndefined();
+    await expect(
+      cache.writeCurrent(ownerKey, current),
+    ).resolves.toBeUndefined();
 
     storage.removeItem.mockRejectedValueOnce(new Error('locked'));
     await expect(cache.remove(ownerKey)).resolves.toBeUndefined();

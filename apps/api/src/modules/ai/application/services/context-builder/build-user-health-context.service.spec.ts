@@ -738,7 +738,6 @@ function buildDailyCheckIn(
   });
 }
 
-
 function buildRecoverySnapshot(
   overrides: Partial<RecoverySnapshot> = {},
 ): RecoverySnapshot {

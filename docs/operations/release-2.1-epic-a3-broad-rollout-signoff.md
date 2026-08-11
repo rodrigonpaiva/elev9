@@ -18,14 +18,14 @@ Decision: do not claim external provisioning and do not introduce an unapproved 
 
 ## 3. Provisioning status
 
-| Capability | Status | Evidence |
-|---|---|---|
-| Metrics export | `NOT_PROVISIONED` | Nutrition counters remain bounded in-process; no exporter or scrape target exists |
-| External logging | `NOT_PROVISIONED` | Request logger exists locally; no external sink or retention policy exists |
-| Dashboards | `DEFINED_NOT_PROVISIONED` | Five dashboards are specified in the observability document |
-| P1 alerts | `DEFINED_NOT_PROVISIONED` | Six alert definitions are specified, with no provider resource IDs |
-| Incident routing | `OWNER_NOT_RESOLVED` | Only role-based ownership exists; no team alias/channel was supplied |
-| Synthetic alert validation | `NOT_EXECUTED` | No safe external alert endpoint is available |
+| Capability                 | Status                    | Evidence                                                                          |
+| -------------------------- | ------------------------- | --------------------------------------------------------------------------------- |
+| Metrics export             | `NOT_PROVISIONED`         | Nutrition counters remain bounded in-process; no exporter or scrape target exists |
+| External logging           | `NOT_PROVISIONED`         | Request logger exists locally; no external sink or retention policy exists        |
+| Dashboards                 | `DEFINED_NOT_PROVISIONED` | Five dashboards are specified in the observability document                       |
+| P1 alerts                  | `DEFINED_NOT_PROVISIONED` | Six alert definitions are specified, with no provider resource IDs                |
+| Incident routing           | `OWNER_NOT_RESOLVED`      | Only role-based ownership exists; no team alias/channel was supplied              |
+| Synthetic alert validation | `NOT_EXECUTED`            | No safe external alert endpoint is available                                      |
 
 ## 4. Dashboard and alert evidence
 

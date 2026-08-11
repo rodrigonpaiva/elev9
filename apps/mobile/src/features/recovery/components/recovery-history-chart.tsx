@@ -31,10 +31,17 @@ export function RecoveryHistoryChart({
           points.map((item) => (
             <View key={item.localDate} style={styles.pointColumn}>
               <View style={styles.barTrack}>
-                <View style={[styles.bar, { height: Math.max(8, Math.min(100, item.score)) }]} />
+                <View
+                  style={[
+                    styles.bar,
+                    { height: Math.max(8, Math.min(100, item.score)) },
+                  ]}
+                />
               </View>
               <Text style={styles.score}>{item.score}</Text>
-              <Text style={styles.date}>{formatRecoveryLocalDate(item.localDate)}</Text>
+              <Text style={styles.date}>
+                {formatRecoveryLocalDate(item.localDate)}
+              </Text>
             </View>
           ))
         )}
@@ -45,12 +52,23 @@ export function RecoveryHistoryChart({
 
 const styles = StyleSheet.create({
   card: { gap: 12 },
-  chart: { minHeight: 150, flexDirection: 'row', alignItems: 'flex-end', gap: 10 },
+  chart: {
+    minHeight: 150,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
+  },
   pointColumn: { flex: 1, alignItems: 'center', gap: 4 },
-  barTrack: { height: 100, width: '100%', justifyContent: 'flex-end', backgroundColor: colors.surface, borderRadius: 8, overflow: 'hidden' },
+  barTrack: {
+    height: 100,
+    width: '100%',
+    justifyContent: 'flex-end',
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
   bar: { width: '100%', backgroundColor: colors.primary, borderRadius: 8 },
   score: { fontSize: 12, fontWeight: '700' },
   date: { color: colors.mutedText, fontSize: 11 },
   empty: { color: colors.mutedText },
 });
-

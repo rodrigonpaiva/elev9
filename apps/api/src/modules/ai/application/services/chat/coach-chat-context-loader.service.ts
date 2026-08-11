@@ -324,9 +324,7 @@ export class CoachChatContextLoaderService {
     );
   }
 
-  private async resolveNutrition(input: {
-    authUserId: string;
-  }) {
+  private async resolveNutrition(input: { authUserId: string }) {
     const result = await this.nutritionContextPort.execute({
       authUserId: input.authUserId,
     });

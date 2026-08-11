@@ -65,7 +65,12 @@ function buildMeal(): Meal {
     title: 'Breakfast',
     description: 'Recorded meal',
     foodItems: [],
-    estimatedMacros: { calories: 500, proteinGrams: 30, carbsGrams: 50, fatGrams: 10 },
+    estimatedMacros: {
+      calories: 500,
+      proteinGrams: 30,
+      carbsGrams: 50,
+      fatGrams: 10,
+    },
     alternatives: [],
     status: 'planned',
   });
@@ -80,13 +85,25 @@ function buildPlan(): NutritionPlan {
     status: 'replaced',
     weekStartDate: '2026-06-01',
     weekEndDate: '2026-06-07',
-    macroTargets: { calories: 2000, proteinGrams: 120, carbsGrams: 220, fatGrams: 60 },
-    days: [{
-      date: '2026-06-02',
-      dayIndex: 1,
-      dailyMacroTargets: { calories: 2000, proteinGrams: 120, carbsGrams: 220, fatGrams: 60 },
-      meals: [buildMeal()],
-    }],
+    macroTargets: {
+      calories: 2000,
+      proteinGrams: 120,
+      carbsGrams: 220,
+      fatGrams: 60,
+    },
+    days: [
+      {
+        date: '2026-06-02',
+        dayIndex: 1,
+        dailyMacroTargets: {
+          calories: 2000,
+          proteinGrams: 120,
+          carbsGrams: 220,
+          fatGrams: 60,
+        },
+        meals: [buildMeal()],
+      },
+    ],
     generatedBy: 'deterministic',
     createdAt: new Date('2026-06-01T00:00:00.000Z'),
     updatedAt: new Date('2026-06-03T00:00:00.000Z'),
@@ -102,7 +119,12 @@ function buildLog(date: string): NutritionLog {
     date,
     mealType: 'breakfast',
     status: 'consumed',
-    actualMacros: { calories: 500, proteinGrams: 30, carbsGrams: 50, fatGrams: 10 },
+    actualMacros: {
+      calories: 500,
+      proteinGrams: 30,
+      carbsGrams: 50,
+      fatGrams: 10,
+    },
     createdAt: new Date('2026-06-02T08:00:00.000Z'),
     updatedAt: new Date('2026-06-02T08:00:00.000Z'),
   });

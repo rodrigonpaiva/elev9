@@ -54,7 +54,8 @@ export function createRecoveryApi(httpClient: HttpClient) {
         validateHistoryDays(days);
       }
 
-      const query = days === undefined ? '' : `?days=${encodeURIComponent(days)}`;
+      const query =
+        days === undefined ? '' : `?days=${encodeURIComponent(days)}`;
 
       return httpClient.request<GetRecoveryExperienceHistoryResponse>({
         method: 'GET',
@@ -66,6 +67,8 @@ export function createRecoveryApi(httpClient: HttpClient) {
 
 function validateHistoryDays(days: number): void {
   if (!Number.isInteger(days) || days < 1 || days > 90) {
-    throw new RangeError('Recovery history days must be an integer between 1 and 90.');
+    throw new RangeError(
+      'Recovery history days must be an integer between 1 and 90.',
+    );
   }
 }

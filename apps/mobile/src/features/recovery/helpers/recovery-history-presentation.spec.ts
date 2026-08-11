@@ -11,7 +11,9 @@ describe('recovery history presentation', () => {
   });
 
   it('counts only available history points', () => {
-    expect(availableHistoryPointCount(availableRecoveryScreenFixture.history)).toBe(4);
+    expect(
+      availableHistoryPointCount(availableRecoveryScreenFixture.history),
+    ).toBe(4);
   });
 
   it('provides a text alternative for history points', () => {
@@ -20,4 +22,3 @@ describe('recovery history presentation', () => {
     );
   });
 });
-

@@ -61,20 +61,36 @@ export type CoachIntelligenceSectionLoadResult<TSectionData> = Readonly<{
 
 export type CoachIntelligenceSectionLoadResultWithExtras<
   TSectionData,
-  TExtras extends Readonly<Record<string, unknown>> = Readonly<Record<string, never>>,
-> = Readonly<
-  CoachIntelligenceSectionLoadResult<TSectionData> & TExtras
->;
+  TExtras extends Readonly<Record<string, unknown>> = Readonly<
+    Record<string, never>
+  >,
+> = Readonly<CoachIntelligenceSectionLoadResult<TSectionData> & TExtras>;
 
 export type CoachIntelligenceSourceStateMap = Readonly<{
-  training: CoachIntelligenceSourceSectionState<CoachIntelligenceSections['training']['data']>;
-  nutrition: CoachIntelligenceSourceSectionState<CoachIntelligenceSections['nutrition']['data']>;
-  recovery: CoachIntelligenceSourceSectionState<CoachIntelligenceSections['recovery']['data']>;
-  goals: CoachIntelligenceSourceSectionState<CoachIntelligenceSections['goals']['data']>;
-  habits: CoachIntelligenceSourceSectionState<CoachIntelligenceSections['habits']['data']>;
-  progress: CoachIntelligenceSourceSectionState<CoachIntelligenceSections['progress']['data']>;
-  personalization: CoachIntelligenceSourceSectionState<CoachIntelligenceSections['personalization']['data']>;
-  notifications: CoachIntelligenceSourceSectionState<CoachIntelligenceSections['notifications']['data']>;
+  training: CoachIntelligenceSourceSectionState<
+    CoachIntelligenceSections['training']['data']
+  >;
+  nutrition: CoachIntelligenceSourceSectionState<
+    CoachIntelligenceSections['nutrition']['data']
+  >;
+  recovery: CoachIntelligenceSourceSectionState<
+    CoachIntelligenceSections['recovery']['data']
+  >;
+  goals: CoachIntelligenceSourceSectionState<
+    CoachIntelligenceSections['goals']['data']
+  >;
+  habits: CoachIntelligenceSourceSectionState<
+    CoachIntelligenceSections['habits']['data']
+  >;
+  progress: CoachIntelligenceSourceSectionState<
+    CoachIntelligenceSections['progress']['data']
+  >;
+  personalization: CoachIntelligenceSourceSectionState<
+    CoachIntelligenceSections['personalization']['data']
+  >;
+  notifications: CoachIntelligenceSourceSectionState<
+    CoachIntelligenceSections['notifications']['data']
+  >;
 }>;
 
 export type CoachIntelligenceSourceContext = Readonly<{
@@ -104,7 +120,9 @@ export type CoachIntelligenceSourceLoadResult = Readonly<{
   source: Readonly<{
     loadDurationMs: number;
   }>;
-  sectionLoadDurationsMs: Readonly<Record<CoachIntelligenceLoadedSectionName, number>>;
+  sectionLoadDurationsMs: Readonly<
+    Record<CoachIntelligenceLoadedSectionName, number>
+  >;
 }>;
 
 export type CoachIntelligenceContextAssemblyResult = Readonly<{

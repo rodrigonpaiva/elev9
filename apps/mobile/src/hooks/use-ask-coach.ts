@@ -9,10 +9,7 @@ import type {
 
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
-import {
-  isCoachOptionalEmptyState,
-  mapUnifiedCoachInsight,
-} from './coach';
+import { isCoachOptionalEmptyState, mapUnifiedCoachInsight } from './coach';
 import {
   type AskCoachCategory,
   type AskCoachCategoryId,

@@ -111,8 +111,6 @@ export function toCoachNutritionContext(
     adherenceStatus: readModel.progress?.adherenceStatus ?? 'unavailable',
     focus: readModel.focus ?? null,
     insight: readModel.insight ?? null,
-    actions: Object.freeze([
-      ...(readModel.actions ?? []),
-    ]),
+    actions: Object.freeze([...(readModel.actions ?? [])]),
   };
 }

@@ -17,10 +17,10 @@ Product Analytics covers intentional navigation and actions. Operational observa
 
 ## Product Analytics versus Observability
 
-| Layer | Examples | Sensitive Recovery data |
-|---|---|---|
-| Product Analytics | CTA selected, screen viewed, refresh, retry | Never included |
-| Operational observability | request result, duration, rebuild attempt/failure | Never included |
+| Layer                     | Examples                                          | Sensitive Recovery data |
+| ------------------------- | ------------------------------------------------- | ----------------------- |
+| Product Analytics         | CTA selected, screen viewed, refresh, retry       | Never included          |
+| Operational observability | request result, duration, rebuild attempt/failure | Never included          |
 
 ## Existing Infrastructure
 
@@ -32,14 +32,14 @@ Events follow the existing `domain_object_action` convention and are emitted onl
 
 ## Event Catalog
 
-| Event | Trigger | Properties | Forbidden | Purpose |
-|---|---|---|---|---|
-| `recovery_dashboard_cta_selected` | Dashboard Recovery CTA | `entryPoint: dashboard` | score, category, availability | Measure entry intent |
-| `recovery_screen_viewed` | Recovery container mount | `entryPoint: unknown` | score, freshness, factors | Measure entry |
-| `recovery_refresh_requested` | Pull-to-refresh | `trigger: pull_to_refresh` | response state | Measure explicit refresh |
-| `recovery_retry_requested` | Full retry | `resource: current_and_history` | error message | Measure retry intent |
-| `recovery_history_retry_requested` | History retry | `resource: history` | history values | Measure partial retry intent |
-| `recovery_check_in_cta_selected` | Recovery opens Daily Check-in | `entryPoint: recovery` | availability, signals | Measure product handoff |
+| Event                              | Trigger                       | Properties                      | Forbidden                     | Purpose                      |
+| ---------------------------------- | ----------------------------- | ------------------------------- | ----------------------------- | ---------------------------- |
+| `recovery_dashboard_cta_selected`  | Dashboard Recovery CTA        | `entryPoint: dashboard`         | score, category, availability | Measure entry intent         |
+| `recovery_screen_viewed`           | Recovery container mount      | `entryPoint: unknown`           | score, freshness, factors     | Measure entry                |
+| `recovery_refresh_requested`       | Pull-to-refresh               | `trigger: pull_to_refresh`      | response state                | Measure explicit refresh     |
+| `recovery_retry_requested`         | Full retry                    | `resource: current_and_history` | error message                 | Measure retry intent         |
+| `recovery_history_retry_requested` | History retry                 | `resource: history`             | history values                | Measure partial retry intent |
+| `recovery_check_in_cta_selected`   | Recovery opens Daily Check-in | `entryPoint: recovery`          | availability, signals         | Measure product handoff      |
 
 No history-range event is emitted because the current UI exposes only the seven-day range. No automatic low/stale/declining/factor events are emitted.
 

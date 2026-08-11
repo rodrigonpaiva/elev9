@@ -4,19 +4,19 @@
 
 This document defines the minimum safe operational surface for Nutrition broad rollout. It does not create a new telemetry platform or alter Nutrition behavior.
 
-| Capability | Provider | Initial state | Final state | Evidence |
-|---|---|---|---|---|
-| Application logs | Nest `Logger` and request middleware | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED` | Existing API source |
-| Nutrition counters/events | `NutritionObservabilityService` | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED` | Allowlisted in-memory counters |
-| Mobile analytics | Product analytics noop boundary | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED` | Existing mobile provider |
-| Coach traces | In-memory Coach observability | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED` | Retained bounded traces; no exporter |
-| Request metrics backend | None | `NOT_CONFIGURED` | `NOT_CONFIGURED` | No metrics exporter found |
-| OpenTelemetry tracing | None | `NOT_CONFIGURED` | `NOT_CONFIGURED` | No exporter/dependency found |
-| Health/readiness | `HealthController` | `CONFIGURED` | `CONFIGURED` | `/health`, `/health/ready` |
-| Dashboards | None versioned | `NOT_CONFIGURED` | `DEFINED_NOT_PROVISIONED` | Dashboard specifications below |
-| Alerting | None versioned | `NOT_CONFIGURED` | `DEFINED_NOT_PROVISIONED` | Alert specifications below |
-| Feature flag telemetry | Existing AI flags only | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED` | `AI_LLM_ENABLED=false`; no Nutrition remote flag |
-| CI validation | GitHub Actions | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED` | E2E gate added to existing workflow |
+| Capability                | Provider                             | Initial state          | Final state               | Evidence                                         |
+| ------------------------- | ------------------------------------ | ---------------------- | ------------------------- | ------------------------------------------------ |
+| Application logs          | Nest `Logger` and request middleware | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED`    | Existing API source                              |
+| Nutrition counters/events | `NutritionObservabilityService`      | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED`    | Allowlisted in-memory counters                   |
+| Mobile analytics          | Product analytics noop boundary      | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED`    | Existing mobile provider                         |
+| Coach traces              | In-memory Coach observability        | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED`    | Retained bounded traces; no exporter             |
+| Request metrics backend   | None                                 | `NOT_CONFIGURED`       | `NOT_CONFIGURED`          | No metrics exporter found                        |
+| OpenTelemetry tracing     | None                                 | `NOT_CONFIGURED`       | `NOT_CONFIGURED`          | No exporter/dependency found                     |
+| Health/readiness          | `HealthController`                   | `CONFIGURED`           | `CONFIGURED`              | `/health`, `/health/ready`                       |
+| Dashboards                | None versioned                       | `NOT_CONFIGURED`       | `DEFINED_NOT_PROVISIONED` | Dashboard specifications below                   |
+| Alerting                  | None versioned                       | `NOT_CONFIGURED`       | `DEFINED_NOT_PROVISIONED` | Alert specifications below                       |
+| Feature flag telemetry    | Existing AI flags only               | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED`    | `AI_LLM_ENABLED=false`; no Nutrition remote flag |
+| CI validation             | GitHub Actions                       | `PARTIALLY_CONFIGURED` | `PARTIALLY_CONFIGURED`    | E2E gate added to existing workflow              |
 
 ## 2. Safe metric inventory
 
@@ -48,40 +48,40 @@ Authorization headers, cookies, tokens, request/response bodies, raw exceptions,
 
 ## 4. Dashboard definitions
 
-| Dashboard | Status | Signals | Owner | Evidence |
-|---|---|---|---|---|
-| Nutrition API Health | `DEFINED_NOT_PROVISIONED` | volume, success, 4xx/5xx, latency buckets, processing, availability | Backend Platform Owner | This document |
-| Consumer Health | `DEFINED_NOT_PROVISIONED` | Dashboard, Coach, Recovery, Training, Goals, Notifications, Health Context success/failure/fallback | Backend Platform Owner | This document |
-| History and Trends | `DEFINED_NOT_PROVISIONED` | volume, latency, empty-result bucket, pagination/processing failures | Backend Platform Owner | This document |
-| Cache and Offline | `DEFINED_NOT_PROVISIONED` | hit/miss/stale/read-write/invalidation categories | Mobile Platform Owner | This document |
-| Rollout Overview | `DEFINED_NOT_PROVISIONED` | release, stage, flag state, error/fallback/alert state | Release Owner | This document |
+| Dashboard            | Status                    | Signals                                                                                             | Owner                  | Evidence      |
+| -------------------- | ------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------- | ------------- |
+| Nutrition API Health | `DEFINED_NOT_PROVISIONED` | volume, success, 4xx/5xx, latency buckets, processing, availability                                 | Backend Platform Owner | This document |
+| Consumer Health      | `DEFINED_NOT_PROVISIONED` | Dashboard, Coach, Recovery, Training, Goals, Notifications, Health Context success/failure/fallback | Backend Platform Owner | This document |
+| History and Trends   | `DEFINED_NOT_PROVISIONED` | volume, latency, empty-result bucket, pagination/processing failures                                | Backend Platform Owner | This document |
+| Cache and Offline    | `DEFINED_NOT_PROVISIONED` | hit/miss/stale/read-write/invalidation categories                                                   | Mobile Platform Owner  | This document |
+| Rollout Overview     | `DEFINED_NOT_PROVISIONED` | release, stage, flag state, error/fallback/alert state                                              | Release Owner          | This document |
 
 No dashboard URL is claimed because no external dashboard provider is connected to the repository.
 
 ## 5. Alert definitions
 
-| Alert | Severity | Status | Owner | Trigger | Response |
-|---|---|---|---|---|---|
-| Nutrition 5xx elevation | P1 | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Sustained relative increase versus prior window | Page, freeze cohort, rollback if release-correlated |
-| Nutrition consumer projection failure | P1 | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Sustained failure signal for Coach/consumer ports | Page, inspect safe error code, rollback |
-| Privacy-safe telemetry violation | P1 | `DEFINED_NOT_PROVISIONED` | Privacy/Security Owner | Any prohibited-field detection | Stop rollout immediately, preserve safe evidence |
-| Cache isolation/cleanup failure | P1 | `DEFINED_NOT_PROVISIONED` | Mobile Platform Owner | Any owner-scope or logout cleanup anomaly | Stop rollout, invalidate cache, security review |
-| Nutrition bootstrap failure | P1 | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Readiness/module startup failure | Stop rollout, restore prior release |
-| Latency elevation | P2 | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Relative degradation versus baseline | Investigate in business hours; pause expansion |
-| Unavailable/stale elevation | P2 | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Relative increase excluding expected states | Investigate and hold stage |
-| History/Trends degradation | P2 | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Sustained query/pagination failures | Hold affected stage; preserve Today where safe |
+| Alert                                 | Severity | Status                    | Owner                  | Trigger                                           | Response                                            |
+| ------------------------------------- | -------- | ------------------------- | ---------------------- | ------------------------------------------------- | --------------------------------------------------- |
+| Nutrition 5xx elevation               | P1       | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Sustained relative increase versus prior window   | Page, freeze cohort, rollback if release-correlated |
+| Nutrition consumer projection failure | P1       | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Sustained failure signal for Coach/consumer ports | Page, inspect safe error code, rollback             |
+| Privacy-safe telemetry violation      | P1       | `DEFINED_NOT_PROVISIONED` | Privacy/Security Owner | Any prohibited-field detection                    | Stop rollout immediately, preserve safe evidence    |
+| Cache isolation/cleanup failure       | P1       | `DEFINED_NOT_PROVISIONED` | Mobile Platform Owner  | Any owner-scope or logout cleanup anomaly         | Stop rollout, invalidate cache, security review     |
+| Nutrition bootstrap failure           | P1       | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Readiness/module startup failure                  | Stop rollout, restore prior release                 |
+| Latency elevation                     | P2       | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Relative degradation versus baseline              | Investigate in business hours; pause expansion      |
+| Unavailable/stale elevation           | P2       | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Relative increase excluding expected states       | Investigate and hold stage                          |
+| History/Trends degradation            | P2       | `DEFINED_NOT_PROVISIONED` | Backend Platform Owner | Sustained query/pagination failures               | Hold affected stage; preserve Today where safe      |
 
 Thresholds require baseline calibration in the controlled stage. No absolute thresholds are invented here.
 
 ## 6. Ownership and escalation
 
-| Responsibility | Primary owner | Secondary owner | Escalation |
-|---|---|---|---|
-| Release decision | Release Owner | Product Owner | Incident Commander |
-| API/runtime | Backend Platform Owner | Release Owner | Incident Commander |
-| Mobile/cache | Mobile Platform Owner | Backend Platform Owner | Incident Commander |
-| Privacy/security | Privacy/Security Owner | Release Owner | Security incident path |
-| Incident command | Incident Commander | Release Owner | Executive/on-call path defined externally |
+| Responsibility   | Primary owner          | Secondary owner        | Escalation                                |
+| ---------------- | ---------------------- | ---------------------- | ----------------------------------------- |
+| Release decision | Release Owner          | Product Owner          | Incident Commander                        |
+| API/runtime      | Backend Platform Owner | Release Owner          | Incident Commander                        |
+| Mobile/cache     | Mobile Platform Owner  | Backend Platform Owner | Incident Commander                        |
+| Privacy/security | Privacy/Security Owner | Release Owner          | Security incident path                    |
+| Incident command | Incident Commander     | Release Owner          | Executive/on-call path defined externally |
 
 These are roles, not invented personal names. The release ticket must replace them with accountable people before Stage 0.
 

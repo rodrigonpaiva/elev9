@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ApiClientError } from '@elev9/api-client';
 import type { CoachIntelligenceAggregate } from '@elev9/types';
@@ -33,7 +27,9 @@ export type CoachIntelligenceMode =
   | 'disabled'
   | 'error';
 
-export type CoachIntelligenceInput = Parameters<typeof buildCoachIntelligence>[0];
+export type CoachIntelligenceInput = Parameters<
+  typeof buildCoachIntelligence
+>[0];
 
 export type UseCoachIntelligenceResult = {
   aggregate: CoachIntelligenceAggregate | null;
@@ -72,12 +68,17 @@ export function useCoachIntelligence(
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const legacyIntelligence = useMemo(
-    () => buildCoachIntelligence(input ?? { coachDecision: null, currentGoal: null }),
+    () =>
+      buildCoachIntelligence(
+        input ?? { coachDecision: null, currentGoal: null },
+      ),
     [input],
   );
   const canonicalIntelligence = useMemo(
     () =>
-      aggregate ? mapCoachIntelligenceAggregateToLegacyIntelligence(aggregate) : null,
+      aggregate
+        ? mapCoachIntelligenceAggregateToLegacyIntelligence(aggregate)
+        : null,
     [aggregate],
   );
   const resolvedIntelligence =
@@ -98,7 +99,11 @@ export function useCoachIntelligence(
       personalizationSnapshot: input?.personalizationSnapshot ?? null,
       currentGoal: input?.currentGoal ?? null,
     });
-  }, [input?.currentGoal, input?.personalizationSnapshot, resolvedIntelligence]);
+  }, [
+    input?.currentGoal,
+    input?.personalizationSnapshot,
+    resolvedIntelligence,
+  ]);
   const explanation = useMemo(() => {
     if (!resolvedIntelligence) {
       return null;
@@ -190,8 +195,8 @@ export function useCoachIntelligence(
   const isFeatureDisabled = !FEATURE_FLAG_ENABLED;
   const isFallbackUsed = Boolean(
     aggregate?.metadata.fallbackUsed ||
-      aggregate?.availability.fallbackUsed ||
-      mode === 'fallback',
+    aggregate?.availability.fallbackUsed ||
+    mode === 'fallback',
   );
   const isLoading =
     (FEATURE_FLAG_ENABLED && mode === 'loading') ||

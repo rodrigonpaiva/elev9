@@ -1,4 +1,7 @@
-import type { CoachExpertContext, CoachExpertRequest } from '../coach-expert.types';
+import type {
+  CoachExpertContext,
+  CoachExpertRequest,
+} from '../coach-expert.types';
 import { NutritionExpert } from './nutrition-expert.service';
 
 describe('NutritionExpert', () => {
@@ -66,7 +69,9 @@ describe('NutritionExpert', () => {
       }),
     );
 
-    expect(result.metadata.analysis.canonicalAvailability).toBe('not_configured');
+    expect(result.metadata.analysis.canonicalAvailability).toBe(
+      'not_configured',
+    );
     expect(result.contributions[0].summary).toContain('nutrition');
   });
 
@@ -90,14 +95,23 @@ function request(userMessage: string): CoachExpertRequest {
 }
 
 function context(overrides: {
-  availability?: 'available' | 'not_configured' | 'insufficient_data' | 'not_available' | 'processing_failed';
+  availability?:
+    | 'available'
+    | 'not_configured'
+    | 'insufficient_data'
+    | 'not_available'
+    | 'processing_failed';
   freshness?: 'current' | 'stale' | 'legacy' | 'unknown';
   calories?: {
     consumed: number;
     target: number | null;
     remaining: number | null;
     excess: number | null;
-    state: 'in_progress' | 'above_target' | 'target_unavailable' | 'not_started';
+    state:
+      | 'in_progress'
+      | 'above_target'
+      | 'target_unavailable'
+      | 'not_started';
   } | null;
   macros?: Array<{
     nutrient: 'protein' | 'carbs' | 'fat';
@@ -105,15 +119,27 @@ function context(overrides: {
     target: number | null;
     remaining: number | null;
     unit: 'g';
-    state: 'in_progress' | 'above_target' | 'target_unavailable' | 'not_started';
+    state:
+      | 'in_progress'
+      | 'above_target'
+      | 'target_unavailable'
+      | 'not_started';
   }>;
   meals?: {
     planned: number;
     completed: number;
     pending: number;
-    nextMeal: { type: 'breakfast' | 'lunch' | 'dinner' | 'snack'; title: string } | null;
+    nextMeal: {
+      type: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+      title: string;
+    } | null;
   } | null;
-  adherenceStatus?: 'not_started' | 'below_range' | 'within_range' | 'above_range' | 'unavailable';
+  adherenceStatus?:
+    | 'not_started'
+    | 'below_range'
+    | 'within_range'
+    | 'above_range'
+    | 'unavailable';
   focus?: null;
   insight?: null;
 }): CoachExpertContext {

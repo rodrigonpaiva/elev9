@@ -130,7 +130,9 @@ describe('Progress Daily Check-in E2E', () => {
   });
 
   it('returns explicit insufficient data without exposing internal fields', async () => {
-    const token = await registerAndGetToken('recovery-no-check-in-e2e@email.com');
+    const token = await registerAndGetToken(
+      'recovery-no-check-in-e2e@email.com',
+    );
 
     const response = await request(app.getHttpServer())
       .get('/recovery/experience/current')

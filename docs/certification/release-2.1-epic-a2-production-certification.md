@@ -26,32 +26,32 @@ This certification reviews Prompts 1–8, including backend read models, contrac
 
 ## Certification Matrix
 
-| Area | Status | Evidence | Risk | Severity | Action |
-|---|---|---|---|---|---|
-| Architecture | PASS | Recovery read-model flow and module boundaries | None found in A2 path | — | Maintain ownership |
-| Domain ownership | PASS_WITH_RISK | Recovery policies/read-model mapper | Legacy consumers remain | P2 | Track fallback removal |
-| Backend/API | PASS | Controllers, use cases, mapper, bounded history | External load data absent | P2 | Monitor after rollout |
-| Contracts | PASS | Shared `RecoveryExperience*` types and privacy tests | Runtime parity relies on E2E | P2 | Keep E2E in release gate |
-| API client | PASS | Route/query/error tests | No Nx test target | P2 | Preserve direct test command |
-| Mobile UI/integration | PASS_WITH_RISK | 21 suites, state mapper, route and container | No device execution | P1 | Complete device matrix |
-| Dashboard/navigation | PASS | CTA and category-source inspection/tests | Manual navigation not executed | P1 | Validate on device |
-| Daily Check-in flow | PASS_WITH_RISK | Focus refresh and E2E chain | Physical return flow untested | P1 | Validate externally |
-| Coach | PASS_WITH_RISK | Canonical branch and deterministic tests | Legacy fallback active | P2 | Measure fallback |
-| Training consistency | PASS_WITH_RISK | Shared semantic action review | Full matrix not E2E-proven | P2 | External regression review |
-| Analytics | PASS | Typed allowlist/noop/provider isolation tests | No external collector | P2 | Validate collector separately |
-| Observability | PASS_WITH_RISK | Redacted Recovery logger adapter/tests | No external dashboards/alerts | P1 | Configure operational monitoring |
-| Offline cache | PASS_WITH_RISK | Schema/storage/privacy/lifecycle tests | AsyncStorage not hardware-backed | P1 | Complete threat-model/device review |
-| Authentication/isolation | PASS_WITH_RISK | Auth cleanup, opaque owner namespace, E2E auth | Account switch not physically executed | P1 | Execute account matrix |
-| Privacy/security | PASS_WITH_RISK | Public allowlists and negative tests | Local cache at-rest limitation | P1 | Security sign-off |
-| Accessibility | PASS_WITH_RISK | Labels, roles, textual chart/offline alternatives | VoiceOver/TalkBack not run | P1 | Manual assistive validation |
-| Performance | PASS_WITH_RISK | Bounded history, request deduplication code review | No production latency sample | P2 | Measure p95 after rollout |
-| Concurrency | PASS_WITH_RISK | Operation/session generation guards and unit coverage | Device lifecycle not exercised | P1 | External lifecycle test |
-| Legacy compatibility | PASS_WITH_RISK | Legacy endpoints/fallback preserved and documented | Real legacy DB not audited | P1 | Run legacy-data audit |
-| Tests | PASS | API 209/1344; mobile 21/99; client 12/12 | No dedicated hook render suite | P2 | Add if test harness becomes available |
-| E2E | PASS_WITH_RISK | 16/56 passed with local-port permission | A2 Coach semantic E2E depth limited | P1 | Add external semantic flow if required |
-| Documentation | PASS | A2 architecture/product/analytics/cache docs | Sign-off pending | P2 | Complete release sign-offs |
-| Deployment/rollback | PASS_WITH_RISK | Versioned routes/cache and documented rollback | No dedicated A2 remote flag | P1 | Use controlled version/release rollout |
-| Operability | PASS_WITH_RISK | Runbook and signals documented below | External alerting absent | P1 | Configure alerts before broad rollout |
+| Area                     | Status         | Evidence                                              | Risk                                   | Severity | Action                                 |
+| ------------------------ | -------------- | ----------------------------------------------------- | -------------------------------------- | -------- | -------------------------------------- |
+| Architecture             | PASS           | Recovery read-model flow and module boundaries        | None found in A2 path                  | —        | Maintain ownership                     |
+| Domain ownership         | PASS_WITH_RISK | Recovery policies/read-model mapper                   | Legacy consumers remain                | P2       | Track fallback removal                 |
+| Backend/API              | PASS           | Controllers, use cases, mapper, bounded history       | External load data absent              | P2       | Monitor after rollout                  |
+| Contracts                | PASS           | Shared `RecoveryExperience*` types and privacy tests  | Runtime parity relies on E2E           | P2       | Keep E2E in release gate               |
+| API client               | PASS           | Route/query/error tests                               | No Nx test target                      | P2       | Preserve direct test command           |
+| Mobile UI/integration    | PASS_WITH_RISK | 21 suites, state mapper, route and container          | No device execution                    | P1       | Complete device matrix                 |
+| Dashboard/navigation     | PASS           | CTA and category-source inspection/tests              | Manual navigation not executed         | P1       | Validate on device                     |
+| Daily Check-in flow      | PASS_WITH_RISK | Focus refresh and E2E chain                           | Physical return flow untested          | P1       | Validate externally                    |
+| Coach                    | PASS_WITH_RISK | Canonical branch and deterministic tests              | Legacy fallback active                 | P2       | Measure fallback                       |
+| Training consistency     | PASS_WITH_RISK | Shared semantic action review                         | Full matrix not E2E-proven             | P2       | External regression review             |
+| Analytics                | PASS           | Typed allowlist/noop/provider isolation tests         | No external collector                  | P2       | Validate collector separately          |
+| Observability            | PASS_WITH_RISK | Redacted Recovery logger adapter/tests                | No external dashboards/alerts          | P1       | Configure operational monitoring       |
+| Offline cache            | PASS_WITH_RISK | Schema/storage/privacy/lifecycle tests                | AsyncStorage not hardware-backed       | P1       | Complete threat-model/device review    |
+| Authentication/isolation | PASS_WITH_RISK | Auth cleanup, opaque owner namespace, E2E auth        | Account switch not physically executed | P1       | Execute account matrix                 |
+| Privacy/security         | PASS_WITH_RISK | Public allowlists and negative tests                  | Local cache at-rest limitation         | P1       | Security sign-off                      |
+| Accessibility            | PASS_WITH_RISK | Labels, roles, textual chart/offline alternatives     | VoiceOver/TalkBack not run             | P1       | Manual assistive validation            |
+| Performance              | PASS_WITH_RISK | Bounded history, request deduplication code review    | No production latency sample           | P2       | Measure p95 after rollout              |
+| Concurrency              | PASS_WITH_RISK | Operation/session generation guards and unit coverage | Device lifecycle not exercised         | P1       | External lifecycle test                |
+| Legacy compatibility     | PASS_WITH_RISK | Legacy endpoints/fallback preserved and documented    | Real legacy DB not audited             | P1       | Run legacy-data audit                  |
+| Tests                    | PASS           | API 209/1344; mobile 21/99; client 12/12              | No dedicated hook render suite         | P2       | Add if test harness becomes available  |
+| E2E                      | PASS_WITH_RISK | 16/56 passed with local-port permission               | A2 Coach semantic E2E depth limited    | P1       | Add external semantic flow if required |
+| Documentation            | PASS           | A2 architecture/product/analytics/cache docs          | Sign-off pending                       | P2       | Complete release sign-offs             |
+| Deployment/rollback      | PASS_WITH_RISK | Versioned routes/cache and documented rollback        | No dedicated A2 remote flag            | P1       | Use controlled version/release rollout |
+| Operability              | PASS_WITH_RISK | Runbook and signals documented below                  | External alerting absent               | P1       | Configure alerts before broad rollout  |
 
 ## Architecture
 
@@ -142,14 +142,14 @@ Authentication guards and server-side profile ownership are present. Logout clea
 
 ## Privacy
 
-| Data | Backend | API | Mobile memory | Cache | Analytics | Logs | Allowed |
-|---|---|---|---|---|---|---|---|
-| score/category/fatigue | Yes | Public read model | Yes | Allowlisted | No | No | Product/cache only |
-| public factors/insight/trend/history | Yes | Safe | Yes | Allowlisted | No | No | Product/cache only |
-| raw check-in values | Internal context | No | No A2 UI/cache | No | No | No | Backend internal only |
-| owner key | Session namespace | No | Session/cache boundary | Namespace only | No | No | Local isolation only |
-| userProfileId/sourceContext | Internal | No | No | No | No | No | Never public |
-| Coach content | Internal response | No cache | Runtime only | No | No | No | Runtime only |
+| Data                                 | Backend           | API               | Mobile memory          | Cache          | Analytics | Logs | Allowed               |
+| ------------------------------------ | ----------------- | ----------------- | ---------------------- | -------------- | --------- | ---- | --------------------- |
+| score/category/fatigue               | Yes               | Public read model | Yes                    | Allowlisted    | No        | No   | Product/cache only    |
+| public factors/insight/trend/history | Yes               | Safe              | Yes                    | Allowlisted    | No        | No   | Product/cache only    |
+| raw check-in values                  | Internal context  | No                | No A2 UI/cache         | No             | No        | No   | Backend internal only |
+| owner key                            | Session namespace | No                | Session/cache boundary | Namespace only | No        | No   | Local isolation only  |
+| userProfileId/sourceContext          | Internal          | No                | No                     | No             | No        | No   | Never public          |
+| Coach content                        | Internal response | No cache          | Runtime only           | No             | No        | No   | Runtime only          |
 
 ## Accessibility
 
@@ -167,16 +167,16 @@ The mobile hook uses an operation guard, mounted checks and session generation c
 
 ## Error Semantics
 
-| Condition | Backend | API client | Mobile | Cache | Coach |
-|---|---|---|---|---|---|
-| insufficient data | Domain response | Preserved | Empty state | May cache public state | Check-in guidance |
-| not available | Domain response | Preserved | Empty state | May cache public state | Neutral fallback |
-| processing failed | Domain response | Preserved | Retry state | Not written as useful current | Safe fallback |
-| network error | N/A | Error | Error/cache fallback | Only recoverable transport | Safe fallback |
-| 401/403 | HTTP error | Error | Auth/error flow | No fallback | No fabricated Recovery |
-| validation/contract error | HTTP/client error | Error | Error | No fallback | Safe fallback |
-| corrupted/expired cache | N/A | N/A | Offline miss/error | Removed/ignored | N/A |
-| history-only error | N/A | Error | Current preserved | Partial cache | N/A |
+| Condition                 | Backend           | API client | Mobile               | Cache                         | Coach                  |
+| ------------------------- | ----------------- | ---------- | -------------------- | ----------------------------- | ---------------------- |
+| insufficient data         | Domain response   | Preserved  | Empty state          | May cache public state        | Check-in guidance      |
+| not available             | Domain response   | Preserved  | Empty state          | May cache public state        | Neutral fallback       |
+| processing failed         | Domain response   | Preserved  | Retry state          | Not written as useful current | Safe fallback          |
+| network error             | N/A               | Error      | Error/cache fallback | Only recoverable transport    | Safe fallback          |
+| 401/403                   | HTTP error        | Error      | Auth/error flow      | No fallback                   | No fabricated Recovery |
+| validation/contract error | HTTP/client error | Error      | Error                | No fallback                   | Safe fallback          |
+| corrupted/expired cache   | N/A               | N/A        | Offline miss/error   | Removed/ignored               | N/A                    |
+| history-only error        | N/A               | Error      | Current preserved    | Partial cache                 | N/A                    |
 
 ## Legacy Compatibility
 
@@ -184,25 +184,25 @@ Legacy endpoints and Coach fallback remain for A1 compatibility. Legacy snapshot
 
 ## Tests
 
-| Layer | Suites | Tests | Status | Gaps |
-|---|---:|---:|---|---|
-| API unit/integration | 209 | 1,344 | PASS | No production load test |
-| Mobile | 21 | 99 | PASS | No device execution |
-| API client direct | 1 | 12 | PASS | No Nx `api-client:test` target |
-| Types | Build only | — | PASS | No Nx `types:test` target |
-| E2E | 16 | 56 | PASS_WITH_RISK | External A2 mobile/Coach flow still pending |
-| Accessibility | Automated code/tests | — | PASS_WITH_RISK | VoiceOver/TalkBack pending |
+| Layer                |               Suites | Tests | Status         | Gaps                                        |
+| -------------------- | -------------------: | ----: | -------------- | ------------------------------------------- |
+| API unit/integration |                  209 | 1,344 | PASS           | No production load test                     |
+| Mobile               |                   21 |    99 | PASS           | No device execution                         |
+| API client direct    |                    1 |    12 | PASS           | No Nx `api-client:test` target              |
+| Types                |           Build only |     — | PASS           | No Nx `types:test` target                   |
+| E2E                  |                   16 |    56 | PASS_WITH_RISK | External A2 mobile/Coach flow still pending |
+| Accessibility        | Automated code/tests |     — | PASS_WITH_RISK | VoiceOver/TalkBack pending                  |
 
 ## Builds
 
-| Target | Result |
-|---|---|
-| `types` | PASS |
-| `api-client` | PASS |
-| `api` | PASS |
-| `mobile` web bundle | PASS |
-| `mobile` Android bundle | PASS |
-| `mobile` iOS bundle | PASS |
+| Target                  | Result |
+| ----------------------- | ------ |
+| `types`                 | PASS   |
+| `api-client`            | PASS   |
+| `api`                   | PASS   |
+| `mobile` web bundle     | PASS   |
+| `mobile` Android bundle | PASS   |
+| `mobile` iOS bundle     | PASS   |
 
 `npm run lint` passed for the configured `types` and `api-client` projects. `api:lint` and `mobile:lint` targets do not exist; this is documented rather than treated as a pass.
 
@@ -265,28 +265,28 @@ Treat as a signal of missing/failed canonical Health Context. Investigate read-m
 
 These are proposed targets, not measured production results:
 
-| Signal | Recommendation | Status |
-|---|---:|---|
-| Current request success | ≥99.5% | RECOMMENDED / NOT_MEASURED |
-| History request success | ≥99% | RECOMMENDED / NOT_MEASURED |
-| Current p95 latency | <500 ms | RECOMMENDED / NOT_MEASURED |
-| Rebuild failure | <1% | RECOMMENDED / NOT_MEASURED |
-| Privacy incidents | 0 | RELEASE REQUIREMENT |
-| Cross-account leaks | 0 | RELEASE REQUIREMENT |
+| Signal                  | Recommendation | Status                     |
+| ----------------------- | -------------: | -------------------------- |
+| Current request success |         ≥99.5% | RECOMMENDED / NOT_MEASURED |
+| History request success |           ≥99% | RECOMMENDED / NOT_MEASURED |
+| Current p95 latency     |        <500 ms | RECOMMENDED / NOT_MEASURED |
+| Rebuild failure         |            <1% | RECOMMENDED / NOT_MEASURED |
+| Privacy incidents       |              0 | RELEASE REQUIREMENT        |
+| Cross-account leaks     |              0 | RELEASE REQUIREMENT        |
 
 ## Risk Register
 
-| ID | Risk | Likelihood | Impact | Severity | Mitigation | Owner |
-|---|---|---|---|---|---|---|
-| R1 | Physical iOS/Android/Web validation absent | Medium | High | P1 | Execute external device matrix | QA/Release |
-| R2 | VoiceOver/TalkBack/manual scaling absent | Medium | High | P1 | Manual accessibility sign-off | Accessibility |
-| R3 | Offline/account-switch lifecycle not physically proven | Medium | High | P1 | External network/account matrix | Mobile QA |
-| R4 | AsyncStorage lacks custom/hardware-backed encryption | Medium | High | P1 | Threat-model/security review | Security |
-| R5 | Coach legacy compatibility fallback remains | Medium | Medium | P2 | Monitor fallback and plan removal | Coach |
-| R6 | External dashboards/alerts absent | High | Medium | P1 | Configure operational monitoring | Operations |
-| R7 | Real legacy database not audited | Medium | Medium | P1 | Run non-destructive legacy audit | Backend |
-| R8 | API/mobile latency not measured in production | High | Medium | P2 | Measure p95 during controlled rollout | Operations |
-| R9 | Package-specific lint targets absent | Certain | Low | P2 | Retain configured lint and builds | Engineering |
+| ID  | Risk                                                   | Likelihood | Impact | Severity | Mitigation                            | Owner         |
+| --- | ------------------------------------------------------ | ---------- | ------ | -------- | ------------------------------------- | ------------- |
+| R1  | Physical iOS/Android/Web validation absent             | Medium     | High   | P1       | Execute external device matrix        | QA/Release    |
+| R2  | VoiceOver/TalkBack/manual scaling absent               | Medium     | High   | P1       | Manual accessibility sign-off         | Accessibility |
+| R3  | Offline/account-switch lifecycle not physically proven | Medium     | High   | P1       | External network/account matrix       | Mobile QA     |
+| R4  | AsyncStorage lacks custom/hardware-backed encryption   | Medium     | High   | P1       | Threat-model/security review          | Security      |
+| R5  | Coach legacy compatibility fallback remains            | Medium     | Medium | P2       | Monitor fallback and plan removal     | Coach         |
+| R6  | External dashboards/alerts absent                      | High       | Medium | P1       | Configure operational monitoring      | Operations    |
+| R7  | Real legacy database not audited                       | Medium     | Medium | P1       | Run non-destructive legacy audit      | Backend       |
+| R8  | API/mobile latency not measured in production          | High       | Medium | P2       | Measure p95 during controlled rollout | Operations    |
+| R9  | Package-specific lint targets absent                   | Certain    | Low    | P2       | Retain configured lint and builds     | Engineering   |
 
 ## Rollout Recommendation
 
@@ -305,14 +305,14 @@ Before rollout beyond internal/limited exposure:
 
 ## External Validation Plan
 
-| Matrix | Required cases |
-|---|---|
-| Devices | small/recent iPhone, small/recent Android, Web |
-| Network | online, offline, slow, timeout, recovery |
-| Accounts | login, logout, switch, expired session, 401, 403 |
-| Accessibility | VoiceOver, TalkBack, 100/150/200% scaling, reduced motion, high contrast |
-| Functional | available, insufficient, unavailable, processing failure, stale, legacy, unknown, empty/error history |
-| Cache | recent, old, expired, corrupted, partial current/history |
+| Matrix        | Required cases                                                                                        |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| Devices       | small/recent iPhone, small/recent Android, Web                                                        |
+| Network       | online, offline, slow, timeout, recovery                                                              |
+| Accounts      | login, logout, switch, expired session, 401, 403                                                      |
+| Accessibility | VoiceOver, TalkBack, 100/150/200% scaling, reduced motion, high contrast                              |
+| Functional    | available, insufficient, unavailable, processing failure, stale, legacy, unknown, empty/error history |
+| Cache         | recent, old, expired, corrupted, partial current/history                                              |
 
 ## Production Checklist
 

@@ -5,9 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RecoveryExperienceInsightAction } from '@elev9/types';
 
 import { productAnalytics } from '../../../analytics/product-analytics';
-import {
-  useRecoveryExperience,
-} from '../hooks/use-recovery-experience';
+import { useRecoveryExperience } from '../hooks/use-recovery-experience';
 import { RecoveryScreen } from './recovery-screen';
 import type { RootStackParamList } from '../../../navigation/app-navigator';
 

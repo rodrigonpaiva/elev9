@@ -80,14 +80,14 @@ O produto implementa uma plataforma de coaching centrada em:
 
 Com base em `nx show projects --json`, o workspace contém exatamente:
 
-| Projeto | Tipo | Root | Responsabilidade factual |
-|---|---|---|---|
-| `api-client` | lib | `packages/api-client` | Cliente HTTP tipado para APIs do backend |
-| `types` | lib | `packages/types` | Contratos TypeScript compartilhados |
-| `mobile` | app | `apps/mobile` | Aplicação React Native/Expo |
-| `ui` | lib | `packages/ui` | Design system compartilhado |
-| `api` | app | `apps/api` | Backend NestJS |
-| `web` | app | `apps/web` | Superfície web |
+| Projeto      | Tipo | Root                  | Responsabilidade factual                 |
+| ------------ | ---- | --------------------- | ---------------------------------------- |
+| `api-client` | lib  | `packages/api-client` | Cliente HTTP tipado para APIs do backend |
+| `types`      | lib  | `packages/types`      | Contratos TypeScript compartilhados      |
+| `mobile`     | app  | `apps/mobile`         | Aplicação React Native/Expo              |
+| `ui`         | lib  | `packages/ui`         | Design system compartilhado              |
+| `api`        | app  | `apps/api`            | Backend NestJS                           |
+| `web`        | app  | `apps/web`            | Superfície web                           |
 
 ### Grafo real de dependências
 
@@ -153,22 +153,22 @@ Referências: [nx.json](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/nx.j
 
 ### Módulos de domínio identificados
 
-| Módulo | Responsabilidade factual | Imports centrais | Observações |
-|---|---|---|---|
-| `ai` | runtime de IA, chat, decisões, composição, persona, explicabilidade, observabilidade | Auth, Dashboard, Fitness, Goals, Habits, Notifications, Nutrition, Personalization, Progress, Recovery, Training, Users | é o módulo mais complexo |
-| `auth` | autenticação, sessão, registro, login | Users | usa JWT e guard de sessão |
-| `dashboard` | agregação de insights | Auth, Ai, Notifications, Goals, Habits, Users, Personalization, Fitness, Progress, Training | consome vários read models |
-| `fitness` | perfil físico | Auth, Users | base para várias recomendações |
-| `goals` | objetivos, milestones, achievements, forecast | Auth, Users, Fitness, Progress, Nutrition, Recovery, Training | integra múltiplos domínios |
-| `habits` | hábitos, consistência, risco | Auth, Users, Fitness, Progress, Recovery, Goals, Notifications, Training | inclui replay |
-| `health` | healthcheck/readiness | nenhum domínio | módulo mínimo |
-| `notifications` | decisões e histórico de notificações | Auth, Users, Fitness, Progress, Nutrition, Goals, Recovery, Training, Ai, Personalization | integra IA/personalização |
-| `nutrition` | perfil, plano, logs, recomendações | Auth, Users, Fitness | inclui cálculo de macros |
-| `personalization` | snapshots, padrões, perfil de comportamento | Auth, Users, Notifications, Habits, Goals, Recovery, Ai | integra sinais comportamentais |
-| `progress` | check-ins, workout logs, summaries | Auth, Users, Fitness, Training | mede progresso e treino realizado |
-| `recovery` | snapshots e tendências de recuperação | Auth, Users, Fitness, Progress, Training | base de readiness |
-| `training` | plano e recomendações adaptativas | Auth, Users, Fitness, Progress, Recovery, Nutrition | planejamento adaptativo |
-| `users` | user profile | Auth | perfil base do usuário |
+| Módulo            | Responsabilidade factual                                                             | Imports centrais                                                                                                        | Observações                       |
+| ----------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| `ai`              | runtime de IA, chat, decisões, composição, persona, explicabilidade, observabilidade | Auth, Dashboard, Fitness, Goals, Habits, Notifications, Nutrition, Personalization, Progress, Recovery, Training, Users | é o módulo mais complexo          |
+| `auth`            | autenticação, sessão, registro, login                                                | Users                                                                                                                   | usa JWT e guard de sessão         |
+| `dashboard`       | agregação de insights                                                                | Auth, Ai, Notifications, Goals, Habits, Users, Personalization, Fitness, Progress, Training                             | consome vários read models        |
+| `fitness`         | perfil físico                                                                        | Auth, Users                                                                                                             | base para várias recomendações    |
+| `goals`           | objetivos, milestones, achievements, forecast                                        | Auth, Users, Fitness, Progress, Nutrition, Recovery, Training                                                           | integra múltiplos domínios        |
+| `habits`          | hábitos, consistência, risco                                                         | Auth, Users, Fitness, Progress, Recovery, Goals, Notifications, Training                                                | inclui replay                     |
+| `health`          | healthcheck/readiness                                                                | nenhum domínio                                                                                                          | módulo mínimo                     |
+| `notifications`   | decisões e histórico de notificações                                                 | Auth, Users, Fitness, Progress, Nutrition, Goals, Recovery, Training, Ai, Personalization                               | integra IA/personalização         |
+| `nutrition`       | perfil, plano, logs, recomendações                                                   | Auth, Users, Fitness                                                                                                    | inclui cálculo de macros          |
+| `personalization` | snapshots, padrões, perfil de comportamento                                          | Auth, Users, Notifications, Habits, Goals, Recovery, Ai                                                                 | integra sinais comportamentais    |
+| `progress`        | check-ins, workout logs, summaries                                                   | Auth, Users, Fitness, Training                                                                                          | mede progresso e treino realizado |
+| `recovery`        | snapshots e tendências de recuperação                                                | Auth, Users, Fitness, Progress, Training                                                                                | base de readiness                 |
+| `training`        | plano e recomendações adaptativas                                                    | Auth, Users, Fitness, Progress, Recovery, Nutrition                                                                     | planejamento adaptativo           |
+| `users`           | user profile                                                                         | Auth                                                                                                                    | perfil base do usuário            |
 
 ### Responsabilidades por camada
 
@@ -180,73 +180,73 @@ Referências: [apps/api/src/app.module.ts](/Users/rodrigopaiva/Desktop/Travail/P
 
 ### APIs públicas e autenticadas
 
-| Módulo | Método | Rota | Auth | Guard | Observação factual |
-|---|---|---|---|---|---|
-| `auth` | POST | `/auth/register` | não | não | registro |
-| `auth` | POST | `/auth/login` | não | não | login |
-| `auth` | GET | `/auth/me` | sim | `AuthSessionGuard` | sessão atual |
-| `users` | POST | `/users/profile` | sim | `AuthSessionGuard` | criação de perfil |
-| `fitness` | POST | `/fitness/profile` | sim | `AuthSessionGuard` | criação de perfil fitness |
-| `fitness` | GET | `/fitness/profile` | sim | `AuthSessionGuard` | perfil fitness atual |
-| `goals` | GET | `/goals/current` | sim | `AuthSessionGuard` | objetivo atual |
-| `goals` | GET | `/goals/history` | sim | `AuthSessionGuard` | histórico |
-| `goals` | GET | `/goals/milestones` | sim | `AuthSessionGuard` | marcos |
-| `goals` | GET | `/goals/achievements` | sim | `AuthSessionGuard` | conquistas |
-| `goals` | GET | `/goals/forecast` | sim | `AuthSessionGuard` | forecast |
-| `habits` | GET | `/habits/today` | sim | `AuthSessionGuard` | snapshot do dia |
-| `habits` | GET | `/habits/current` | sim | `AuthSessionGuard` | snapshot atual |
-| `habits` | GET | `/habits/history` | sim | `AuthSessionGuard` | histórico |
-| `habits` | GET | `/habits/summary` | sim | `AuthSessionGuard` | resumo |
-| `habits` | GET | `/habits/risk` | sim | `AuthSessionGuard` | risco |
-| `notifications` | GET | `/notifications/today` | sim | `AuthSessionGuard` | decisão do dia |
-| `notifications` | GET | `/notifications/current` | sim | `AuthSessionGuard` | decisão atual |
-| `notifications` | GET | `/notifications/history` | sim | `AuthSessionGuard` | histórico |
-| `notifications` | GET | `/notifications/engagement-summary` | sim | `AuthSessionGuard` | resumo de engajamento |
-| `notifications` | POST | `/notifications/:id/events` | sim | `AuthSessionGuard` | evento de engajamento |
-| `nutrition` | POST | `/nutrition/profile` | sim | `AuthSessionGuard` | perfil de nutrição |
-| `nutrition` | GET | `/nutrition/profile` | sim | `AuthSessionGuard` | perfil atual |
-| `nutrition` | POST | `/nutrition/macro-targets/calculate` | sim | `AuthSessionGuard` | cálculo de macros |
-| `nutrition` | POST | `/nutrition/plans` | sim | `AuthSessionGuard` | plano |
-| `nutrition` | GET | `/nutrition/plans/current` | sim | `AuthSessionGuard` | plano atual |
-| `nutrition` | GET | `/nutrition/today` | sim | `AuthSessionGuard` | overview |
-| `nutrition` | POST | `/nutrition/logs` | sim | `AuthSessionGuard` | log alimentar |
-| `nutrition` | POST | `/nutrition/meals/:mealId/replace` | sim | `AuthSessionGuard` | substituição de refeição |
-| `nutrition` | POST | `/nutrition/recommendations` | sim | `AuthSessionGuard` | criação de recomendação |
-| `nutrition` | GET | `/nutrition/recommendations` | sim | `AuthSessionGuard` | lista de recomendações |
-| `progress` | POST | `/progress/daily-check-in` | sim | `AuthSessionGuard` | check-in diário |
-| `progress` | POST | `/progress/workout-logs` | sim | `AuthSessionGuard` | log de treino |
-| `progress` | GET | `/progress/summary` | sim | `AuthSessionGuard` | resumo |
-| `progress` | GET | `/progress/workout-logs` | sim | `AuthSessionGuard` | logs |
-| `progress` | GET | `/progress/daily-check-ins` | sim | `AuthSessionGuard` | histórico de check-ins |
-| `recovery` | GET | `/recovery/today` | sim | `AuthSessionGuard` | snapshot do dia |
-| `recovery` | GET | `/recovery/current` | sim | `AuthSessionGuard` | snapshot atual |
-| `recovery` | GET | `/recovery/history` | sim | `AuthSessionGuard` | histórico |
-| `training` | POST | `/training/plans` | sim | `AuthSessionGuard` | criação de plano |
-| `training` | GET | `/training/plans/current` | sim | `AuthSessionGuard` | plano atual |
-| `training` | GET | `/training/adaptive/today` | sim | `AuthSessionGuard` | recomendação adaptativa do dia |
-| `training` | GET | `/training/adaptive/current` | sim | `AuthSessionGuard` | recomendação adaptativa atual |
-| `training` | GET | `/training/adaptive/history` | sim | `AuthSessionGuard` | histórico adaptativo |
-| `dashboard` | GET | `/dashboard/home` | sim | `AuthSessionGuard` | home do dashboard |
-| `dashboard` | GET | `/dashboard/home/debug` | sim | `AuthSessionGuard` | debug interno |
-| `ai` | POST | `/ai/chat` | sim | `AuthSessionGuard` | chat |
-| `ai` | POST | `/ai/chat/stream` | sim | `AuthSessionGuard` | streaming |
-| `ai` | GET | `/ai/chat/history` | sim | `AuthSessionGuard` | histórico |
-| `ai` | GET | `/ai/chat/debug/history` | sim | `AuthSessionGuard` | debug |
-| `ai` | GET | `/ai/chat/debug/memory` | sim | `AuthSessionGuard` | debug |
-| `ai` | GET | `/ai/chat/debug/prompt` | sim | `AuthSessionGuard` | debug |
-| `ai` | GET | `/ai/chat/debug/reply-path` | sim | `AuthSessionGuard` | debug |
-| `ai` | GET | `/ai/chat/debug` | sim | `AuthSessionGuard` | debug |
-| `ai` | POST | `/ai/coach-feedback` | sim | `AuthSessionGuard` | feedback |
-| `ai` | GET | `/ai/coach-feedback` | sim | `AuthSessionGuard` | feedback |
-| `ai` | GET | `/ai/debug/coach-feedback` | sim | `AuthSessionGuard` | debug |
-| `ai` | GET | `/ai/debug/coach-feedback/:id/replay` | sim | `AuthSessionGuard` | replay |
-| `ai` | GET | `/ai/context` | sim | `AuthSessionGuard` | contexto |
-| `ai` | GET | `/ai/coach-decision/today` | sim | `AuthSessionGuard` | decisão do dia |
-| `ai` | GET | `/ai/coach-decision/current` | sim | `AuthSessionGuard` | decisão atual |
-| `ai` | GET | `/ai/coach-decision/history` | sim | `AuthSessionGuard` | histórico |
-| `ai` | GET | `/ai/coach-decision/debug/:id/replay` | sim | `AuthSessionGuard` | replay |
-| `health` | GET | `/health` | não | não | healthcheck |
-| `health` | GET | `/health/ready` | não | não | readiness |
+| Módulo          | Método | Rota                                  | Auth | Guard              | Observação factual             |
+| --------------- | ------ | ------------------------------------- | ---- | ------------------ | ------------------------------ |
+| `auth`          | POST   | `/auth/register`                      | não  | não                | registro                       |
+| `auth`          | POST   | `/auth/login`                         | não  | não                | login                          |
+| `auth`          | GET    | `/auth/me`                            | sim  | `AuthSessionGuard` | sessão atual                   |
+| `users`         | POST   | `/users/profile`                      | sim  | `AuthSessionGuard` | criação de perfil              |
+| `fitness`       | POST   | `/fitness/profile`                    | sim  | `AuthSessionGuard` | criação de perfil fitness      |
+| `fitness`       | GET    | `/fitness/profile`                    | sim  | `AuthSessionGuard` | perfil fitness atual           |
+| `goals`         | GET    | `/goals/current`                      | sim  | `AuthSessionGuard` | objetivo atual                 |
+| `goals`         | GET    | `/goals/history`                      | sim  | `AuthSessionGuard` | histórico                      |
+| `goals`         | GET    | `/goals/milestones`                   | sim  | `AuthSessionGuard` | marcos                         |
+| `goals`         | GET    | `/goals/achievements`                 | sim  | `AuthSessionGuard` | conquistas                     |
+| `goals`         | GET    | `/goals/forecast`                     | sim  | `AuthSessionGuard` | forecast                       |
+| `habits`        | GET    | `/habits/today`                       | sim  | `AuthSessionGuard` | snapshot do dia                |
+| `habits`        | GET    | `/habits/current`                     | sim  | `AuthSessionGuard` | snapshot atual                 |
+| `habits`        | GET    | `/habits/history`                     | sim  | `AuthSessionGuard` | histórico                      |
+| `habits`        | GET    | `/habits/summary`                     | sim  | `AuthSessionGuard` | resumo                         |
+| `habits`        | GET    | `/habits/risk`                        | sim  | `AuthSessionGuard` | risco                          |
+| `notifications` | GET    | `/notifications/today`                | sim  | `AuthSessionGuard` | decisão do dia                 |
+| `notifications` | GET    | `/notifications/current`              | sim  | `AuthSessionGuard` | decisão atual                  |
+| `notifications` | GET    | `/notifications/history`              | sim  | `AuthSessionGuard` | histórico                      |
+| `notifications` | GET    | `/notifications/engagement-summary`   | sim  | `AuthSessionGuard` | resumo de engajamento          |
+| `notifications` | POST   | `/notifications/:id/events`           | sim  | `AuthSessionGuard` | evento de engajamento          |
+| `nutrition`     | POST   | `/nutrition/profile`                  | sim  | `AuthSessionGuard` | perfil de nutrição             |
+| `nutrition`     | GET    | `/nutrition/profile`                  | sim  | `AuthSessionGuard` | perfil atual                   |
+| `nutrition`     | POST   | `/nutrition/macro-targets/calculate`  | sim  | `AuthSessionGuard` | cálculo de macros              |
+| `nutrition`     | POST   | `/nutrition/plans`                    | sim  | `AuthSessionGuard` | plano                          |
+| `nutrition`     | GET    | `/nutrition/plans/current`            | sim  | `AuthSessionGuard` | plano atual                    |
+| `nutrition`     | GET    | `/nutrition/today`                    | sim  | `AuthSessionGuard` | overview                       |
+| `nutrition`     | POST   | `/nutrition/logs`                     | sim  | `AuthSessionGuard` | log alimentar                  |
+| `nutrition`     | POST   | `/nutrition/meals/:mealId/replace`    | sim  | `AuthSessionGuard` | substituição de refeição       |
+| `nutrition`     | POST   | `/nutrition/recommendations`          | sim  | `AuthSessionGuard` | criação de recomendação        |
+| `nutrition`     | GET    | `/nutrition/recommendations`          | sim  | `AuthSessionGuard` | lista de recomendações         |
+| `progress`      | POST   | `/progress/daily-check-in`            | sim  | `AuthSessionGuard` | check-in diário                |
+| `progress`      | POST   | `/progress/workout-logs`              | sim  | `AuthSessionGuard` | log de treino                  |
+| `progress`      | GET    | `/progress/summary`                   | sim  | `AuthSessionGuard` | resumo                         |
+| `progress`      | GET    | `/progress/workout-logs`              | sim  | `AuthSessionGuard` | logs                           |
+| `progress`      | GET    | `/progress/daily-check-ins`           | sim  | `AuthSessionGuard` | histórico de check-ins         |
+| `recovery`      | GET    | `/recovery/today`                     | sim  | `AuthSessionGuard` | snapshot do dia                |
+| `recovery`      | GET    | `/recovery/current`                   | sim  | `AuthSessionGuard` | snapshot atual                 |
+| `recovery`      | GET    | `/recovery/history`                   | sim  | `AuthSessionGuard` | histórico                      |
+| `training`      | POST   | `/training/plans`                     | sim  | `AuthSessionGuard` | criação de plano               |
+| `training`      | GET    | `/training/plans/current`             | sim  | `AuthSessionGuard` | plano atual                    |
+| `training`      | GET    | `/training/adaptive/today`            | sim  | `AuthSessionGuard` | recomendação adaptativa do dia |
+| `training`      | GET    | `/training/adaptive/current`          | sim  | `AuthSessionGuard` | recomendação adaptativa atual  |
+| `training`      | GET    | `/training/adaptive/history`          | sim  | `AuthSessionGuard` | histórico adaptativo           |
+| `dashboard`     | GET    | `/dashboard/home`                     | sim  | `AuthSessionGuard` | home do dashboard              |
+| `dashboard`     | GET    | `/dashboard/home/debug`               | sim  | `AuthSessionGuard` | debug interno                  |
+| `ai`            | POST   | `/ai/chat`                            | sim  | `AuthSessionGuard` | chat                           |
+| `ai`            | POST   | `/ai/chat/stream`                     | sim  | `AuthSessionGuard` | streaming                      |
+| `ai`            | GET    | `/ai/chat/history`                    | sim  | `AuthSessionGuard` | histórico                      |
+| `ai`            | GET    | `/ai/chat/debug/history`              | sim  | `AuthSessionGuard` | debug                          |
+| `ai`            | GET    | `/ai/chat/debug/memory`               | sim  | `AuthSessionGuard` | debug                          |
+| `ai`            | GET    | `/ai/chat/debug/prompt`               | sim  | `AuthSessionGuard` | debug                          |
+| `ai`            | GET    | `/ai/chat/debug/reply-path`           | sim  | `AuthSessionGuard` | debug                          |
+| `ai`            | GET    | `/ai/chat/debug`                      | sim  | `AuthSessionGuard` | debug                          |
+| `ai`            | POST   | `/ai/coach-feedback`                  | sim  | `AuthSessionGuard` | feedback                       |
+| `ai`            | GET    | `/ai/coach-feedback`                  | sim  | `AuthSessionGuard` | feedback                       |
+| `ai`            | GET    | `/ai/debug/coach-feedback`            | sim  | `AuthSessionGuard` | debug                          |
+| `ai`            | GET    | `/ai/debug/coach-feedback/:id/replay` | sim  | `AuthSessionGuard` | replay                         |
+| `ai`            | GET    | `/ai/context`                         | sim  | `AuthSessionGuard` | contexto                       |
+| `ai`            | GET    | `/ai/coach-decision/today`            | sim  | `AuthSessionGuard` | decisão do dia                 |
+| `ai`            | GET    | `/ai/coach-decision/current`          | sim  | `AuthSessionGuard` | decisão atual                  |
+| `ai`            | GET    | `/ai/coach-decision/history`          | sim  | `AuthSessionGuard` | histórico                      |
+| `ai`            | GET    | `/ai/coach-decision/debug/:id/replay` | sim  | `AuthSessionGuard` | replay                         |
+| `health`        | GET    | `/health`                             | não  | não                | healthcheck                    |
+| `health`        | GET    | `/health/ready`                       | não  | não                | readiness                      |
 
 ### Status codes, DTOs e erros
 
@@ -598,13 +598,13 @@ Controller
 
 ### Validações executadas
 
-| Comando | Resultado |
-|---|---|
-| `npm run format` | aprovado |
-| `npm run format:check` | aprovado |
-| `npm exec tsc -- --noEmit --pretty false` | aprovado |
-| `npm run test` | aprovado |
-| `npm run test:e2e` | reprovado no sandbox por `mongodb-memory-server`/bind em `0.0.0.0` com `EPERM` |
+| Comando                                   | Resultado                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------ |
+| `npm run format`                          | aprovado                                                                       |
+| `npm run format:check`                    | aprovado                                                                       |
+| `npm exec tsc -- --noEmit --pretty false` | aprovado                                                                       |
+| `npm run test`                            | aprovado                                                                       |
+| `npm run test:e2e`                        | reprovado no sandbox por `mongodb-memory-server`/bind em `0.0.0.0` com `EPERM` |
 
 ## 17. Resultados das validações executadas
 
@@ -650,11 +650,11 @@ Resultado resumido:
 
 ### Divergências principais
 
-| Documento | Afirmação | Implementação encontrada | Tipo de divergência | Risco |
-|---|---|---|---|---|
-| [docs/specs/README.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/README.md) | descreve capacidades amplas de IA e runtime | há implementação forte em `apps/api`, mas parte do comportamento ainda é exposto via debug/internals | documentação mais ampla que a superfície pública | falsa expectativa de disponibilidade |
-| [docs/specs/ai/release-readiness/final-certification.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/ai/release-readiness/final-certification.md) | certificação de prontidão | há feature flags e infraestrutura, mas e2e falhou no sandbox e não foi provada operação prod real aqui | certificação depende de contexto externo | risco de leitura excessivamente positiva |
-| [docs/specs/mobile/coach-intelligence-integration/README.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/mobile/coach-intelligence-integration/README.md) | integração com inteligência unificada | mobile compõe localmente a inteligência a partir de múltiplos endpoints | divergência parcial de arquitetura | duplicação de lógica |
+| Documento                                                                                                                                                                    | Afirmação                                   | Implementação encontrada                                                                               | Tipo de divergência                              | Risco                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------ | ---------------------------------------- |
+| [docs/specs/README.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/README.md)                                                                             | descreve capacidades amplas de IA e runtime | há implementação forte em `apps/api`, mas parte do comportamento ainda é exposto via debug/internals   | documentação mais ampla que a superfície pública | falsa expectativa de disponibilidade     |
+| [docs/specs/ai/release-readiness/final-certification.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/ai/release-readiness/final-certification.md)         | certificação de prontidão                   | há feature flags e infraestrutura, mas e2e falhou no sandbox e não foi provada operação prod real aqui | certificação depende de contexto externo         | risco de leitura excessivamente positiva |
+| [docs/specs/mobile/coach-intelligence-integration/README.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/mobile/coach-intelligence-integration/README.md) | integração com inteligência unificada       | mobile compõe localmente a inteligência a partir de múltiplos endpoints                                | divergência parcial de arquitetura               | duplicação de lógica                     |
 
 ## 20. Débitos técnicos
 
@@ -698,21 +698,21 @@ Resultado resumido:
 
 ### Notas objetivas
 
-| Critério | Nota | Justificativa factual |
-|---|---:|---|
-| DDD | 8/10 | bounded contexts e separação por domínio são reais; há forte alinhamento entre módulos e agregados |
-| Clean Architecture | 7.5/10 | separação por camadas existe; some coupling via aggregation/services compartilhados |
-| Modular Monolith | 8.5/10 | o workspace é claramente modular monolith e não microservice-like |
-| Segurança | 8/10 | guards, DTO validation, feature flags e safety de IA estão presentes |
-| Observabilidade | 8/10 | há replay, debug, observability services e readiness docs |
-| Manutenibilidade | 7.5/10 | boa estrutura, mas com duplicação mobile e docs divergentes |
-| Testabilidade | 8/10 | cobertura alta em backend e validações centrais; e2e impedido pelo sandbox |
-| Escalabilidade | 7.5/10 | boa modularidade, mas IA/persistência precisam disciplina operacional |
-| Confiabilidade | 8/10 | fallback, safety e feature flags ajudam; e2e não validado no sandbox |
-| Maturidade mobile | 7.5/10 | app consistente, mas com composição local significativa e duplicação visual |
-| Maturidade da IA | 8.5/10 | runtime, experts, composição, persona, explicabilidade e observabilidade são fortes |
-| Maturidade operacional | 7.5/10 | readiness existe, mas validação completa fora do sandbox é necessária |
-| Qualidade documental | 7/10 | ampla e bem estruturada, porém com divergências e linguagem parcialmente aspiracional |
+| Critério               |   Nota | Justificativa factual                                                                              |
+| ---------------------- | -----: | -------------------------------------------------------------------------------------------------- |
+| DDD                    |   8/10 | bounded contexts e separação por domínio são reais; há forte alinhamento entre módulos e agregados |
+| Clean Architecture     | 7.5/10 | separação por camadas existe; some coupling via aggregation/services compartilhados                |
+| Modular Monolith       | 8.5/10 | o workspace é claramente modular monolith e não microservice-like                                  |
+| Segurança              |   8/10 | guards, DTO validation, feature flags e safety de IA estão presentes                               |
+| Observabilidade        |   8/10 | há replay, debug, observability services e readiness docs                                          |
+| Manutenibilidade       | 7.5/10 | boa estrutura, mas com duplicação mobile e docs divergentes                                        |
+| Testabilidade          |   8/10 | cobertura alta em backend e validações centrais; e2e impedido pelo sandbox                         |
+| Escalabilidade         | 7.5/10 | boa modularidade, mas IA/persistência precisam disciplina operacional                              |
+| Confiabilidade         |   8/10 | fallback, safety e feature flags ajudam; e2e não validado no sandbox                               |
+| Maturidade mobile      | 7.5/10 | app consistente, mas com composição local significativa e duplicação visual                        |
+| Maturidade da IA       | 8.5/10 | runtime, experts, composição, persona, explicabilidade e observabilidade são fortes                |
+| Maturidade operacional | 7.5/10 | readiness existe, mas validação completa fora do sandbox é necessária                              |
+| Qualidade documental   |   7/10 | ampla e bem estruturada, porém com divergências e linguagem parcialmente aspiracional              |
 
 ### Julgamento final
 
@@ -774,4 +774,3 @@ O repositório está arquiteturalmente acima de um produto mid-level e abaixo de
 - [docs/specs/ai/release-readiness/final-certification.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/ai/release-readiness/final-certification.md)
 - [docs/specs/mobile/coach-intelligence-integration/README.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/mobile/coach-intelligence-integration/README.md)
 - [scripts/docker-smoke.sh](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/scripts/docker-smoke.sh)
-

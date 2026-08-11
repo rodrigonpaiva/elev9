@@ -18,7 +18,9 @@ export function RecoveryFactorList({
       {factors.length === 0 ? (
         <RecoveryFactorEmpty />
       ) : (
-        factors.map((factor) => <RecoveryFactorRow key={factor.key} factor={factor} />)
+        factors.map((factor) => (
+          <RecoveryFactorRow key={factor.key} factor={factor} />
+        ))
       )}
     </View>
   );
@@ -28,5 +30,4 @@ function RecoveryFactorEmpty() {
   return <SectionHeader title="No factor details available" />;
 }
 
-const styles = StyleSheet.create({ section: { gap: 12 }, });
-
+const styles = StyleSheet.create({ section: { gap: 12 } });

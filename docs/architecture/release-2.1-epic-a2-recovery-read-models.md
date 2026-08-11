@@ -58,11 +58,11 @@ O endpoint público atual tenta reconstruir antes de mapear. Snapshots legados s
 `RecoveryCategoryPolicy` mapeia os valores existentes de `recommendedIntensity` sem alterar os thresholds do calculator:
 
 | Existing intensity | Public category |
-|---|---|
-| `recovery` | `low` |
-| `light` | `moderate` |
-| `moderate` | `good` |
-| `hard` | `high` |
+| ------------------ | --------------- |
+| `recovery`         | `low`           |
+| `light`            | `moderate`      |
+| `moderate`         | `good`          |
+| `hard`             | `high`          |
 
 O mobile não recebe thresholds.
 
@@ -160,4 +160,3 @@ Cobertura adicionada: mapper/privacy, category mapping indireto, fator sem raw f
 - migração dos consumers para os novos endpoints;
 - mobile UI e Dashboard;
 - analytics, offline read cache e device validation.
-

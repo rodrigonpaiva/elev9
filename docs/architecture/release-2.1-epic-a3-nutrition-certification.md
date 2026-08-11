@@ -60,19 +60,19 @@ Operational signals cover outcome, availability, freshness, safe error code, con
 
 ## Testing evidence
 
-| Validation | Result |
-| --- | --- |
-| API full suite | `PASSED` — 215 suites / 1,352 tests |
-| Mobile full suite | `PASSED` — 22 suites / 104 tests |
-| Nutrition boundary suite | `PASSED` — 1 suite / 3 tests |
-| API build | `PASSED` |
-| Mobile build | `PASSED` |
-| API Client build | `PASSED` |
-| API Client lint | `PASSED` |
-| Types lint | `PASSED` |
-| API lint target | `NOT_CONFIGURED` |
-| E2E | `PASSED` — 16 suites / 56 tests on compatible host after module wiring fix |
-| `git diff --check` | `PASSED` |
+| Validation               | Result                                                                     |
+| ------------------------ | -------------------------------------------------------------------------- |
+| API full suite           | `PASSED` — 215 suites / 1,352 tests                                        |
+| Mobile full suite        | `PASSED` — 22 suites / 104 tests                                           |
+| Nutrition boundary suite | `PASSED` — 1 suite / 3 tests                                               |
+| API build                | `PASSED`                                                                   |
+| Mobile build             | `PASSED`                                                                   |
+| API Client build         | `PASSED`                                                                   |
+| API Client lint          | `PASSED`                                                                   |
+| Types lint               | `PASSED`                                                                   |
+| API lint target          | `NOT_CONFIGURED`                                                           |
+| E2E                      | `PASSED` — 16 suites / 56 tests on compatible host after module wiring fix |
+| `git diff --check`       | `PASSED`                                                                   |
 
 ## Prompt 10 E2E validation
 
@@ -82,14 +82,14 @@ Existing E2E covers authentication, authorization, Coach, Dashboard and persiste
 
 ## Compatibility
 
-| Contract | Status | Consumer | Removal condition |
-| --- | --- | --- | --- |
-| `NutritionReadModel` | preserved | API, Dashboard, Mobile | none for current release |
-| `CoachNutritionContext` | preserved | Coach, Health Context | none for current release |
-| History/trend contracts | preserved | History, Mobile | none for current release |
-| `TodayNutrition` alias | compatibility-only | external/legacy boundary | external clients migrate |
-| Historical persisted legacy fields | existing documents only | persistence compatibility | safe lifecycle migration |
-| `AI_LLM_ENABLED` default | disabled | AI runtime | explicit future product decision |
+| Contract                           | Status                  | Consumer                  | Removal condition                |
+| ---------------------------------- | ----------------------- | ------------------------- | -------------------------------- |
+| `NutritionReadModel`               | preserved               | API, Dashboard, Mobile    | none for current release         |
+| `CoachNutritionContext`            | preserved               | Coach, Health Context     | none for current release         |
+| History/trend contracts            | preserved               | History, Mobile           | none for current release         |
+| `TodayNutrition` alias             | compatibility-only      | external/legacy boundary  | external clients migrate         |
+| Historical persisted legacy fields | existing documents only | persistence compatibility | safe lifecycle migration         |
+| `AI_LLM_ENABLED` default           | disabled                | AI runtime                | explicit future product decision |
 
 ## Rollback strategy
 
@@ -97,13 +97,13 @@ The release is backward-compatible at the public contract boundary. Rollback mus
 
 ## Findings
 
-| ID | Severity | Area | Finding | Required action |
-| --- | --- | --- | --- | --- |
-| F-001 | resolved | E2E | MongoMemoryServer sandbox bind condition and NutritionModule provider wiring | Compatible-host E2E passed after minimal wiring correction |
-| F-002 | P2 | Tooling | API lint target is not configured in Nx | Configure in a future tooling pass |
-| F-003 | P3 | Compatibility | Public `TodayNutrition` alias remains | Remove after external migration |
-| F-004 | P3 | Persistence | Legacy historical fields may exist in old documents | Retire through a future safe lifecycle migration |
-| F-005 | P1 | Operations | Critical alert backend and external dashboards are not provisioned | Provision, assign owners, and run safe synthetic trigger validation before broad rollout |
+| ID    | Severity | Area          | Finding                                                                      | Required action                                                                          |
+| ----- | -------- | ------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| F-001 | resolved | E2E           | MongoMemoryServer sandbox bind condition and NutritionModule provider wiring | Compatible-host E2E passed after minimal wiring correction                               |
+| F-002 | P2       | Tooling       | API lint target is not configured in Nx                                      | Configure in a future tooling pass                                                       |
+| F-003 | P3       | Compatibility | Public `TodayNutrition` alias remains                                        | Remove after external migration                                                          |
+| F-004 | P3       | Persistence   | Legacy historical fields may exist in old documents                          | Retire through a future safe lifecycle migration                                         |
+| F-005 | P1       | Operations    | Critical alert backend and external dashboards are not provisioned           | Provision, assign owners, and run safe synthetic trigger validation before broad rollout |
 
 ## Conditions
 

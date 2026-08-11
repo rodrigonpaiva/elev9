@@ -44,8 +44,7 @@ export function mapCoachIntelligenceAggregateToLegacyIntelligence(
       source: 'legacy',
       generatedAt: aggregate.header.generatedAt,
       updatedAt: aggregate.header.generatedAt,
-      executionDurationMs:
-        aggregate.explainability.metadata.durationMs ?? 0,
+      executionDurationMs: aggregate.explainability.metadata.durationMs ?? 0,
     },
     currentFocus: aggregate.insight.currentFocus,
     currentRisk: aggregate.insight.currentRisk,
@@ -73,14 +72,14 @@ export function isCoachIntelligenceAggregate(
 
   return Boolean(
     candidate.header &&
-      candidate.ownership &&
-      candidate.insight &&
-      candidate.explainability &&
-      candidate.availability &&
-      candidate.freshness &&
-      candidate.sections &&
-      candidate.metadata &&
-      Array.isArray(candidate.evidence) &&
-      Array.isArray(candidate.warnings),
+    candidate.ownership &&
+    candidate.insight &&
+    candidate.explainability &&
+    candidate.availability &&
+    candidate.freshness &&
+    candidate.sections &&
+    candidate.metadata &&
+    Array.isArray(candidate.evidence) &&
+    Array.isArray(candidate.warnings),
   );
 }

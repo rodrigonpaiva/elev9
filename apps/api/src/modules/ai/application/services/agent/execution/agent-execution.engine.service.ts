@@ -504,7 +504,7 @@ export class AgentExecutionEngineService {
           continue;
         }
 
-    if (stepName === 'COMPLETE') {
+        if (stepName === 'COMPLETE') {
           await this.refreshWorkingMemory({
             lifecycleEvents,
             request: input.request,

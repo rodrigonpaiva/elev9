@@ -13,9 +13,7 @@ import type {
   CoachUnifiedRisk,
   CoachUnifiedRiskLevel,
 } from './coach-expert-composition.types';
-import type {
-  CoachExpertContribution,
-} from '../coach-expert.types';
+import type { CoachExpertContribution } from '../coach-expert.types';
 import type { CoachExpertSelection } from '../router/coach-expert-router.types';
 import type { CoachExpertResult } from '../coach-expert.types';
 

@@ -33,12 +33,12 @@ Evidence:
 
 ## Signal Mapping
 
-| Check-in signal | Recovery input | Transformation | Direction | Validated |
-|---|---|---|---|---|
-| `energyLevel` | `RecoveryScoreCalculatorInput.energyLevel` | Five-point value passed directly | Higher value increases readiness and reduces fatigue | Yes: `BuildRecoverySnapshotUseCase` and calculator tests |
-| `sleepQuality` | `RecoveryScoreCalculatorInput.sleepQuality` | Five-point value passed directly | Higher value increases readiness and reduces fatigue | Yes: `BuildRecoverySnapshotUseCase` and calculator tests |
-| `muscleSoreness` | `RecoveryScoreCalculatorInput.muscleSoreness` | Five-point value passed directly; readiness uses `invertScore`, fatigue uses direct value | Higher soreness reduces readiness and increases fatigue | Yes: `apps/api/src/modules/recovery/application/services/recovery-score-calculator.service.ts` |
-| `motivationLevel` | Health Context `latestCheckIn.motivationLevel` | Preserved in the latest check-in context; not passed to Recovery calculator | Available to Coach context, no Recovery-score effect | Yes: context tests and implementation-plan decision |
+| Check-in signal   | Recovery input                                 | Transformation                                                                            | Direction                                               | Validated                                                                                      |
+| ----------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `energyLevel`     | `RecoveryScoreCalculatorInput.energyLevel`     | Five-point value passed directly                                                          | Higher value increases readiness and reduces fatigue    | Yes: `BuildRecoverySnapshotUseCase` and calculator tests                                       |
+| `sleepQuality`    | `RecoveryScoreCalculatorInput.sleepQuality`    | Five-point value passed directly                                                          | Higher value increases readiness and reduces fatigue    | Yes: `BuildRecoverySnapshotUseCase` and calculator tests                                       |
+| `muscleSoreness`  | `RecoveryScoreCalculatorInput.muscleSoreness`  | Five-point value passed directly; readiness uses `invertScore`, fatigue uses direct value | Higher soreness reduces readiness and increases fatigue | Yes: `apps/api/src/modules/recovery/application/services/recovery-score-calculator.service.ts` |
+| `motivationLevel` | Health Context `latestCheckIn.motivationLevel` | Preserved in the latest check-in context; not passed to Recovery calculator               | Available to Coach context, no Recovery-score effect    | Yes: context tests and implementation-plan decision                                            |
 
 The omission of `motivationLevel` from the Recovery formula is deliberate and documented. Changing that formula would be a product/rules decision outside this validation prompt.
 
@@ -78,12 +78,12 @@ The deterministic decision path remains active independently of generative AI:
 
 Relevant defaults:
 
-| Flag | Default | Effect | Required for Epic A1 |
-|---|---:|---|---:|
-| `AI_COACH_INTELLIGENCE_ENABLED` | `false` | Enables the separate Coach Intelligence endpoint/path | No |
-| `AI_AGENT_RUNTIME_ENABLED` | `false` | Enables Agent Runtime | No |
-| `AI_AGENT_TOOLS_ENABLED` | `false` | Enables agent tools | No |
-| `AI_LLM_ENABLED` | `false` | Enables LLM provider usage | No |
+| Flag                            | Default | Effect                                                | Required for Epic A1 |
+| ------------------------------- | ------: | ----------------------------------------------------- | -------------------: |
+| `AI_COACH_INTELLIGENCE_ENABLED` | `false` | Enables the separate Coach Intelligence endpoint/path |                   No |
+| `AI_AGENT_RUNTIME_ENABLED`      | `false` | Enables Agent Runtime                                 |                   No |
+| `AI_AGENT_TOOLS_ENABLED`        | `false` | Enables agent tools                                   |                   No |
+| `AI_LLM_ENABLED`                | `false` | Enables LLM provider usage                            |                   No |
 
 Streaming, tool calling, structured outputs, and memory are not required for the deterministic A1 path. No AI flag was enabled or changed.
 
@@ -117,16 +117,16 @@ The deterministic pipeline does not require an AI flag. Defaults are confirmed i
 
 ## Legacy Paths
 
-| Path | Classification | Finding |
-|---|---|---|
-| `ProgressModule → BuildRecoverySnapshotUseCase` | `CANONICAL` | Owns check-in-triggered Recovery rebuild. |
-| `GetTodayRecoveryUseCase` / `GetCurrentRecoveryUseCase` | `CANONICAL` | Own current-date/current-state selection and freshness validation. |
-| `BuildUserHealthContextService → GetTodayRecoveryUseCase` | `CANONICAL` | Production context path now delegates to canonical Recovery read. |
-| Direct Recovery repository fallback in `BuildUserHealthContextService` | `LEGACY_ACTIVE` | Compatibility path for callers without the optional use case; should be retired after constructor/test migration. |
-| Direct Recovery repository fallback in Training | `LEGACY_ACTIVE` | Compatibility path; canonical provider is preferred. |
-| Mobile Dashboard Recovery and Coach requests | `CANONICAL` | Separate API reads, not local calculations or a parallel Recovery algorithm. |
-| Nutrition recommendation persistence path | `CANONICAL` for Nutrition, `NOT_USED` for A1 Recovery | No Recovery dependency. |
-| Agent Runtime, LLM, streaming, tool calling | `LEGACY_INACTIVE` for A1 | Infrastructure exists but defaults are disabled and does not participate in this flow. |
+| Path                                                                   | Classification                                        | Finding                                                                                                           |
+| ---------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `ProgressModule → BuildRecoverySnapshotUseCase`                        | `CANONICAL`                                           | Owns check-in-triggered Recovery rebuild.                                                                         |
+| `GetTodayRecoveryUseCase` / `GetCurrentRecoveryUseCase`                | `CANONICAL`                                           | Own current-date/current-state selection and freshness validation.                                                |
+| `BuildUserHealthContextService → GetTodayRecoveryUseCase`              | `CANONICAL`                                           | Production context path now delegates to canonical Recovery read.                                                 |
+| Direct Recovery repository fallback in `BuildUserHealthContextService` | `LEGACY_ACTIVE`                                       | Compatibility path for callers without the optional use case; should be retired after constructor/test migration. |
+| Direct Recovery repository fallback in Training                        | `LEGACY_ACTIVE`                                       | Compatibility path; canonical provider is preferred.                                                              |
+| Mobile Dashboard Recovery and Coach requests                           | `CANONICAL`                                           | Separate API reads, not local calculations or a parallel Recovery algorithm.                                      |
+| Nutrition recommendation persistence path                              | `CANONICAL` for Nutrition, `NOT_USED` for A1 Recovery | No Recovery dependency.                                                                                           |
+| Agent Runtime, LLM, streaming, tool calling                            | `LEGACY_INACTIVE` for A1                              | Infrastructure exists but defaults are disabled and does not participate in this flow.                            |
 
 ## Tests and Evidence
 

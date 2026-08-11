@@ -30,4 +30,3 @@ export function recoveryTrendAccessibilityLabel(
 ): string {
   return `Seven-day Recovery trend. ${trendLabel(trend.direction)}. ${availablePointCount} data point${availablePointCount === 1 ? '' : 's'} available.`;
 }
-

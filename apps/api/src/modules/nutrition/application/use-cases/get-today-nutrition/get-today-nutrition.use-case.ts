@@ -59,7 +59,9 @@ export class GetTodayNutritionUseCase {
         await this.userProfileRepository.findByAuthUserId(authUserId);
 
       if (!userProfile) {
-        return { todayNutrition: buildUnavailableTodayNutrition('not_configured') };
+        return {
+          todayNutrition: buildUnavailableTodayNutrition('not_configured'),
+        };
       }
 
       const nutritionPlan =
@@ -68,7 +70,9 @@ export class GetTodayNutritionUseCase {
         );
 
       if (!nutritionPlan) {
-        return { todayNutrition: buildUnavailableTodayNutrition('not_configured') };
+        return {
+          todayNutrition: buildUnavailableTodayNutrition('not_configured'),
+        };
       }
 
       const today = toUtcDateString(new Date());
@@ -114,7 +118,10 @@ export class GetTodayNutritionUseCase {
           nextMeal: deterministicState.nextMeal,
           focus: deterministicState.focus,
           insight: deterministicState.insight,
-          actions: [deterministicState.focus.action, deterministicState.insight.action],
+          actions: [
+            deterministicState.focus.action,
+            deterministicState.insight.action,
+          ],
           nutritionFocus: deterministicState.focus.message,
         },
       };
@@ -128,9 +135,10 @@ export class GetTodayNutritionUseCase {
     } catch (error) {
       if (error instanceof GetTodayNutritionError) {
         this.observability?.recordTodayRead({
-          outcome: error.code === GET_TODAY_NUTRITION_ERROR_CODES.INVALID_SESSION
-            ? 'unauthorized'
-            : 'failure',
+          outcome:
+            error.code === GET_TODAY_NUTRITION_ERROR_CODES.INVALID_SESSION
+              ? 'unauthorized'
+              : 'failure',
           durationMs: Date.now() - startedAt,
           safeErrorCode: toNutritionSafeErrorCode(error.code),
         });
@@ -177,9 +185,7 @@ function buildUnavailableTodayNutrition(
   };
 }
 
-function toNutritionSafeErrorCode(
-  errorCode: string,
-): NutritionSafeErrorCode {
+function toNutritionSafeErrorCode(errorCode: string): NutritionSafeErrorCode {
   switch (errorCode) {
     case GET_TODAY_NUTRITION_ERROR_CODES.INVALID_SESSION:
       return 'NUTRITION_UNAUTHORIZED';
@@ -194,10 +200,14 @@ function toNutritionSafeErrorCode(
   }
 }
 
-function buildProgress(input: ReturnType<typeof calculateNutritionDeterministicState>): TodayNutritionProgressOutput {
+function buildProgress(
+  input: ReturnType<typeof calculateNutritionDeterministicState>,
+): TodayNutritionProgressOutput {
   const consumed = input.consumed;
   const protein = input.macros.find((macro) => macro.nutrient === 'protein')!;
-  const carbs = input.macros.find((macro) => macro.nutrient === 'carbohydrates')!;
+  const carbs = input.macros.find(
+    (macro) => macro.nutrient === 'carbohydrates',
+  )!;
   const fat = input.macros.find((macro) => macro.nutrient === 'fat')!;
   return {
     consumedCalories: consumed.calories,
@@ -222,12 +232,19 @@ function resolveFreshness(updatedAt?: Date): 'current' | 'unknown' {
   return updatedAt ? 'current' : 'unknown';
 }
 
-function resolveLastUpdatedAt(input: { nutritionPlan: { updatedAt?: Date; createdAt: Date }; logs: NutritionLog[] }): string | null {
-  const timestamps = [input.nutritionPlan.updatedAt ?? input.nutritionPlan.createdAt, ...input.logs.map((log) => log.updatedAt)];
-  const latest = timestamps.reduce((current, value) => value > current ? value : current);
+function resolveLastUpdatedAt(input: {
+  nutritionPlan: { updatedAt?: Date; createdAt: Date };
+  logs: NutritionLog[];
+}): string | null {
+  const timestamps = [
+    input.nutritionPlan.updatedAt ?? input.nutritionPlan.createdAt,
+    ...input.logs.map((log) => log.updatedAt),
+  ];
+  const latest = timestamps.reduce((current, value) =>
+    value > current ? value : current,
+  );
   return latest.toISOString();
 }
-
 
 function toUtcDateString(date: Date): string {
   return date.toISOString().slice(0, 10);

@@ -32,7 +32,9 @@ import type { RecoveryScreenState } from '../models/recovery-screen-state';
 
 export type RecoveryExperienceApi = {
   getCurrentRecoveryExperience: () => Promise<GetCurrentRecoveryExperienceResponse>;
-  getRecoveryExperienceHistory: (input?: { days?: number }) => Promise<GetRecoveryExperienceHistoryResponse>;
+  getRecoveryExperienceHistory: (input?: {
+    days?: number;
+  }) => Promise<GetRecoveryExperienceHistoryResponse>;
 };
 
 export type UseRecoveryExperienceResult = {
@@ -51,7 +53,8 @@ type LoadOptions = {
 };
 
 const defaultApi: RecoveryExperienceApi = {
-  getCurrentRecoveryExperience: () => apiClient.recovery.getCurrentRecoveryExperience(),
+  getCurrentRecoveryExperience: () =>
+    apiClient.recovery.getCurrentRecoveryExperience(),
   getRecoveryExperienceHistory: (input) =>
     apiClient.recovery.getRecoveryExperienceHistory(input),
 };
@@ -62,8 +65,12 @@ export function useRecoveryExperience(
   ownerKeyProvider: RecoveryExperienceOwnerKeyProvider = getSessionOwnerKey,
 ): UseRecoveryExperienceResult {
   const { status: authStatus } = useAuth();
-  const [current, setCurrent] = useState<RecoveryCurrentResource>({ status: 'loading' });
-  const [history, setHistory] = useState<RecoveryHistoryResource>({ status: 'loading' });
+  const [current, setCurrent] = useState<RecoveryCurrentResource>({
+    status: 'loading',
+  });
+  const [history, setHistory] = useState<RecoveryHistoryResource>({
+    status: 'loading',
+  });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const mountedRef = useRef(true);
   const operationRef = useRef<Promise<void> | null>(null);
@@ -238,7 +245,9 @@ async function loadHistory(
 ) {
   const ownerKey = await ownerKeyProvider();
   try {
-    const response = await injectedApi.getRecoveryExperienceHistory({ days: 7 });
+    const response = await injectedApi.getRecoveryExperienceHistory({
+      days: 7,
+    });
     if (
       mountedRef.current &&
       sessionGenerationIsCurrent(sessionGenerationRef, sessionGeneration)
@@ -256,7 +265,9 @@ async function loadHistory(
       if (ownerKey && isRecoverableRecoveryNetworkError(error)) {
         const cached = await injectedCache.read(ownerKey);
         if (cached?.history) {
-          const cacheAge = getRecoveryCacheAge(cached.historySavedAt ?? cached.savedAt);
+          const cacheAge = getRecoveryCacheAge(
+            cached.historySavedAt ?? cached.savedAt,
+          );
           if (cacheAge !== 'expired') {
             setHistory({
               status: 'success',

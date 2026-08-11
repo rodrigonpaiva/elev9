@@ -13,9 +13,16 @@ export function RecoveryErrorState({
   return (
     <Card accessibilityLiveRegion="polite" style={styles.card}>
       <Text variant="title">Recovery unavailable</Text>
-      <Text style={styles.message}>{message ?? 'We could not load Recovery. Please try again.'}</Text>
+      <Text style={styles.message}>
+        {message ?? 'We could not load Recovery. Please try again.'}
+      </Text>
       {onRetry ? (
-        <Button label="Retry" loading={isRetrying} onPress={onRetry} style={styles.button} />
+        <Button
+          label="Retry"
+          loading={isRetrying}
+          onPress={onRetry}
+          style={styles.button}
+        />
       ) : null}
     </Card>
   );
@@ -26,4 +33,3 @@ const styles = StyleSheet.create({
   message: { color: '#94a3b8' },
   button: { marginTop: 8 },
 });
-

@@ -36,24 +36,26 @@ import type {
   CoachExpertRequest,
   CoachExpertResult,
 } from '../experts/coach-expert.types';
-import type {
-  CoachExpertRoutingDecision,
-} from '../experts/router/coach-expert-router.types';
+import type { CoachExpertRoutingDecision } from '../experts/router/coach-expert-router.types';
 import type { AgentPolicyEvaluation } from '../agent/policies/agent-policy.types';
 import type { PersonalizationPromptPayload } from '../../../../../shared/mappers';
 import { PersonalizationReadModelMapper } from '../../../../../shared/mappers';
-import { GetCoachIntelligenceError, COACH_INTELLIGENCE_ERROR_CODES } from './coach-intelligence.errors';
+import {
+  GetCoachIntelligenceError,
+  COACH_INTELLIGENCE_ERROR_CODES,
+} from './coach-intelligence.errors';
 
 const COACH_INTELLIGENCE_SOURCE_VERSION = '1.0.0';
-const EXPERT_NAME_BY_ID: Readonly<Record<string, CoachExpertName>> = Object.freeze({
-  WorkoutExpert: 'Workout',
-  NutritionExpert: 'Nutrition',
-  RecoveryExpert: 'Recovery',
-  GoalExpert: 'Goal',
-  HabitExpert: 'Habit',
-  ProgressExpert: 'Progress',
-  MotivationExpert: 'Motivation',
-});
+const EXPERT_NAME_BY_ID: Readonly<Record<string, CoachExpertName>> =
+  Object.freeze({
+    WorkoutExpert: 'Workout',
+    NutritionExpert: 'Nutrition',
+    RecoveryExpert: 'Recovery',
+    GoalExpert: 'Goal',
+    HabitExpert: 'Habit',
+    ProgressExpert: 'Progress',
+    MotivationExpert: 'Motivation',
+  });
 const PUBLIC_EXPERT_NAMES = new Set<CoachExpertName>([
   'Workout',
   'Nutrition',
@@ -80,7 +82,9 @@ export class CoachIntelligenceAggregationService {
     private readonly aiRolloutService: AiRolloutService,
   ) {}
 
-  async build(input: CoachIntelligenceBuildInput): Promise<CoachIntelligenceBuildResult> {
+  async build(
+    input: CoachIntelligenceBuildInput,
+  ): Promise<CoachIntelligenceBuildResult> {
     if (!this.configService.isEnabled()) {
       throw new GetCoachIntelligenceError(
         COACH_INTELLIGENCE_ERROR_CODES.FEATURE_DISABLED,
@@ -90,23 +94,27 @@ export class CoachIntelligenceAggregationService {
 
     const requestId = this.normalizeRequestId(input.requestId);
     const assemblyStartedAt = Date.now();
-    const resolvedUserProfile = await this.contextAssemblerService.resolveUserProfile({
-      authUserId: input.authUserId,
-      ...(input.userProfileId ? { userProfileId: input.userProfileId } : {}),
-    });
+    const resolvedUserProfile =
+      await this.contextAssemblerService.resolveUserProfile({
+        authUserId: input.authUserId,
+        ...(input.userProfileId ? { userProfileId: input.userProfileId } : {}),
+      });
 
-    const aggregateTrace = this.coachIntelligenceObservabilityService.startTrace({
-      requestId,
-      authUserId: input.authUserId,
-      userProfileId: resolvedUserProfile.id,
-      metadata: Object.freeze({
-        featureEnabled: true,
+    const aggregateTrace =
+      this.coachIntelligenceObservabilityService.startTrace({
         requestId,
-      }),
-    });
+        authUserId: input.authUserId,
+        userProfileId: resolvedUserProfile.id,
+        metadata: Object.freeze({
+          featureEnabled: true,
+          requestId,
+        }),
+      });
 
     let sourceContext: CoachIntelligenceSourceContext | undefined;
-    let aggregate: ReturnType<CoachIntelligenceMapperService['map']> | undefined;
+    let aggregate:
+      | ReturnType<CoachIntelligenceMapperService['map']>
+      | undefined;
 
     try {
       const assembledContext = await this.contextAssemblerService.assemble({
@@ -232,7 +240,9 @@ export class CoachIntelligenceAggregationService {
         healthContext: sourceContext.healthContext,
         userProfile: {
           userProfileId: resolvedUserProfile.id,
-          ...(resolvedUserProfile.name ? { userName: resolvedUserProfile.name } : {}),
+          ...(resolvedUserProfile.name
+            ? { userName: resolvedUserProfile.name }
+            : {}),
         },
         fitnessProfile: {
           goal: sourceContext.healthContext.goal,
@@ -263,7 +273,10 @@ export class CoachIntelligenceAggregationService {
           orchestrationDurationMs: assembledContext.source.loadDurationMs,
           expertExecutionDurationMs,
           executionDurationMs:
-            Date.now() - assemblyStartedAt + compositionDurationMs + personaDurationMs,
+            Date.now() -
+            assemblyStartedAt +
+            compositionDurationMs +
+            personaDurationMs,
           stepCount: routingDecision.orderedExperts.length,
           responseMode: 'standard',
         },
@@ -336,12 +349,14 @@ export class CoachIntelligenceAggregationService {
           })),
           metadata: result.metadata,
         })),
-        expertContributions: expertExecution.contributions.map((contribution) => ({
-          expertId: contribution.expertId,
-          type: contribution.type,
-          summary: contribution.summary,
-          metadata: contribution.metadata,
-        })),
+        expertContributions: expertExecution.contributions.map(
+          (contribution) => ({
+            expertId: contribution.expertId,
+            type: contribution.type,
+            summary: contribution.summary,
+            metadata: contribution.metadata,
+          }),
+        ),
         composition,
         personaGuidance,
         explanation,
@@ -382,7 +397,9 @@ export class CoachIntelligenceAggregationService {
             ? error.code
             : COACH_INTELLIGENCE_ERROR_CODES.INTERNAL_ERROR,
         errorMessage:
-          error instanceof Error ? error.message : 'An unexpected error occurred.',
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred.',
       });
 
       if (error instanceof GetCoachIntelligenceError) {
@@ -435,7 +452,8 @@ export class CoachIntelligenceAggregationService {
           metadata: Object.freeze({
             expertId: expert.metadata.id,
             runtimeMode: 'analysis-error-fallback',
-            errorMessage: error instanceof Error ? error.message : String(error),
+            errorMessage:
+              error instanceof Error ? error.message : String(error),
           }),
         });
       }
@@ -514,7 +532,9 @@ export class CoachIntelligenceAggregationService {
     const blockedExpertIds = input.candidateExperts
       .filter((expert) => !expert.enabled)
       .map((expert) => expert.id);
-    const allowedExperts = input.candidateExperts.filter((expert) => expert.enabled);
+    const allowedExperts = input.candidateExperts.filter(
+      (expert) => expert.enabled,
+    );
 
     return Object.freeze({
       decision: Object.freeze({
@@ -611,7 +631,9 @@ export class CoachIntelligenceAggregationService {
     });
   }
 
-  private buildSelectionReason(routingDecision: CoachExpertRoutingDecision): string {
+  private buildSelectionReason(
+    routingDecision: CoachExpertRoutingDecision,
+  ): string {
     const selected = routingDecision.orderedExperts.map((expert) => expert.id);
     const primary = routingDecision.primaryExpert?.id ?? 'none';
 
@@ -622,9 +644,13 @@ export class CoachIntelligenceAggregationService {
     source: CoachIntelligenceSourceContext,
   ): PersonalizationPromptPayload | undefined {
     return PersonalizationReadModelMapper.toPromptPayload({
-      snapshot: source.sections.personalization.data?.personalizationSnapshot ?? undefined,
-      profile: source.sections.personalization.data?.userBehaviorProfile ?? undefined,
-      patterns: source.sections.personalization.data?.behavioralPatterns ?? undefined,
+      snapshot:
+        source.sections.personalization.data?.personalizationSnapshot ??
+        undefined,
+      profile:
+        source.sections.personalization.data?.userBehaviorProfile ?? undefined,
+      patterns:
+        source.sections.personalization.data?.behavioralPatterns ?? undefined,
     });
   }
 
@@ -692,11 +718,15 @@ export class CoachIntelligenceAggregationService {
   }): readonly CoachExpertMetadata[] {
     const byId = new Map<string, CoachExpertMetadata>();
 
-    for (const expert of this.coachExpertRegistry.getExpertsForIntent(input.intent)) {
+    for (const expert of this.coachExpertRegistry.getExpertsForIntent(
+      input.intent,
+    )) {
       byId.set(expert.metadata.id, expert.metadata);
     }
 
-    for (const expert of this.coachExpertRegistry.getExpertsForDomains(input.selectedDomains)) {
+    for (const expert of this.coachExpertRegistry.getExpertsForDomains(
+      input.selectedDomains,
+    )) {
       if (!byId.has(expert.metadata.id)) {
         byId.set(expert.metadata.id, expert.metadata);
       }
@@ -723,13 +753,15 @@ export class CoachIntelligenceAggregationService {
     aggregate: ReturnType<CoachIntelligenceMapperService['map']>,
   ): Record<string, { status: string; fallbackUsed: boolean }> {
     return Object.fromEntries(
-      Object.entries(aggregate.availability.sections).map(([section, state]) => [
-        section,
-        {
-          status: state.status,
-          fallbackUsed: state.fallbackUsed,
-        },
-      ]),
+      Object.entries(aggregate.availability.sections).map(
+        ([section, state]) => [
+          section,
+          {
+            status: state.status,
+            fallbackUsed: state.fallbackUsed,
+          },
+        ],
+      ),
     );
   }
 

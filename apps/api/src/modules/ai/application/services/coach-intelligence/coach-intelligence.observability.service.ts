@@ -98,7 +98,8 @@ export class CoachIntelligenceObservabilityService {
     const stored = input.requestId
       ? this.traces.get(input.requestId)
       : undefined;
-    const startedAtMs = stored?.startedAtMs ?? Date.parse(input.trace.startedAt);
+    const startedAtMs =
+      stored?.startedAtMs ?? Date.parse(input.trace.startedAt);
     const completedAtMs = Date.now();
     const availabilitySections = Object.entries(input.availability.sections);
     const unavailableSections = availabilitySections
@@ -220,7 +221,10 @@ export class CoachIntelligenceObservabilityService {
       (left, right) => left[1].startedAtMs - right[1].startedAtMs,
     );
 
-    for (const [requestId] of ordered.slice(0, this.traces.size - this.maxItems)) {
+    for (const [requestId] of ordered.slice(
+      0,
+      this.traces.size - this.maxItems,
+    )) {
       this.traces.delete(requestId);
     }
   }
@@ -235,7 +239,9 @@ export class CoachIntelligenceObservabilityService {
       status: trace.status,
       startedAt: trace.startedAt,
       ...(trace.completedAt ? { completedAt: trace.completedAt } : {}),
-      ...(trace.durationMs !== undefined ? { durationMs: trace.durationMs } : {}),
+      ...(trace.durationMs !== undefined
+        ? { durationMs: trace.durationMs }
+        : {}),
       partialResult: trace.partialResult,
       fallbackUsed: trace.fallbackUsed,
       participatingExperts: Object.freeze([...trace.participatingExperts]),

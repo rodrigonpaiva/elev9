@@ -48,9 +48,11 @@ describe('Nutrition application boundaries', () => {
       sourceFiles(join(workspaceRoot, relativeRoot)).flatMap((filePath) => {
         const source = readFileSync(filePath, 'utf8');
         const matches: string[] = [];
-        if (forbiddenRawImportPattern.test(source)) matches.push(`${filePath}:raw-import`);
+        if (forbiddenRawImportPattern.test(source))
+          matches.push(`${filePath}:raw-import`);
         for (const field of forbiddenRuntimeFields) {
-          if (new RegExp(`\\b${field}\\s*:`).test(source)) matches.push(`${filePath}:${field}`);
+          if (new RegExp(`\\b${field}\\s*:`).test(source))
+            matches.push(`${filePath}:${field}`);
         }
         return matches;
       }),
@@ -67,7 +69,8 @@ describe('Nutrition application boundaries', () => {
       if (
         filePath.endsWith('packages/types/src/nutrition/index.ts') ||
         filePath.endsWith('packages/types/src/nutrition/index.d.ts')
-      ) return false;
+      )
+        return false;
       return /\bTodayNutrition\b/.test(readFileSync(filePath, 'utf8'));
     });
     expect(violations).toEqual([]);

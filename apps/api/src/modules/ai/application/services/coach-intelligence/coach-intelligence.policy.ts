@@ -108,12 +108,13 @@ export class CoachIntelligenceFreshnessPolicy {
     const freshnessStatuses = freshnessEntries.map(
       (entry) => entry.freshness.status,
     );
-    const status: CoachIntelligenceFreshnessStatus =
-      freshnessStatuses.includes('stale')
-        ? 'stale'
-        : freshnessStatuses.every((value) => value === 'unknown')
-          ? 'unknown'
-          : 'fresh';
+    const status: CoachIntelligenceFreshnessStatus = freshnessStatuses.includes(
+      'stale',
+    )
+      ? 'stale'
+      : freshnessStatuses.every((value) => value === 'unknown')
+        ? 'unknown'
+        : 'fresh';
     const generatedAtMs = Date.parse(input.generatedAt);
     const sourceTimestampMs = latestSourceTimestamp
       ? Date.parse(latestSourceTimestamp)
@@ -122,7 +123,9 @@ export class CoachIntelligenceFreshnessPolicy {
     return Object.freeze({
       status,
       generatedAt: input.generatedAt,
-      ...(latestSourceTimestamp ? { sourceTimestamp: latestSourceTimestamp } : {}),
+      ...(latestSourceTimestamp
+        ? { sourceTimestamp: latestSourceTimestamp }
+        : {}),
       ...(Number.isFinite(generatedAtMs) && Number.isFinite(sourceTimestampMs)
         ? { ageMs: Math.max(0, generatedAtMs - sourceTimestampMs) }
         : {}),
@@ -155,7 +158,8 @@ export class CoachIntelligenceFreshnessPolicy {
       freshness,
       fallbackUsed: input.fallbackUsed ?? false,
       retryable: input.retryable ?? false,
-      reasonCode: input.reasonCode ?? this.resolveReasonCode(freshness, input.data),
+      reasonCode:
+        input.reasonCode ?? this.resolveReasonCode(freshness, input.data),
       disabled: input.disabled ?? false,
     });
     const warnings = this.resolveWarnings({
@@ -229,7 +233,9 @@ export class CoachIntelligenceFreshnessPolicy {
     const status: CoachIntelligenceAvailabilityStatus =
       coreUnavailableCount === CORE_SECTION_NAMES.length
         ? 'unavailable'
-        : coreUnavailableCount > 0 || hasDegradedSection || hasUnavailableSection
+        : coreUnavailableCount > 0 ||
+            hasDegradedSection ||
+            hasUnavailableSection
           ? 'degraded'
           : hasStaleSection
             ? 'stale'
@@ -296,7 +302,10 @@ export class CoachIntelligenceFreshnessPolicy {
       );
     }
 
-    if (input.availability.status === 'stale' || input.freshness.status === 'stale') {
+    if (
+      input.availability.status === 'stale' ||
+      input.freshness.status === 'stale'
+    ) {
       warnings.push(
         this.buildWarning({
           code: 'STALE_CONTEXT',
@@ -366,8 +375,9 @@ export class CoachIntelligenceFreshnessPolicy {
     }
 
     if (input.data === null) {
-      const status: CoachIntelligenceAvailabilityStatus =
-        input.fallbackUsed ? 'degraded' : 'unavailable';
+      const status: CoachIntelligenceAvailabilityStatus = input.fallbackUsed
+        ? 'degraded'
+        : 'unavailable';
 
       return Object.freeze({
         status,
@@ -405,22 +415,23 @@ export class CoachIntelligenceFreshnessPolicy {
     });
   }
 
-  private buildAvailabilitySectionMap(
-    input: {
-      sections: SectionStateMap;
-      status?: CoachIntelligenceAvailabilityStatus;
-      reasonCode?: CoachIntelligenceAvailabilityReasonCode;
-      fallbackUsed?: boolean;
-      retryable?: boolean;
-    },
-  ): CoachIntelligenceAvailability['sections'] {
+  private buildAvailabilitySectionMap(input: {
+    sections: SectionStateMap;
+    status?: CoachIntelligenceAvailabilityStatus;
+    reasonCode?: CoachIntelligenceAvailabilityReasonCode;
+    fallbackUsed?: boolean;
+    retryable?: boolean;
+  }): CoachIntelligenceAvailability['sections'] {
     const dataSectionMap = Object.fromEntries(
       DATA_SECTIONS.map((section) => [
         section,
         input.sections[section].availability,
       ]),
     ) as Record<
-      Exclude<CoachIntelligenceSectionName, 'insight' | 'evidence' | 'explainability'>,
+      Exclude<
+        CoachIntelligenceSectionName,
+        'insight' | 'evidence' | 'explainability'
+      >,
       CoachIntelligenceSectionAvailability
     >;
 
@@ -459,7 +470,10 @@ export class CoachIntelligenceFreshnessPolicy {
         }),
       ]),
     ) as Record<
-      Exclude<CoachIntelligenceSectionName, 'insight' | 'evidence' | 'explainability'>,
+      Exclude<
+        CoachIntelligenceSectionName,
+        'insight' | 'evidence' | 'explainability'
+      >,
       CoachIntelligenceSectionFreshness
     >;
 
@@ -509,7 +523,9 @@ export class CoachIntelligenceFreshnessPolicy {
       return 'VALIDATION_FAILED';
     }
 
-    if (statuses.some((status) => status.reasonCode === 'INSUFFICIENT_SIGNALS')) {
+    if (
+      statuses.some((status) => status.reasonCode === 'INSUFFICIENT_SIGNALS')
+    ) {
       return 'INSUFFICIENT_SIGNALS';
     }
 
@@ -559,7 +575,7 @@ export class CoachIntelligenceFreshnessPolicy {
     sectionName: CoachIntelligenceSectionName;
     title: string;
     detail?: string;
-    }): CoachIntelligenceWarning {
+  }): CoachIntelligenceWarning {
     return {
       code: input.code,
       severity: input.severity,
@@ -615,7 +631,9 @@ export class CoachIntelligenceFreshnessPolicy {
     return normalized.length > 0 ? normalized : undefined;
   }
 
-  private resolveLatestTimestamp(values: readonly string[]): string | undefined {
+  private resolveLatestTimestamp(
+    values: readonly string[],
+  ): string | undefined {
     if (values.length === 0) {
       return undefined;
     }

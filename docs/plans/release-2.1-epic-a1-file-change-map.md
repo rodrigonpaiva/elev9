@@ -173,12 +173,12 @@ No production code, dependency, lockfile, backend, contract, mobile feature or `
 
 ## Prompt 10 Actual Changes
 
-| Order | File | Action | Reason | Depends On | Risk |
-| ----: | ---- | ------ | ------ | ---------- | ---- |
-| 120 | `apps/api/src/modules/ai/application/services/experts/coach-expert.registry.ts` | MODIFY | Make the existing default expert catalog usable by Nest without an unqualified `Array` token. | Existing default catalog | Low |
-| 121 | `apps/api/src/modules/ai/application/services/agent/tools/agent-tool-registry.service.ts` | MODIFY | Make the existing default tool catalog usable by Nest without an unqualified `Array` token. | Existing default catalog | Low |
-| 122 | `apps/api/src/modules/ai/ai.module.ts` | MODIFY | Register existing composition, explainability and persona policy providers required by their services. | Existing provider classes | Low |
-| 123 | `docs/validation/release-2.1-epic-a1-external-validation.md` | CREATE | Record real E2E, environment, device limitations, privacy inspection and rollout gate. | Prompt 10 validation | Low |
-| 124 | `docs/audits/release-2.1-epic-a1-production-certification.md` | MODIFY | Record Prompt 10 evidence, corrections and restricted rollout verdict. | External validation report | Low |
-| 125 | `docs/plans/release-2.1-epic-a1-daily-check-in-implementation-plan.md` | MODIFY | Record Prompt 10 gate and localized wiring corrections. | External validation report | Low |
-| 126 | `docs/plans/release-2.1-epic-a1-file-change-map.md` | MODIFY | Record actual Prompt 10 file changes. | Prompt 10 review | Low |
+| Order | File                                                                                      | Action | Reason                                                                                                 | Depends On                 | Risk |
+| ----: | ----------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------ | -------------------------- | ---- |
+|   120 | `apps/api/src/modules/ai/application/services/experts/coach-expert.registry.ts`           | MODIFY | Make the existing default expert catalog usable by Nest without an unqualified `Array` token.          | Existing default catalog   | Low  |
+|   121 | `apps/api/src/modules/ai/application/services/agent/tools/agent-tool-registry.service.ts` | MODIFY | Make the existing default tool catalog usable by Nest without an unqualified `Array` token.            | Existing default catalog   | Low  |
+|   122 | `apps/api/src/modules/ai/ai.module.ts`                                                    | MODIFY | Register existing composition, explainability and persona policy providers required by their services. | Existing provider classes  | Low  |
+|   123 | `docs/validation/release-2.1-epic-a1-external-validation.md`                              | CREATE | Record real E2E, environment, device limitations, privacy inspection and rollout gate.                 | Prompt 10 validation       | Low  |
+|   124 | `docs/audits/release-2.1-epic-a1-production-certification.md`                             | MODIFY | Record Prompt 10 evidence, corrections and restricted rollout verdict.                                 | External validation report | Low  |
+|   125 | `docs/plans/release-2.1-epic-a1-daily-check-in-implementation-plan.md`                    | MODIFY | Record Prompt 10 gate and localized wiring corrections.                                                | External validation report | Low  |
+|   126 | `docs/plans/release-2.1-epic-a1-file-change-map.md`                                       | MODIFY | Record actual Prompt 10 file changes.                                                                  | Prompt 10 review           | Low  |

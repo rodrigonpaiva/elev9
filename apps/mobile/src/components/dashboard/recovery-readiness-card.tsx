@@ -51,7 +51,11 @@ export const RecoveryReadinessCard = memo(function RecoveryReadinessCard({
     );
   }
 
-  if (!recoveryExperience || recoveryExperience.availability !== 'available' || !recoveryExperience.recovery) {
+  if (
+    !recoveryExperience ||
+    recoveryExperience.availability !== 'available' ||
+    !recoveryExperience.recovery
+  ) {
     return (
       <View
         accessibilityLabel="Recovery is not available yet. Open Recovery to see what to do next."
@@ -63,7 +67,11 @@ export const RecoveryReadinessCard = memo(function RecoveryReadinessCard({
           <Text style={styles.message}>
             Complete your daily check-in to unlock Recovery guidance.
           </Text>
-          <Button label="Open Recovery" onPress={onOpenRecovery} style={styles.button} />
+          <Button
+            label="Open Recovery"
+            onPress={onOpenRecovery}
+            style={styles.button}
+          />
         </View>
       </View>
     );
@@ -83,7 +91,9 @@ export const RecoveryReadinessCard = memo(function RecoveryReadinessCard({
       </View>
       <View style={styles.scoreGroup}>
         <Text style={styles.score}>{current.score}</Text>
-        <Text style={styles.scoreSentence}>{formatInsight(current.insight.bodyKey)}</Text>
+        <Text style={styles.scoreSentence}>
+          {formatInsight(current.insight.bodyKey)}
+        </Text>
       </View>
       <View style={styles.metaRow}>
         <Text style={styles.meta}>{formatFreshness(current.freshness)}</Text>
@@ -177,14 +187,44 @@ const styles = StyleSheet.create({
   title: { color: tokens.text, fontSize: 18, fontWeight: '700' },
   message: { color: tokens.secondaryText, lineHeight: 22 },
   scoreGroup: { gap: 8 },
-  score: { color: tokens.text, fontSize: 56, lineHeight: 62, fontWeight: '800' },
+  score: {
+    color: tokens.text,
+    fontSize: 56,
+    lineHeight: 62,
+    fontWeight: '800',
+  },
   scoreSentence: { color: tokens.secondaryText, fontSize: 16, lineHeight: 23 },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
   meta: { color: tokens.tertiaryText, fontSize: 12 },
   button: { marginTop: 2 },
-  skeletonLabel: { width: 82, height: 14, backgroundColor: tokens.skeleton, borderRadius: 6 },
-  skeletonBadge: { width: 82, height: 28, backgroundColor: tokens.skeleton, borderRadius: 14 },
-  skeletonScore: { width: 94, height: 62, backgroundColor: tokens.skeleton, borderRadius: 12 },
-  skeletonSentence: { width: '82%', height: 22, backgroundColor: tokens.skeleton, borderRadius: 8 },
-  skeletonButton: { width: '100%', height: 48, backgroundColor: tokens.skeleton, borderRadius: 18 },
+  skeletonLabel: {
+    width: 82,
+    height: 14,
+    backgroundColor: tokens.skeleton,
+    borderRadius: 6,
+  },
+  skeletonBadge: {
+    width: 82,
+    height: 28,
+    backgroundColor: tokens.skeleton,
+    borderRadius: 14,
+  },
+  skeletonScore: {
+    width: 94,
+    height: 62,
+    backgroundColor: tokens.skeleton,
+    borderRadius: 12,
+  },
+  skeletonSentence: {
+    width: '82%',
+    height: 22,
+    backgroundColor: tokens.skeleton,
+    borderRadius: 8,
+  },
+  skeletonButton: {
+    width: '100%',
+    height: 48,
+    backgroundColor: tokens.skeleton,
+    borderRadius: 18,
+  },
 });

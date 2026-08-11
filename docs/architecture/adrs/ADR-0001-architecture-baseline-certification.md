@@ -479,4 +479,3 @@ Supporting references:
 - [docs/specs/mobile/coach-intelligence-integration/README.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/mobile/coach-intelligence-integration/README.md)
 - [docs/product/product-vision.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/product/product-vision.md)
 - [docs/domain/domain-model.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/domain/domain-model.md)
-

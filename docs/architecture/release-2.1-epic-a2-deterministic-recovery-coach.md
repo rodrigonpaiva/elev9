@@ -57,12 +57,12 @@ The four Recovery availability states are preserved:
 
 The Coach consumes the backend category mapping:
 
-| Category | Deterministic guidance intent |
-|---|---|
-| `low` | Prioritize recovery / reduce intensity |
-| `moderate` | Keep intensity flexible |
-| `good` | Planned activity is generally supported |
-| `high` | Planned activity is supported without promising performance |
+| Category   | Deterministic guidance intent                               |
+| ---------- | ----------------------------------------------------------- |
+| `low`      | Prioritize recovery / reduce intensity                      |
+| `moderate` | Keep intensity flexible                                     |
+| `good`     | Planned activity is generally supported                     |
+| `high`     | Planned activity is supported without promising performance |
 
 The Coach does not calculate these categories from score thresholds.
 

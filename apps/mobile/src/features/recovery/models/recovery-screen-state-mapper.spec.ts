@@ -40,18 +40,22 @@ const history: GetRecoveryExperienceHistoryResponse = {
 describe('Recovery screen state mapper', () => {
   it('identifies only transport failures as cache-recoverable', () => {
     expect(
-      isRecoverableRecoveryNetworkError(new ApiClientError({
-        status: 0,
-        code: 'NETWORK_ERROR',
-        message: 'offline',
-      })),
+      isRecoverableRecoveryNetworkError(
+        new ApiClientError({
+          status: 0,
+          code: 'NETWORK_ERROR',
+          message: 'offline',
+        }),
+      ),
     ).toBe(true);
     expect(
-      isRecoverableRecoveryNetworkError(new ApiClientError({
-        status: 401,
-        code: 'UNAUTHORIZED',
-        message: 'unauthorized',
-      })),
+      isRecoverableRecoveryNetworkError(
+        new ApiClientError({
+          status: 401,
+          code: 'UNAUTHORIZED',
+          message: 'unauthorized',
+        }),
+      ),
     ).toBe(false);
   });
 
@@ -132,6 +136,8 @@ describe('Recovery screen state mapper', () => {
         isRefreshing: false,
       }).status,
     ).toBe('error');
-    expect(mapRecoveryExperienceError(new Error('internal'))).not.toContain('internal');
+    expect(mapRecoveryExperienceError(new Error('internal'))).not.toContain(
+      'internal',
+    );
   });
 });

@@ -369,22 +369,19 @@ export class BuildUserHealthContextService {
     let recoverySnapshot: RecoverySnapshot | null = null;
 
     if (shouldLoadFitnessProfile) {
-      [fitnessProfile, latestCheckIn, recoverySnapshot] =
-        await Promise.all([
-          this.fitnessProfileRepository.findActiveByUserProfileId(
-            userProfile.id,
-          ),
-          shouldLoadRecovery
-            ? this.dailyCheckInRepository.findLatestByUserProfileId(
-                userProfile.id,
-              )
-            : Promise.resolve(null),
-          shouldLoadRecovery
-            ? this.recoverySnapshotRepository.findLatestByUserProfileId(
-                userProfile.id,
-              )
-            : Promise.resolve(null),
-        ]);
+      [fitnessProfile, latestCheckIn, recoverySnapshot] = await Promise.all([
+        this.fitnessProfileRepository.findActiveByUserProfileId(userProfile.id),
+        shouldLoadRecovery
+          ? this.dailyCheckInRepository.findLatestByUserProfileId(
+              userProfile.id,
+            )
+          : Promise.resolve(null),
+        shouldLoadRecovery
+          ? this.recoverySnapshotRepository.findLatestByUserProfileId(
+              userProfile.id,
+            )
+          : Promise.resolve(null),
+      ]);
     } else {
       [latestCheckIn, recoverySnapshot] = await Promise.all([
         shouldLoadRecovery
@@ -543,7 +540,9 @@ export class BuildUserHealthContextService {
     }
 
     try {
-      const result = await this.getTodayNutritionUseCase.execute({ authUserId });
+      const result = await this.getTodayNutritionUseCase.execute({
+        authUserId,
+      });
       const context = toCoachNutritionContext(result.todayNutrition);
       this.nutritionObservability?.recordCoachContext({
         outcome: 'success',
@@ -751,7 +750,8 @@ export class BuildUserHealthContextService {
     }
 
     try {
-      const result = await this.getCurrentRecoveryReadModelUseCase.execute(input);
+      const result =
+        await this.getCurrentRecoveryReadModelUseCase.execute(input);
       this.recoveryObservability?.recordCoachContext(
         result.availability === 'available' ? 'available' : 'fallback',
       );

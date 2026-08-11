@@ -69,7 +69,9 @@ export class GetRecoveryHistoryReadModelUseCase {
             error.message,
           );
         }
-        if (error.code === GET_RECOVERY_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND) {
+        if (
+          error.code === GET_RECOVERY_HISTORY_ERROR_CODES.USER_PROFILE_NOT_FOUND
+        ) {
           throw new GetRecoveryHistoryReadModelError(
             GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.USER_PROFILE_NOT_FOUND,
             error.message,

@@ -125,4 +125,3 @@ O mapper possui testes para success, history parcial, loading, availability expl
 - E2E fora do sandbox;
 - validação em dispositivos físicos;
 - certificação de produção.
-

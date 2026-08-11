@@ -27,7 +27,12 @@ describe('BuildGoalProgressSnapshotUseCase', () => {
   let dailyCheckInRepository: jest.Mocked<DailyCheckInRepository>;
   let nutritionSignalsPort: {
     getGoalSignals: jest.MockedFunction<
-      (input: { authUserId: string; userProfileId: string; startDate: string; endDate: string }) => Promise<GoalNutritionSignals>
+      (input: {
+        authUserId: string;
+        userProfileId: string;
+        startDate: string;
+        endDate: string;
+      }) => Promise<GoalNutritionSignals>
     >;
   };
   let recoverySnapshotRepository: jest.Mocked<RecoverySnapshotRepository>;

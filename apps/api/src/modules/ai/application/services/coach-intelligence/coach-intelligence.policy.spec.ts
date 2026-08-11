@@ -44,7 +44,9 @@ describe('CoachIntelligenceFreshnessPolicy', () => {
   });
 });
 
-function buildSections(): ReturnType<CoachIntelligenceFreshnessPolicy['resolveAggregateAvailability']>['sections'] {
+function buildSections(): ReturnType<
+  CoachIntelligenceFreshnessPolicy['resolveAggregateAvailability']
+>['sections'] {
   const state = {
     availability: {
       status: 'available',

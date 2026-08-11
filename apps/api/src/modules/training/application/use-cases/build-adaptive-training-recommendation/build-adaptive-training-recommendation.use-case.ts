@@ -63,7 +63,9 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
     private readonly recoverySnapshotRepository: RecoverySnapshotRepository,
     @Inject(NUTRITION_TRAINING_SIGNALS_PORT)
     private readonly nutritionSignalsPort: {
-      getTrainingSignals(input: { authUserId: string }): Promise<TrainingNutritionSignals>;
+      getTrainingSignals(input: {
+        authUserId: string;
+      }): Promise<TrainingNutritionSignals>;
     },
     @Inject(ADAPTIVE_TRAINING_RECOMMENDATION_REPOSITORY)
     private readonly adaptiveTrainingRecommendationRepository: AdaptiveTrainingRecommendationRepository,
@@ -134,10 +136,12 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
           })
         : [];
 
-      const nutritionSignals = await this.nutritionSignalsPort.getTrainingSignals({
-        authUserId,
-      });
-      const nutritionAdherence = nutritionSignals.adherencePercentage ?? DEFAULT_NEUTRAL_SCORE;
+      const nutritionSignals =
+        await this.nutritionSignalsPort.getTrainingSignals({
+          authUserId,
+        });
+      const nutritionAdherence =
+        nutritionSignals.adherencePercentage ?? DEFAULT_NEUTRAL_SCORE;
 
       const recentWorkoutLogsCount = recentWorkoutLogs.length;
       const currentStreak = calculateStreak(orderedWorkoutLogs as WorkoutLog[]);
@@ -304,5 +308,4 @@ export class BuildAdaptiveTrainingRecommendationUseCase {
       endDate,
     };
   }
-
 }

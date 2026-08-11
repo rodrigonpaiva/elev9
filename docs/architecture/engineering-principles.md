@@ -1160,4 +1160,3 @@ Before merging any code, an engineer MUST verify:
 ## Final Note
 
 These principles are mandatory because they preserve the repository’s current architecture, its contract stability, and its ability to evolve safely over time.
-

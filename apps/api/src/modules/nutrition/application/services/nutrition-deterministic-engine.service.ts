@@ -161,7 +161,9 @@ export function calculateNutritionDeterministicState(
   ];
   const adherenceStatus = classifyAdherence({
     calorieProgress,
-    hasConsumedLogs: completedLogs.length > 0 || plannedLogs.some((log) => log.status === 'partial'),
+    hasConsumedLogs:
+      completedLogs.length > 0 ||
+      plannedLogs.some((log) => log.status === 'partial'),
   });
   const focus = buildFocus({
     calorieProgress,
@@ -294,7 +296,12 @@ function buildMacroProgress(
 function classifyProgressState(
   consumed: number,
   target: number,
-): 'not_started' | 'in_progress' | 'near_target' | 'target_reached' | 'above_target' {
+):
+  | 'not_started'
+  | 'in_progress'
+  | 'near_target'
+  | 'target_reached'
+  | 'above_target' {
   if (consumed <= 0) return 'not_started';
   if (consumed > target) return 'above_target';
   if (consumed === target) return 'target_reached';
@@ -309,7 +316,10 @@ function classifyAdherence(input: {
   if (input.calorieProgress.target === null) return 'unavailable';
   if (!input.hasConsumedLogs) return 'not_started';
   if (input.calorieProgress.state === 'above_target') return 'above_range';
-  if (input.calorieProgress.rawPercentage !== null && input.calorieProgress.rawPercentage >= 80) {
+  if (
+    input.calorieProgress.rawPercentage !== null &&
+    input.calorieProgress.rawPercentage >= 80
+  ) {
     return 'within_range';
   }
   return 'below_range';
@@ -331,11 +341,14 @@ function buildMealProgress(input: {
     completed,
     pending: Math.max(0, input.pending),
     completionPercentage:
-      input.planned > 0 ? roundPercentage((completed / input.planned) * 100) : null,
+      input.planned > 0
+        ? roundPercentage((completed / input.planned) * 100)
+        : null,
     nextMealId: input.nextMeal?.id ?? null,
     additionalLoggedCount: input.additionalLoggedCount,
     plannedCount: input.planned,
-    consumedCount: input.plannedLogs.filter((log) => log.status !== 'skipped').length,
+    consumedCount: input.plannedLogs.filter((log) => log.status !== 'skipped')
+      .length,
     completedCount: completed,
     remainingCount: Math.max(0, input.pending),
   };
@@ -357,7 +370,8 @@ function buildFocus(input: {
   }
   if (input.mealProgress.nextMealId) {
     return {
-      kind: input.mealProgress.completed === 0 ? 'log_meal' : 'complete_next_meal',
+      kind:
+        input.mealProgress.completed === 0 ? 'log_meal' : 'complete_next_meal',
       title: 'Continue with your plan',
       message: 'Your next planned meal is ready to complete.',
       priority: 'medium',
@@ -419,7 +433,8 @@ function buildInsight(input: {
     return {
       kind: 'protein_progress',
       title: 'Protein progress',
-      message: 'Continue with the planned meals to progress toward protein target.',
+      message:
+        'Continue with the planned meals to progress toward protein target.',
       action: { type: 'open_today_meals' },
     };
   }

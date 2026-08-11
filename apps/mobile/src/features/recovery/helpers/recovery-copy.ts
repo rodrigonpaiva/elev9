@@ -54,9 +54,7 @@ export function categoryLabel(category: RecoveryExperienceCategory): string {
   return categoryLabels[category];
 }
 
-export function freshnessLabel(
-  freshness: RecoveryExperienceFreshness,
-): string {
+export function freshnessLabel(freshness: RecoveryExperienceFreshness): string {
   return freshnessLabels[freshness];
 }
 
@@ -64,7 +62,9 @@ export function impactLabel(impact: RecoveryExperienceFactorImpact): string {
   return impactLabels[impact];
 }
 
-export function trendLabel(direction: RecoveryExperienceTrendDirection): string {
+export function trendLabel(
+  direction: RecoveryExperienceTrendDirection,
+): string {
   return trendLabels[direction];
 }
 
@@ -104,4 +104,3 @@ export function insightToneLabel(tone: RecoveryExperienceInsightTone): string {
         ? 'A supportive plan for today'
         : 'Today’s recovery guidance';
 }
-

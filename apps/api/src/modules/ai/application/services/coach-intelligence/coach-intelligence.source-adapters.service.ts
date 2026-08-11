@@ -352,7 +352,7 @@ export class CoachIntelligenceSourceAdaptersService {
   }): Promise<
     CoachIntelligenceSectionLoadResult<
       CoachIntelligenceSourceLoadResult['sections']['training']['data']
-  >
+    >
   > {
     return this.loadSection({
       sectionName: 'training',
