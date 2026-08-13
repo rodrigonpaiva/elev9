@@ -5,6 +5,9 @@ export class CreateDailyCheckInResponseDto {
     sleepQuality: number;
     muscleSoreness: number;
     motivationLevel: number;
+    localDate: string;
+    timezone: string;
     createdAt: string;
+    updatedAt: string;
   };
 }

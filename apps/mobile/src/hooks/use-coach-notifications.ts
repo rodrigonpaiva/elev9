@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   NotificationDecision,
   NotificationEngagementSummary,
@@ -8,6 +7,7 @@ import type {
 import { formatNotificationStatus, formatNotificationType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
+import { isCoachOptionalEmptyState } from './coach';
 
 export type CoachNotificationTarget =
   | 'coach-home'
@@ -169,8 +169,8 @@ export function useCoachNotifications(): CoachNotificationsResult {
 
     if (
       results.every((result) => result.status === 'rejected') &&
-      !isOptionalEmptyState(currentReason) &&
-      !isOptionalEmptyState(todayReason)
+      !isCoachOptionalEmptyState(currentReason, ['NOTIFICATION_NOT_FOUND']) &&
+      !isCoachOptionalEmptyState(todayReason, ['NOTIFICATION_NOT_FOUND'])
     ) {
       setState(INITIAL_STATE);
       setErrorMessage('Unable to load smart nudges.');
@@ -329,23 +329,29 @@ function buildUpcomingNudges(
 function buildHistoryItems(
   notifications: NotificationDecision[],
 ): CoachNotificationHistoryItem[] {
-  return notifications.slice(0, 8).map((notification) => {
-    const target = resolveTarget(notification);
-    const actionLabel = resolveActionLabel(notification);
+  return [...notifications]
+    .sort(
+      (left, right) =>
+        getNotificationPriorityRank(left) - getNotificationPriorityRank(right),
+    )
+    .slice(0, 8)
+    .map((notification) => {
+      const target = resolveTarget(notification);
+      const actionLabel = resolveActionLabel(notification);
 
-    return {
-      id: notification.id ?? `${notification.date}-${notification.type}`,
-      dateLabel: formatNotificationDate(notification),
-      title: notification.title,
-      detail: notification.message,
-      typeLabel: formatNotificationType(notification.type),
-      statusLabel: formatNotificationStatus(notification.status),
-      actionLabel,
-      target,
-      notificationId: notification.id ?? null,
-      accessibilityLabel: `${formatNotificationType(notification.type)}. ${formatNotificationDate(notification)}. ${notification.title}. ${notification.message}. Status ${formatNotificationStatus(notification.status)}.`,
-    };
-  });
+      return {
+        id: notification.id ?? `${notification.date}-${notification.type}`,
+        dateLabel: formatNotificationDate(notification),
+        title: notification.title,
+        detail: notification.message,
+        typeLabel: formatNotificationType(notification.type),
+        statusLabel: formatNotificationStatus(notification.status),
+        actionLabel,
+        target,
+        notificationId: notification.id ?? null,
+        accessibilityLabel: `${formatNotificationType(notification.type)}. ${formatNotificationDate(notification)}. ${notification.title}. ${notification.message}. Status ${formatNotificationStatus(notification.status)}.`,
+      };
+    });
 }
 
 function buildPreferences(
@@ -523,6 +529,30 @@ function resolveActionLabel(notification: NotificationDecision): string {
   }
 }
 
+function getNotificationPriorityRank(
+  notification: NotificationDecision,
+): number {
+  const typeRank: Record<NotificationDecision['type'], number> = {
+    recovery_alert: 0,
+    workout_reminder: 1,
+    missed_workout: 1,
+    nutrition_reminder: 2,
+    goal_milestone: 3,
+    goal_achievement: 3,
+    weekly_summary: 4,
+    coach_nudge: 5,
+  };
+
+  const priorityRank: Record<NotificationDecision['priority'], number> = {
+    urgent: 0,
+    high: 1,
+    medium: 2,
+    low: 3,
+  };
+
+  return typeRank[notification.type] * 10 + priorityRank[notification.priority];
+}
+
 function resolveTarget(
   notification: NotificationDecision,
 ): CoachNotificationTarget {
@@ -659,15 +689,6 @@ function buildAccessibilityLabel(input: {
   }
 
   return pieces.join(' ');
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    ['USER_PROFILE_NOT_FOUND', 'NOT_FOUND', 'NOTIFICATION_NOT_FOUND'].includes(
-      error.code,
-    )
-  );
 }
 
 export function trackCoachNotificationsEvent(

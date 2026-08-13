@@ -3,7 +3,11 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "../../dist/apps/api",
-    "incremental": false
+    "incremental": false,
+    "paths": {
+      "@elev9/types": ["../../dist/packages/types/src/index.d.ts"],
+      "@elev9/types/*": ["../../dist/packages/types/src/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "../../dist", "test", "**/*.spec.ts"]

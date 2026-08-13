@@ -243,8 +243,8 @@ describe('GetHomeDashboardDebugUseCase', () => {
         ],
       },
       nutrition: {
-        priority: 'recovery',
-        signals: ['high_fatigue', 'poor_sleep', 'high_soreness'],
+        priority: 'consistency',
+        signals: ['nutrition_unavailable'],
       },
     });
   });

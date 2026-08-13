@@ -19,7 +19,7 @@ import { UserProfileRepository } from '../../../../users/domain/repositories/use
 import { FitnessProfileRepository } from '../../../../fitness/domain/repositories/fitness-profile.repository';
 import { TrainingPlanRepository } from '../../../../training/domain/repositories/training-plan.repository';
 import { WorkoutLogRepository } from '../../../../progress/domain/repositories/workout-log.repository';
-import { NutritionRecommendationRepository } from '../../../../nutrition/domain/repositories/nutrition-recommendation.repository';
+import { NotificationNutritionSignals } from '../../../../nutrition/application/ports/nutrition-consumer.ports';
 import { NotificationInfluence } from '../../../../notifications/domain/value-objects/notification-influence.value-object';
 
 describe('BuildCoachDecisionUseCase', () => {
@@ -27,7 +27,7 @@ describe('BuildCoachDecisionUseCase', () => {
   let fitnessProfileRepository: jest.Mocked<FitnessProfileRepository>;
   let trainingPlanRepository: jest.Mocked<TrainingPlanRepository>;
   let workoutLogRepository: jest.Mocked<WorkoutLogRepository>;
-  let nutritionRecommendationRepository: jest.Mocked<NutritionRecommendationRepository>;
+  let nutritionSignalsPort: { getNotificationSignals: jest.Mock };
   let coachDecisionRepository: jest.Mocked<CoachDecisionRepository>;
   let getCurrentRecoveryUseCase: jest.Mocked<GetCurrentRecoveryUseCase>;
   let getCurrentGoalUseCase: jest.Mocked<GetCurrentGoalUseCase>;
@@ -56,9 +56,13 @@ describe('BuildCoachDecisionUseCase', () => {
       findByTrainingPlanIdsAndDateRange: jest.fn(),
       findByTrainingPlanIdsOrdered: jest.fn(),
     } as unknown as jest.Mocked<WorkoutLogRepository>;
-    nutritionRecommendationRepository = {
-      findManyByUserProfileId: jest.fn(),
-    } as unknown as jest.Mocked<NutritionRecommendationRepository>;
+    nutritionSignalsPort = {
+      getNotificationSignals: jest.fn().mockResolvedValue({
+        availability: 'not_configured',
+        freshness: 'unknown',
+        adherencePercentage: null,
+      } satisfies NotificationNutritionSignals),
+    };
     coachDecisionRepository = {
       upsertDailyDecision: jest.fn(),
     } as unknown as jest.Mocked<CoachDecisionRepository>;
@@ -114,7 +118,7 @@ describe('BuildCoachDecisionUseCase', () => {
       fitnessProfileRepository,
       trainingPlanRepository,
       workoutLogRepository,
-      nutritionRecommendationRepository,
+      nutritionSignalsPort,
       coachDecisionRepository,
       getCurrentRecoveryUseCase,
       getCurrentGoalUseCase,
@@ -151,9 +155,11 @@ describe('BuildCoachDecisionUseCase', () => {
       buildWorkoutLog('2026-06-03'),
       buildWorkoutLog('2026-06-02'),
     ]);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [buildNutritionRecommendation()],
-    );
+    nutritionSignalsPort.getNotificationSignals.mockResolvedValue({
+      availability: 'available',
+      freshness: 'current',
+      adherencePercentage: 82,
+    });
     getCurrentRecoveryUseCase.execute.mockResolvedValue({
       recoverySnapshot: buildRecoverySnapshot(),
     } as never);
@@ -220,7 +226,7 @@ describe('BuildCoachDecisionUseCase', () => {
       expect.objectContaining({
         userProfileId: 'profile_123',
         date: expectedDate,
-        nutritionRecommendationId: 'nutrition_123',
+        nutritionRecommendationId: undefined,
         adaptiveTrainingRecommendationId: 'adaptive_123',
         generatedBy: 'deterministic',
         llmMetadata: { used: false },
@@ -240,9 +246,6 @@ describe('BuildCoachDecisionUseCase', () => {
       buildUserProfile(),
     );
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [],
-    );
     workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
       [],
     );
@@ -309,9 +312,6 @@ describe('BuildCoachDecisionUseCase', () => {
       buildUserProfile(),
     );
     fitnessProfileRepository.findActiveByUserProfileId.mockResolvedValue(null);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [],
-    );
     workoutLogRepository.findByTrainingPlanIdsAndDateRange.mockResolvedValue(
       [],
     );
@@ -410,9 +410,6 @@ describe('BuildCoachDecisionUseCase', () => {
       [],
     );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [],
-    );
     getCurrentRecoveryUseCase.execute.mockResolvedValue({
       recoverySnapshot: buildRecoverySnapshot({ readinessScore: 32 }),
     } as never);
@@ -448,9 +445,6 @@ describe('BuildCoachDecisionUseCase', () => {
       [],
     );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [],
-    );
     getCurrentRecoveryUseCase.execute.mockResolvedValue({
       recoverySnapshot: buildRecoverySnapshot({ readinessScore: 72 }),
     } as never);
@@ -523,9 +517,6 @@ describe('BuildCoachDecisionUseCase', () => {
       [],
     );
     workoutLogRepository.findByTrainingPlanIdsOrdered.mockResolvedValue([]);
-    nutritionRecommendationRepository.findManyByUserProfileId.mockResolvedValue(
-      [],
-    );
     getCurrentRecoveryUseCase.execute.mockResolvedValue({
       recoverySnapshot: undefined,
     } as never);

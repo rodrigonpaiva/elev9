@@ -119,14 +119,6 @@ describe('GetCoachChatPromptDebugUseCase', () => {
         motivationLevel: 3,
         createdAt: new Date('2026-05-18T09:00:00.000Z'),
       },
-      nutritionProfile: {
-        goal: 'muscle_gain',
-        mealsPerDay: 4,
-        dietaryRestrictions: ['gluten_free'],
-        allergies: ['peanuts'],
-        dislikedFoods: ['broccoli'],
-        preferredFoods: ['rice', 'eggs'],
-      },
       generatedAt: new Date('2026-05-18T10:00:00.000Z'),
     } as never);
 
@@ -171,7 +163,7 @@ describe('GetCoachChatPromptDebugUseCase', () => {
       id: 'memory_123',
       conversationId: 'conversation_123',
       summary:
-        'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
+        'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
       metadata: {
         generatedFromMessageCount: 4,
         version: 'memory-v1',
@@ -210,7 +202,7 @@ describe('GetCoachChatPromptDebugUseCase', () => {
       context: {
         fatigueLevel: 'HIGH',
         recoveryTrend: 'needs_recovery',
-        hasNutritionProfile: true,
+        hasNutritionProfile: false,
         hasLatestCheckIn: true,
         recentWorkoutCount: 3,
         recentConversationMessages: 4,
@@ -228,7 +220,7 @@ describe('GetCoachChatPromptDebugUseCase', () => {
         version: 'memory-v1',
         generatedFromMessageCount: 4,
         summaryPreview:
-          'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; nutrition=muscle_gain/4 meals; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
+          'goal=gain_muscle; fatigue=HIGH; recovery=needs_recovery; workout_continuity=streak:5, recent_workouts:3; user_concern=recovery',
       },
     });
     expect(JSON.stringify(result)).not.toContain('auth_user_123');

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
 import { BuildRecoverySnapshotUseCase } from '../build-recovery-snapshot/build-recovery-snapshot.use-case';
 import {
@@ -16,9 +16,16 @@ import {
 import { GetTodayRecoveryInput } from './get-today-recovery.input';
 import { GetTodayRecoveryOutput } from './get-today-recovery.output';
 import { RecoveryDateService } from '../../services/recovery-date.service';
+import {
+  DAILY_CHECK_IN_REPOSITORY,
+  DailyCheckInRepository,
+} from '../../../../progress/domain/repositories/daily-check-in.repository';
+import { isRecoverySnapshotStaleForCheckIn } from '../../services/recovery-freshness';
 
 @Injectable()
 export class GetTodayRecoveryUseCase {
+  private readonly logger = new Logger(GetTodayRecoveryUseCase.name);
+
   constructor(
     @Inject(USER_PROFILE_REPOSITORY)
     private readonly userProfileRepository: UserProfileRepository,
@@ -26,6 +33,9 @@ export class GetTodayRecoveryUseCase {
     private readonly recoverySnapshotRepository: RecoverySnapshotRepository,
     private readonly buildRecoverySnapshotUseCase: BuildRecoverySnapshotUseCase,
     private readonly recoveryDateService: RecoveryDateService,
+    @Optional()
+    @Inject(DAILY_CHECK_IN_REPOSITORY)
+    private readonly dailyCheckInRepository?: DailyCheckInRepository,
   ) {}
 
   async execute(input: GetTodayRecoveryInput): Promise<GetTodayRecoveryOutput> {
@@ -50,7 +60,10 @@ export class GetTodayRecoveryUseCase {
         );
       }
 
-      const todayDate = this.recoveryDateService.todayUtcDateString();
+      const todayDate = this.recoveryDateService.getDateString(
+        new Date(),
+        String(userProfile.timezone || 'UTC'),
+      );
       const existingSnapshot =
         await this.recoverySnapshotRepository.findByUserProfileIdAndDate(
           userProfile.id,
@@ -58,9 +71,24 @@ export class GetTodayRecoveryUseCase {
         );
 
       if (existingSnapshot) {
-        return {
-          recoverySnapshot: existingSnapshot,
-        };
+        const todayCheckIn = this.dailyCheckInRepository
+          ? await this.dailyCheckInRepository.findByUserProfileIdAndLocalDate({
+              userProfileId: userProfile.id,
+              localDate: todayDate,
+            })
+          : null;
+
+        if (
+          !isRecoverySnapshotStaleForCheckIn(existingSnapshot, todayCheckIn)
+        ) {
+          return { recoverySnapshot: existingSnapshot };
+        }
+
+        this.logger.log({
+          event: 'recovery_stale_snapshot_rejected',
+          operation: 'recovery.today',
+          result: 'rebuild_required',
+        });
       }
 
       return await this.buildRecoverySnapshotUseCase.execute({

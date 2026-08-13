@@ -9,7 +9,11 @@ Nesta organização:
 - `docs/specs/` documenta os fluxos por contexto de negócio
 - `docs/adr/` registra decisões arquiteturais mais estáveis
 - os módulos evoluem por entregas incrementais
-- o estado atual do sistema, especialmente no módulo `ai`, segue uma abordagem `deterministic-first`
+- o estado atual do sistema inclui os contextos de recovery, training, nutrition, goals, habits, personalization, notifications e AI / Coach
+- o módulo `ai` já inclui governança de prompt, rollout canário determinístico, rollback por configuração e avaliação interna
+- a camada conversacional agora pode ser envolvida por um runtime interno de agentes, mas isso permanece desabilitado por padrão e sem alterar o contrato público
+- esse runtime interno agora também possui um registro metadata-only de ferramentas internas para planejamento futuro
+- esse runtime interno agora também possui um planning engine determinístico que produz planos validados e imutáveis antes do fluxo de chat existente
 - o bounded context `dashboard` documenta a superfície adaptativa da home e seus debug surfaces internos
 
 Este índice funciona como ponto central de navegação da arquitetura documental do projeto.
@@ -45,6 +49,7 @@ Repository CI validation flow, quality gates and deterministic validation policy
 ## Adaptive Experience
 
 - [dashboard](./dashboard/README.md)
+- [mobile coach intelligence integration](./mobile/coach-intelligence-integration/README.md)
 
 ## AI & Adaptive Coaching
 
@@ -63,29 +68,39 @@ Repository CI validation flow, quality gates and deterministic validation policy
 O módulo `ai` documentado em [docs/specs/ai/README.md](./ai/README.md) atualmente se organiza em torno do seguinte fluxo:
 
 ```txt
-UserHealthContext
-→ Recovery System
-→ Coach Feedback
-→ Explainability
-→ Replay
+CoachDecision
+→ CoachFeedback
+→ Conversational Coach
+→ Coach Home / Daily Briefing / Memory / Insights / Ask Coach / Weekly Review / Goal Guidance / Smart Notifications
+→ Safety / Reliability / Observability layers
+→ Prompt registry / evaluation / canary rollout / rollback governance
+→ Replay / Explainability
 ```
 
 Hoje, o módulo cobre principalmente:
 
 - context aggregation
-- recovery heuristics
-- nutrition awareness
+- coach decision generation
 - coach feedback generation
-- debug history
+- conversational coaching
+- explainability
 - replay
+- cross-surface coach reads
+- optional LLM-assisted chat behind safety, reliability, and observability layers
+- internal agent runtime scaffolding behind a disabled-by-default feature flag
+- deterministic intent classification and centralized context orchestration for the agent runtime
+- internal tool registry metadata for future execution planning without tool dispatch
+- request tracing, token accounting, bounded retention, and cost guardrails for LLM requests
+- prompt version registry with deterministic canary rollout and config-driven rollback
+- internal evaluation runner and golden prompt dataset
 
-O bounded context `dashboard` documentado em [docs/specs/dashboard/README.md](./dashboard/README.md) reutiliza o mesmo `UserHealthContext` e compartilha heurísticas determinísticas com essa camada contextual.
+O bounded context `dashboard` documentado em [docs/specs/dashboard/README.md](./dashboard/README.md) reutiliza o mesmo contexto contextual e compartilha read models com a camada coach.
 
 Importante:
 
-- o loop principal atual continua determinístico
-- integração com LLM ainda não faz parte do fluxo implementado principal
-- a explicabilidade do dashboard alinha-se à arquitetura de explainability do módulo `ai`
+- o loop principal atual continua deterministic-first
+- o produto usa read models já implementados para coach, habits, goals, personalization e notifications
+- a explicabilidade do dashboard e do coach alinha-se à mesma arquitetura de explainability
 
 ---
 
@@ -93,6 +108,10 @@ Importante:
 
 - [ADR-002 — Recovery & Adaptive Coaching System](../adr/adr-002-recovery-system.md)
 - [ADR-003 — Coach Feedback Explainability & Replay System](../adr/adr-003-coach-feedback-explainability.md)
+- [ADR-004 — Conversational Coach Architecture](../adr/adr-004-conversational-coach-architecture.md)
+- [ADR-005 — AI Coach Experience](../adr/adr-005-ai-coach-experience.md)
+- [ADR-006 — AI LLM Observability & Cost Control](../adr/adr-006-ai-llm-observability-cost-control.md)
+- [ADR-010 — AI Agent Platform Core Architecture](../adr/adr-010-ai-agent-platform-core-architecture.md)
 
 ---
 
@@ -102,11 +121,18 @@ O estado atual da arquitetura pode ser resumido por:
 
 - modular monolith
 - spec-driven workflow
-- deterministic-first AI
-- heuristic recovery system
+- deterministic-first read models
 - safe reduced contexts
+- centralized domain selection before context loading
 - replay/debug infrastructure
 - internal explainability metadata
+- coach-centric mobile surfaces
+- optional LLM-assisted chat with safety, reliability, and observability controls
+- internal agent runtime foundation with tool execution postponed
+- intent classification and context orchestration inside the agent runtime
+- centralized policy governance for runtime authorization and deterministic fallback
+- internal tool registry as a metadata-only catalog for future execution
+- planning engine and validator for immutable execution plans
 
 Essas características descrevem o sistema atual e não devem ser lidas como capacidades avançadas de IA generativa.
 
@@ -120,8 +146,7 @@ Possíveis direções arquiteturais futuras, ainda não implementadas:
 - semantic memory
 - adaptive recommendation engine
 - wearable integrations
-- nutrition intelligence
-- evaluation engine
+- richer telemetry pipelines
 
 Esses itens devem ser tratados como roadmap técnico, não como comportamento atual do sistema.
 

@@ -2,7 +2,7 @@
 
 ## Summary
 
-Elev9 Coach is organized as an Nx monorepo with a modular NestJS backend and an Expo React Native client. The current architecture is intentionally MVP-oriented: clear boundaries, low operational complexity, and enough structure to scale without rewriting core flows.
+Elev9 Coach is organized as an Nx monorepo with a modular NestJS backend and an Expo React Native client. The current architecture now supports the full AI Coach experience in mobile, alongside the core training, nutrition, recovery, goals, habits, personalization, notification, and AI observability flows.
 
 ## Workspace Structure
 
@@ -37,6 +37,13 @@ Main implemented domains:
 - `fitness`
 - `training`
 - `progress`
+- `nutrition`
+- `recovery`
+- `goals`
+- `habits`
+- `personalization`
+- `notifications`
+- `ai`
 - `dashboard`
 
 ## Mobile Model
@@ -48,6 +55,9 @@ Current mobile scope:
 - login
 - token persistence
 - authenticated dashboard flow
+- full AI Coach experience
+- workout, nutrition, recovery, and goal-linked surfaces
+- AI coach home, conversation, briefing, memory, insights, ask coach, weekly review, goal guidance, and smart notifications
 
 ## Shared Packages
 
@@ -69,14 +79,18 @@ The project optimizes for:
 
 - implementation clarity
 - low-friction iteration
+- contract consistency across backend and clients
+- explainable coach surfaces
+- safety, reliability, and observability around optional LLM-assisted coaching
+- modern OpenAI Responses API usage with structured outputs and a centralized parser
+- additive streaming transport for coach chat without changing the synchronous contract
+- prompt version registry, canary rollout, rollback, and internal evaluation for coach prompts
 - safe future extraction
-- strong contract consistency across backend and clients
 
 It does not yet optimize for:
 
 - distributed services
 - advanced caching
-- production-grade observability
 - large-scale operational concerns
 
 ## Engineering Highlights
@@ -90,4 +104,4 @@ It does not yet optimize for:
 
 ## Positioning
 
-This is an MVP in progress, not a production-ready platform. The architecture is designed to demonstrate sound engineering decisions, product iteration discipline, and a credible path toward broader web and mobile surfaces.
+The architecture is designed to demonstrate sound engineering decisions, product iteration discipline, and a credible path toward broader web and mobile surfaces.

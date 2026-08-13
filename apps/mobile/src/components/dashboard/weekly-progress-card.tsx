@@ -9,7 +9,6 @@ type ProgressSummary = ProgressSummaryResponse['summary'];
 type WeeklyProgressCardProps = {
   progressSummary: ProgressSummary | null;
   plannedWorkouts: number;
-  nutritionAdherencePercentage?: number | null;
   recoveryScore?: number | null;
   trendValues?: number[];
   isLoading: boolean;
@@ -39,7 +38,6 @@ const tokens = {
 export const WeeklyProgressCard = memo(function WeeklyProgressCard({
   errorMessage,
   isLoading,
-  nutritionAdherencePercentage,
   onRetry,
   onOpenWeeklyReview,
   onViewAnalytics,
@@ -56,7 +54,6 @@ export const WeeklyProgressCard = memo(function WeeklyProgressCard({
 
     if (
       isProgressEmpty({
-        nutritionAdherencePercentage,
         progressSummary,
         recoveryScore,
       })
@@ -65,19 +62,12 @@ export const WeeklyProgressCard = memo(function WeeklyProgressCard({
     }
 
     return buildWeeklyProgressModel({
-      nutritionAdherencePercentage,
       plannedWorkouts,
       progressSummary,
       recoveryScore,
       trendValues,
     });
-  }, [
-    nutritionAdherencePercentage,
-    plannedWorkouts,
-    progressSummary,
-    recoveryScore,
-    trendValues,
-  ]);
+  }, [plannedWorkouts, progressSummary, recoveryScore, trendValues]);
 
   if (isLoading) {
     return <WeeklyProgressSkeleton />;
@@ -253,7 +243,6 @@ function Sparkline({ values }: { values: number[] }) {
 }
 
 function buildWeeklyProgressModel({
-  nutritionAdherencePercentage,
   plannedWorkouts,
   progressSummary,
   recoveryScore,
@@ -261,7 +250,6 @@ function buildWeeklyProgressModel({
 }: {
   progressSummary: ProgressSummary;
   plannedWorkouts: number;
-  nutritionAdherencePercentage?: number | null;
   recoveryScore?: number | null;
   trendValues?: number[];
 }) {
@@ -271,15 +259,10 @@ function buildWeeklyProgressModel({
     progressSummary.workoutsCompleted / workoutTarget,
   );
   const trend = getTrend({
-    nutritionAdherencePercentage,
     recoveryScore,
     workoutCompletion,
   });
   const recoveryLabel = getRecoveryLabel(recoveryScore);
-  const nutritionLabel =
-    typeof nutritionAdherencePercentage === 'number'
-      ? `${Math.round(nutritionAdherencePercentage)}%`
-      : '--';
   const sparklineValues =
     trendValues && trendValues.length >= 2 ? trendValues.slice(-7) : null;
 
@@ -292,63 +275,55 @@ function buildWeeklyProgressModel({
         value: `${progressSummary.workoutsCompleted} / ${workoutTarget}`,
       },
       {
-        label: 'Nutrition',
-        value: nutritionLabel,
+        label: 'Consistency',
+        value: `${progressSummary.currentStreak} day${
+          progressSummary.currentStreak === 1 ? '' : 's'
+        }`,
       },
       {
         label: 'Recovery',
         value: recoveryLabel,
       },
     ],
-    momentum: getMomentum(progressSummary, nutritionAdherencePercentage),
+    momentum: getMomentum(progressSummary),
     sparklineValues,
     focus: getWeeklyFocus({
-      nutritionAdherencePercentage,
       progressSummary,
       recoveryScore,
       workoutTarget,
     }),
-    accessibilityLabel: `Weekly progress ${trend.label.toLowerCase()}. ${progressSummary.workoutsCompleted} of ${workoutTarget} workouts completed. Nutrition adherence ${nutritionLabel}.`,
+    accessibilityLabel: `Weekly progress ${trend.label.toLowerCase()}. ${progressSummary.workoutsCompleted} of ${workoutTarget} workouts completed. ${progressSummary.currentStreak} day consistency streak.`,
   };
 }
 
 function isProgressEmpty({
-  nutritionAdherencePercentage,
   progressSummary,
   recoveryScore,
 }: {
   progressSummary: ProgressSummary;
-  nutritionAdherencePercentage?: number | null;
   recoveryScore?: number | null;
 }): boolean {
   return (
     progressSummary.workoutsCompleted === 0 &&
     progressSummary.currentStreak === 0 &&
     progressSummary.lastWorkoutDate === null &&
-    typeof nutritionAdherencePercentage !== 'number' &&
     typeof recoveryScore !== 'number'
   );
 }
 
 function getTrend({
-  nutritionAdherencePercentage,
   recoveryScore,
   workoutCompletion,
 }: {
   workoutCompletion: number;
-  nutritionAdherencePercentage?: number | null;
   recoveryScore?: number | null;
 }): {
   label: TrendLabel;
   badgeVariant: BadgeVariant;
 } {
-  const nutritionScore =
-    typeof nutritionAdherencePercentage === 'number'
-      ? nutritionAdherencePercentage / 100
-      : 0.6;
   const recoveryMomentum =
     typeof recoveryScore === 'number' ? recoveryScore / 100 : 0.6;
-  const average = (workoutCompletion + nutritionScore + recoveryMomentum) / 3;
+  const average = (workoutCompletion + recoveryMomentum) / 2;
 
   if (average >= 0.78) {
     return { label: 'Improving', badgeVariant: 'primary' };
@@ -393,19 +368,9 @@ function getRecoveryLabel(score?: number | null): string {
   return 'Low';
 }
 
-function getMomentum(
-  summary: ProgressSummary,
-  nutritionAdherencePercentage?: number | null,
-): string {
+function getMomentum(summary: ProgressSummary): string {
   if (summary.currentStreak > 0) {
     return `${summary.currentStreak}-day workout streak`;
-  }
-
-  if (
-    typeof nutritionAdherencePercentage === 'number' &&
-    nutritionAdherencePercentage >= 80
-  ) {
-    return 'Nutrition adherence is on track';
   }
 
   if (summary.workoutsCompleted > 0) {
@@ -416,14 +381,12 @@ function getMomentum(
 }
 
 function getWeeklyFocus({
-  nutritionAdherencePercentage,
   progressSummary,
   recoveryScore,
   workoutTarget,
 }: {
   progressSummary: ProgressSummary;
   workoutTarget: number;
-  nutritionAdherencePercentage?: number | null;
   recoveryScore?: number | null;
 }): string {
   if (progressSummary.workoutsCompleted < workoutTarget) {
@@ -432,13 +395,6 @@ function getWeeklyFocus({
 
   if (typeof recoveryScore === 'number' && recoveryScore < 60) {
     return 'Prioritize recovery tomorrow.';
-  }
-
-  if (
-    typeof nutritionAdherencePercentage === 'number' &&
-    nutritionAdherencePercentage < 70
-  ) {
-    return 'Stay consistent with meal timing.';
   }
 
   return 'Maintain current momentum.';

@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -34,7 +34,7 @@ The engine must remain:
 
 ## Decision
 
-The Adaptive Training Engine will be implemented as a deterministic bounded capability that owns adaptive training recommendation generation.
+The Adaptive Training Engine is implemented as a deterministic bounded capability that owns adaptive training recommendation generation.
 
 The module will own:
 
@@ -44,7 +44,7 @@ The module will own:
 - recommendation persistence
 - current/today/history read models
 
-The engine will consume signals from existing bounded contexts:
+The engine consumes signals from existing bounded contexts:
 
 - `training`
 - `progress`

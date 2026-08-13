@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -34,7 +34,7 @@ The recovery layer must remain:
 
 ## Decision
 
-The Recovery & Readiness Engine will be implemented as a deterministic bounded capability that owns the recovery snapshot lifecycle.
+The Recovery & Readiness Engine is implemented as a deterministic bounded capability that owns the recovery snapshot lifecycle.
 
 The module will own:
 
@@ -52,7 +52,7 @@ The source signals will continue to come from existing bounded contexts:
 - `nutrition`
 - `ai` context
 
-The new engine will be the canonical producer of recovery data for:
+The engine is the canonical producer of recovery data for:
 
 - `dashboard`
 - `ai` context

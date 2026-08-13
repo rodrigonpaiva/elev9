@@ -38,15 +38,15 @@ packages/
 
 #### `apps/api`
 
-Contém o backend NestJS já existente, preservando a arquitetura atual de modular monolith e os contextos de domínio já implementados.
+Contém o backend NestJS, preservando a arquitetura de modular monolith e os contextos de domínio implementados.
 
 #### `apps/mobile`
 
-É o canal principal do usuário no MVP. Deve concentrar a experiência principal do produto, onboarding, uso recorrente, acompanhamento de treino e evolução diária.
+É o canal principal do usuário. Concentra a experiência principal do produto, onboarding, coach contextual, treino, nutrição, recuperação, objetivos e notificações.
 
 #### `apps/web`
 
-No curto prazo, pode começar como landing page institucional e superfície mínima do produto. No médio prazo, pode evoluir para dashboard web do usuário e, no futuro, para backoffice/admin.
+Hoje permanece uma superfície secundária e mínima. Não é o canal principal da experiência do usuário.
 
 ### Papel de cada package
 
@@ -61,10 +61,6 @@ Contém o client HTTP reutilizável para consumo da API, incluindo configuraçã
 #### `packages/ui`
 
 Contém componentes compartilháveis quando isso fizer sentido. O escopo deve ser restrito a UI simples e transversal, evitando abstrações pesadas ou dependência de regras de negócio.
-
-#### `packages/config`
-
-Contém configurações compartilhadas, como presets de TypeScript, ESLint, Prettier e convenções úteis para todo o workspace.
 
 ## 3. Stack Escolhida
 

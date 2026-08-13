@@ -1,7 +1,11 @@
 import { DailyCheckIn } from '../entities/daily-check-in.entity';
 
-export interface CreateDailyCheckInRepositoryInput {
+export interface UpsertDailyCheckInRepositoryInput {
   userProfileId: string;
+  localDate: string;
+  timezone: string;
+  legacyDayStart?: Date;
+  legacyDayEnd?: Date;
   energyLevel: number;
   sleepQuality: number;
   muscleSoreness: number;
@@ -9,7 +13,13 @@ export interface CreateDailyCheckInRepositoryInput {
 }
 
 export interface DailyCheckInRepository {
-  create(input: CreateDailyCheckInRepositoryInput): Promise<DailyCheckIn>;
+  upsert(input: UpsertDailyCheckInRepositoryInput): Promise<DailyCheckIn>;
+  findByUserProfileIdAndLocalDate(input: {
+    userProfileId: string;
+    localDate: string;
+    legacyDayStart?: Date;
+    legacyDayEnd?: Date;
+  }): Promise<DailyCheckIn | null>;
   findLatestByUserProfileId(
     userProfileId: string,
   ): Promise<DailyCheckIn | null>;

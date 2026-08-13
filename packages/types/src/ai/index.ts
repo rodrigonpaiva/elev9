@@ -178,3 +178,5 @@ export interface CoachFeedbackCoachDecision {
   actionItems: string[];
   influences: CoachDecisionInfluence[];
 }
+
+export * from './coach-intelligence';

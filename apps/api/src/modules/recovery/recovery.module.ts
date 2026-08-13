@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { AuthModule } from '../auth/auth.module';
@@ -26,13 +26,21 @@ import {
 } from './infrastructure/mongoose/recovery-snapshot.schema';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
 import { RecoveryController } from './presentation/http/recovery.controller';
+import { RecoveryCategoryPolicy } from './application/services/recovery-category.policy';
+import { RecoveryFactorBreakdownPolicy } from './application/services/recovery-factor-breakdown.policy';
+import { RecoveryInsightPolicy } from './application/services/recovery-insight.policy';
+import { RecoveryReadModelMapper } from './application/services/recovery-read-model.mapper';
+import { RecoveryTrendPolicy } from './application/services/recovery-trend.policy';
+import { GetCurrentRecoveryReadModelUseCase } from './application/use-cases/get-current-recovery-read-model/get-current-recovery-read-model.use-case';
+import { GetRecoveryHistoryReadModelUseCase } from './application/use-cases/get-recovery-history-read-model/get-recovery-history-read-model.use-case';
+import { RecoveryObservabilityService } from './application/services/recovery-observability.service';
 
 @Module({
   imports: [
     AuthModule,
     UsersModule,
     FitnessModule,
-    ProgressModule,
+    forwardRef(() => ProgressModule),
     MongooseModule.forFeature([
       {
         name: TRAINING_PLAN_MODEL_NAME,
@@ -54,6 +62,14 @@ import { RecoveryController } from './presentation/http/recovery.controller';
     GetTodayRecoveryUseCase,
     GetCurrentRecoveryUseCase,
     GetRecoveryHistoryUseCase,
+    RecoveryCategoryPolicy,
+    RecoveryFactorBreakdownPolicy,
+    RecoveryInsightPolicy,
+    RecoveryReadModelMapper,
+    RecoveryTrendPolicy,
+    GetCurrentRecoveryReadModelUseCase,
+    GetRecoveryHistoryReadModelUseCase,
+    RecoveryObservabilityService,
     {
       provide: TRAINING_PLAN_REPOSITORY,
       useClass: MongooseTrainingPlanRepository,
@@ -69,7 +85,9 @@ import { RecoveryController } from './presentation/http/recovery.controller';
     BuildRecoverySnapshotUseCase,
     GetTodayRecoveryUseCase,
     GetCurrentRecoveryUseCase,
+    GetCurrentRecoveryReadModelUseCase,
     GetRecoveryHistoryUseCase,
+    RecoveryObservabilityService,
   ],
 })
 export class RecoveryModule {}

@@ -50,7 +50,10 @@ describe('GetDailyCheckInHistoryUseCase', () => {
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 5,
+        localDate: '2026-05-14',
+        timezone: 'UTC',
         createdAt: '2026-05-14T10:00:00.000Z',
+        updatedAt: '2026-05-14T10:00:00.000Z',
       },
       {
         id: 'checkin_1',
@@ -58,7 +61,10 @@ describe('GetDailyCheckInHistoryUseCase', () => {
         sleepQuality: 3,
         muscleSoreness: 2,
         motivationLevel: 5,
+        localDate: '2026-05-13',
+        timezone: 'UTC',
         createdAt: '2026-05-13T10:00:00.000Z',
+        updatedAt: '2026-05-13T10:00:00.000Z',
       },
     ]);
   });

@@ -165,7 +165,6 @@ describe('GenerateCoachFeedbackUseCase', () => {
       expect.objectContaining({
         fatigueLevel: 'MODERATE',
         latestCheckIn: undefined,
-        nutritionProfile: undefined,
         notification: expect.objectContaining({
           current: expect.objectContaining({
             type: 'coach_nudge',
@@ -459,35 +458,17 @@ describe('GenerateCoachFeedbackUseCase', () => {
     );
   });
 
-  it('passes nutritionProfile from health context to the generator', async () => {
+  it('does not pass raw Nutrition fields to the generator', async () => {
     buildUserHealthContextService.build.mockResolvedValue(
-      buildHealthContext({
-        nutritionProfile: {
-          goal: 'muscle_gain',
-          mealsPerDay: 4,
-          dietaryRestrictions: [],
-          allergies: [],
-          dislikedFoods: [],
-          preferredFoods: ['rice', 'eggs'],
-        },
-      }),
+      buildHealthContext({}),
     );
 
     await useCase.execute({
       authUserId: 'auth_user_123',
     });
 
-    expect(generateSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        nutritionProfile: {
-          goal: 'muscle_gain',
-          mealsPerDay: 4,
-          dietaryRestrictions: [],
-          allergies: [],
-          dislikedFoods: [],
-          preferredFoods: ['rice', 'eggs'],
-        },
-      }) as CoachFeedbackGeneratorInput,
+    expect(generateSpy.mock.calls[0]?.[0]).not.toHaveProperty(
+      'nutritionProfile',
     );
     expect(coachFeedbackRepository.create).toHaveBeenCalledWith({
       userProfileId: 'profile_123',
@@ -511,14 +492,6 @@ describe('GenerateCoachFeedbackUseCase', () => {
           motivationLevel: 3,
           createdAt: new Date('2026-05-04T09:00:00.000Z'),
         },
-        nutritionProfile: {
-          goal: 'fat_loss',
-          mealsPerDay: 2,
-          dietaryRestrictions: ['vegetarian'],
-          allergies: [],
-          dislikedFoods: [],
-          preferredFoods: [],
-        },
         recentWorkoutLogs: [
           buildWorkoutLog('2026-05-02', 40),
           buildWorkoutLog('2026-05-04', 44),
@@ -538,9 +511,6 @@ describe('GenerateCoachFeedbackUseCase', () => {
           'checkin:low_energy',
           'checkin:poor_sleep',
           'checkin:high_soreness',
-          'nutrition:fat_loss',
-          'nutrition:low_meal_frequency',
-          'nutrition:dietary_restrictions',
           'training:low_consistency',
         ]),
         contextSnapshot: expect.objectContaining({
@@ -557,10 +527,6 @@ describe('GenerateCoachFeedbackUseCase', () => {
             sleepQuality: 2,
             muscleSoreness: 4,
             motivationLevel: 3,
-          },
-          nutritionProfile: {
-            goal: 'fat_loss',
-            mealsPerDay: 2,
           },
           recentWorkoutLogs: [
             {

@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import type { ReactNode } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -14,6 +13,13 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Text } from '@elev9/ui';
 
+import {
+  CoachCenteredState,
+  CoachHeroCard,
+  CoachEvidenceList,
+  CoachPriorityBanner,
+  CoachSection,
+} from '../components/coach';
 import type {
   CoachDailyBriefingModel,
   DailyBriefingPrimaryAction,
@@ -132,6 +138,7 @@ export function CoachDailyBriefingScreen() {
         >
           <MorningGreeting model={briefing.model} />
           <SummaryHero model={briefing.model} />
+          <PriorityBanner model={briefing.model} />
           <WhyButton onPress={() => navigation.navigate('CoachInsights')} />
           <NeedHelpButton onPress={() => navigation.navigate('AskCoach')} />
           <WeeklyReviewButton
@@ -143,6 +150,7 @@ export function CoachDailyBriefingScreen() {
           <CoachInterpretation model={briefing.model} />
           <Priorities priorities={briefing.model.priorities} />
           <ReadinessOverview items={briefing.model.readiness} />
+          <EvidenceSection model={briefing.model} />
           {briefing.model.schedule.length > 0 ? (
             <TodaySchedule schedule={briefing.model.schedule} />
           ) : null}
@@ -180,21 +188,44 @@ const SummaryHero = memo(function SummaryHero({
   model: CoachDailyBriefingModel;
 }) {
   return (
-    <View
-      accessibilityLabel={`Today's summary. ${model.summary}`}
-      style={styles.hero}
-    >
-      <View style={styles.heroIcon}>
-        <Ionicons name="sunny-outline" size={20} color={briefingTokens.text} />
-      </View>
-      <Text
-        maxFontSizeMultiplier={1.25}
-        numberOfLines={2}
-        style={styles.heroText}
-      >
-        {model.summary}
-      </Text>
-    </View>
+    <CoachHeroCard
+      accessibilityLabel={`Today's summary. ${model.summary}. ${model.currentFocus}.`}
+      containerStyle={styles.hero}
+      iconColor={briefingTokens.text}
+      iconContainerStyle={styles.heroIcon}
+      iconName="sunny-outline"
+      title={model.summary}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25, numberOfLines: 2 }}
+      titleStyle={styles.heroText}
+    />
+  );
+});
+
+const PriorityBanner = memo(function PriorityBanner({
+  model,
+}: {
+  model: CoachDailyBriefingModel;
+}) {
+  return (
+    <CoachPriorityBanner
+      confidenceLevel={model.confidenceLevel}
+      detail={model.supportingEvidenceSummary || model.interpretation}
+      focus={model.focus}
+      riskLevel={model.riskLevel}
+      title={model.topRecommendation}
+    />
+  );
+});
+
+const EvidenceSection = memo(function EvidenceSection({
+  model,
+}: {
+  model: CoachDailyBriefingModel;
+}) {
+  return (
+    <CoachSection title="Supporting Evidence" style={styles.section}>
+      <CoachEvidenceList evidence={model.evidence} maxItems={3} />
+    </CoachSection>
   );
 });
 
@@ -284,7 +315,7 @@ const CoachInterpretation = memo(function CoachInterpretation({
   model: CoachDailyBriefingModel;
 }) {
   return (
-    <Section title="Coach Interpretation">
+    <CoachSection title="Coach Interpretation" style={styles.section}>
       <View
         accessibilityLabel={`Coach interpretation. ${model.interpretation}`}
         style={styles.interpretationCard}
@@ -293,7 +324,7 @@ const CoachInterpretation = memo(function CoachInterpretation({
           {model.interpretation}
         </Text>
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -303,7 +334,7 @@ const Priorities = memo(function Priorities({
   priorities: DailyBriefingPriority[];
 }) {
   return (
-    <Section title="Priorities">
+    <CoachSection title="Priorities" style={styles.section}>
       <View style={styles.priorityStack}>
         {priorities.map((priority, index) => (
           <View
@@ -328,7 +359,7 @@ const Priorities = memo(function Priorities({
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -338,7 +369,7 @@ const ReadinessOverview = memo(function ReadinessOverview({
   items: DailyBriefingReadinessItem[];
 }) {
   return (
-    <Section title="Readiness Overview">
+    <CoachSection title="Readiness Overview" style={styles.section}>
       <View style={styles.readinessGrid}>
         {items.map((item) => (
           <View
@@ -353,7 +384,7 @@ const ReadinessOverview = memo(function ReadinessOverview({
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -363,7 +394,7 @@ const TodaySchedule = memo(function TodaySchedule({
   schedule: DailyBriefingScheduleItem[];
 }) {
   return (
-    <Section title="Today's Schedule">
+    <CoachSection title="Today's Schedule" style={styles.section}>
       <View style={styles.timeline}>
         {schedule.map((item, index) => (
           <View key={item.id} style={styles.timelineRow}>
@@ -382,7 +413,7 @@ const TodaySchedule = memo(function TodaySchedule({
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -425,17 +456,6 @@ const PrimaryAction = memo(function PrimaryAction({
   );
 });
 
-function Section({ children, title }: { children: ReactNode; title: string }) {
-  return (
-    <View style={styles.section}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
-        {title}
-      </Text>
-      {children}
-    </View>
-  );
-}
-
 function DailyBriefingSkeleton() {
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -468,12 +488,8 @@ function BriefingState({
   secondaryText?: string;
 }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={message} style={styles.stateContent}>
-        <Text style={styles.stateTitle}>{message}</Text>
-        {secondaryText ? (
-          <Text style={styles.stateSecondary}>{secondaryText}</Text>
-        ) : null}
+    <CoachCenteredState
+      action={
         <Pressable
           accessibilityLabel={buttonLabel}
           accessibilityRole="button"
@@ -485,8 +501,16 @@ function BriefingState({
         >
           <Text style={styles.primaryActionText}>{buttonLabel}</Text>
         </Pressable>
-      </View>
-    </SafeAreaView>
+      }
+      contentStyle={styles.stateContent}
+      message={message}
+      safeAreaStyle={styles.safeArea}
+      secondaryText={secondaryText}
+      secondaryTextStyle={styles.stateSecondary}
+      titleStyle={styles.stateTitle}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
+      secondaryTextProps={{ maxFontSizeMultiplier: 1.35 }}
+    />
   );
 }
 

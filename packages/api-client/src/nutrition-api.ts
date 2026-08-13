@@ -1,9 +1,15 @@
 import type {
   CalculateMacroTargetsResponse,
+  CreateNutritionProfileRequest,
+  CreateNutritionProfileResponse,
   CreateNutritionPlanResponse,
   GetCurrentNutritionPlanResponse,
+  GetNutritionProfileResponse,
   GetNutritionRecommendationsResponse,
   GetTodayNutritionResponse,
+  GetNutritionHistoryResponse,
+  GetNutritionHistoryDayResponse,
+  GetNutritionTrendsResponse,
   GenerateNutritionRecommendationResponse,
   LogMealRequest,
   LogMealResponse,
@@ -19,6 +25,23 @@ export function createNutritionApi(httpClient: HttpClient) {
       return httpClient.request<CalculateMacroTargetsResponse>({
         method: 'POST',
         path: '/nutrition/macro-targets/calculate',
+      });
+    },
+
+    createNutritionProfile(
+      input: CreateNutritionProfileRequest,
+    ): Promise<CreateNutritionProfileResponse> {
+      return httpClient.request<CreateNutritionProfileResponse>({
+        method: 'POST',
+        path: '/nutrition/profile',
+        body: input,
+      });
+    },
+
+    getNutritionProfile(): Promise<GetNutritionProfileResponse> {
+      return httpClient.request<GetNutritionProfileResponse>({
+        method: 'GET',
+        path: '/nutrition/profile',
       });
     },
 
@@ -40,6 +63,45 @@ export function createNutritionApi(httpClient: HttpClient) {
       return httpClient.request<GetTodayNutritionResponse>({
         method: 'GET',
         path: '/nutrition/today',
+      });
+    },
+
+    getHistory(input?: {
+      from?: string;
+      to?: string;
+      cursor?: string;
+      limit?: number;
+    }): Promise<GetNutritionHistoryResponse> {
+      const params = new URLSearchParams();
+      if (input?.from) params.set('from', input.from);
+      if (input?.to) params.set('to', input.to);
+      if (input?.cursor) params.set('cursor', input.cursor);
+      if (input?.limit !== undefined) params.set('limit', String(input.limit));
+      const query = params.toString();
+      return httpClient.request<GetNutritionHistoryResponse>({
+        method: 'GET',
+        path: `/nutrition/history${query ? `?${query}` : ''}`,
+      });
+    },
+
+    getHistoryDay(date: string): Promise<GetNutritionHistoryDayResponse> {
+      return httpClient.request<GetNutritionHistoryDayResponse>({
+        method: 'GET',
+        path: `/nutrition/history/${encodeURIComponent(date)}`,
+      });
+    },
+
+    getTrends(input?: {
+      from?: string;
+      to?: string;
+    }): Promise<GetNutritionTrendsResponse> {
+      const params = new URLSearchParams();
+      if (input?.from) params.set('from', input.from);
+      if (input?.to) params.set('to', input.to);
+      const query = params.toString();
+      return httpClient.request<GetNutritionTrendsResponse>({
+        method: 'GET',
+        path: `/nutrition/trends${query ? `?${query}` : ''}`,
       });
     },
 

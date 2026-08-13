@@ -1,11 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
   UserProfileRepository,
 } from '../../../../users/domain/repositories/user-profile.repository';
-import { Meal } from '../../../domain/entities/meal.entity';
-import { NutritionLog } from '../../../domain/entities/nutrition-log.entity';
 import {
   NUTRITION_LOG_REPOSITORY,
   NutritionLogRepository,
@@ -14,7 +12,8 @@ import {
   NUTRITION_PLAN_REPOSITORY,
   NutritionPlanRepository,
 } from '../../../domain/repositories/nutrition-plan.repository';
-import { MacroTargetsProps } from '../../../domain/value-objects/macro-targets.value-object';
+import { calculateNutritionDeterministicState } from '../../services/nutrition-deterministic-engine.service';
+import { NutritionLog } from '../../../domain/entities/nutrition-log.entity';
 import {
   GET_TODAY_NUTRITION_ERROR_CODES,
   GetTodayNutritionError,
@@ -23,6 +22,10 @@ import {
   GetTodayNutritionOutput,
   TodayNutritionProgressOutput,
 } from './get-today-nutrition.output';
+import {
+  NutritionObservabilityService,
+  NutritionSafeErrorCode,
+} from '../../services/nutrition-observability.service';
 
 @Injectable()
 export class GetTodayNutritionUseCase {
@@ -33,11 +36,14 @@ export class GetTodayNutritionUseCase {
     private readonly nutritionPlanRepository: NutritionPlanRepository,
     @Inject(NUTRITION_LOG_REPOSITORY)
     private readonly nutritionLogRepository: NutritionLogRepository,
+    @Optional()
+    private readonly observability?: NutritionObservabilityService,
   ) {}
 
   async execute(input: {
     authUserId: string;
   }): Promise<GetTodayNutritionOutput> {
+    const startedAt = Date.now();
     const authUserId =
       typeof input.authUserId === 'string' ? input.authUserId.trim() : '';
 
@@ -53,10 +59,9 @@ export class GetTodayNutritionUseCase {
         await this.userProfileRepository.findByAuthUserId(authUserId);
 
       if (!userProfile) {
-        throw new GetTodayNutritionError(
-          GET_TODAY_NUTRITION_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-          'User profile not found.',
-        );
+        return {
+          todayNutrition: buildUnavailableTodayNutrition('not_configured'),
+        };
       }
 
       const nutritionPlan =
@@ -65,21 +70,24 @@ export class GetTodayNutritionUseCase {
         );
 
       if (!nutritionPlan) {
-        throw new GetTodayNutritionError(
-          GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_PLAN_NOT_FOUND,
-          'Active nutrition plan not found.',
-        );
+        return {
+          todayNutrition: buildUnavailableTodayNutrition('not_configured'),
+        };
       }
 
       const today = toUtcDateString(new Date());
       const nutritionDay = nutritionPlan.days.find((day) => day.date === today);
 
       if (!nutritionDay) {
-        throw new GetTodayNutritionError(
-          GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_DAY_NOT_FOUND,
-          'Active nutrition plan does not contain today.',
-          { date: today },
-        );
+        return {
+          todayNutrition: buildUnavailableTodayNutrition(
+            'insufficient_data',
+            today,
+            resolveFreshness(nutritionPlan.updatedAt),
+            nutritionPlan.updatedAt?.toISOString() ??
+              nutritionPlan.createdAt.toISOString(),
+          ),
+        };
       }
 
       const macroTargets = nutritionDay.dailyMacroTargets;
@@ -87,25 +95,61 @@ export class GetTodayNutritionUseCase {
         userProfile.id,
         today,
       );
+      const deterministicState = calculateNutritionDeterministicState({
+        meals: nutritionDay.meals,
+        logs,
+        macroTargets,
+      });
 
-      return {
+      const output: GetTodayNutritionOutput = {
         todayNutrition: {
           date: today,
+          availability: 'available',
+          freshness: resolveFreshness(nutritionPlan.updatedAt),
+          lastUpdatedAt: resolveLastUpdatedAt({ nutritionPlan, logs }),
+          timezone: 'UTC',
           macroTargets,
+          targets: macroTargets,
           meals: nutritionDay.meals,
-          progress: buildProgress({ macroTargets, logs }),
-          nextMeal: resolveNextMeal({
-            meals: nutritionDay.meals,
-            logs,
-          }),
-          nutritionFocus: buildNutritionFocus(nutritionPlan.sourceContext),
+          progress: buildProgress(deterministicState),
+          calories: deterministicState.calorieProgress,
+          macros: deterministicState.macros,
+          mealProgress: deterministicState.mealProgress,
+          nextMeal: deterministicState.nextMeal,
+          focus: deterministicState.focus,
+          insight: deterministicState.insight,
+          actions: [
+            deterministicState.focus.action,
+            deterministicState.insight.action,
+          ],
+          nutritionFocus: deterministicState.focus.message,
         },
       };
+      this.observability?.recordTodayRead({
+        outcome: 'success',
+        availability: output.todayNutrition.availability,
+        freshness: output.todayNutrition.freshness,
+        durationMs: Date.now() - startedAt,
+      });
+      return output;
     } catch (error) {
       if (error instanceof GetTodayNutritionError) {
+        this.observability?.recordTodayRead({
+          outcome:
+            error.code === GET_TODAY_NUTRITION_ERROR_CODES.INVALID_SESSION
+              ? 'unauthorized'
+              : 'failure',
+          durationMs: Date.now() - startedAt,
+          safeErrorCode: toNutritionSafeErrorCode(error.code),
+        });
         throw error;
       }
 
+      this.observability?.recordTodayRead({
+        outcome: 'failure',
+        durationMs: Date.now() - startedAt,
+        safeErrorCode: 'NUTRITION_PROCESSING_FAILED',
+      });
       throw new GetTodayNutritionError(
         GET_TODAY_NUTRITION_ERROR_CODES.INTERNAL_ERROR,
         'An unexpected error occurred.',
@@ -114,90 +158,92 @@ export class GetTodayNutritionUseCase {
   }
 }
 
-function buildProgress(input: {
-  macroTargets: MacroTargetsProps;
-  logs: NutritionLog[];
-}): TodayNutritionProgressOutput {
-  const consumed = input.logs.reduce(
-    (accumulator, log) => {
-      const actualMacros = log.actualMacros;
+function buildUnavailableTodayNutrition(
+  availability: 'not_configured' | 'insufficient_data',
+  date = toUtcDateString(new Date()),
+  freshness: 'current' | 'unknown' = 'unknown',
+  lastUpdatedAt: string | null = null,
+): GetTodayNutritionOutput['todayNutrition'] {
+  return {
+    availability,
+    freshness,
+    lastUpdatedAt,
+    timezone: 'UTC',
+    date,
+    macroTargets: null,
+    meals: [],
+    progress: null,
+    targets: null,
+    calories: null,
+    macros: [],
+    mealProgress: null,
+    nextMeal: null,
+    focus: null,
+    insight: null,
+    actions: [],
+    nutritionFocus: null,
+  };
+}
 
-      if (!actualMacros || log.status === 'skipped') {
-        return accumulator;
-      }
+function toNutritionSafeErrorCode(errorCode: string): NutritionSafeErrorCode {
+  switch (errorCode) {
+    case GET_TODAY_NUTRITION_ERROR_CODES.INVALID_SESSION:
+      return 'NUTRITION_UNAUTHORIZED';
+    case GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_PLAN_NOT_FOUND:
+      return 'NUTRITION_PLAN_NOT_AVAILABLE';
+    case GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_DAY_NOT_FOUND:
+      return 'NUTRITION_DATA_INSUFFICIENT';
+    case GET_TODAY_NUTRITION_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+      return 'NUTRITION_PROFILE_NOT_CONFIGURED';
+    default:
+      return 'NUTRITION_UNKNOWN_ERROR';
+  }
+}
 
-      return {
-        calories: accumulator.calories + actualMacros.calories,
-        proteinGrams: accumulator.proteinGrams + actualMacros.proteinGrams,
-        carbsGrams: accumulator.carbsGrams + actualMacros.carbsGrams,
-        fatGrams: accumulator.fatGrams + actualMacros.fatGrams,
-      };
-    },
-    {
-      calories: 0,
-      proteinGrams: 0,
-      carbsGrams: 0,
-      fatGrams: 0,
-    },
-  );
-
+function buildProgress(
+  input: ReturnType<typeof calculateNutritionDeterministicState>,
+): TodayNutritionProgressOutput {
+  const consumed = input.consumed;
+  const protein = input.macros.find((macro) => macro.nutrient === 'protein')!;
+  const carbs = input.macros.find(
+    (macro) => macro.nutrient === 'carbohydrates',
+  )!;
+  const fat = input.macros.find((macro) => macro.nutrient === 'fat')!;
   return {
     consumedCalories: consumed.calories,
     consumedProteinGrams: consumed.proteinGrams,
     consumedCarbsGrams: consumed.carbsGrams,
     consumedFatGrams: consumed.fatGrams,
-    targetCalories: input.macroTargets.calories,
-    targetProteinGrams: input.macroTargets.proteinGrams,
-    targetCarbsGrams: input.macroTargets.carbsGrams,
-    targetFatGrams: input.macroTargets.fatGrams,
-    adherencePercentage: calculateAdherencePercentage({
-      consumedCalories: consumed.calories,
-      targetCalories: input.macroTargets.calories,
-    }),
+    targetCalories: input.calorieProgress.target ?? 0,
+    targetProteinGrams: protein?.target ?? 0,
+    targetCarbsGrams: carbs?.target ?? 0,
+    targetFatGrams: fat?.target ?? 0,
+    adherencePercentage: input.calorieProgress.percentage ?? 0,
+    adherenceStatus: input.adherenceStatus,
+    macroProgress: {
+      protein,
+      carbs,
+      fat,
+    },
   };
 }
 
-function resolveNextMeal(input: {
-  meals: Meal[];
+function resolveFreshness(updatedAt?: Date): 'current' | 'unknown' {
+  return updatedAt ? 'current' : 'unknown';
+}
+
+function resolveLastUpdatedAt(input: {
+  nutritionPlan: { updatedAt?: Date; createdAt: Date };
   logs: NutritionLog[];
-}): Meal | null {
-  const loggedMealIds = new Set(input.logs.map((log) => log.mealId));
-
-  return input.meals.find((meal) => !loggedMealIds.has(meal.id)) ?? null;
-}
-
-function calculateAdherencePercentage(input: {
-  consumedCalories: number;
-  targetCalories: number;
-}): number {
-  if (input.targetCalories <= 0) {
-    return 0;
-  }
-
-  return Math.min(
-    100,
-    Math.round((input.consumedCalories / input.targetCalories) * 100),
+}): string | null {
+  const timestamps = [
+    input.nutritionPlan.updatedAt ?? input.nutritionPlan.createdAt,
+    ...input.logs.map((log) => log.updatedAt),
+  ];
+  const latest = timestamps.reduce((current, value) =>
+    value > current ? value : current,
   );
-}
-
-function buildNutritionFocus(
-  sourceContext:
-    | {
-        goalAdjustment?: number;
-      }
-    | undefined,
-): string {
-  const goalAdjustment = sourceContext?.goalAdjustment;
-
-  if (typeof goalAdjustment === 'number' && goalAdjustment < 0) {
-    return 'Focus on a controlled calorie deficit while keeping protein consistent.';
-  }
-
-  if (typeof goalAdjustment === 'number' && goalAdjustment > 0) {
-    return 'Focus on a clean calorie surplus and consistent protein across meals.';
-  }
-
-  return 'Focus on consistency and balanced meals across the day.';
+  return latest.toISOString();
 }
 
 function toUtcDateString(date: Date): string {

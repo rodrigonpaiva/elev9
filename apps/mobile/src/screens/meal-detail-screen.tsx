@@ -14,7 +14,7 @@ import type {
   FoodItem,
   Meal,
   NutritionRecommendation,
-  TodayNutrition,
+  NutritionReadModel,
 } from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
@@ -54,9 +54,8 @@ export function MealDetailScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'MealDetail'>>();
   const { mealId } = route.params;
-  const [todayNutrition, setTodayNutrition] = useState<TodayNutrition | null>(
-    null,
-  );
+  const [todayNutrition, setTodayNutrition] =
+    useState<NutritionReadModel | null>(null);
   const [recommendations, setRecommendations] = useState<
     NutritionRecommendation[]
   >([]);
@@ -378,7 +377,7 @@ function MealDetailStateView({
 
 function buildMealDetailModel(input: {
   mealId: string;
-  todayNutrition: TodayNutrition;
+  todayNutrition: NutritionReadModel;
   recommendations: NutritionRecommendation[];
 }): MealDetailModel | null {
   const meal = input.todayNutrition.meals.find(
@@ -423,7 +422,10 @@ function buildMealDetailModel(input: {
   };
 }
 
-function getMealStatus(meal: Meal, nutrition: TodayNutrition): MealStatusLabel {
+function getMealStatus(
+  meal: Meal,
+  nutrition: NutritionReadModel,
+): MealStatusLabel {
   if (nutrition.nextMeal?.id === meal.id) {
     return 'Next';
   }
@@ -459,7 +461,7 @@ function getBadgeVariant(status: MealStatusLabel): BadgeVariant {
 
 function getCoachNote(
   meal: Meal,
-  nutrition: TodayNutrition,
+  nutrition: NutritionReadModel,
   recommendations: NutritionRecommendation[],
 ): string {
   const recommendation = recommendations
@@ -485,7 +487,10 @@ function getCoachNote(
   return "This meal keeps your nutrition consistent with today's plan.";
 }
 
-function getPreparationGuidance(meal: Meal, nutrition: TodayNutrition): string {
+function getPreparationGuidance(
+  meal: Meal,
+  nutrition: NutritionReadModel,
+): string {
   if (nutrition.nextMeal?.id === meal.id) {
     return 'Keep portions consistent with the plan and hydrate with this meal.';
   }

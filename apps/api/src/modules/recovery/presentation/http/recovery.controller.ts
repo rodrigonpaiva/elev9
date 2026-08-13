@@ -9,6 +9,7 @@ import {
   Query,
   Req,
   UnauthorizedException,
+  Optional,
   UseGuards,
 } from '@nestjs/common';
 
@@ -38,7 +39,20 @@ import { GetRecoveryHistoryQueryDto } from './dto/get-recovery-history.query.dto
 import { GetRecoveryHistoryResponseDto } from './dto/get-recovery-history.response.dto';
 import { GetCurrentRecoveryResponseDto } from './dto/get-current-recovery.response.dto';
 import { GetTodayRecoveryResponseDto } from './dto/get-today-recovery.response.dto';
+import { GetRecoveryExperienceCurrentResponseDto } from './dto/get-recovery-experience-current.response.dto';
+import { GetRecoveryExperienceHistoryQueryDto } from './dto/get-recovery-experience-history.query.dto';
+import { GetRecoveryExperienceHistoryResponseDto } from './dto/get-recovery-experience-history.response.dto';
 import type { RecoverySnapshotResponse } from './dto/recovery-response.type';
+import { GetCurrentRecoveryReadModelUseCase } from '../../application/use-cases/get-current-recovery-read-model/get-current-recovery-read-model.use-case';
+import {
+  GET_CURRENT_RECOVERY_READ_MODEL_ERROR_CODES,
+  GetCurrentRecoveryReadModelError,
+} from '../../application/use-cases/get-current-recovery-read-model/get-current-recovery-read-model.errors';
+import { GetRecoveryHistoryReadModelUseCase } from '../../application/use-cases/get-recovery-history-read-model/get-recovery-history-read-model.use-case';
+import {
+  GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES,
+  GetRecoveryHistoryReadModelError,
+} from '../../application/use-cases/get-recovery-history-read-model/get-recovery-history-read-model.errors';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -54,7 +68,49 @@ export class RecoveryController {
     private readonly getCurrentRecoveryUseCase: GetCurrentRecoveryUseCase,
     private readonly getRecoveryHistoryUseCase: GetRecoveryHistoryUseCase,
     private readonly buildRecoverySnapshotUseCase: BuildRecoverySnapshotUseCase,
+    @Optional()
+    private readonly getCurrentRecoveryReadModelUseCase?: GetCurrentRecoveryReadModelUseCase,
+    @Optional()
+    private readonly getRecoveryHistoryReadModelUseCase?: GetRecoveryHistoryReadModelUseCase,
   ) {}
+
+  @Get('experience/current')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getExperienceCurrent(
+    @Req() request: RequestWithAuthUser,
+  ): Promise<GetRecoveryExperienceCurrentResponseDto> {
+    try {
+      if (!this.getCurrentRecoveryReadModelUseCase) {
+        throw new Error('Recovery current read model is not configured.');
+      }
+      return await this.getCurrentRecoveryReadModelUseCase.execute({
+        authUserId: request.authUser?.id ?? '',
+      });
+    } catch (error) {
+      this.handleReadModelCurrentError(error);
+    }
+  }
+
+  @Get('experience/history')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getExperienceHistory(
+    @Req() request: RequestWithAuthUser,
+    @Query() query: GetRecoveryExperienceHistoryQueryDto,
+  ): Promise<GetRecoveryExperienceHistoryResponseDto> {
+    try {
+      if (!this.getRecoveryHistoryReadModelUseCase) {
+        throw new Error('Recovery history read model is not configured.');
+      }
+      return await this.getRecoveryHistoryReadModelUseCase.execute({
+        authUserId: request.authUser?.id ?? '',
+        days: query.days,
+      });
+    } catch (error) {
+      this.handleReadModelHistoryError(error);
+    }
+  }
 
   @Get('today')
   @UseGuards(AuthSessionGuard)
@@ -204,6 +260,61 @@ export class RecoveryController {
       default:
         throw new InternalServerErrorException({
           code: GET_RECOVERY_HISTORY_ERROR_CODES.INTERNAL_ERROR,
+          message: 'An unexpected error occurred.',
+        });
+    }
+  }
+
+  private handleReadModelCurrentError(error: unknown): never {
+    if (!(error instanceof GetCurrentRecoveryReadModelError)) {
+      throw new InternalServerErrorException('An unexpected error occurred.');
+    }
+
+    switch (error.code) {
+      case GET_CURRENT_RECOVERY_READ_MODEL_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+        });
+      case GET_CURRENT_RECOVERY_READ_MODEL_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+        });
+      case GET_CURRENT_RECOVERY_READ_MODEL_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: GET_CURRENT_RECOVERY_READ_MODEL_ERROR_CODES.INTERNAL_ERROR,
+          message: 'An unexpected error occurred.',
+        });
+    }
+  }
+
+  private handleReadModelHistoryError(error: unknown): never {
+    if (!(error instanceof GetRecoveryHistoryReadModelError)) {
+      throw new InternalServerErrorException('An unexpected error occurred.');
+    }
+
+    switch (error.code) {
+      case GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+        });
+      case GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+        });
+      case GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.INVALID_RANGE:
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+        });
+      case GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: GET_RECOVERY_HISTORY_READ_MODEL_ERROR_CODES.INTERNAL_ERROR,
           message: 'An unexpected error occurred.',
         });
     }

@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import type { ReactNode } from 'react';
 import {
   FlatList,
   Pressable,
@@ -14,6 +13,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Text } from '@elev9/ui';
 
+import {
+  CoachActionGrid,
+  CoachCenteredState,
+  CoachHeroCard,
+  CoachEvidenceList,
+  CoachPriorityBanner,
+  CoachSection,
+} from '../components/coach';
 import type {
   CoachWeeklyReviewModel,
   WeeklyReviewAction,
@@ -193,7 +200,13 @@ export function CoachWeeklyReviewScreen() {
             tintColor={weeklyTokens.accent}
           />
         }
-        ListHeaderComponent={<WeeklyHero model={weeklyReview.model} />}
+        ListHeaderComponent={
+          <View style={styles.headerStack}>
+            <WeeklyHero model={weeklyReview.model} />
+            <WeeklyPriority model={weeklyReview.model} />
+            <WeeklyEvidence model={weeklyReview.model} />
+          </View>
+        }
         initialNumToRender={8}
         maxToRenderPerBatch={8}
         windowSize={7}
@@ -224,17 +237,47 @@ const WeeklyHero = memo(function WeeklyHero({
   model: CoachWeeklyReviewModel;
 }) {
   return (
-    <View accessibilityLabel={model.accessibilityLabel} style={styles.hero}>
-      <View style={styles.heroIcon}>
-        <Ionicons name="calendar-outline" size={22} color={weeklyTokens.text} />
-      </View>
-      <Text maxFontSizeMultiplier={1.25} style={styles.heroTitle}>
-        Your Week
-      </Text>
-      <Text maxFontSizeMultiplier={1.35} style={styles.heroSubtitle}>
-        {model.subtitle}
-      </Text>
-    </View>
+    <CoachHeroCard
+      accessibilityLabel={model.accessibilityLabel}
+      containerStyle={styles.hero}
+      iconColor={weeklyTokens.text}
+      iconContainerStyle={styles.heroIcon}
+      iconName="calendar-outline"
+      subtitle={model.subtitle}
+      subtitleTextProps={{ maxFontSizeMultiplier: 1.35 }}
+      subtitleStyle={styles.heroSubtitle}
+      title="Your Week"
+      titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
+      titleStyle={styles.heroTitle}
+    />
+  );
+});
+
+const WeeklyPriority = memo(function WeeklyPriority({
+  model,
+}: {
+  model: CoachWeeklyReviewModel;
+}) {
+  return (
+    <CoachPriorityBanner
+      confidenceLevel={model.confidenceLevel}
+      detail={model.supportingEvidenceSummary || model.weekSummary}
+      focus={model.focus}
+      riskLevel={model.riskLevel}
+      title={model.topRecommendation}
+    />
+  );
+});
+
+const WeeklyEvidence = memo(function WeeklyEvidence({
+  model,
+}: {
+  model: CoachWeeklyReviewModel;
+}) {
+  return (
+    <CoachSection title="Supporting Evidence" style={styles.section}>
+      <CoachEvidenceList evidence={model.evidence} maxItems={3} />
+    </CoachSection>
   );
 });
 
@@ -244,7 +287,7 @@ const WeekSummary = memo(function WeekSummary({
   model: CoachWeeklyReviewModel;
 }) {
   return (
-    <Section title="Week Summary">
+    <CoachSection title="Week Summary" style={styles.section}>
       <View
         accessibilityLabel={`Week summary. ${model.weekSummary}`}
         style={styles.summaryCard}
@@ -257,13 +300,13 @@ const WeekSummary = memo(function WeekSummary({
           {model.weekSummary}
         </Text>
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
 const Wins = memo(function Wins({ wins }: { wins: WeeklyReviewWin[] }) {
   return (
-    <Section title="Wins">
+    <CoachSection title="Wins" style={styles.section}>
       <View style={styles.stack}>
         {wins.map((win) => (
           <Pressable
@@ -296,7 +339,7 @@ const Wins = memo(function Wins({ wins }: { wins: WeeklyReviewWin[] }) {
           </Pressable>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -306,7 +349,7 @@ const Opportunities = memo(function Opportunities({
   opportunities: WeeklyReviewOpportunity[];
 }) {
   return (
-    <Section title="Opportunities">
+    <CoachSection title="Opportunities" style={styles.section}>
       <View style={styles.stack}>
         {opportunities.map((opportunity) => (
           <View
@@ -330,7 +373,7 @@ const Opportunities = memo(function Opportunities({
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -344,7 +387,7 @@ const BehavioralTrends = memo(function BehavioralTrends({
   }
 
   return (
-    <Section title="Behavioral Trends">
+    <CoachSection title="Behavioral Trends" style={styles.section}>
       <View style={styles.stack}>
         {trends.map((trend) => (
           <View
@@ -369,7 +412,7 @@ const BehavioralTrends = memo(function BehavioralTrends({
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -379,7 +422,7 @@ const CoachReflection = memo(function CoachReflection({
   model: CoachWeeklyReviewModel;
 }) {
   return (
-    <Section title="Coach Reflection">
+    <CoachSection title="Coach Reflection" style={styles.section}>
       <View
         accessibilityLabel={`Coach reflection. ${model.reflection}`}
         style={styles.reflectionCard}
@@ -394,7 +437,7 @@ const CoachReflection = memo(function CoachReflection({
           </Text>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -406,7 +449,7 @@ const NextWeekFocus = memo(function NextWeekFocus({
   onPress: (focus: WeeklyReviewFocus) => void;
 }) {
   return (
-    <Section title="Next Week Focus">
+    <CoachSection title="Next Week Focus" style={styles.section}>
       <View
         accessibilityLabel={`Next week focus. ${focus.title}. ${focus.reason}`}
         style={styles.focusCard}
@@ -428,7 +471,7 @@ const NextWeekFocus = memo(function NextWeekFocus({
           <Text style={styles.primaryButtonText}>{focus.ctaLabel}</Text>
         </Pressable>
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -440,42 +483,16 @@ const QuickActions = memo(function QuickActions({
   onAction: (action: WeeklyReviewAction) => void;
 }) {
   return (
-    <Section title="Quick Actions">
-      <View style={styles.actionGrid}>
-        {actions.map((action) => (
-          <Pressable
-            accessibilityLabel={action.label}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !action.isEnabled }}
-            disabled={!action.isEnabled}
-            key={action.id}
-            onPress={() => onAction(action)}
-            style={({ pressed }) => [
-              styles.actionButton,
-              !action.isEnabled ? styles.disabled : null,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <Text style={styles.actionText}>{action.label}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </Section>
-  );
-});
-
-const Section = memo(function Section({
-  children,
-  title,
-}: {
-  children: ReactNode;
-  title: string;
-}) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {children}
-    </View>
+    <CoachSection title="Quick Actions" style={styles.section}>
+      <CoachActionGrid
+        actions={actions}
+        actionStyle={styles.actionButton}
+        containerStyle={styles.actionGridContainer}
+        disabledActionStyle={styles.disabled}
+        onAction={onAction}
+        textStyle={styles.actionText}
+      />
+    </CoachSection>
   );
 });
 
@@ -506,16 +523,8 @@ function WeeklyReviewState({
   secondaryText?: string;
 }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.stateContent}>
-        <Text maxFontSizeMultiplier={1.25} style={styles.stateTitle}>
-          {message}
-        </Text>
-        {secondaryText ? (
-          <Text maxFontSizeMultiplier={1.35} style={styles.stateCopy}>
-            {secondaryText}
-          </Text>
-        ) : null}
+    <CoachCenteredState
+      action={
         <Pressable
           accessibilityRole="button"
           onPress={onPress}
@@ -526,8 +535,16 @@ function WeeklyReviewState({
         >
           <Text style={styles.stateButtonText}>{buttonLabel}</Text>
         </Pressable>
-      </View>
-    </SafeAreaView>
+      }
+      contentStyle={styles.stateContent}
+      message={message}
+      safeAreaStyle={styles.safeArea}
+      secondaryText={secondaryText}
+      secondaryTextProps={{ maxFontSizeMultiplier: 1.35 }}
+      secondaryTextStyle={styles.stateCopy}
+      titleStyle={styles.stateTitle}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
+    />
   );
 }
 
@@ -541,6 +558,9 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 36,
     gap: 22,
+  },
+  headerStack: {
+    gap: 16,
   },
   hero: {
     borderRadius: 28,
@@ -714,7 +734,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-  actionGrid: {
+  actionGridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,

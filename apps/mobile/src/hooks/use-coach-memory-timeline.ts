@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   BehavioralPattern,
   CoachChatHistoryMessage,
@@ -12,6 +11,7 @@ import type {
 } from '@elev9/types';
 
 import { apiClient } from '../api/client';
+import { isCoachOptionalEmptyState } from './coach';
 
 export type CoachMemoryTarget =
   | 'insight'
@@ -135,7 +135,7 @@ export function useCoachMemoryTimeline(): CoachMemoryTimelineResult {
         goalResult,
         progressResult,
       ].every((result) => result.status === 'rejected') &&
-      !isOptionalEmptyState(chatResult.reason)
+      !isCoachOptionalEmptyState(chatResult.reason)
     ) {
       setErrorMessage('Unable to load coach memories.');
       setState(INITIAL_STATE);
@@ -644,19 +644,6 @@ function getDateSortValue(label: string): number {
   const parsed = new Date(label);
 
   return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    [
-      'USER_PROFILE_NOT_FOUND',
-      'GOAL_NOT_FOUND',
-      'HABIT_SNAPSHOT_NOT_FOUND',
-      'PERSONALIZATION_SNAPSHOT_NOT_FOUND',
-      'NOT_FOUND',
-    ].includes(error.code)
-  );
 }
 
 export function trackCoachMemoryEvent(

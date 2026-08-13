@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   CoachDecision,
   GetCurrentGoalResponse,
@@ -11,6 +10,22 @@ import { formatGoalType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
+import {
+  getCoachGreetingMessage,
+  getCoachConfidenceLabel,
+  getCoachFocusLabel,
+  getCoachRiskLabel,
+  getCoachPriorityBenefit,
+  getCoachPriorityGoalLabel,
+  isCoachOptionalEmptyState,
+  mapUnifiedCoachInsight,
+  normalizeCoachSentence,
+  stripCoachMetricLanguage,
+  type CoachFocus,
+  type CoachConfidenceLevel,
+  type CoachRiskLevel,
+  type CoachUnifiedCoachIntelligence,
+} from './coach';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
 
@@ -44,12 +59,21 @@ export type CoachDailyBriefingModel = {
   subtitle: string;
   summary: string;
   interpretation: string;
+  currentFocus: string;
+  focus: CoachFocus | null;
+  currentRisk: string;
+  confidence: string;
+  riskLevel: CoachRiskLevel | null;
+  confidenceLevel: CoachConfidenceLevel | null;
+  supportingEvidenceSummary: string;
   priorities: DailyBriefingPriority[];
   readiness: DailyBriefingReadinessItem[];
   schedule: DailyBriefingScheduleItem[];
   motivation: string;
   primaryAction: DailyBriefingPrimaryAction;
   accessibilityLabel: string;
+  topRecommendation: string;
+  evidence: CoachUnifiedCoachIntelligence['evidence'];
 };
 
 export type CoachDailyBriefingResult = {
@@ -62,8 +86,6 @@ export type CoachDailyBriefingResult = {
   workout: ReturnType<typeof useDashboard>['workout']['todaysWorkout'];
   refresh: () => Promise<void>;
 };
-
-const USER_NAME = 'Rodrigo';
 
 export function useCoachDailyBriefing(): CoachDailyBriefingResult {
   const dashboard = useDashboard();
@@ -89,13 +111,13 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
 
     if (goalResult.status === 'fulfilled') {
       setCurrentGoal(goalResult.value.goal);
-    } else if (isOptionalEmptyState(goalResult.reason)) {
+    } else if (isCoachOptionalEmptyState(goalResult.reason)) {
       setCurrentGoal(null);
     }
 
     if (habitResult.status === 'fulfilled') {
       setHabitSnapshot(habitResult.value.habitSnapshot);
-    } else if (isOptionalEmptyState(habitResult.reason)) {
+    } else if (isCoachOptionalEmptyState(habitResult.reason)) {
       setHabitSnapshot(null);
     }
 
@@ -103,7 +125,7 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
       setPersonalizationSnapshot(
         personalizationResult.value.personalizationSnapshot,
       );
-    } else if (isOptionalEmptyState(personalizationResult.reason)) {
+    } else if (isCoachOptionalEmptyState(personalizationResult.reason)) {
       setPersonalizationSnapshot(null);
     }
 
@@ -111,7 +133,7 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
       goalResult.status === 'rejected' &&
       habitResult.status === 'rejected' &&
       personalizationResult.status === 'rejected' &&
-      !isOptionalEmptyState(goalResult.reason)
+      !isCoachOptionalEmptyState(goalResult.reason)
     ) {
       setExtraError("Unable to prepare today's briefing.");
     }
@@ -132,8 +154,21 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
       return null;
     }
 
+    if (dashboard.coach.mode === 'error' && !dashboard.coach.intelligence) {
+      return null;
+    }
+
+    const intelligence = dashboard.coach.intelligence;
+    const insight = mapUnifiedCoachInsight({
+      intelligence,
+      fallbackHeadline: dashboard.coach.data.headline,
+      fallbackSummary: dashboard.coach.data.summary,
+    });
+
     return buildDailyBriefingModel({
       coachDecision: dashboard.coach.data,
+      intelligence,
+      userName: dashboard.userName,
       currentGoal,
       habitSnapshot,
       personalizationSnapshot,
@@ -144,10 +179,13 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
       nextMealTitle: dashboard.nutrition.data?.nextMeal?.title,
       nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
       workoutsCompleted: dashboard.progress.data?.workoutsCompleted,
+      insight,
     });
   }, [
     currentGoal,
     dashboard.coach.data,
+    dashboard.coach.intelligence,
+    dashboard.coach.mode,
     dashboard.nutrition.data,
     dashboard.progress.data,
     dashboard.recovery.data,
@@ -185,6 +223,8 @@ export function useCoachDailyBriefing(): CoachDailyBriefingResult {
 
 function buildDailyBriefingModel(input: {
   coachDecision: CoachDecision;
+  intelligence: CoachUnifiedCoachIntelligence | null;
+  userName: string | null;
   currentGoal: CurrentGoal | null;
   habitSnapshot: HabitSnapshot | null;
   personalizationSnapshot: PersonalizationSnapshot | null;
@@ -195,40 +235,62 @@ function buildDailyBriefingModel(input: {
   nextMealTitle?: string;
   nutritionFocus?: string;
   workoutsCompleted?: number;
+  insight: ReturnType<typeof mapUnifiedCoachInsight>;
 }): CoachDailyBriefingModel {
-  const priorities = buildPriorities(input.coachDecision);
+  const priorities = buildPriorities(input.coachDecision, input.intelligence);
   const summary = getSummary(input);
 
   return {
-    greeting: `${getGreeting()}, ${USER_NAME}.`,
+    greeting: getCoachGreetingMessage(input.userName),
     subtitle: getSubtitle(input.personalizationSnapshot),
     summary,
     interpretation: getInterpretation(input),
+    currentFocus: input.insight.currentFocus
+      ? getCoachFocusLabel(input.insight.currentFocus)
+      : 'Coach',
+    focus: input.insight.currentFocus ?? null,
+    currentRisk: input.insight.currentRisk
+      ? getCoachRiskLabel(input.insight.currentRisk.level)
+      : 'No major risk',
+    confidence: input.insight.confidence
+      ? getCoachConfidenceLabel(input.insight.confidence.level)
+      : 'Low confidence',
+    riskLevel: input.insight.currentRisk?.level ?? null,
+    confidenceLevel: input.insight.confidence?.level ?? null,
+    supportingEvidenceSummary: input.insight.supportingEvidenceSummary,
     priorities,
     readiness: buildReadiness(input),
     schedule: buildSchedule(input),
     motivation: getMotivation(input),
     primaryAction: getPrimaryAction(input),
-    accessibilityLabel: `Daily briefing. ${summary}. ${priorities.length} priorities available today.`,
+    accessibilityLabel: `Daily briefing. ${input.insight.headline}. ${input.insight.supportingEvidenceSummary}.`,
+    topRecommendation:
+      input.insight.topRecommendation?.title ?? priorities[0]?.title ?? summary,
+    evidence: input.insight.evidence,
   };
 }
 
 function buildPriorities(
   coachDecision: CoachDecision,
+  intelligence: CoachUnifiedCoachIntelligence | null,
 ): DailyBriefingPriority[] {
   const items =
-    coachDecision.actionItems.length > 0
-      ? coachDecision.actionItems
-      : [getFallbackPriority(coachDecision.priority)];
+    intelligence && intelligence.recommendations.length > 0
+      ? intelligence.recommendations.map(
+          (recommendation) => recommendation.title,
+        )
+      : coachDecision.actionItems.length > 0
+        ? coachDecision.actionItems
+        : [getFallbackPriority(coachDecision.priority)];
 
   return items
     .filter((item) => item.trim().length > 0)
     .slice(0, 3)
     .map((item, index) => ({
       id: `${coachDecision.id}-${index}`,
-      title: normalizeSentence(item),
-      reason: getPriorityReason(coachDecision, index),
-      benefit: getExpectedBenefit(coachDecision.priority),
+      title: normalizeCoachSentence(item),
+      reason: getPriorityReason(coachDecision, index, intelligence),
+      benefit: getCoachPriorityBenefit(coachDecision.priority),
     }));
 }
 
@@ -268,7 +330,7 @@ function buildReadiness(input: {
       label: 'Goal',
       value: input.currentGoal
         ? formatGoalType(input.currentGoal.type)
-        : getPriorityGoalLabel(input.coachDecision.priority),
+        : getCoachPriorityGoalLabel(input.coachDecision.priority),
     },
   ];
 }
@@ -342,7 +404,7 @@ function getInterpretation(input: {
   const summary = input.coachDecision.summary.trim();
 
   if (summary.length > 0) {
-    return stripRawMetricLanguage(summary);
+    return stripCoachMetricLanguage(summary);
   }
 
   if (input.habitSnapshot?.trend === 'improving') {
@@ -424,7 +486,13 @@ function getMotivation(input: {
 function getPriorityReason(
   coachDecision: CoachDecision,
   index: number,
+  intelligence: CoachUnifiedCoachIntelligence | null,
 ): string {
+  const evidence = intelligence?.evidence[index];
+  if (evidence?.detail) {
+    return evidence.detail;
+  }
+
   const influence =
     coachDecision.influences[index] ?? coachDecision.influences[0];
 
@@ -433,22 +501,6 @@ function getPriorityReason(
     coachDecision.summary ||
     "This supports today's coaching focus."
   );
-}
-
-function getExpectedBenefit(priority: CoachDecision['priority']): string {
-  switch (priority) {
-    case 'recovery':
-      return 'Better readiness tomorrow.';
-    case 'nutrition':
-      return 'More consistent energy today.';
-    case 'training':
-      return 'A stronger training signal.';
-    case 'consistency':
-      return 'Keeps your momentum intact.';
-    case 'motivation':
-    default:
-      return 'A clearer next step.';
-  }
 }
 
 function getFallbackPriority(priority: CoachDecision['priority']): string {
@@ -495,70 +547,10 @@ function getHabitLabel(habitSnapshot: HabitSnapshot | null): string {
   }
 }
 
-function getPriorityGoalLabel(priority: CoachDecision['priority']): string {
-  switch (priority) {
-    case 'recovery':
-      return 'Improve recovery';
-    case 'nutrition':
-      return 'Nutrition consistency';
-    case 'training':
-      return 'Training progress';
-    case 'consistency':
-      return 'Improve consistency';
-    case 'motivation':
-    default:
-      return 'Personal progress';
-  }
-}
-
-function normalizeSentence(value: string): string {
-  const trimmed = value.trim();
-
-  if (trimmed.endsWith('.') || trimmed.endsWith('!') || trimmed.endsWith('?')) {
-    return trimmed;
-  }
-
-  return `${trimmed}.`;
-}
-
-function stripRawMetricLanguage(value: string): string {
-  return value
-    .replace(/\b\d+(\.\d+)?%?\b/g, '')
-    .replace(/\s{2,}/g, ' ')
-    .trim();
-}
-
 function limitLines(value: string): string {
   const sentence = value.split(/\n+/).filter(Boolean).slice(0, 2).join(' ');
 
   return sentence.length > 96 ? `${sentence.slice(0, 93).trim()}...` : sentence;
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-
-  if (hour < 12) {
-    return 'Good morning';
-  }
-
-  if (hour < 18) {
-    return 'Good afternoon';
-  }
-
-  return 'Good evening';
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    [
-      'USER_PROFILE_NOT_FOUND',
-      'GOAL_NOT_FOUND',
-      'HABIT_SNAPSHOT_NOT_FOUND',
-      'PERSONALIZATION_SNAPSHOT_NOT_FOUND',
-      'NOT_FOUND',
-    ].includes(error.code)
-  );
 }
 
 export function trackCoachDailyBriefingEvent(

@@ -16,6 +16,7 @@ import { RecoveryModule } from './modules/recovery/recovery.module';
 import { ProgressModule } from './modules/progress/progress.module';
 import { TrainingModule } from './modules/training/training.module';
 import { UsersModule } from './modules/users/users.module';
+import { ObservabilityModule } from './observability/observability.module';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ function getMongoDbUri(): string {
 
 @Module({
   imports: [
+    ObservabilityModule,
     MongooseModule.forRoot(getMongoDbUri()),
     AiModule,
     AuthModule,

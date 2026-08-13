@@ -3,26 +3,41 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ApiClientError } from '@elev9/api-client';
 import type {
   CoachDecision,
-  CoachDecisionPriority,
+  CoachIntelligenceAggregate,
+  GetTodayDailyCheckInResponse,
+  GetCurrentRecoveryExperienceResponse,
   ProgressSummaryResponse,
   RecoverySnapshot,
-  TodayNutrition,
+  NutritionReadModel,
   TodayWorkout,
   TrainingPlanResponse,
 } from '@elev9/types';
 
 import { apiClient } from '../api/client';
-import type { CoachInsightBadgeLabel } from '../components/dashboard/coach-insight-card';
 import type { RecoveryStatus } from '../components/dashboard/todays-workout-card';
+import {
+  getCoachBadgeLabel,
+  getCoachConfidenceLabel,
+  getCoachFocusLabel,
+  getCoachRecommendationTarget,
+  mapUnifiedCoachInsight,
+  type CoachExplanation,
+  type CoachPersonaProfile,
+  type CoachUnifiedCoachIntelligence,
+} from './coach';
+import { useCoachIntelligence } from './coach/use-coach-intelligence';
+import { getDailyCheckInOfflineState } from '../features/daily-check-in/offline/daily-check-in-storage';
 
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
 type ProgressSummary = ProgressSummaryResponse['summary'];
 type DashboardDomain =
   | 'coach'
   | 'recovery'
+  | 'recoveryExperience'
   | 'workout'
   | 'nutrition'
-  | 'progress';
+  | 'progress'
+  | 'dailyCheckIn';
 export type DashboardCoachActionTarget =
   | 'workout'
   | 'nutrition'
@@ -40,26 +55,48 @@ type DashboardDomainResult<TData> = DomainState<TData> & {
 };
 
 type CoachDisplay = {
-  badgeLabel: CoachInsightBadgeLabel;
+  badgeLabel: string;
   recommendedAction: string;
   ctaLabel: string;
   actionTarget: DashboardCoachActionTarget;
+  currentFocus: string | null;
+  currentRiskLabel: string | null;
+  confidenceLabel: string | null;
+  supportingEvidenceSummary: string;
 };
 
 export type UseDashboardResult = {
   isLoading: boolean;
   isRefreshing: boolean;
   error: string | null;
-  coach: DashboardDomainResult<CoachDecision> & CoachDisplay;
+  userName: string | null;
+  coach: DashboardDomainResult<CoachDecision> &
+    CoachDisplay & {
+      aggregate: CoachIntelligenceAggregate | null;
+      mode: 'loading' | 'canonical' | 'fallback' | 'disabled' | 'error';
+      isFallbackUsed: boolean;
+      isFeatureDisabled: boolean;
+      availability: CoachIntelligenceAggregate['availability'] | null;
+      freshness: CoachIntelligenceAggregate['freshness'] | null;
+      warnings: CoachIntelligenceAggregate['warnings'];
+      intelligence: CoachUnifiedCoachIntelligence | null;
+      persona: CoachPersonaProfile | null;
+      explanation: CoachExplanation | null;
+    };
   recovery: DashboardDomainResult<RecoverySnapshot> & {
     status: RecoveryStatus | null;
   };
+  recoveryExperience: DashboardDomainResult<GetCurrentRecoveryExperienceResponse>;
   workout: DashboardDomainResult<TrainingPlan> & {
     todaysWorkout: TodayWorkout | null;
     plannedWorkoutCount: number;
   };
-  nutrition: DashboardDomainResult<TodayNutrition>;
+  nutrition: DashboardDomainResult<NutritionReadModel>;
   progress: DashboardDomainResult<ProgressSummary>;
+  dailyCheckIn: DashboardDomainResult<GetTodayDailyCheckInResponse> & {
+    completedToday: boolean;
+    offlineState: 'idle' | 'queued' | 'syncing' | 'failed' | 'synced';
+  };
   refresh: () => Promise<void>;
 };
 
@@ -70,21 +107,31 @@ export function useDashboard(): UseDashboardResult {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [coach, setCoach] = useState<DomainState<CoachDecision>>(
     createInitialDomainState(),
   );
   const [recovery, setRecovery] = useState<DomainState<RecoverySnapshot>>(
     createInitialDomainState(),
   );
+  const [recoveryExperience, setRecoveryExperience] = useState<
+    DomainState<GetCurrentRecoveryExperienceResponse>
+  >(createInitialDomainState());
   const [workout, setWorkout] = useState<DomainState<TrainingPlan>>(
     createInitialDomainState(),
   );
-  const [nutrition, setNutrition] = useState<DomainState<TodayNutrition>>(
+  const [nutrition, setNutrition] = useState<DomainState<NutritionReadModel>>(
     createInitialDomainState(),
   );
   const [progress, setProgress] = useState<DomainState<ProgressSummary>>(
     createInitialDomainState(),
   );
+  const [dailyCheckIn, setDailyCheckIn] = useState<
+    DomainState<GetTodayDailyCheckInResponse>
+  >(createInitialDomainState());
+  const [dailyCheckInOfflineState, setDailyCheckInOfflineState] = useState<
+    'idle' | 'queued' | 'syncing' | 'failed' | 'synced'
+  >('idle');
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -121,16 +168,32 @@ export function useDashboard(): UseDashboardResult {
       const domains: DashboardDomain[] = [
         'coach',
         'recovery',
+        'recoveryExperience',
         'workout',
         'nutrition',
         'progress',
+        'dailyCheckIn',
       ];
-      const [results] = await Promise.all([
+      const [results, dashboardResult] = await Promise.all([
         Promise.allSettled(
           domains.map((domain) => fetchDashboardDomain(domain)),
         ),
+        apiClient.dashboard
+          .getHome()
+          .then((response) => response.dashboard.user.name)
+          .catch(() => null),
         options?.refresh ? wait(REFRESH_DURATION_MS) : Promise.resolve(),
       ]);
+
+      setUserName(
+        typeof dashboardResult === 'string'
+          ? dashboardResult.trim() || null
+          : null,
+      );
+
+      setDailyCheckInOfflineState(
+        await getDailyCheckInOfflineState().catch(() => 'idle'),
+      );
 
       results.forEach((result, index) => {
         applyDomainResult(domains[index], result);
@@ -147,15 +210,6 @@ export function useDashboard(): UseDashboardResult {
     [],
   );
 
-  const refresh = useCallback(
-    () => loadDashboardData({ refresh: true }),
-    [loadDashboardData],
-  );
-
-  useEffect(() => {
-    void loadDashboardData();
-  }, [loadDashboardData]);
-
   const todaysWorkout = useMemo(
     () => resolveTodaysWorkout(workout.data),
     [workout.data],
@@ -168,33 +222,110 @@ export function useDashboard(): UseDashboardResult {
     () => resolveRecoveryStatus(recovery.data),
     [recovery.data],
   );
-  const coachDisplay = useMemo(
-    () => resolveCoachInsightDisplay(coach.data, todaysWorkout),
-    [coach.data, todaysWorkout],
+  const coachIntelligenceState = useCoachIntelligence({
+    coachDecision: coach.data,
+    currentGoal: null,
+    recoverySnapshot: recovery.data,
+    workout: todaysWorkout,
+    nutrition: nutrition.data,
+    progressSummary: progress.data,
+  });
+  const coachIntelligence = useMemo(
+    () => coachIntelligenceState.intelligence,
+    [coachIntelligenceState.intelligence],
   );
+  const refresh = useCallback(async () => {
+    await Promise.all([
+      loadDashboardData({ refresh: true }),
+      coachIntelligenceState.refresh(),
+    ]);
+  }, [coachIntelligenceState.refresh, loadDashboardData]);
+  const coachDisplay = useMemo(() => {
+    if (coachIntelligenceState.mode === 'error' && !coachIntelligence) {
+      return withDailyCheckInOfflineDisplay(
+        {
+          badgeLabel: 'Coach Insight',
+          recommendedAction: 'Open Coach',
+          ctaLabel: 'Open Coach',
+          actionTarget: 'coach' as const,
+          currentFocus: null,
+          currentRiskLabel: null,
+          confidenceLabel: null,
+          supportingEvidenceSummary: '',
+        },
+        dailyCheckInOfflineState,
+      );
+    }
 
-  const retryCoach = useCallback(() => loadDomain('coach'), [loadDomain]);
+    return resolveCoachInsightDisplay(
+      coach.data,
+      todaysWorkout,
+      coachIntelligence,
+      dailyCheckInOfflineState,
+    );
+  }, [
+    coach.data,
+    coachIntelligence,
+    coachIntelligenceState.mode,
+    dailyCheckInOfflineState,
+    todaysWorkout,
+  ]);
+
+  useEffect(() => {
+    void loadDashboardData();
+  }, [loadDashboardData]);
+
+  const retryCoach = useCallback(async () => {
+    await Promise.all([loadDomain('coach'), coachIntelligenceState.retry()]);
+  }, [coachIntelligenceState.retry, loadDomain]);
   const retryRecovery = useCallback(() => loadDomain('recovery'), [loadDomain]);
+  const retryRecoveryExperience = useCallback(
+    () => loadDomain('recoveryExperience'),
+    [loadDomain],
+  );
   const retryWorkout = useCallback(() => loadDomain('workout'), [loadDomain]);
   const retryNutrition = useCallback(
     () => loadDomain('nutrition'),
     [loadDomain],
   );
   const retryProgress = useCallback(() => loadDomain('progress'), [loadDomain]);
+  const retryDailyCheckIn = useCallback(async () => {
+    await loadDomain('dailyCheckIn');
+    setDailyCheckInOfflineState(
+      await getDailyCheckInOfflineState().catch(() => 'idle'),
+    );
+  }, [loadDomain]);
 
   return {
-    isLoading,
-    isRefreshing,
+    isLoading:
+      isLoading || coachIntelligenceState.isLoading || dailyCheckIn.isLoading,
+    isRefreshing: isRefreshing || coachIntelligenceState.isRefreshing,
     error,
+    userName,
     coach: {
       ...coach,
       ...coachDisplay,
+      errorMessage: coachIntelligenceState.errorMessage ?? coach.errorMessage,
+      aggregate: coachIntelligenceState.aggregate,
+      mode: coachIntelligenceState.mode,
+      isFallbackUsed: coachIntelligenceState.isFallbackUsed,
+      isFeatureDisabled: coachIntelligenceState.isFeatureDisabled,
+      availability: coachIntelligenceState.availability,
+      freshness: coachIntelligenceState.freshness,
+      warnings: coachIntelligenceState.warnings,
+      intelligence: coachIntelligence,
+      persona: coachIntelligenceState.persona,
+      explanation: coachIntelligenceState.explanation,
       retry: retryCoach,
     },
     recovery: {
       ...recovery,
       status: recoveryStatus,
       retry: retryRecovery,
+    },
+    recoveryExperience: {
+      ...recoveryExperience,
+      retry: retryRecoveryExperience,
     },
     workout: {
       ...workout,
@@ -209,6 +340,12 @@ export function useDashboard(): UseDashboardResult {
     progress: {
       ...progress,
       retry: retryProgress,
+    },
+    dailyCheckIn: {
+      ...dailyCheckIn,
+      completedToday: dailyCheckIn.data?.completedToday ?? false,
+      offlineState: dailyCheckInOfflineState,
+      retry: retryDailyCheckIn,
     },
     refresh,
   };
@@ -232,7 +369,15 @@ export function useDashboard(): UseDashboardResult {
 
   function clearDomainErrors() {
     (
-      ['coach', 'recovery', 'workout', 'nutrition', 'progress'] as const
+      [
+        'coach',
+        'recovery',
+        'recoveryExperience',
+        'workout',
+        'nutrition',
+        'progress',
+        'dailyCheckIn',
+      ] as const
     ).forEach((domain) => {
       setDomainError(domain, null);
     });
@@ -279,6 +424,14 @@ export function useDashboard(): UseDashboardResult {
             ) as DomainState<RecoverySnapshot>,
         );
         return;
+      case 'recoveryExperience':
+        setRecoveryExperience(
+          (current) =>
+            updater(
+              current as DomainState<TData>,
+            ) as DomainState<GetCurrentRecoveryExperienceResponse>,
+        );
+        return;
       case 'workout':
         setWorkout(
           (current) =>
@@ -290,7 +443,7 @@ export function useDashboard(): UseDashboardResult {
           (current) =>
             updater(
               current as DomainState<TData>,
-            ) as DomainState<TodayNutrition>,
+            ) as DomainState<NutritionReadModel>,
         );
         return;
       case 'progress':
@@ -301,6 +454,14 @@ export function useDashboard(): UseDashboardResult {
             ) as DomainState<ProgressSummary>,
         );
         return;
+      case 'dailyCheckIn':
+        setDailyCheckIn(
+          (current) =>
+            updater(
+              current as DomainState<TData>,
+            ) as DomainState<GetTodayDailyCheckInResponse>,
+        );
+        return;
     }
   }
 }
@@ -308,9 +469,11 @@ export function useDashboard(): UseDashboardResult {
 type DashboardDomainData =
   | CoachDecision
   | RecoverySnapshot
+  | GetCurrentRecoveryExperienceResponse
   | TrainingPlan
-  | TodayNutrition
+  | NutritionReadModel
   | ProgressSummary
+  | GetTodayDailyCheckInResponse
   | null;
 
 function createInitialDomainState<TData>(): DomainState<TData> {
@@ -329,12 +492,16 @@ async function fetchDashboardDomain(
       return fetchCoachInsight();
     case 'recovery':
       return fetchRecovery();
+    case 'recoveryExperience':
+      return fetchRecoveryExperience();
     case 'workout':
       return fetchWorkout();
     case 'nutrition':
       return fetchNutrition();
     case 'progress':
       return fetchProgress();
+    case 'dailyCheckIn':
+      return fetchDailyCheckIn();
   }
 }
 
@@ -364,6 +531,10 @@ async function fetchRecovery(): Promise<RecoverySnapshot | null> {
   }
 }
 
+async function fetchRecoveryExperience(): Promise<GetCurrentRecoveryExperienceResponse> {
+  return apiClient.recovery.getCurrentRecoveryExperience();
+}
+
 async function fetchWorkout(): Promise<TrainingPlan | null> {
   try {
     const response = await apiClient.training.getCurrentPlan();
@@ -377,7 +548,7 @@ async function fetchWorkout(): Promise<TrainingPlan | null> {
   }
 }
 
-async function fetchNutrition(): Promise<TodayNutrition | null> {
+async function fetchNutrition(): Promise<NutritionReadModel | null> {
   try {
     const response = await apiClient.nutrition.getTodayNutrition();
     return response.todayNutrition ?? null;
@@ -408,6 +579,21 @@ async function fetchProgress(): Promise<ProgressSummary | null> {
   }
 }
 
+async function fetchDailyCheckIn(): Promise<GetTodayDailyCheckInResponse> {
+  try {
+    return await apiClient.progress.getTodayDailyCheckIn();
+  } catch (error) {
+    if (isEmptyStateError(error, ['USER_PROFILE_NOT_FOUND'])) {
+      return {
+        completedToday: false,
+        dailyCheckIn: null,
+      };
+    }
+
+    throw error;
+  }
+}
+
 function isEmptyStateError(error: unknown, codes: string[]): boolean {
   return error instanceof ApiClientError && codes.includes(error.code);
 }
@@ -423,12 +609,16 @@ function getDomainErrorMessage(
       return error instanceof ApiClientError
         ? 'Try again in a moment.'
         : 'Try again in a moment.';
+    case 'recoveryExperience':
+      return 'Try again in a moment.';
     case 'workout':
       return 'Workout unavailable.';
     case 'nutrition':
       return 'Nutrition data unavailable.';
     case 'progress':
       return 'Progress data unavailable.';
+    case 'dailyCheckIn':
+      return 'Daily check-in unavailable.';
   }
 }
 
@@ -493,49 +683,86 @@ function resolveWeeklyPlannedWorkoutCount(trainingPlan: TrainingPlan | null) {
 function resolveCoachInsightDisplay(
   coachDecision: CoachDecision | null,
   workout: TodayWorkout | null,
+  intelligence: CoachUnifiedCoachIntelligence | null,
+  offlineState: 'idle' | 'queued' | 'syncing' | 'failed' | 'synced' = 'idle',
 ): CoachDisplay {
   if (!coachDecision) {
-    return {
-      badgeLabel: 'Insight',
+    const emptyDisplay = {
+      badgeLabel: 'Coach Insight',
       recommendedAction: 'Open Coach',
       ctaLabel: 'Open Coach',
       actionTarget: 'coach',
+      currentFocus: null,
+      currentRiskLabel: null,
+      confidenceLabel: null,
+      supportingEvidenceSummary: '',
+    };
+
+    return withDailyCheckInOfflineDisplay(emptyDisplay, offlineState);
+  }
+
+  const recommendation = intelligence?.topRecommendation ?? null;
+  const recommendedAction =
+    recommendation?.title?.trim() ||
+    coachDecision.actionItems
+      .find((action) => action.trim().length > 0)
+      ?.trim() ||
+    getCoachRecommendedAction(coachDecision.priority, workout);
+  const actionTarget = recommendation
+    ? getCoachRecommendationTarget(recommendation)
+    : getCoachActionTarget(coachDecision.priority, workout);
+  const insight = mapUnifiedCoachInsight({
+    intelligence,
+    fallbackHeadline: coachDecision.headline,
+    fallbackSummary: coachDecision.summary,
+  });
+
+  return withDailyCheckInOfflineDisplay(
+    {
+      badgeLabel: getCoachBadgeLabel(
+        intelligence?.primaryExpert ??
+          mapCoachPriorityToExpert(coachDecision.priority),
+        insight.currentRisk,
+      ),
+      recommendedAction,
+      ctaLabel: getCoachCtaLabel(actionTarget),
+      actionTarget,
+      currentFocus: insight.currentFocus
+        ? getCoachFocusLabel(insight.currentFocus)
+        : null,
+      currentRiskLabel: insight.currentRisk ? insight.currentRisk.title : null,
+      confidenceLabel: insight.confidence
+        ? getCoachConfidenceLabel(insight.confidence.level)
+        : null,
+      supportingEvidenceSummary: insight.supportingEvidenceSummary,
+    },
+    offlineState,
+  );
+}
+
+function withDailyCheckInOfflineDisplay(
+  display: CoachDisplay,
+  offlineState: 'idle' | 'queued' | 'syncing' | 'failed' | 'synced',
+): CoachDisplay {
+  if (offlineState === 'queued' || offlineState === 'syncing') {
+    return {
+      ...display,
+      recommendedAction: 'Daily check-in waiting to sync',
+      ctaLabel: 'Daily check-in waiting to sync',
+      actionTarget: 'check_in',
     };
   }
 
-  const fallbackAction = getCoachRecommendedAction(
-    coachDecision.priority,
-    workout,
-  );
-  const primaryAction = coachDecision.actionItems
-    .find((action) => action.trim().length > 0)
-    ?.trim();
-  const recommendedAction = primaryAction ?? fallbackAction;
-  const actionTarget = getCoachActionTarget(coachDecision.priority, workout);
-
-  return {
-    badgeLabel: getCoachBadgeLabel(coachDecision.priority),
-    recommendedAction,
-    ctaLabel: getCoachCtaLabel(actionTarget),
-    actionTarget,
-  };
-}
-
-function getCoachBadgeLabel(
-  priority: CoachDecisionPriority,
-): CoachInsightBadgeLabel {
-  switch (priority) {
-    case 'recovery':
-      return 'Recovery Focus';
-    case 'training':
-    case 'consistency':
-      return 'Performance Focus';
-    case 'nutrition':
-      return 'Recommendation';
-    case 'motivation':
-    default:
-      return 'Insight';
+  if (offlineState === 'failed') {
+    return {
+      ...display,
+      recommendedAction: 'Daily check-in needs attention',
+      ctaLabel: 'Daily check-in needs attention',
+      actionTarget: 'check_in',
+    };
   }
+
+  return display;
 }
 
 function getCoachRecommendedAction(
@@ -592,6 +819,31 @@ function getCoachCtaLabel(target: DashboardCoachActionTarget): string {
     case 'coach':
     default:
       return 'Ask Coach';
+  }
+}
+
+function mapCoachPriorityToExpert(
+  priority: CoachDecision['priority'],
+):
+  | 'Workout'
+  | 'Nutrition'
+  | 'Recovery'
+  | 'Goal'
+  | 'Habit'
+  | 'Progress'
+  | 'Motivation' {
+  switch (priority) {
+    case 'training':
+      return 'Workout';
+    case 'nutrition':
+      return 'Nutrition';
+    case 'recovery':
+      return 'Recovery';
+    case 'consistency':
+      return 'Habit';
+    case 'motivation':
+    default:
+      return 'Motivation';
   }
 }
 

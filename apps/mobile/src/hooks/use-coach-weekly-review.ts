@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   BehavioralPattern,
   ConsistencySummary,
@@ -15,6 +14,18 @@ import type {
 import { formatGoalType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
+import { useDashboard } from './use-dashboard';
+import {
+  getCoachConfidenceLabel,
+  getCoachFocusLabel,
+  getCoachRiskLabel,
+  isCoachOptionalEmptyState,
+  mapUnifiedCoachInsight,
+  type CoachConfidenceLevel,
+  type CoachFocus,
+  type CoachRiskLevel,
+  type CoachUnifiedCoachIntelligence,
+} from './coach';
 
 type ProgressSummary = ProgressSummaryResponse['summary'];
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
@@ -68,6 +79,13 @@ export type WeeklyReviewAction = {
 export type CoachWeeklyReviewModel = {
   subtitle: string;
   weekSummary: string;
+  currentFocus: string;
+  focus: CoachFocus | null;
+  currentRisk: string;
+  confidence: string;
+  riskLevel: CoachRiskLevel | null;
+  confidenceLevel: CoachConfidenceLevel | null;
+  supportingEvidenceSummary: string;
   wins: WeeklyReviewWin[];
   opportunities: WeeklyReviewOpportunity[];
   trends: WeeklyReviewTrend[];
@@ -75,6 +93,8 @@ export type CoachWeeklyReviewModel = {
   nextFocus: WeeklyReviewFocus;
   quickActions: WeeklyReviewAction[];
   accessibilityLabel: string;
+  topRecommendation: string;
+  evidence: CoachUnifiedCoachIntelligence['evidence'];
 };
 
 export type CoachWeeklyReviewResult = {
@@ -113,6 +133,7 @@ const INITIAL_STATE: WeeklyReviewState = {
 };
 
 export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
+  const dashboard = useDashboard();
   const [state, setState] = useState<WeeklyReviewState>(INITIAL_STATE);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -163,7 +184,9 @@ export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
 
     if (
       results.every((result) => result.status === 'rejected') &&
-      !isOptionalEmptyState(progressResult.reason)
+      !isCoachOptionalEmptyState(progressResult.reason, [
+        'TRAINING_PLAN_NOT_FOUND',
+      ])
     ) {
       setState(INITIAL_STATE);
       setErrorMessage('Unable to prepare your weekly review.');
@@ -218,7 +241,29 @@ export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
     void load();
   }, [load]);
 
-  const model = useMemo(() => buildWeeklyReviewModel(state), [state]);
+  const model = useMemo(() => {
+    if (dashboard.coach.mode === 'error' && !dashboard.coach.intelligence) {
+      return null;
+    }
+
+    const intelligence = dashboard.coach.intelligence;
+    const insight = mapUnifiedCoachInsight({
+      intelligence,
+      fallbackHeadline: state.currentGoal
+        ? formatGoalType(state.currentGoal.goal.type)
+        : 'Weekly review',
+      fallbackSummary: state.consistencySummary
+        ? `Consistency score ${state.consistencySummary.score}.`
+        : undefined,
+    });
+
+    return buildWeeklyReviewModel(state, intelligence, insight);
+  }, [
+    dashboard.coach.data,
+    dashboard.coach.intelligence,
+    dashboard.coach.mode,
+    state,
+  ]);
   const hasSignals =
     Boolean(state.progressSummary) ||
     Boolean(state.trainingPlan) ||
@@ -238,12 +283,17 @@ export function useCoachWeeklyReview(): CoachWeeklyReviewResult {
     isEmpty: !isLoading && !errorMessage && !model && !hasSignals,
     trainingPlanId: state.trainingPlan?.id ?? null,
     todaysWorkout: getTodayWorkout(state.trainingPlan),
-    refresh: () => load({ refresh: true }),
+    refresh: async () => {
+      await dashboard.refresh();
+      await load({ refresh: true });
+    },
   };
 }
 
 function buildWeeklyReviewModel(
   state: WeeklyReviewState,
+  intelligence: CoachUnifiedCoachIntelligence | null,
+  insight: ReturnType<typeof mapUnifiedCoachInsight>,
 ): CoachWeeklyReviewModel | null {
   const wins = buildWins(state);
   const opportunities = buildOpportunities(state);
@@ -264,12 +314,27 @@ function buildWeeklyReviewModel(
 
   return {
     subtitle: "Here's what we achieved together.",
+    currentFocus: insight.currentFocus
+      ? getCoachFocusLabel(insight.currentFocus)
+      : 'Coach',
+    focus: insight.currentFocus ?? null,
+    currentRisk: insight.currentRisk
+      ? getCoachRiskLabel(insight.currentRisk.level)
+      : 'No major risk',
+    confidence: insight.confidence
+      ? getCoachConfidenceLabel(insight.confidence.level)
+      : 'Low confidence',
+    riskLevel: insight.currentRisk?.level ?? null,
+    confidenceLevel: insight.confidence?.level ?? null,
+    supportingEvidenceSummary: insight.supportingEvidenceSummary,
     weekSummary,
     wins,
     opportunities,
     trends,
     reflection,
     nextFocus,
+    topRecommendation: insight.topRecommendation?.title ?? weekSummary,
+    evidence: insight.evidence,
     quickActions: [
       {
         id: 'training',
@@ -308,7 +373,7 @@ function buildWeeklyReviewModel(
         isEnabled: true,
       },
     ],
-    accessibilityLabel: `Weekly Review. Your biggest win this week was ${wins[0]?.title ?? weekSummary}.`,
+    accessibilityLabel: `Weekly Review. ${insight.headline}. ${insight.supportingEvidenceSummary}.`,
   };
 }
 
@@ -663,20 +728,6 @@ function getBehaviorPatternLabel(pattern: BehavioralPattern): string {
     default:
       return 'Your coaching pattern became clearer this week.';
   }
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    [
-      'USER_PROFILE_NOT_FOUND',
-      'GOAL_NOT_FOUND',
-      'HABIT_SNAPSHOT_NOT_FOUND',
-      'PERSONALIZATION_SNAPSHOT_NOT_FOUND',
-      'TRAINING_PLAN_NOT_FOUND',
-      'NOT_FOUND',
-    ].includes(error.code)
-  );
 }
 
 export function trackCoachWeeklyReviewEvent(

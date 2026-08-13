@@ -8,6 +8,9 @@ Ele é um sistema inteligente que atua como um coach pessoal automatizado, combi
 
 - treino
 - alimentação
+- recuperação
+- objetivos
+- hábitos
 - acompanhamento diário
 - adaptação contínua via IA
 
@@ -64,7 +67,7 @@ Problema:
 
 Elev9 Coach é:
 
-👉 Um coach fitness inteligente baseado em IA que adapta treino e alimentação automaticamente com base no comportamento do usuário.
+👉 Um coach fitness inteligente baseado em IA que adapta treino, alimentação e orientação diária automaticamente com base no comportamento do usuário.
 
 ---
 
@@ -100,7 +103,7 @@ Repetido continuamente.
 
 Para o usuário:
 
-👉 “Você não precisa pensar. O app decide por você.”
+👉 “Você não precisa interpretar tudo sozinho. O coach já organizou o que importa.”
 
 Benefícios:
 
@@ -175,7 +178,7 @@ Agora, você tem tudo isso no bolso.”
 
 ### Versões alternativas
 
-- “Train smarter. Eat better. Automatically.”
+- “Train smarter. Eat better. Recover better.”
 - “Seu coach fitness com inteligência artificial”
 - “Pare de pensar. Comece a evoluir.”
 

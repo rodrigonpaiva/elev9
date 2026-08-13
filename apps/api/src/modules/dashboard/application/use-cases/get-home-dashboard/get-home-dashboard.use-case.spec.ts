@@ -491,9 +491,8 @@ describe('GetHomeDashboardUseCase', () => {
         },
         nutritionGuidance: {
           priority: 'consistency',
-          message:
-            'Keep your meals consistent today to support recovery and routine.',
-          signals: ['low_consistency'],
+          message: 'Keep your nutrition routine consistent today.',
+          signals: ['nutrition_unavailable'],
         },
       },
     });
@@ -556,9 +555,8 @@ describe('GetHomeDashboardUseCase', () => {
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
-      message:
-        'Keep your meals consistent today to support recovery and routine.',
-      signals: ['low_consistency'],
+      message: 'Keep your nutrition routine consistent today.',
+      signals: ['nutrition_unavailable'],
     });
     expect(
       workoutLogRepository.findByTrainingPlanIdsAndDateRange,
@@ -740,9 +738,8 @@ describe('GetHomeDashboardUseCase', () => {
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
-      message:
-        'Keep your meals consistent today to support recovery and routine.',
-      signals: ['low_consistency'],
+      message: 'Keep your nutrition routine consistent today.',
+      signals: ['nutrition_unavailable'],
     });
     expect(result.dashboard.coachDecision).toEqual({
       priority: 'motivation',
@@ -846,9 +843,9 @@ describe('GetHomeDashboardUseCase', () => {
       },
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
-      priority: 'recovery',
-      message: 'Focus on recovery meals and hydration today.',
-      signals: ['high_fatigue', 'poor_sleep', 'high_soreness'],
+      priority: 'consistency',
+      message: 'Keep your nutrition routine consistent today.',
+      signals: ['nutrition_unavailable'],
     });
   });
 
@@ -885,9 +882,8 @@ describe('GetHomeDashboardUseCase', () => {
     });
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
-      message:
-        'Keep your meals consistent today to support recovery and routine.',
-      signals: ['low_consistency'],
+      message: 'Keep your nutrition routine consistent today.',
+      signals: ['nutrition_unavailable'],
     });
   });
 
@@ -991,7 +987,6 @@ describe('GetHomeDashboardUseCase', () => {
       recoveryTrend: 'needs_recovery',
       recommendedIntensity: 'hard',
       latestCheckIn: undefined,
-      nutritionProfile: undefined,
     });
 
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
@@ -1013,7 +1008,7 @@ describe('GetHomeDashboardUseCase', () => {
       ],
       latestCheckIn: undefined,
     });
-    expect(result.dashboard.nutritionGuidance.priority).toBe('recovery');
+    expect(result.dashboard.nutritionGuidance.priority).toBe('consistency');
   });
 
   it('returns consistency guidance when meal frequency is low', async () => {
@@ -1041,23 +1036,14 @@ describe('GetHomeDashboardUseCase', () => {
         motivationLevel: 3,
         createdAt: new Date('2026-04-30T09:00:00.000Z'),
       },
-      nutritionProfile: {
-        goal: 'maintenance',
-        mealsPerDay: 2,
-        dietaryRestrictions: [],
-        allergies: [],
-        dislikedFoods: [],
-        preferredFoods: [],
-      },
     });
 
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
-      message:
-        'Keep your meals consistent today to support recovery and routine.',
-      signals: ['low_meal_frequency'],
+      message: 'Keep your nutrition routine consistent today.',
+      signals: ['nutrition_unavailable'],
     });
   });
 
@@ -1086,23 +1072,14 @@ describe('GetHomeDashboardUseCase', () => {
         motivationLevel: 5,
         createdAt: new Date('2026-04-30T09:00:00.000Z'),
       },
-      nutritionProfile: {
-        goal: 'muscle_gain',
-        mealsPerDay: 4,
-        dietaryRestrictions: [],
-        allergies: [],
-        dislikedFoods: [],
-        preferredFoods: ['rice', 'eggs'],
-      },
     });
 
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.nutritionGuidance).toEqual({
-      priority: 'performance',
-      message:
-        "Support today's training with consistent meals around your session.",
-      signals: ['muscle_gain_goal', 'high_motivation', 'low_fatigue'],
+      priority: 'consistency',
+      message: 'Keep your nutrition routine consistent today.',
+      signals: ['nutrition_unavailable'],
     });
   });
 
@@ -1132,7 +1109,7 @@ describe('GetHomeDashboardUseCase', () => {
     expect(result.dashboard.nutritionGuidance).toEqual({
       priority: 'consistency',
       message: 'Keep your nutrition routine consistent today.',
-      signals: ['general_consistency'],
+      signals: ['nutrition_unavailable'],
     });
   });
 
@@ -1192,7 +1169,7 @@ describe('GetHomeDashboardUseCase', () => {
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.nutritionGuidance.signals).toContain(
-      'needs_recovery_trend',
+      'nutrition_unavailable',
     );
   });
 
@@ -1220,14 +1197,6 @@ describe('GetHomeDashboardUseCase', () => {
         muscleSoreness: 1,
         motivationLevel: 5,
         createdAt: new Date('2026-04-30T09:00:00.000Z'),
-      },
-      nutritionProfile: {
-        goal: 'muscle_gain',
-        mealsPerDay: 4,
-        dietaryRestrictions: [],
-        allergies: [],
-        dislikedFoods: [],
-        preferredFoods: [],
       },
     });
     mockDailyCheckInHistory([
@@ -1260,9 +1229,7 @@ describe('GetHomeDashboardUseCase', () => {
     const result = await useCase.execute({ authUserId: 'auth_user_123' });
 
     expect(result.dashboard.nutritionGuidance.signals).toEqual([
-      'muscle_gain_goal',
-      'high_motivation',
-      'low_fatigue',
+      'nutrition_unavailable',
     ]);
   });
 

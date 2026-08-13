@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-Este roadmap organiza a evolução do MVP do Elev9 Coach em fases objetivas.
+Este roadmap organiza a evolução do produto em fases objetivas.
 
 Princípios:
 
@@ -148,6 +148,32 @@ Critério de saída:
 
 ---
 
+## 9. Phase 6 — AI Coach Experience
+
+Objetivo:
+
+entregar a camada de coaching contextual que interpreta o contexto do usuário.
+
+Entregas:
+
+- Coach Home
+- Conversational Coach
+- Daily Briefing
+- Coach Memory Timeline
+- Coach Insights
+- Ask Coach
+- Weekly Review
+- Goal Guidance
+- Smart Notifications
+
+Critério de saída:
+
+- o usuário entende o que importa hoje sem precisar interpretar métricas brutas
+- o coach explica recomendações em linguagem humana
+- o coach pode ser acessado a partir de dashboard, workout, nutrition, profile e notifications
+
+---
+
 ## 9. Out of Scope for MVP
 
 Não entram antes da validação do loop principal:
@@ -171,6 +197,7 @@ Phase 2 -> Fitness + Nutrition profiles
 Phase 3 -> Plan generation
 Phase 4 -> Check-in + Adaptation
 Phase 5 -> Dashboard + Retention loop
+Phase 6 -> AI Coach Experience
 ```
 
 ---
@@ -184,6 +211,7 @@ Sinais de sucesso do MVP:
 - usuário faz check-in diário
 - sistema adapta recomendações
 - usuário retorna no dia seguinte
+- usuário usa o coach como superfície principal de orientação diária
 
 ---
 

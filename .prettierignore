@@ -4,4 +4,11 @@
 /.nx/cache
 /.nx/workspace-data
 /.next
+/android/build/
+/apps/mobile/android/
+/apps/web/.next/
+# TypeScript build outputs accidentally emitted under the source package.
+/packages/types/src/**/*.js
+/packages/types/src/**/*.js.map
+/packages/types/src/**/*.d.ts
 /scripts/docker-smoke.sh

@@ -1,5 +1,4 @@
 import { memo, useCallback } from 'react';
-import type { ReactNode } from 'react';
 import {
   Pressable,
   RefreshControl,
@@ -14,6 +13,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Text } from '@elev9/ui';
 
+import {
+  CoachActionGrid,
+  CoachCenteredState,
+  CoachHeroCard,
+  CoachEvidenceList,
+  CoachPriorityBanner,
+  CoachSection,
+} from '../components/coach';
 import type {
   CoachInsightAction,
   CoachInsightSignal,
@@ -138,11 +145,13 @@ export function CoachInsightsScreen() {
           style={styles.content}
         >
           <RecommendationHero model={insights.model} />
+          <PriorityBanner model={insights.model} />
           <Explanation model={insights.model} />
           <Signals signals={insights.model.signals} />
           <Benefits benefits={insights.model.benefits} />
           <Alternative alternative={insights.model.alternative} />
           <Confidence confidence={insights.model.confidence} />
+          <EvidenceSection model={insights.model} />
           <QuickActions
             actions={insights.model.actions}
             onAction={handleAction}
@@ -159,21 +168,32 @@ const RecommendationHero = memo(function RecommendationHero({
   model: CoachInsightsModel;
 }) {
   return (
-    <View
-      accessibilityLabel={`Recommendation. ${model.recommendation}`}
-      style={styles.hero}
-    >
-      <View style={styles.heroIcon}>
-        <Ionicons name="bulb-outline" size={21} color={insightTokens.text} />
-      </View>
-      <Text
-        maxFontSizeMultiplier={1.25}
-        numberOfLines={2}
-        style={styles.heroText}
-      >
-        {model.recommendation}
-      </Text>
-    </View>
+    <CoachHeroCard
+      accessibilityLabel={`Recommendation. ${model.recommendation}. ${model.focus}.`}
+      containerStyle={styles.hero}
+      iconColor={insightTokens.text}
+      iconContainerStyle={styles.heroIcon}
+      iconName="bulb-outline"
+      title={model.recommendation}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25, numberOfLines: 2 }}
+      titleStyle={styles.heroText}
+    />
+  );
+});
+
+const PriorityBanner = memo(function PriorityBanner({
+  model,
+}: {
+  model: CoachInsightsModel;
+}) {
+  return (
+    <CoachPriorityBanner
+      confidenceLevel={model.confidenceLevel}
+      detail={model.supportingEvidenceSummary || model.explanation}
+      focus={model.focusLevel}
+      riskLevel={model.riskLevel}
+      title={model.topRecommendation}
+    />
   );
 });
 
@@ -183,7 +203,7 @@ const Explanation = memo(function Explanation({
   model: CoachInsightsModel;
 }) {
   return (
-    <Section title="Why This Recommendation?">
+    <CoachSection title="Why This Recommendation?" style={styles.section}>
       <View
         accessibilityLabel={`Why this recommendation. ${model.explanation}`}
         onLayout={() => trackCoachInsightsEvent('coach_explanation_read')}
@@ -199,7 +219,19 @@ const Explanation = memo(function Explanation({
           </Text>
         ))}
       </View>
-    </Section>
+    </CoachSection>
+  );
+});
+
+const EvidenceSection = memo(function EvidenceSection({
+  model,
+}: {
+  model: CoachInsightsModel;
+}) {
+  return (
+    <CoachSection title="Supporting Evidence" style={styles.section}>
+      <CoachEvidenceList evidence={model.evidence} maxItems={3} />
+    </CoachSection>
   );
 });
 
@@ -209,7 +241,7 @@ const Signals = memo(function Signals({
   signals: CoachInsightSignal[];
 }) {
   return (
-    <Section title="Signals Used">
+    <CoachSection title="Signals Used" style={styles.section}>
       <View style={styles.signalGrid}>
         {signals.map((signal) => (
           <View
@@ -224,13 +256,13 @@ const Signals = memo(function Signals({
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
 const Benefits = memo(function Benefits({ benefits }: { benefits: string[] }) {
   return (
-    <Section title="What Happens If You Follow It?">
+    <CoachSection title="What Happens If You Follow It?" style={styles.section}>
       <View style={styles.benefitGrid}>
         {benefits.map((benefit) => (
           <View key={benefit} style={styles.benefitCard}>
@@ -245,7 +277,7 @@ const Benefits = memo(function Benefits({ benefits }: { benefits: string[] }) {
           </View>
         ))}
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -255,7 +287,7 @@ const Alternative = memo(function Alternative({
   alternative: string;
 }) {
   return (
-    <Section title="Alternative Recommendation">
+    <CoachSection title="Alternative Recommendation" style={styles.section}>
       <Pressable
         accessibilityLabel={`If today doesn't go as planned. ${alternative}`}
         accessibilityRole="button"
@@ -272,7 +304,7 @@ const Alternative = memo(function Alternative({
           {alternative}
         </Text>
       </Pressable>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -282,7 +314,7 @@ const Confidence = memo(function Confidence({
   confidence: string;
 }) {
   return (
-    <Section title="Coach Confidence">
+    <CoachSection title="Coach Confidence" style={styles.section}>
       <View
         accessibilityLabel={`Coach confidence. ${confidence}`}
         style={styles.confidenceCard}
@@ -291,7 +323,7 @@ const Confidence = memo(function Confidence({
           {confidence}
         </Text>
       </View>
-    </Section>
+    </CoachSection>
   );
 });
 
@@ -303,40 +335,18 @@ const QuickActions = memo(function QuickActions({
   onAction: (action: CoachInsightAction) => void;
 }) {
   return (
-    <Section title="Quick Actions">
-      <View style={styles.actionGrid}>
-        {actions.map((action) => (
-          <Pressable
-            accessibilityLabel={action.label}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !action.isEnabled }}
-            disabled={!action.isEnabled}
-            key={action.id}
-            onPress={() => onAction(action)}
-            style={({ pressed }) => [
-              styles.actionPill,
-              !action.isEnabled ? styles.disabled : null,
-              pressed ? styles.pressed : null,
-            ]}
-          >
-            <Text style={styles.actionText}>{action.label}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </Section>
+    <CoachSection title="Quick Actions" style={styles.section}>
+      <CoachActionGrid
+        actions={actions}
+        actionStyle={styles.actionPill}
+        containerStyle={styles.actionGridContainer}
+        disabledActionStyle={styles.disabled}
+        onAction={onAction}
+        textStyle={styles.actionText}
+      />
+    </CoachSection>
   );
 });
-
-function Section({ children, title }: { children: ReactNode; title: string }) {
-  return (
-    <View style={styles.section}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
-        {title}
-      </Text>
-      {children}
-    </View>
-  );
-}
 
 function InsightsSkeleton() {
   return (
@@ -367,12 +377,8 @@ function InsightsState({
   secondaryText?: string;
 }) {
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View accessibilityLabel={message} style={styles.stateContent}>
-        <Text style={styles.stateTitle}>{message}</Text>
-        {secondaryText ? (
-          <Text style={styles.stateSecondary}>{secondaryText}</Text>
-        ) : null}
+    <CoachCenteredState
+      action={
         <Pressable
           accessibilityLabel={buttonLabel}
           accessibilityRole="button"
@@ -384,8 +390,16 @@ function InsightsState({
         >
           <Text style={styles.primaryButtonText}>{buttonLabel}</Text>
         </Pressable>
-      </View>
-    </SafeAreaView>
+      }
+      contentStyle={styles.stateContent}
+      message={message}
+      safeAreaStyle={styles.safeArea}
+      secondaryText={secondaryText}
+      secondaryTextStyle={styles.stateSecondary}
+      titleStyle={styles.stateTitle}
+      titleTextProps={{ maxFontSizeMultiplier: 1.25 }}
+      secondaryTextProps={{ maxFontSizeMultiplier: 1.35 }}
+    />
   );
 }
 
@@ -545,7 +559,7 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontWeight: '800',
   },
-  actionGrid: {
+  actionGridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,

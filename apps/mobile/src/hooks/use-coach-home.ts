@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   CoachChatHistoryMessage,
   CoachDecision,
@@ -10,6 +9,21 @@ import { formatGoalType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
+import {
+  formatCoachRelativeTime,
+  getCoachConfidenceLabel,
+  getCoachGreetingMessage,
+  getCoachPriorityBenefit,
+  getCoachPriorityGoalLabel,
+  getCoachFocusLabel,
+  getCoachRiskLabel,
+  isCoachOptionalEmptyState,
+  normalizeCoachSentence,
+  mapUnifiedCoachInsight,
+  type CoachConfidenceLevel,
+  type CoachRiskLevel,
+  type CoachUnifiedCoachIntelligence,
+} from './coach';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
 
@@ -61,6 +75,12 @@ export type CoachHomeModel = {
   subtitle: string;
   mainInsight: string;
   insightSummary: string;
+  currentFocus: string;
+  currentRisk: string;
+  confidence: string;
+  riskLevel: CoachRiskLevel | null;
+  confidenceLevel: CoachConfidenceLevel | null;
+  supportingEvidenceSummary: string;
   contextItems: CoachHomeContextItem[];
   priorities: CoachHomePriority[];
   actions: CoachHomeAction[];
@@ -81,8 +101,6 @@ export type CoachHomeResult = {
   refresh: () => Promise<void>;
 };
 
-const USER_NAME = 'Rodrigo';
-
 export function useCoachHome(): CoachHomeResult {
   const dashboard = useDashboard();
   const [latestMessage, setLatestMessage] =
@@ -102,13 +120,13 @@ export function useCoachHome(): CoachHomeResult {
 
     if (chatResult.status === 'fulfilled') {
       setLatestMessage(resolveLatestAssistantMessage(chatResult.value));
-    } else if (!isOptionalEmptyState(chatResult.reason)) {
+    } else if (!isCoachOptionalEmptyState(chatResult.reason)) {
       setExtraError("Unable to load today's coaching.");
     }
 
     if (goalResult.status === 'fulfilled') {
       setCurrentGoal(goalResult.value.goal);
-    } else if (isOptionalEmptyState(goalResult.reason)) {
+    } else if (isCoachOptionalEmptyState(goalResult.reason)) {
       setCurrentGoal(null);
     }
 
@@ -128,19 +146,36 @@ export function useCoachHome(): CoachHomeResult {
       return null;
     }
 
+    if (dashboard.coach.mode === 'error' && !dashboard.coach.intelligence) {
+      return null;
+    }
+
+    const intelligence = dashboard.coach.intelligence;
+    const insight = mapUnifiedCoachInsight({
+      intelligence,
+      fallbackHeadline: dashboard.coach.data.headline,
+      fallbackSummary: dashboard.coach.data.summary,
+    });
+
     return buildCoachHomeModel({
       coachDecision: dashboard.coach.data,
+      intelligence,
+      userName: dashboard.userName,
       latestMessage,
       currentGoal,
       recoveryScore: dashboard.recovery.data?.readinessScore,
       hasWorkout: Boolean(dashboard.workout.todaysWorkout),
       mealsRemaining: getMealsRemaining(dashboard.nutrition.data?.meals.length),
       nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
+      insight,
     });
   }, [
     currentGoal,
     dashboard.coach.data,
+    dashboard.coach.intelligence,
+    dashboard.coach.mode,
     dashboard.nutrition.data,
+    dashboard.progress.data,
     dashboard.recovery.data,
     dashboard.workout.todaysWorkout,
     latestMessage,
@@ -175,24 +210,39 @@ export function useCoachHome(): CoachHomeResult {
 
 function buildCoachHomeModel(input: {
   coachDecision: CoachDecision;
+  intelligence: CoachUnifiedCoachIntelligence | null;
+  userName: string | null;
   latestMessage: CoachChatHistoryMessage | null;
   currentGoal: CurrentGoal | null;
   recoveryScore?: number;
   hasWorkout: boolean;
   mealsRemaining?: number;
   nutritionFocus?: string;
+  insight: ReturnType<typeof mapUnifiedCoachInsight>;
 }): CoachHomeModel {
   const contextItems = buildContextItems(input);
-  const priorities = buildPriorities(input.coachDecision);
+  const priorities = buildPriorities(input.coachDecision, input.intelligence);
   const updatedAt =
     input.coachDecision.updatedAt || input.coachDecision.createdAt;
   const generatedAt = getGeneratedAt(input.coachDecision);
 
   return {
-    greeting: `${getGreeting()}, ${USER_NAME}.`,
+    greeting: getCoachGreetingMessage(input.userName),
     subtitle: "Here's what deserves your attention today.",
-    mainInsight: input.coachDecision.headline,
-    insightSummary: input.coachDecision.summary,
+    mainInsight: input.insight.headline,
+    insightSummary: input.insight.summary,
+    currentFocus: input.insight.currentFocus
+      ? getCoachFocusLabel(input.insight.currentFocus)
+      : 'Coach',
+    currentRisk: input.insight.currentRisk
+      ? getCoachRiskLabel(input.insight.currentRisk.level)
+      : 'No major risk',
+    confidence: input.insight.confidence
+      ? getCoachConfidenceLabel(input.insight.confidence.level)
+      : 'Low confidence',
+    riskLevel: input.insight.currentRisk?.level ?? null,
+    confidenceLevel: input.insight.confidence?.level ?? null,
+    supportingEvidenceSummary: input.insight.supportingEvidenceSummary,
     contextItems,
     priorities,
     actions: [
@@ -275,11 +325,11 @@ function buildCoachHomeModel(input: {
       },
     ],
     latestMessage: input.latestMessage,
-    statusText: `Coach updated ${formatRelativeTime(updatedAt)}.`,
+    statusText: `Coach updated ${formatCoachRelativeTime(updatedAt)}.`,
     statusDetail: generatedAt
       ? "Today's recommendations are based on your latest workout and nutrition logs."
       : "Today's recommendations are based on the latest signals Elev9 has available.",
-    accessibilityLabel: `Coach Home. ${input.coachDecision.headline}. ${priorities.length} priorities available.`,
+    accessibilityLabel: `Coach Home. ${input.insight.headline}. ${input.insight.supportingEvidenceSummary}.`,
   };
 }
 
@@ -315,25 +365,32 @@ function buildContextItems(input: {
       label: 'Goal',
       value: input.currentGoal
         ? formatGoalType(input.currentGoal.type)
-        : getPriorityGoalLabel(input.coachDecision.priority),
+        : getCoachPriorityGoalLabel(input.coachDecision.priority),
     },
   ];
 }
 
-function buildPriorities(coachDecision: CoachDecision): CoachHomePriority[] {
+function buildPriorities(
+  coachDecision: CoachDecision,
+  intelligence: CoachUnifiedCoachIntelligence | null,
+): CoachHomePriority[] {
   const sourceItems =
-    coachDecision.actionItems.length > 0
-      ? coachDecision.actionItems
-      : [getFallbackPriority(coachDecision.priority)];
+    intelligence && intelligence.recommendations.length > 0
+      ? intelligence.recommendations.map(
+          (recommendation) => recommendation.title,
+        )
+      : coachDecision.actionItems.length > 0
+        ? coachDecision.actionItems
+        : [getFallbackPriority(coachDecision.priority)];
 
   return sourceItems
     .filter((item) => item.trim().length > 0)
     .slice(0, 3)
     .map((item, index) => ({
       id: `${coachDecision.id}-${index}`,
-      title: normalizeSentence(item),
-      reason: getPriorityReason(coachDecision, index),
-      benefit: getExpectedBenefit(coachDecision.priority),
+      title: normalizeCoachSentence(item),
+      reason: getPriorityReason(coachDecision, index, intelligence),
+      benefit: getCoachPriorityBenefit(coachDecision.priority),
     }));
 }
 
@@ -373,7 +430,14 @@ function getRecoveryLabel(score?: number): string {
 function getPriorityReason(
   coachDecision: CoachDecision,
   index: number,
+  intelligence: CoachUnifiedCoachIntelligence | null,
 ): string {
+  const evidence = intelligence?.evidence[index];
+
+  if (evidence?.detail) {
+    return evidence.detail;
+  }
+
   const influence =
     coachDecision.influences[index] ?? coachDecision.influences[0];
 
@@ -382,22 +446,6 @@ function getPriorityReason(
   }
 
   return coachDecision.summary;
-}
-
-function getExpectedBenefit(priority: CoachDecision['priority']): string {
-  switch (priority) {
-    case 'recovery':
-      return 'Better readiness tomorrow.';
-    case 'nutrition':
-      return 'More consistent energy today.';
-    case 'training':
-      return 'A stronger training signal.';
-    case 'consistency':
-      return 'Keeps your momentum intact.';
-    case 'motivation':
-    default:
-      return 'A clearer next step.';
-  }
 }
 
 function getFallbackPriority(priority: CoachDecision['priority']): string {
@@ -416,82 +464,8 @@ function getFallbackPriority(priority: CoachDecision['priority']): string {
   }
 }
 
-function getPriorityGoalLabel(priority: CoachDecision['priority']): string {
-  switch (priority) {
-    case 'recovery':
-      return 'Improve recovery';
-    case 'nutrition':
-      return 'Nutrition consistency';
-    case 'training':
-      return 'Training progress';
-    case 'consistency':
-      return 'Improve consistency';
-    case 'motivation':
-    default:
-      return 'Personal progress';
-  }
-}
-
 function getGeneratedAt(coachDecision: CoachDecision): string | null {
   const generatedAt = coachDecision.sourceContext.generatedAt;
 
   return typeof generatedAt === 'string' ? generatedAt : null;
-}
-
-function normalizeSentence(value: string): string {
-  const trimmed = value.trim();
-
-  if (trimmed.endsWith('.') || trimmed.endsWith('!') || trimmed.endsWith('?')) {
-    return trimmed;
-  }
-
-  return `${trimmed}.`;
-}
-
-function getGreeting(): string {
-  const hour = new Date().getHours();
-
-  if (hour < 12) {
-    return 'Good morning';
-  }
-
-  if (hour < 18) {
-    return 'Good afternoon';
-  }
-
-  return 'Good evening';
-}
-
-function formatRelativeTime(value: string): string {
-  const date = new Date(value);
-  const diffMs = Date.now() - date.getTime();
-
-  if (!Number.isFinite(diffMs)) {
-    return 'today';
-  }
-
-  const minutes = Math.max(0, Math.round(diffMs / 60000));
-
-  if (minutes < 1) {
-    return 'just now';
-  }
-
-  if (minutes < 60) {
-    return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-  }
-
-  const hours = Math.round(minutes / 60);
-
-  if (hours < 24) {
-    return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-  }
-
-  return 'today';
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    ['USER_PROFILE_NOT_FOUND', 'GOAL_NOT_FOUND'].includes(error.code)
-  );
 }

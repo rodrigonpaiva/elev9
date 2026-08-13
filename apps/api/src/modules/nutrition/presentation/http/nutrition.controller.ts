@@ -86,6 +86,11 @@ import {
 } from './dto/nutrition-recommendation.response.dto';
 import { ReplaceMealRequestDto } from './dto/replace-meal.request.dto';
 import { ReplaceMealResponseDto } from './dto/replace-meal.response.dto';
+import { GetNutritionHistoryQueryDto } from './dto/get-nutrition-history.query.dto';
+import {
+  NutritionHistoryQueryError,
+  NutritionHistoryQueryService,
+} from '../../application/services/nutrition-history-query.service';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -111,6 +116,7 @@ export class NutritionController {
     private readonly replaceMealUseCase: ReplaceMealUseCase,
     private readonly generateNutritionRecommendationUseCase: GenerateNutritionRecommendationUseCase,
     private readonly getNutritionRecommendationsUseCase: GetNutritionRecommendationsUseCase,
+    private readonly nutritionHistoryQueryService: NutritionHistoryQueryService,
   ) {}
 
   @Post('profile')
@@ -250,18 +256,88 @@ export class NutritionController {
 
       return {
         todayNutrition: {
+          availability: result.todayNutrition.availability,
+          freshness: result.todayNutrition.freshness,
+          lastUpdatedAt: result.todayNutrition.lastUpdatedAt,
+          timezone: result.todayNutrition.timezone,
           date: result.todayNutrition.date,
           macroTargets: result.todayNutrition.macroTargets,
+          targets: result.todayNutrition.targets,
           meals: result.todayNutrition.meals.map(mapMeal),
           progress: result.todayNutrition.progress,
+          calories: result.todayNutrition.calories,
+          macros: result.todayNutrition.macros,
+          mealProgress: result.todayNutrition.mealProgress,
           nextMeal: result.todayNutrition.nextMeal
             ? mapMeal(result.todayNutrition.nextMeal)
             : null,
+          focus: result.todayNutrition.focus,
+          insight: result.todayNutrition.insight,
+          actions: result.todayNutrition.actions,
           nutritionFocus: result.todayNutrition.nutritionFocus,
         },
       };
     } catch (error) {
       this.handleGetTodayNutritionError(error);
+    }
+  }
+
+  @Get('history')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getNutritionHistory(
+    @Req() request: RequestWithAuthUser,
+    @Query() query: GetNutritionHistoryQueryDto,
+  ) {
+    try {
+      return await this.nutritionHistoryQueryService.getPage({
+        authUserId: request.authUser?.id ?? '',
+        from: query.from,
+        to: query.to,
+        cursor: query.cursor,
+        limit: query.limit,
+      });
+    } catch (error) {
+      this.handleNutritionHistoryError(error);
+    }
+  }
+
+  @Get('history/:date')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getNutritionHistoryDay(
+    @Req() request: RequestWithAuthUser,
+    @Param('date') date: string,
+  ) {
+    try {
+      return {
+        day: await this.nutritionHistoryQueryService.getDay({
+          authUserId: request.authUser?.id ?? '',
+          date,
+        }),
+      };
+    } catch (error) {
+      this.handleNutritionHistoryError(error);
+    }
+  }
+
+  @Get('trends')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getNutritionTrends(
+    @Req() request: RequestWithAuthUser,
+    @Query() query: GetNutritionHistoryQueryDto,
+  ) {
+    try {
+      return {
+        trends: await this.nutritionHistoryQueryService.getTrends({
+          authUserId: request.authUser?.id ?? '',
+          from: query.from,
+          to: query.to,
+        }),
+      };
+    } catch (error) {
+      this.handleNutritionHistoryError(error);
     }
   }
 
@@ -388,6 +464,38 @@ export class NutritionController {
         throw new InternalServerErrorException({
           code: CREATE_NUTRITION_PROFILE_ERROR_CODES.INTERNAL_ERROR,
           message: 'An unexpected error occurred.',
+        });
+    }
+  }
+
+  private handleNutritionHistoryError(error: unknown): never {
+    if (!(error instanceof NutritionHistoryQueryError)) {
+      throw new InternalServerErrorException('An unexpected error occurred.');
+    }
+
+    switch (error.code) {
+      case 'INVALID_SESSION':
+        throw new UnauthorizedException({
+          code: 'NUTRITION_UNAUTHORIZED',
+          message: 'Authentication required.',
+        });
+      case 'USER_PROFILE_NOT_FOUND':
+        throw new NotFoundException({
+          code: 'NUTRITION_PROFILE_NOT_CONFIGURED',
+          message: 'Nutrition history is not configured yet.',
+        });
+      case 'INVALID_DATE_RANGE':
+      case 'INVALID_CURSOR':
+      case 'RANGE_TOO_LARGE':
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+        });
+      case 'PROCESSING_FAILED':
+      default:
+        throw new InternalServerErrorException({
+          code: 'NUTRITION_PROCESSING_FAILED',
+          message: 'Nutrition history is temporarily unavailable.',
         });
     }
   }

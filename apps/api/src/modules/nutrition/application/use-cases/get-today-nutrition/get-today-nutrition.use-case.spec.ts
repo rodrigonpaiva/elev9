@@ -62,38 +62,32 @@ describe('GetTodayNutritionUseCase', () => {
     });
   });
 
-  it('fails when user profile does not exist', async () => {
+  it('returns not_configured when user profile does not exist', async () => {
     userProfileRepository.findByAuthUserId.mockResolvedValue(null);
 
-    await expect(
-      useCase.execute({ authUserId: 'auth_user_123' }),
-    ).rejects.toMatchObject({
-      code: GET_TODAY_NUTRITION_ERROR_CODES.USER_PROFILE_NOT_FOUND,
-    });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
+
+    expect(result.todayNutrition.availability).toBe('not_configured');
   });
 
-  it('fails when active nutrition plan does not exist', async () => {
+  it('returns not_configured when active nutrition plan does not exist', async () => {
     arrangeUserProfile();
     nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(null);
 
-    await expect(
-      useCase.execute({ authUserId: 'auth_user_123' }),
-    ).rejects.toMatchObject({
-      code: GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_PLAN_NOT_FOUND,
-    });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
+
+    expect(result.todayNutrition.availability).toBe('not_configured');
   });
 
-  it('fails when active plan does not contain today', async () => {
+  it('returns insufficient_data when active plan does not contain today', async () => {
     arrangeUserProfile();
     nutritionPlanRepository.findActiveByUserProfileId.mockResolvedValue(
       buildNutritionPlan({ days: [] }),
     );
 
-    await expect(
-      useCase.execute({ authUserId: 'auth_user_123' }),
-    ).rejects.toMatchObject({
-      code: GET_TODAY_NUTRITION_ERROR_CODES.NUTRITION_DAY_NOT_FOUND,
-    });
+    const result = await useCase.execute({ authUserId: 'auth_user_123' });
+
+    expect(result.todayNutrition.availability).toBe('insufficient_data');
   });
 
   it('returns zero progress while nutrition logs do not exist', async () => {
@@ -114,6 +108,39 @@ describe('GetTodayNutritionUseCase', () => {
       targetCarbsGrams: 250,
       targetFatGrams: 70,
       adherencePercentage: 0,
+      adherenceStatus: 'not_started',
+      macroProgress: {
+        protein: {
+          nutrient: 'protein',
+          consumed: 0,
+          target: 150,
+          remaining: 150,
+          percentage: 0,
+          rawPercentage: 0,
+          unit: 'g',
+          state: 'not_started',
+        },
+        carbs: {
+          nutrient: 'carbohydrates',
+          consumed: 0,
+          target: 250,
+          remaining: 250,
+          percentage: 0,
+          rawPercentage: 0,
+          unit: 'g',
+          state: 'not_started',
+        },
+        fat: {
+          nutrient: 'fat',
+          consumed: 0,
+          target: 70,
+          remaining: 70,
+          percentage: 0,
+          rawPercentage: 0,
+          unit: 'g',
+          state: 'not_started',
+        },
+      },
     });
   });
 
@@ -246,12 +273,8 @@ describe('GetTodayNutritionUseCase', () => {
 
     const muscleGain = await useCase.execute({ authUserId: 'auth_user_123' });
 
-    expect(fatLoss.todayNutrition.nutritionFocus).toContain(
-      'controlled calorie deficit',
-    );
-    expect(muscleGain.todayNutrition.nutritionFocus).toContain(
-      'clean calorie surplus',
-    );
+    expect(fatLoss.todayNutrition.focus.kind).toBe('log_meal');
+    expect(muscleGain.todayNutrition.insight.kind).toBe('next_meal_available');
   });
 
   function arrangeUserProfile(): void {

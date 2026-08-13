@@ -24,6 +24,7 @@ export interface CreateNutritionPlanRepositoryInput {
 
 export interface NutritionPlanRepository {
   findById(nutritionPlanId: string): Promise<NutritionPlan | null>;
+  findByIds?(nutritionPlanIds: readonly string[]): Promise<NutritionPlan[]>;
   findActiveByUserProfileId(
     userProfileId: string,
   ): Promise<NutritionPlan | null>;

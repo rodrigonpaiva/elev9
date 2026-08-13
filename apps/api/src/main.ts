@@ -42,6 +42,8 @@ async function bootstrap(): Promise<void> {
   console.info('[Bootstrap] Request correlation enabled');
   console.info('[Bootstrap] Request logging enabled');
 
+  app.enableShutdownHooks();
+
   app.use(requestCorrelationMiddleware);
   app.use(requestLoggingMiddleware);
   app.enableCors({

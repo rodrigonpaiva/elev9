@@ -51,7 +51,6 @@ export class CoachChatReplyGenerator {
     const hasLowMotivation = latestCheckIn
       ? latestCheckIn.motivationLevel <= 2
       : false;
-    const nutritionProfile = input.healthContext.nutritionProfile;
     const personalizationTone = this.buildPersonalizationTone(
       input.personalization,
     );
@@ -64,28 +63,6 @@ export class CoachChatReplyGenerator {
     ) {
       return this.applyTone(
         "Your recovery signals suggest keeping today's session lighter.",
-        personalizationTone,
-      );
-    }
-
-    if (
-      nutritionProfile?.goal === 'muscle_gain' &&
-      input.healthContext.fatigueLevel === 'LOW' &&
-      latestCheckIn &&
-      latestCheckIn.motivationLevel >= 4
-    ) {
-      return this.applyTone(
-        'Your recent consistency looks strong. This may be a good moment for controlled progression.',
-        personalizationTone,
-      );
-    }
-
-    if (
-      nutritionProfile?.mealsPerDay !== undefined &&
-      nutritionProfile.mealsPerDay <= 2
-    ) {
-      return this.applyTone(
-        'Keeping your meals consistent today will support recovery and training.',
         personalizationTone,
       );
     }

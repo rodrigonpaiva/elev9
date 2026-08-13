@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context
 
@@ -29,14 +29,14 @@ The product needs a deterministic engine that can answer:
 
 ## Decision
 
-Introduce a dedicated bounded context:
+The current product uses a dedicated bounded context:
 
 ```ts
 habits;
 ```
 
-The Habit Engine will be read-model-first and deterministic-first.
-It will consume existing platform signals and turn them into canonical habit snapshots, consistency summaries, and risk signals.
+The Habit Engine is read-model-first and deterministic-first.
+It consumes existing platform signals and turns them into canonical habit snapshots, consistency summaries, and risk signals.
 
 The engine will own:
 
@@ -47,7 +47,7 @@ The engine will own:
 - deterministic habit formulas
 - consistency trend classification
 
-The engine will consume existing signals from:
+The engine consumes existing signals from:
 
 - workouts
 - daily check-ins

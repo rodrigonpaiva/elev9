@@ -4,22 +4,25 @@ import { StyleSheet, View } from 'react-native';
 import type { CoachDecision } from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
-export type CoachInsightBadgeLabel =
-  | 'Insight'
-  | 'Recommendation'
-  | 'Recovery Focus'
-  | 'Performance Focus';
+import { CoachConfidenceBadge } from '../coach/coach-confidence-badge';
+import { CoachRiskBadge } from '../coach/coach-risk-badge';
+import type { CoachConfidenceLevel, CoachRiskLevel } from '../../hooks/coach';
 
 type CoachInsightCardProps = {
   coachDecision: CoachDecision | null;
-  badgeLabel: CoachInsightBadgeLabel;
+  badgeLabel: string;
   recommendedAction: string;
   ctaLabel: string;
   isLoading: boolean;
   errorMessage?: string | null;
+  riskLevel?: CoachRiskLevel | null;
+  confidenceLevel?: CoachConfidenceLevel | null;
+  supportingEvidenceSummary?: string;
   onRetry: () => void;
   onPressCta: () => void;
 };
+
+export type CoachInsightBadgeLabel = string;
 
 type BadgeVariant = 'primary' | 'muted' | 'danger';
 
@@ -44,6 +47,9 @@ export const CoachInsightCard = memo(function CoachInsightCard({
   onPressCta,
   onRetry,
   recommendedAction,
+  confidenceLevel,
+  riskLevel,
+  supportingEvidenceSummary,
 }: CoachInsightCardProps) {
   const badgeVariant = useMemo(() => getBadgeVariant(badgeLabel), [badgeLabel]);
   const accessibilityLabel = useMemo(() => {
@@ -99,7 +105,15 @@ export const CoachInsightCard = memo(function CoachInsightCard({
     <View accessibilityLabel={accessibilityLabel} style={styles.card}>
       <View style={styles.headerRow}>
         <Text style={styles.label}>AI COACH</Text>
-        <Badge label={badgeLabel} variant={badgeVariant} style={styles.badge} />
+        <View style={styles.badges}>
+          <CoachRiskBadge level={riskLevel ?? null} />
+          <CoachConfidenceBadge level={confidenceLevel ?? null} />
+          <Badge
+            label={badgeLabel}
+            variant={badgeVariant}
+            style={styles.badge}
+          />
+        </View>
       </View>
 
       <View style={styles.messageGroup}>
@@ -116,6 +130,11 @@ export const CoachInsightCard = memo(function CoachInsightCard({
         <Text numberOfLines={2} style={styles.actionText}>
           {recommendedAction}
         </Text>
+        {supportingEvidenceSummary ? (
+          <Text numberOfLines={2} style={styles.actionSummary}>
+            {supportingEvidenceSummary}
+          </Text>
+        ) : null}
       </View>
 
       <Button
@@ -149,11 +168,19 @@ function CoachInsightSkeleton() {
   );
 }
 
-function getBadgeVariant(label: CoachInsightBadgeLabel): BadgeVariant {
+function getBadgeVariant(label: string): BadgeVariant {
   switch (label) {
     case 'Performance Focus':
-    case 'Insight':
+    case 'Coach Insight':
+    case 'Workout Focus':
+    case 'Nutrition Focus':
+    case 'Goal Focus':
+    case 'Consistency Focus':
+    case 'Progress Focus':
+    case 'Motivation Focus':
       return 'primary';
+    case 'Safety Focus':
+      return 'danger';
     case 'Recovery Focus':
     case 'Recommendation':
     default:
@@ -187,6 +214,11 @@ const styles = StyleSheet.create({
   },
   badge: {
     flexShrink: 0,
+  },
+  badges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   messageGroup: {
     gap: 10,
@@ -224,6 +256,11 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 23,
     fontWeight: '800',
+  },
+  actionSummary: {
+    color: tokens.secondaryText,
+    fontSize: 14,
+    lineHeight: 20,
   },
   primaryButton: {
     width: '100%',

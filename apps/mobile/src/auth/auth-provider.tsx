@@ -8,7 +8,8 @@ import {
 } from 'react';
 
 import { ApiClientError } from '@elev9/api-client';
-import type { LoginUserResponse, TrainingPlanResponse } from '@elev9/types';
+import type { LoginUserResponse } from '@elev9/types';
+import type { NutritionGoal, TrainingPlanResponse } from '@elev9/types';
 
 import { apiClient, mobileApiClient } from '../api/client';
 import {
@@ -16,6 +17,14 @@ import {
   getAccessToken,
   setAccessToken,
 } from '../storage/token-storage';
+import { clearDailyCheckInOfflineStorage } from '../features/daily-check-in/offline/daily-check-in-storage';
+import { clearRecoveryCacheForOwner } from '../features/recovery/cache/recovery-cache';
+import {
+  clearSessionOwnerKey,
+  createSessionOwnerKey,
+  ensureSessionOwnerKey,
+  getSessionOwnerKey,
+} from '../storage/session-owner-storage';
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -47,6 +56,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       try {
         nextToken = await getAccessToken();
+        if (nextToken) await ensureSessionOwnerKey();
       } catch (error) {
         console.error('AuthProvider bootstrap error:', error);
       } finally {
@@ -92,8 +102,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
         try {
           await clearAccessToken();
         } finally {
-          setAccessTokenState(null);
-          setStatus('unauthenticated');
+          try {
+            await clearRecoveryCacheForOwner(await getSessionOwnerKey());
+          } finally {
+            try {
+              await clearSessionOwnerKey();
+            } finally {
+              try {
+                await clearDailyCheckInOfflineStorage();
+              } finally {
+                setAccessTokenState(null);
+                setStatus('unauthenticated');
+              }
+            }
+          }
         }
       },
     }),
@@ -131,6 +153,7 @@ async function loginOrProvisionDemoUser(): Promise<LoginUserResponse> {
 
 async function ensureDemoWorkspace(): Promise<void> {
   let dashboard = await getDashboardOrNull();
+  let fitnessGoal: NutritionGoal = 'muscle_gain';
 
   if (!dashboard) {
     await createProfileIfNeeded();
@@ -139,18 +162,24 @@ async function ensureDemoWorkspace(): Promise<void> {
 
   if (!dashboard.fitnessProfile) {
     const response = await createFitnessProfileIfNeeded();
+    fitnessGoal = mapFitnessGoalToNutritionGoal(response.fitnessProfile.goal);
 
     if (!dashboard.trainingPlan) {
       await createTrainingPlanIfNeeded(response.fitnessProfile.id);
     }
 
+    await ensureDemoNutritionSetup(fitnessGoal);
+    await ensureDemoWorkoutHistory();
     return;
   }
+
+  fitnessGoal = mapFitnessGoalToNutritionGoal(dashboard.fitnessProfile.goal);
 
   if (!dashboard.trainingPlan) {
     await createTrainingPlanIfNeeded(dashboard.fitnessProfile.id);
   }
 
+  await ensureDemoNutritionSetup(fitnessGoal);
   await ensureDemoWorkoutHistory();
 }
 
@@ -227,6 +256,53 @@ async function createTrainingPlanIfNeeded(
   }
 }
 
+async function ensureDemoNutritionSetup(goal: NutritionGoal): Promise<void> {
+  const [profileResult, planResult] = await Promise.allSettled([
+    apiClient.nutrition.getNutritionProfile(),
+    apiClient.nutrition.getCurrentNutritionPlan(),
+  ]);
+
+  if (
+    profileResult.status === 'rejected' &&
+    profileResult.reason instanceof ApiClientError &&
+    profileResult.reason.code === 'NUTRITION_PROFILE_NOT_FOUND'
+  ) {
+    await mobileApiClient.nutrition.createNutritionProfile({
+      goal,
+      mealsPerDay: 4,
+      dietaryRestrictions: [],
+      allergies: [],
+      dislikedFoods: [],
+      preferredFoods: [],
+    });
+  } else if (profileResult.status === 'rejected') {
+    throw profileResult.reason;
+  }
+
+  if (
+    planResult.status === 'rejected' &&
+    planResult.reason instanceof ApiClientError &&
+    (planResult.reason.code === 'NUTRITION_PLAN_NOT_FOUND' ||
+      planResult.reason.code === 'NUTRITION_PROFILE_NOT_FOUND')
+  ) {
+    await apiClient.nutrition.createNutritionPlan();
+  } else if (planResult.status === 'rejected') {
+    throw planResult.reason;
+  }
+}
+
+function mapFitnessGoalToNutritionGoal(goal: string): NutritionGoal {
+  switch (goal) {
+    case 'lose_weight':
+      return 'fat_loss';
+    case 'maintain':
+      return 'maintenance';
+    case 'gain_muscle':
+    default:
+      return 'muscle_gain';
+  }
+}
+
 async function ensureDemoWorkoutHistory(): Promise<void> {
   const history = await mobileApiClient.progress.getWorkoutHistory(50);
 
@@ -282,6 +358,7 @@ async function persistSession(
   setStatus: (value: AuthStatus) => void,
 ): Promise<void> {
   await setAccessToken(response.accessToken);
+  await createSessionOwnerKey();
   setAccessTokenState(response.accessToken);
   setStatus('authenticated');
 }

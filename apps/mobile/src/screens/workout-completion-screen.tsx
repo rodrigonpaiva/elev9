@@ -9,7 +9,7 @@ import { ApiClientError } from '@elev9/api-client';
 import type {
   CoachDecision,
   RecoverySnapshot,
-  TodayNutrition,
+  NutritionReadModel,
 } from '@elev9/types';
 import { Button, Text } from '@elev9/ui';
 
@@ -19,7 +19,7 @@ import type { RootStackParamList } from '../navigation/app-navigator';
 type CompletionState = {
   coachDecision: CoachDecision | null;
   recoverySnapshot: RecoverySnapshot | null;
-  nutrition: TodayNutrition | null;
+  nutrition: NutritionReadModel | null;
   workoutSaved: boolean;
 };
 
@@ -416,7 +416,7 @@ function buildCompletionModel({
   completedExercises: RootStackParamList['WorkoutCompletion']['completedExercises'];
   durationMinutes: number;
   recoverySnapshot: RecoverySnapshot | null;
-  nutrition: TodayNutrition | null;
+  nutrition: NutritionReadModel | null;
   workoutSaved: boolean;
 }) {
   if (!workout || completedExercises.length === 0) {
@@ -462,7 +462,7 @@ function getHighlights({
   workout: RootStackParamList['WorkoutCompletion']['workout'];
   setsCompleted: number;
   recoverySnapshot: RecoverySnapshot | null;
-  nutrition: TodayNutrition | null;
+  nutrition: NutritionReadModel | null;
   workoutSaved: boolean;
 }): string[] {
   const highlights = new Set<string>();
@@ -526,7 +526,7 @@ function getNextSteps({
   recoverySnapshot,
 }: {
   recoverySnapshot: RecoverySnapshot | null;
-  nutrition: TodayNutrition | null;
+  nutrition: NutritionReadModel | null;
   onReviewRecovery: () => void;
   onViewNutrition: () => void;
   onViewProgress: () => void;

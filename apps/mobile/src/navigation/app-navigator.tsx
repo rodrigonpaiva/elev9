@@ -8,10 +8,13 @@ import { Text } from '@elev9/ui';
 import { AskCoachScreen } from '../screens/ask-coach-screen';
 import { useAuth } from '../auth/auth-provider';
 import { ActiveWorkoutScreen } from '../screens/active-workout-screen';
+import { CreateNutritionProfileScreen } from '../screens/create-nutrition-profile-screen';
 import { CreateFitnessProfileScreen } from '../screens/create-fitness-profile-screen';
 import { CreateProfileScreen } from '../screens/create-profile-screen';
 import { CreateTrainingPlanScreen } from '../screens/create-training-plan-screen';
 import { DailyCheckInHistoryScreen } from '../screens/daily-check-in-history-screen';
+import { DailyCheckInScreen } from '../screens/daily-check-in-screen';
+import { RecoveryScreenContainer } from '../features/recovery';
 import { CoachChatScreen } from '../screens/coach-chat-screen';
 import { CoachDailyBriefingScreen } from '../screens/coach-daily-briefing-screen';
 import { CoachHomeScreen } from '../screens/coach-home-screen';
@@ -27,7 +30,10 @@ import { LoginScreen } from '../screens/login-screen';
 import { LogMealScreen } from '../screens/log-meal-screen';
 import { MainTabsScreen } from '../screens/main-tabs-screen';
 import { MealDetailScreen } from '../screens/meal-detail-screen';
-import { NutritionHistoryScreen } from '../screens/nutrition-history-screen';
+import {
+  NutritionHistoryDayScreen,
+  NutritionHistoryScreen,
+} from '../screens/nutrition-history-screen';
 import { NutritionOverviewScreen } from '../screens/nutrition-overview-screen';
 import { NutritionPlanScreen } from '../screens/nutrition-plan-screen';
 import { NutritionRecommendationsScreen } from '../screens/nutrition-recommendations-screen';
@@ -50,6 +56,11 @@ export type RootStackParamList = {
     goal?: 'lose_weight' | 'gain_muscle' | 'maintain';
     activityLevel?: 'low' | 'medium' | 'high';
   };
+  CreateNutritionProfile:
+    | {
+        prefillGoal?: 'fat_loss' | 'maintenance' | 'muscle_gain';
+      }
+    | undefined;
   MainTabs:
     | {
         initialTab?:
@@ -75,7 +86,15 @@ export type RootStackParamList = {
   CoachNotifications: undefined;
   CoachMemoryTimeline: undefined;
   CoachWeeklyReview: undefined;
+  DailyCheckIn:
+    | {
+        mode?: 'create' | 'edit';
+        entryPoint?: 'dashboard' | 'other';
+        initialValues?: import('@elev9/types').SubmitDailyCheckInRequest;
+      }
+    | undefined;
   DailyCheckInHistory: undefined;
+  Recovery: undefined;
   MealDetail: {
     mealId: string;
   };
@@ -88,6 +107,7 @@ export type RootStackParamList = {
   NutritionOverview: undefined;
   NutritionPlan: undefined;
   NutritionHistory: undefined;
+  NutritionHistoryDay: { date: string };
   NutritionRecommendations: undefined;
   TodaysMeals: undefined;
   TrainingAnalytics: undefined;
@@ -200,6 +220,11 @@ export function AppNavigator() {
               options={{ headerShown: false }}
             />
             <Stack.Screen
+              name="CreateNutritionProfile"
+              component={CreateNutritionProfileScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="MainTabs"
               component={MainTabsScreen}
               options={{ headerShown: false }}
@@ -268,16 +293,30 @@ export function AppNavigator() {
               }}
             />
             <Stack.Screen
+              name="DailyCheckIn"
+              component={DailyCheckInScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
               name="DailyCheckInHistory"
               component={DailyCheckInHistoryScreen}
               options={{
                 headerShown: true,
-                title: 'Recovery History',
+                title: 'Daily Check-in History',
                 headerStyle: {
                   backgroundColor: '#020617',
                 },
                 headerTintColor: '#f8fafc',
                 headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="Recovery"
+              component={RecoveryScreenContainer}
+              options={{
+                headerShown: false,
               }}
             />
             <Stack.Screen
@@ -330,6 +369,14 @@ export function AppNavigator() {
                 },
                 headerTintColor: '#111827',
                 headerShadowVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="NutritionHistoryDay"
+              component={NutritionHistoryDayScreen}
+              options={{
+                headerShown: true,
+                title: 'Nutrition Day',
               }}
             />
             <Stack.Screen

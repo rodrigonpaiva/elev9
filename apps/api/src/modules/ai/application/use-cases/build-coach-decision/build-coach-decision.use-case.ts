@@ -11,9 +11,9 @@ import {
   TrainingPlanRepository,
 } from '../../../../training/domain/repositories/training-plan.repository';
 import {
-  NUTRITION_RECOMMENDATION_REPOSITORY,
-  NutritionRecommendationRepository,
-} from '../../../../nutrition/domain/repositories/nutrition-recommendation.repository';
+  NUTRITION_NOTIFICATION_SIGNALS_PORT,
+  NotificationNutritionSignals,
+} from '../../../../nutrition/application/ports/nutrition-consumer.ports';
 import {
   FITNESS_PROFILE_REPOSITORY,
   FitnessProfileRepository,
@@ -59,7 +59,6 @@ import { BuildCoachDecisionInput } from './build-coach-decision.input';
 import { BuildCoachDecisionOutput } from './build-coach-decision.output';
 
 const RECENT_WINDOW_DAYS = 7;
-const RECENT_NUTRITION_RECOMMENDATION_LIMIT = 1;
 const DEFAULT_NEUTRAL_SCORE = 50;
 
 @Injectable()
@@ -73,8 +72,12 @@ export class BuildCoachDecisionUseCase {
     private readonly trainingPlanRepository: TrainingPlanRepository,
     @Inject(WORKOUT_LOG_REPOSITORY)
     private readonly workoutLogRepository: WorkoutLogRepository,
-    @Inject(NUTRITION_RECOMMENDATION_REPOSITORY)
-    private readonly nutritionRecommendationRepository: NutritionRecommendationRepository,
+    @Inject(NUTRITION_NOTIFICATION_SIGNALS_PORT)
+    private readonly nutritionSignalsPort: {
+      getNotificationSignals(input: {
+        authUserId: string;
+      }): Promise<NotificationNutritionSignals>;
+    },
     @Inject(COACH_DECISION_REPOSITORY)
     private readonly coachDecisionRepository: CoachDecisionRepository,
     private readonly getCurrentRecoveryUseCase: GetCurrentRecoveryUseCase,
@@ -129,12 +132,10 @@ export class BuildCoachDecisionUseCase {
       const personalizationContext =
         await this.resolvePersonalizationContext(authUserId);
 
-      const latestNutritionRecommendation =
-        await this.nutritionRecommendationRepository.findManyByUserProfileId(
-          userProfile.id,
-          RECENT_NUTRITION_RECOMMENDATION_LIMIT,
-        );
-      const nutritionRecommendation = latestNutritionRecommendation[0] ?? null;
+      const nutritionSignals =
+        await this.nutritionSignalsPort.getNotificationSignals({
+          authUserId,
+        });
 
       const adaptiveTrainingRecommendation = (
         await this.getCurrentAdaptiveTrainingUseCase.execute({ authUserId })
@@ -184,7 +185,7 @@ export class BuildCoachDecisionUseCase {
         Boolean(trainingPlanId) && recentWorkoutLogsCount === 0;
 
       const nutritionAdherence = this.resolveNutritionAdherence(
-        nutritionRecommendation?.contextSnapshot?.adherenceScore,
+        nutritionSignals.adherencePercentage ?? undefined,
       );
 
       const calculatorInput: CoachDecisionCalculatorInput = {
@@ -233,9 +234,7 @@ export class BuildCoachDecisionUseCase {
         noRecentActivity,
         ...(habitContext?.sourceContext ?? {}),
         ...(personalizationContext?.sourceContext ?? {}),
-        ...(nutritionRecommendation?.id
-          ? { nutritionRecommendationId: nutritionRecommendation.id }
-          : {}),
+
         ...(adaptiveTrainingRecommendation?.id
           ? {
               adaptiveTrainingRecommendationId:
@@ -250,7 +249,7 @@ export class BuildCoachDecisionUseCase {
         await this.coachDecisionRepository.upsertDailyDecision({
           userProfileId: userProfile.id,
           date: todayDate,
-          nutritionRecommendationId: nutritionRecommendation?.id,
+          nutritionRecommendationId: undefined,
           adaptiveTrainingRecommendationId: adaptiveTrainingRecommendation?.id,
           priority: calculatedResult.priority,
           headline: calculatedResult.headline,

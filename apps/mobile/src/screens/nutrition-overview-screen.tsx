@@ -8,7 +8,7 @@ import { ApiClientError } from '@elev9/api-client';
 import type {
   GetCurrentNutritionPlanResponse,
   NutritionRecommendation,
-  TodayNutrition,
+  NutritionReadModel,
 } from '@elev9/types';
 import { Button, Text } from '@elev9/ui';
 
@@ -18,7 +18,7 @@ import type { RootStackParamList } from '../navigation/app-navigator';
 type NutritionPlan = GetCurrentNutritionPlanResponse['nutritionPlan'];
 
 type NutritionState = {
-  todayNutrition: TodayNutrition | null;
+  todayNutrition: NutritionReadModel | null;
   nutritionPlan: NutritionPlan | null;
   recommendations: NutritionRecommendation[];
 };
@@ -123,7 +123,6 @@ export function NutritionOverviewScreen() {
     () =>
       state.todayNutrition
         ? buildNutritionOverviewModel({
-            recommendations: state.recommendations,
             todayNutrition: state.todayNutrition,
           })
         : null,
@@ -131,7 +130,7 @@ export function NutritionOverviewScreen() {
   );
 
   const handleCreateNutritionProfile = useCallback(() => {
-    navigation.replace('MainTabs', { initialTab: 'profile' });
+    navigation.navigate('CreateNutritionProfile');
   }, [navigation]);
 
   const handleOpenCoach = useCallback(() => {
@@ -421,23 +420,15 @@ function NutritionOverviewStateView({
 }
 
 function buildNutritionOverviewModel(input: {
-  todayNutrition: TodayNutrition;
-  recommendations: NutritionRecommendation[];
+  todayNutrition: NutritionReadModel;
 }): NutritionOverviewModel {
-  const { todayNutrition, recommendations } = input;
+  const { todayNutrition } = input;
   const targets = todayNutrition.macroTargets;
-  const mealsRemaining = getMealsRemaining(todayNutrition);
-  const mealsCompleted = Math.max(
-    0,
-    todayNutrition.meals.length - mealsRemaining,
-  );
-  const adherence = Math.round(todayNutrition.progress.adherencePercentage);
-  const recommendation = recommendations.find(
-    (item) => item.message.trim().length > 0,
-  );
-  const heroTitle = getHeroTitle(todayNutrition, recommendation);
-  const heroMessage = getHeroMessage(todayNutrition, recommendation);
-  const coachInsight = getCoachInsight(todayNutrition, recommendation);
+  const mealsRemaining = todayNutrition.mealProgress.pending;
+  const mealsCompleted = todayNutrition.mealProgress.completed;
+  const heroTitle = getHeroTitle(todayNutrition);
+  const heroMessage = getHeroMessage(todayNutrition);
+  const coachInsight = getCoachInsight(todayNutrition);
 
   return {
     accessibilityLabel: `Nutrition overview. ${Math.round(
@@ -458,7 +449,10 @@ function buildNutritionOverviewModel(input: {
     progress: [
       { label: 'Meals Completed', value: `${mealsCompleted} completed` },
       { label: 'Meals Remaining', value: `${mealsRemaining} remaining` },
-      { label: 'Nutrition Adherence', value: `${adherence}%` },
+      {
+        label: 'Nutrition Adherence',
+        value: formatAdherenceStatus(todayNutrition.progress.adherenceStatus),
+      },
     ],
     nextMeal: todayNutrition.nextMeal
       ? {
@@ -478,88 +472,30 @@ function buildNutritionOverviewModel(input: {
   };
 }
 
-function getMealsRemaining(nutrition: TodayNutrition): number {
-  if (!nutrition.nextMeal) {
-    return 0;
-  }
-
-  const nextMealIndex = nutrition.meals.findIndex(
-    (meal) => meal.id === nutrition.nextMeal?.id,
-  );
-
-  if (nextMealIndex < 0) {
-    return 1;
-  }
-
-  return Math.max(0, nutrition.meals.length - nextMealIndex);
-}
-
-function getHeroTitle(
-  nutrition: TodayNutrition,
-  recommendation?: NutritionRecommendation,
-): string {
-  if (recommendation?.contextSnapshot.trainingDay?.intensity === 'high') {
-    return 'Fueling For Performance';
-  }
-
-  if (recommendation?.contextSnapshot.recovery?.fatigueLevel === 'HIGH') {
-    return 'Recovery Nutrition Focus';
-  }
-
-  if (nutrition.progress.adherencePercentage >= 80) {
+function getHeroTitle(nutrition: NutritionReadModel): string {
+  if (nutrition.progress.adherenceStatus === 'within_range') {
     return 'Nutrition On Track';
   }
 
   return 'Nutrition Focus Today';
 }
 
-function getHeroMessage(
-  nutrition: TodayNutrition,
-  recommendation?: NutritionRecommendation,
-): string {
-  if (recommendation?.message.trim()) {
-    return recommendation.message.trim();
-  }
-
-  if (nutrition.nutritionFocus.trim()) {
-    return nutrition.nutritionFocus.trim();
-  }
-
-  if (nutrition.progress.adherencePercentage >= 80) {
-    return "Today's plan supports your training goals.";
-  }
-
-  return 'Protein intake remains your priority today.';
+function getHeroMessage(nutrition: NutritionReadModel): string {
+  return nutrition.insight.message;
 }
 
-function getCoachInsight(
-  nutrition: TodayNutrition,
-  recommendation?: NutritionRecommendation,
+function getCoachInsight(nutrition: NutritionReadModel): string {
+  return nutrition.insight.message;
+}
+
+function formatAdherenceStatus(
+  status: NonNullable<NutritionReadModel['progress']>['adherenceStatus'],
 ): string {
-  const firstRecommendation = recommendation?.recommendations.find(
-    (item) => item.trim().length > 0,
-  );
-
-  if (firstRecommendation) {
-    return firstRecommendation.trim();
-  }
-
-  if (
-    nutrition.progress.consumedProteinGrams <
-    nutrition.progress.targetProteinGrams
-  ) {
-    return 'Spread protein across your remaining meals today.';
-  }
-
-  if (nutrition.nextMeal?.type === 'lunch') {
-    return 'Stay consistent with meal timing today.';
-  }
-
-  return 'Protein distribution is improving.';
+  return status.replace('_', ' ');
 }
 
 function getMealTimeLabel(
-  type: TodayNutrition['meals'][number]['type'],
+  type: NonNullable<NutritionReadModel['meals']>[number]['type'],
 ): string | null {
   switch (type) {
     case 'breakfast':

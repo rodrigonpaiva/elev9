@@ -2,13 +2,12 @@
 
 ## 1. Overview
 
-A arquitetura do MVP do Elev9 Coach é projetada para:
+A arquitetura atual do Elev9 Coach é projetada para:
 
-- Ser simples de implementar
-- Permitir iteração rápida
-- Validar o produto o mais cedo possível
-
-Embora o sistema final seja baseado em microservices, o MVP adota uma abordagem simplificada.
+- ser simples de implementar
+- permitir iteração rápida
+- validar o produto o mais cedo possível
+- manter o coach contextual e explicável em mobile
 
 ---
 
@@ -18,11 +17,9 @@ Mobile App (React Native)
 ↓
 API Layer (NestJS)
 ↓
-Application Services (modular, dentro do mesmo projeto)
+Application Services / Read Models
 ↓
 MongoDB
-↓
-OpenAI API
 
 ---
 
@@ -34,7 +31,7 @@ A arquitetura deve permitir evolução futura, mas sem introduzir complexidade d
 
 ---
 
-## 4. Application Structure (MVP)
+## 4. Application Structure
 
 Em vez de microservices distribuídos, usamos um **modular monolith**:
 
@@ -45,8 +42,13 @@ users/
 fitness/
 training/
 nutrition/
-ai-agent/
 progress/
+recovery/
+goals/
+habits/
+personalization/
+notifications/
+ai/
 
 Cada módulo contém:
 
@@ -82,16 +84,31 @@ MongoDB é usado por:
 
 ## 7. AI Integration
 
-### AI Agent Module
+### AI / Coach Layer
 
 Responsável por:
 
 - construir contexto do usuário
-- gerar prompts
-- chamar OpenAI API
-- processar respostas
-
----
+- expor coach decisions
+- consumir recovery, goals, habits, personalization, and notifications
+- renderizar experiências de coaching contextual no mobile
+- aplicar uma safety layer para sanitização de prompt, detecção de injection, redaction de PII e validação de saída
+- consultar OpenAI de forma opcional por meio de uma camada de confiabilidade que aplica timeout, retry, circuit breaker, kill switch e fallback determinístico
+- usar o Responses API da OpenAI com structured outputs, parser centralizado de resposta e metadata de capabilities para manter compatibilidade com GPT-5.5 e modelos futuros
+- registrar traces operacionais, contagem de tokens, custo estimado e guardrails de custo por requisição através de uma camada de observabilidade interna
+- expor um transporte de streaming aditivo para chat contextual sem alterar o contrato síncrono existente
+- manter registry de versões de prompt, rollout canário determinístico, rollback por configuração e evaluation runner interno
+- operar um `AgentRuntime` interno com policy, context orchestration, planning, execution, memory e trace, tudo behind feature flags
+- operar um `CoachExpertRegistry` interno com roteamento determinístico de especialistas do coach, apenas como metadata de planejamento
+- operar um `CoachExpertRouter` interno para primary/complementary expert selection, dependency ordering and route validation
+- operar o `WorkoutExpert` interno como especialista determinístico de treino, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `NutritionExpert` interno como especialista determinístico de nutrição, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `RecoveryExpert` interno como especialista determinístico de recovery, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `GoalExpert` interno como especialista determinístico de progresso de metas, milestones e forecast, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `HabitExpert` interno como especialista determinístico de consistência comportamental, streaks e padrões, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `ProgressExpert` interno como especialista determinístico de evolução longitudinal, momentum, plateau e regression, com contribuição estruturada e sem alterar o plano do usuário
+- operar o `MotivationExpert` interno como especialista determinístico de engajamento comportamental, oportunidade motivacional e estratégia interna, com contribuição estruturada e sem alterar o plano do usuário
+- operar a `Expert Composition Engine` interna para consolidar as contribuições dos especialistas em uma inteligência unificada antes da construção do prompt
 
 ### Fluxo da IA
 
@@ -100,14 +117,17 @@ Responsável por:
    - training plan
    - nutrition plan
    - check-ins
+   - recovery
+   - goals
+   - habits
+   - personalization
+   - notification decisions
 
 2. Monta contexto
 
-3. Gera prompt
+3. Produz read models, aplica safety checks, registra telemetria operacional interna, considera especialistas do coach como metadata de planejamento, aplica o `CoachExpertRouter` para ordenar a execução determinística, executa o `WorkoutExpert`, o `NutritionExpert`, o `RecoveryExpert`, o `GoalExpert`, o `HabitExpert`, o `ProgressExpert` e o `MotivationExpert`, consolida as contribuições pela `Expert Composition Engine` e gera resposta conversacional determinística, assistida por LLM ou transmitida por streaming quando habilitado
 
-4. Chama OpenAI
-
-5. Retorna resposta
+4. O mobile renderiza a experiência de coach
 
 ---
 
@@ -118,12 +138,17 @@ INPUT:
 - treino realizado
 - alimentação
 - check-in diário
+- goal progress
+- habit signals
+- notification engagement
 
 ↓
 
 PROCESS:
 
-- AI Agent analisa
+- context aggregation
+- coach decisioning
+- explainable summarization
 
 ↓
 
@@ -131,6 +156,9 @@ OUTPUT:
 
 - ajuste de treino
 - ajuste alimentar
+- briefing diário
+- conversa contextual
+- weekly review
 
 ---
 

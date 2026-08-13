@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ApiClientError } from '@elev9/api-client';
 import type {
   GoalAchievement,
   GoalForecast,
@@ -16,6 +15,17 @@ import { formatGoalType } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import { useDashboard } from './use-dashboard';
+import {
+  getCoachConfidenceLabel,
+  getCoachFocusLabel,
+  getCoachRiskLabel,
+  isCoachOptionalEmptyState,
+  mapUnifiedCoachInsight,
+  type CoachConfidenceLevel,
+  type CoachFocus,
+  type CoachRiskLevel,
+  type CoachUnifiedCoachIntelligence,
+} from './coach';
 
 type CurrentGoal = GetCurrentGoalResponse['goal'];
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
@@ -60,6 +70,13 @@ export type CoachGoalGuidanceModel = {
   goalTitle: string;
   subtitle: string;
   currentProgress: string;
+  currentFocus: string;
+  focus: CoachFocus | null;
+  currentRisk: string;
+  confidence: string;
+  riskLevel: CoachRiskLevel | null;
+  confidenceLevel: CoachConfidenceLevel | null;
+  supportingEvidenceSummary: string;
   helping: CoachGoalGuidanceHelpingCard[];
   barriers: CoachGoalGuidanceBarrierCard[];
   strategy: string;
@@ -67,6 +84,8 @@ export type CoachGoalGuidanceModel = {
   milestones: CoachGoalGuidanceMilestone[];
   quickActions: CoachGoalGuidanceAction[];
   accessibilityLabel: string;
+  topRecommendation: string;
+  evidence: CoachUnifiedCoachIntelligence['evidence'];
 };
 
 export type CoachGoalGuidanceResult = {
@@ -156,7 +175,9 @@ export function useCoachGoalGuidance(): CoachGoalGuidanceResult {
         habitHistoryResult,
         personalizationHistoryResult,
       ].every((result) => result.status === 'rejected') &&
-      !isOptionalEmptyState(firstFailureReason)
+      !isCoachOptionalEmptyState(firstFailureReason, [
+        'TRAINING_PLAN_NOT_FOUND',
+      ])
     ) {
       setState(INITIAL_STATE);
       setExtraError('Unable to prepare your goal guidance.');
@@ -209,28 +230,41 @@ export function useCoachGoalGuidance(): CoachGoalGuidanceResult {
     await Promise.all([dashboard.refresh(), loadExtras()]);
   }, [dashboard.refresh, loadExtras]);
 
-  const model = useMemo(
-    () =>
-      buildGoalGuidanceModel({
-        ...state,
-        coachDecision: dashboard.coach.data,
-        progressSummary: dashboard.progress.data,
-        recoverySnapshot: dashboard.recovery.data,
-        workoutPlan: dashboard.workout.data,
-        todayWorkout: dashboard.workout.todaysWorkout,
-        nutritionProgress: dashboard.nutrition.data?.progress,
-        nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
-      }),
-    [
-      dashboard.coach.data,
-      dashboard.nutrition.data,
-      dashboard.progress.data,
-      dashboard.recovery.data,
-      dashboard.workout.data,
-      dashboard.workout.todaysWorkout,
-      state,
-    ],
-  );
+  const model = useMemo(() => {
+    if (dashboard.coach.mode === 'error' && !dashboard.coach.intelligence) {
+      return null;
+    }
+
+    const intelligence = dashboard.coach.intelligence;
+    const insight = mapUnifiedCoachInsight({
+      intelligence,
+      fallbackHeadline: dashboard.coach.data?.headline,
+      fallbackSummary: dashboard.coach.data?.summary,
+    });
+
+    return buildGoalGuidanceModel({
+      ...state,
+      intelligence,
+      insight,
+      coachDecision: dashboard.coach.data,
+      progressSummary: dashboard.progress.data,
+      recoverySnapshot: dashboard.recovery.data,
+      workoutPlan: dashboard.workout.data,
+      todayWorkout: dashboard.workout.todaysWorkout,
+      nutritionProgress: dashboard.nutrition.data?.progress,
+      nutritionFocus: dashboard.nutrition.data?.nutritionFocus,
+    });
+  }, [
+    dashboard.coach.data,
+    dashboard.coach.intelligence,
+    dashboard.coach.mode,
+    dashboard.nutrition.data,
+    dashboard.progress.data,
+    dashboard.recovery.data,
+    dashboard.workout.data,
+    dashboard.workout.todaysWorkout,
+    state,
+  ]);
 
   const errorMessage =
     dashboard.error ||
@@ -269,6 +303,8 @@ export function useCoachGoalGuidance(): CoachGoalGuidanceResult {
 function buildGoalGuidanceModel(
   input: GoalGuidanceState & {
     coachDecision: ReturnType<typeof useDashboard>['coach']['data'];
+    intelligence: CoachUnifiedCoachIntelligence | null;
+    insight: ReturnType<typeof mapUnifiedCoachInsight>;
     progressSummary: DashboardProgress;
     recoverySnapshot: RecoverySnapshot | null;
     workoutPlan: TrainingPlan | null;
@@ -293,11 +329,26 @@ function buildGoalGuidanceModel(
     goalTitle,
     subtitle: "Let's keep moving toward your goal.",
     currentProgress,
+    currentFocus: input.insight.currentFocus
+      ? getCoachFocusLabel(input.insight.currentFocus)
+      : 'Coach',
+    focus: input.insight.currentFocus ?? null,
+    currentRisk: input.insight.currentRisk
+      ? getCoachRiskLabel(input.insight.currentRisk.level)
+      : 'No major risk',
+    confidence: input.insight.confidence
+      ? getCoachConfidenceLabel(input.insight.confidence.level)
+      : 'Low confidence',
+    riskLevel: input.insight.currentRisk?.level ?? null,
+    confidenceLevel: input.insight.confidence?.level ?? null,
+    supportingEvidenceSummary: input.insight.supportingEvidenceSummary,
     helping,
     barriers,
     strategy,
     forecast,
     milestones,
+    topRecommendation: input.insight.topRecommendation?.title ?? strategy,
+    evidence: input.insight.evidence,
     quickActions: [
       {
         id: 'workout',
@@ -330,7 +381,7 @@ function buildGoalGuidanceModel(
         isEnabled: true,
       },
     ],
-    accessibilityLabel: `Goal Guidance. ${currentProgress}. ${helping[0]?.title ?? 'Goal strategy available.'}`,
+    accessibilityLabel: `Goal Guidance. ${currentProgress}. ${input.insight.supportingEvidenceSummary}.`,
   };
 }
 
@@ -640,20 +691,6 @@ function getMilestoneTarget(
 
 function getAchievementTitle(achievement: GoalAchievement): string {
   return `Goal achievement ${achievement.completionPercentage >= 100 ? 'reached' : 'in progress'}`;
-}
-
-function isOptionalEmptyState(error: unknown): boolean {
-  return (
-    error instanceof ApiClientError &&
-    [
-      'GOAL_NOT_FOUND',
-      'NOT_FOUND',
-      'HABIT_SNAPSHOT_NOT_FOUND',
-      'PERSONALIZATION_SNAPSHOT_NOT_FOUND',
-      'TRAINING_PLAN_NOT_FOUND',
-      'USER_PROFILE_NOT_FOUND',
-    ].includes(error.code)
-  );
 }
 
 export function trackCoachGoalGuidanceEvent(

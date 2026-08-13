@@ -7,12 +7,20 @@ import {
   NotificationPromptPayload,
   PersonalizationPromptPayload,
 } from '../../../../../shared/mappers';
+import type { CoachExpertCompositionResult } from '../experts/composition/coach-expert-composition';
+import type { CoachExplanation } from '../explainability/coach-explainability';
+import type { CoachPersonaGuidance } from '../persona/coach-persona-engine';
 import {
   FatigueLevel,
   UserHealthContext,
 } from '../context-builder/build-user-health-context.service';
 import { CoachDecisionReadModelPayload } from '../../../../../shared/mappers';
 import { AiLlmMessage, AiLlmPrompt } from './ai-llm.types';
+import {
+  AI_COACH_CHAT_PROMPT_ID,
+  AiRolloutAssignment,
+} from '../governance/ai-governance.types';
+import { AiPromptRegistryService } from '../governance/ai-prompt-registry.service';
 
 export const AI_CHAT_PROMPT_VERSION = 'coach-chat-prompt-v1';
 
@@ -34,11 +42,17 @@ export type AiPromptBuilderInput = {
   message: string;
   healthContext: UserHealthContext;
   conversationHistory: AiPromptBuilderConversationMessage[];
+  trace?: AiLlmPrompt['trace'];
   conversationMemory?: AiPromptBuilderConversationMemory;
   coachDecision?: CoachDecisionReadModelPayload;
   notification?: NotificationPromptPayload;
   habit?: HabitPromptPayload;
   personalization?: PersonalizationPromptPayload;
+  experiment?: AiRolloutAssignment;
+  composition?: CoachExpertCompositionResult;
+  unifiedCoachIntelligence?: CoachExpertCompositionResult;
+  personaGuidance?: CoachPersonaGuidance;
+  explanation?: CoachExplanation;
 };
 
 export type AiPromptBuilderDebugSnapshot = {
@@ -64,7 +78,20 @@ export type AiPromptBuilderDebugSnapshot = {
 
 @Injectable()
 export class AiPromptBuilder {
+  constructor(
+    private readonly promptRegistry: AiPromptRegistryService = new AiPromptRegistryService(),
+  ) {}
+
   build(input: AiPromptBuilderInput): AiLlmPrompt {
+    const promptDefinition = this.promptRegistry.getVersionMetadata(
+      AI_COACH_CHAT_PROMPT_ID,
+      input.experiment?.selectedPromptVersion,
+    );
+    const promptVersion =
+      promptDefinition?.version ??
+      this.promptRegistry.getCurrentVersion(AI_COACH_CHAT_PROMPT_ID) ??
+      AI_CHAT_PROMPT_VERSION;
+
     const messages: AiLlmMessage[] = [
       {
         role: 'system',
@@ -82,6 +109,38 @@ export class AiPromptBuilder {
       messages.push({
         role: 'system',
         content: notificationBlock,
+      });
+    }
+
+    const unifiedCoachIntelligenceBlock =
+      this.buildUnifiedCoachIntelligenceBlock(
+        input.unifiedCoachIntelligence ?? input.composition,
+      );
+
+    if (unifiedCoachIntelligenceBlock) {
+      messages.push({
+        role: 'system',
+        content: unifiedCoachIntelligenceBlock,
+      });
+    }
+
+    const personaGuidanceBlock = this.buildPersonaGuidanceBlock(
+      input.personaGuidance,
+    );
+
+    if (personaGuidanceBlock) {
+      messages.push({
+        role: 'system',
+        content: personaGuidanceBlock,
+      });
+    }
+
+    const explanationBlock = this.buildCoachExplanationBlock(input.explanation);
+
+    if (explanationBlock) {
+      messages.push({
+        role: 'system',
+        content: explanationBlock,
       });
     }
 
@@ -140,8 +199,40 @@ export class AiPromptBuilder {
     });
 
     return {
-      promptVersion: AI_CHAT_PROMPT_VERSION,
+      promptVersion,
       messages,
+      trace: {
+        ...(input.trace ?? {}),
+        ...(input.experiment
+          ? {
+              experimentId: input.experiment.experimentId,
+              canaryBucket: input.experiment.canaryBucket,
+              rolloutVariant: input.experiment.rolloutVariant,
+            }
+          : {}),
+      },
+      metadata: {
+        promptId: AI_COACH_CHAT_PROMPT_ID,
+        promptReleaseDate: promptDefinition?.releaseDate,
+        promptStatus: promptDefinition?.status,
+        promptAuthor: promptDefinition?.author,
+        promptDescription: promptDefinition?.description,
+        experimentId: input.experiment?.experimentId,
+        canaryBucket: input.experiment?.canaryBucket,
+        canaryPercentage: input.experiment?.canaryPercentage,
+        streamingEnabled: input.experiment?.streamingEnabled,
+        structuredOutputsEnabled: input.experiment?.structuredOutputsEnabled,
+        toolCallingEnabled: input.experiment?.toolCallingEnabled,
+        futureMemoryEnabled: input.experiment?.futureMemoryEnabled,
+        currentPromptVersion: input.experiment?.currentPromptVersion,
+        previousPromptVersion: input.experiment?.previousPromptVersion,
+        currentProvider: input.experiment?.currentProvider,
+        previousProvider: input.experiment?.previousProvider,
+        currentModel: input.experiment?.currentModel,
+        previousModel: input.experiment?.previousModel,
+        provider: input.experiment?.selectedProvider,
+        model: input.experiment?.selectedModel,
+      },
     };
   }
 
@@ -161,11 +252,17 @@ export class AiPromptBuilder {
       : undefined;
 
     return {
-      promptVersion: AI_CHAT_PROMPT_VERSION,
+      promptVersion:
+        input.experiment?.selectedPromptVersion ?? AI_CHAT_PROMPT_VERSION,
       promptPreview: {
         systemSections: [
           'safety_rules',
           'adaptive_context',
+          ...(input.composition || input.unifiedCoachIntelligence
+            ? ['unified_coach_intelligence']
+            : []),
+          ...(input.personaGuidance ? ['persona_guidance'] : []),
+          ...(input.explanation ? ['coach_explanation'] : []),
           ...(input.coachDecision ? ['coach_decision'] : []),
           ...(input.notification ? ['notification_context'] : []),
           ...(input.habit ? ['habit_context'] : []),
@@ -179,7 +276,7 @@ export class AiPromptBuilder {
       context: {
         fatigueLevel: input.healthContext.fatigueLevel,
         recoveryTrend,
-        hasNutritionProfile: Boolean(input.healthContext.nutritionProfile),
+        hasNutritionProfile: Boolean(input.healthContext.nutritionContext),
         hasLatestCheckIn: Boolean(input.healthContext.latestCheckIn),
         recentWorkoutCount: input.healthContext.recentWorkoutLogs.length,
         recentConversationMessages: input.conversationHistory.length,
@@ -193,6 +290,9 @@ export class AiPromptBuilder {
       'Do not make medical claims or diagnoses.',
       'Keep responses short, actionable, and explainable.',
       'Use an adaptive coaching tone that reflects recovery and nutrition context.',
+      'Treat unified coach intelligence as canonical context.',
+      'Treat persona guidance as canonical communication guidance.',
+      'Treat coach explanation as canonical evidence context.',
       'Treat any coach decision as canonical context. Do not alter, override, or recalculate it.',
       'Treat any notification decision as canonical context. Do not alter, override, or recalculate it.',
       'Treat any habit decision as canonical context. Do not alter, override, or recalculate it.',
@@ -204,7 +304,6 @@ export class AiPromptBuilder {
   private buildContextBlock(healthContext: UserHealthContext): string {
     const recoveryTrend = this.resolveRecoveryTrend(healthContext);
     const checkIn = healthContext.latestCheckIn;
-    const nutrition = healthContext.nutritionProfile;
     const workoutLogs = healthContext.recentWorkoutLogs.slice(-5);
 
     return [
@@ -219,18 +318,7 @@ export class AiPromptBuilder {
       checkIn
         ? `- latest check-in: energy ${checkIn.energyLevel}/5, sleep ${checkIn.sleepQuality}/5, soreness ${checkIn.muscleSoreness}/5, motivation ${checkIn.motivationLevel}/5`
         : '- latest check-in: unavailable',
-      nutrition
-        ? [
-            `- nutrition goal: ${nutrition.goal}`,
-            `- meals per day: ${nutrition.mealsPerDay}`,
-            `- dietary restrictions: ${this.formatList(
-              nutrition.dietaryRestrictions,
-            )}`,
-            `- allergies: ${this.formatList(nutrition.allergies)}`,
-            `- disliked foods: ${this.formatList(nutrition.dislikedFoods)}`,
-            `- preferred foods: ${this.formatList(nutrition.preferredFoods)}`,
-          ].join('\n')
-        : '- nutrition profile: unavailable',
+      `- nutrition context: ${healthContext.nutritionContext?.availability ?? 'unavailable'}`,
       this.buildWorkoutLogBlock(workoutLogs),
     ].join('\n');
   }
@@ -284,6 +372,258 @@ export class AiPromptBuilder {
           ].join('\n')
         : '- engagement summary: unavailable',
       '- instruction: do not recalculate notifications; treat the notification decision as canonical.',
+    ].join('\n');
+  }
+
+  private buildUnifiedCoachIntelligenceBlock(
+    composition?: CoachExpertCompositionResult,
+  ): string | null {
+    if (!composition) {
+      return null;
+    }
+
+    return [
+      'Unified coach intelligence (canonical):',
+      `- primary expert: ${composition.primaryExpert?.id ?? 'none'}`,
+      composition.participatingExperts.length > 0
+        ? [
+            '- participating experts:',
+            ...composition.participatingExperts.map(
+              (expert) =>
+                `  - ${expert.expertId} | ${expert.role} | ${expert.sequence}`,
+            ),
+          ].join('\n')
+        : '- participating experts: none',
+      `- summary: ${this.normalizeContent(composition.summary)}`,
+      composition.keyFindings.length > 0
+        ? [
+            '- key findings:',
+            ...composition.keyFindings.map((finding) => `  - ${finding}`),
+          ].join('\n')
+        : '- key findings: none',
+      composition.recommendations.length > 0
+        ? [
+            '- recommendations:',
+            ...composition.recommendations.map(
+              (recommendation) =>
+                `  - ${recommendation.code} | ${recommendation.category} | ${this.normalizeContent(recommendation.summary)}`,
+            ),
+          ].join('\n')
+        : '- recommendations: none',
+      composition.risks.length > 0
+        ? [
+            '- risks:',
+            ...composition.risks.map(
+              (risk) =>
+                `  - ${risk.level} | ${this.formatList([...risk.sources])} | ${this.normalizeContent(risk.summary)}`,
+            ),
+          ].join('\n')
+        : '- risks: none',
+      `- confidence: ${composition.confidence.level} | ${this.normalizeContent(composition.confidence.summary)}`,
+      composition.conflicts.length > 0
+        ? [
+            '- conflicts:',
+            ...composition.conflicts.map(
+              (conflict) =>
+                `  - ${conflict.type} | ${conflict.severity} | ${conflict.resolution.strategy}`,
+            ),
+          ].join('\n')
+        : '- conflicts: none',
+      composition.supportingExperts.length > 0
+        ? [
+            '- supporting experts:',
+            ...composition.supportingExperts.map(
+              (expert) => `  - ${expert.expertId}`,
+            ),
+          ].join('\n')
+        : '- supporting experts: none',
+      [
+        '- metadata:',
+        `  - request id: ${composition.metadata.requestId ?? 'none'}`,
+        `  - intent: ${composition.metadata.intent}`,
+        `  - selected domains: ${this.formatList([
+          ...composition.metadata.selectedDomains,
+        ])}`,
+        `  - route confidence: ${composition.metadata.routeConfidence}`,
+        `  - policy approved: ${composition.metadata.policyApproved}`,
+        `  - policy blocked: ${composition.metadata.policyBlocked}`,
+        `  - policy fallback required: ${composition.metadata.policyFallbackRequired}`,
+        `  - runtime completeness: ${composition.metadata.runtimeCompleteness}`,
+        `  - composition duration ms: ${composition.metadata.compositionDurationMs}`,
+      ].join('\n'),
+    ].join('\n');
+  }
+
+  private buildPersonaGuidanceBlock(
+    personaGuidance?: CoachPersonaGuidance,
+  ): string | null {
+    if (!personaGuidance) {
+      return null;
+    }
+
+    return [
+      'Coach persona guidance (canonical):',
+      `- tone: ${personaGuidance.tone}`,
+      `- verbosity: ${personaGuidance.verbosity}`,
+      `- focus: ${personaGuidance.focus}`,
+      `- directive level: ${personaGuidance.directiveLevel}`,
+      `- empathy level: ${personaGuidance.empathyLevel}`,
+      `- encouragement level: ${personaGuidance.encouragementLevel}`,
+      `- technical depth: ${personaGuidance.technicalDepth}`,
+      `- urgency: ${personaGuidance.urgency}`,
+      `- celebration level: ${personaGuidance.celebrationLevel}`,
+      `- safety level: ${personaGuidance.safetyLevel}`,
+      personaGuidance.communicationRules.length > 0
+        ? [
+            '- communication rules:',
+            ...personaGuidance.communicationRules.map((rule) => `  - ${rule}`),
+          ].join('\n')
+        : '- communication rules: none',
+      [
+        '- metadata:',
+        `  - request id: ${personaGuidance.metadata.requestId ?? 'none'}`,
+        `  - intent: ${personaGuidance.metadata.intent}`,
+        `  - selected domains: ${this.formatList([
+          ...personaGuidance.metadata.selectedDomains,
+        ])}`,
+        `  - primary expert id: ${personaGuidance.metadata.primaryExpertId ?? 'none'}`,
+        `  - participating expert ids: ${this.formatList([
+          ...personaGuidance.metadata.participatingExpertIds,
+        ])}`,
+        `  - supporting expert ids: ${this.formatList([
+          ...personaGuidance.metadata.supportingExpertIds,
+        ])}`,
+        `  - blocked expert ids: ${this.formatList([
+          ...personaGuidance.metadata.blockedExpertIds,
+        ])}`,
+        `  - risk level: ${personaGuidance.metadata.riskLevel}`,
+        `  - conflict count: ${personaGuidance.metadata.conflictCount}`,
+        `  - recommendation count: ${personaGuidance.metadata.recommendationCount}`,
+        `  - communication rule count: ${personaGuidance.metadata.communicationRuleCount}`,
+        `  - runtime completeness: ${personaGuidance.metadata.runtimeCompleteness}`,
+      ].join('\n'),
+    ].join('\n');
+  }
+
+  private buildCoachExplanationBlock(
+    explanation?: CoachExplanation,
+  ): string | null {
+    if (!explanation) {
+      return null;
+    }
+
+    return [
+      'Coach explanation (canonical):',
+      `- primary expert: ${explanation.primaryExpertId ?? 'none'}`,
+      explanation.participatingExperts.length > 0
+        ? [
+            '- participating experts:',
+            ...explanation.participatingExperts.map(
+              (expertId) => `  - ${expertId}`,
+            ),
+          ].join('\n')
+        : '- participating experts: none',
+      explanation.supportingExperts.length > 0
+        ? [
+            '- supporting experts:',
+            ...explanation.supportingExperts.map(
+              (expertId) => `  - ${expertId}`,
+            ),
+          ].join('\n')
+        : '- supporting experts: none',
+      explanation.evidence.length > 0
+        ? [
+            '- evidence:',
+            ...explanation.evidence.map(
+              (evidence) =>
+                `  - ${evidence.type} | ${evidence.source} | ${evidence.expert ?? 'none'} | ${evidence.importance} | ${evidence.confidence} | ${evidence.availability}`,
+            ),
+          ].join('\n')
+        : '- evidence: none',
+      explanation.decisionReasons.length > 0
+        ? [
+            '- decision reasons:',
+            ...explanation.decisionReasons.map(
+              (reason) =>
+                `  - ${reason.decisionType} | ${reason.code} | ${reason.reasonCategory} | ${reason.priority}`,
+            ),
+          ].join('\n')
+        : '- decision reasons: none',
+      explanation.recommendationReasons.length > 0
+        ? [
+            '- recommendation reasons:',
+            ...explanation.recommendationReasons.map(
+              (reason) =>
+                `  - ${reason.recommendationCode} | ${reason.reasonCategory} | ${reason.priority}`,
+            ),
+          ].join('\n')
+        : '- recommendation reasons: none',
+      explanation.riskExplanations.length > 0
+        ? [
+            '- risk explanations:',
+            ...explanation.riskExplanations.map(
+              (risk) =>
+                `  - ${risk.riskLevel} | ${risk.severity} | ${this.formatList([...risk.supportingExperts])}`,
+            ),
+          ].join('\n')
+        : '- risk explanations: none',
+      [
+        '- confidence explanation:',
+        `  - confidence: ${explanation.confidenceExplanation.confidence}`,
+        `  - supporting evidence count: ${explanation.confidenceExplanation.supportingEvidenceCount}`,
+        `  - supporting expert count: ${explanation.confidenceExplanation.supportingExpertCount}`,
+        `  - missing evidence count: ${explanation.confidenceExplanation.missingEvidenceCount}`,
+        `  - policy restrictions: ${this.formatList([
+          ...explanation.confidenceExplanation.policyRestrictions,
+        ])}`,
+      ].join('\n'),
+      explanation.conflictExplanations.length > 0
+        ? [
+            '- conflict explanations:',
+            ...explanation.conflictExplanations.map(
+              (conflict) =>
+                `  - ${conflict.conflictType} | ${conflict.severity} | ${conflict.resolvedBy}`,
+            ),
+          ].join('\n')
+        : '- conflict explanations: none',
+      explanation.missingEvidence.length > 0
+        ? [
+            '- missing evidence:',
+            ...explanation.missingEvidence.map(
+              (item) =>
+                `  - ${item.type} | ${item.source} | ${item.availability}`,
+            ),
+          ].join('\n')
+        : '- missing evidence: none',
+      [
+        '- metadata:',
+        `  - request id: ${explanation.metadata.requestId ?? 'none'}`,
+        `  - intent: ${explanation.metadata.intent}`,
+        `  - selected domains: ${this.formatList([
+          ...explanation.metadata.selectedDomains,
+        ])}`,
+        `  - primary expert id: ${explanation.metadata.primaryExpertId ?? 'none'}`,
+        `  - participating expert ids: ${this.formatList([
+          ...explanation.metadata.participatingExpertIds,
+        ])}`,
+        `  - supporting expert ids: ${this.formatList([
+          ...explanation.metadata.supportingExpertIds,
+        ])}`,
+        `  - evidence count: ${explanation.metadata.evidenceCount}`,
+        `  - explanation count: ${explanation.metadata.explanationCount}`,
+        `  - recommendation count: ${explanation.metadata.recommendationCount}`,
+        `  - risk count: ${explanation.metadata.riskCount}`,
+        `  - conflict count: ${explanation.metadata.conflictCount}`,
+        `  - missing evidence count: ${explanation.metadata.missingEvidenceCount}`,
+        `  - blocked expert count: ${explanation.metadata.blockedExpertCount}`,
+        `  - blocked recommendation count: ${explanation.metadata.blockedRecommendationCount}`,
+        `  - persona tone: ${explanation.metadata.personaTone}`,
+        `  - persona focus: ${explanation.metadata.personaFocus}`,
+        `  - persona safety level: ${explanation.metadata.personaSafetyLevel}`,
+        `  - persona urgency: ${explanation.metadata.personaUrgency}`,
+        `  - runtime completeness: ${explanation.metadata.runtimeCompleteness}`,
+        `  - explanation version: ${explanation.metadata.explanationVersion}`,
+      ].join('\n'),
     ].join('\n');
   }
 

@@ -11,9 +11,11 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import type { Request, Response } from 'express';
 
 import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
 import {
@@ -71,10 +73,8 @@ import {
   GenerateCoachFeedbackError,
 } from '../../application/use-cases/generate-coach-feedback/generate-coach-feedback.errors';
 import { GenerateCoachFeedbackUseCase } from '../../application/use-cases/generate-coach-feedback/generate-coach-feedback.use-case';
-import {
-  BuildUserHealthContextService,
-  UserHealthContextNutritionProfile,
-} from '../../application/services/context-builder/build-user-health-context.service';
+import { BuildUserHealthContextService } from '../../application/services/context-builder/build-user-health-context.service';
+import type { CoachNutritionContext } from '../../application/services/context-builder/coach-nutrition-context.types';
 import { GetCoachFeedbackDebugHistoryQueryDto } from './dto/get-coach-feedback-debug-history.query.dto';
 import { GetCoachFeedbackDebugHistoryResponseDto } from './dto/get-coach-feedback-debug-history.response.dto';
 import { GetCoachFeedbackHistoryQueryDto } from './dto/get-coach-feedback-history.query.dto';
@@ -92,7 +92,7 @@ import { GetCoachChatDebugIndexResponseDto } from './dto/get-coach-chat-debug-in
 import { GenerateCoachFeedbackResponseDto } from './dto/generate-coach-feedback.response.dto';
 import { ReplayCoachFeedbackResponseDto } from './dto/replay-coach-feedback.response.dto';
 
-type RequestWithAuthUser = {
+type RequestWithAuthUser = Request & {
   authUser?: {
     id: string;
     email: string;
@@ -145,6 +145,79 @@ export class AiController {
       });
     } catch (error) {
       this.handleChatError(error);
+    }
+  }
+
+  @Post('chat/stream')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async createCoachChatStream(
+    @Req() request: RequestWithAuthUser,
+    @Res({ passthrough: true }) response: Response,
+    @Body() body?: CreateCoachChatRequestDto | Record<string, unknown>,
+  ): Promise<void> {
+    const message = (body as { message?: unknown } | undefined)?.message;
+    const normalizedMessage = typeof message === 'string' ? message : '';
+
+    if (
+      !body ||
+      typeof body !== 'object' ||
+      typeof message !== 'string' ||
+      Object.keys(body).some((key) => key !== 'message')
+    ) {
+      throw new BadRequestException({
+        code: CREATE_COACH_CHAT_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid chat message input.',
+      });
+    }
+
+    response.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    response.setHeader('Cache-Control', 'no-cache, no-transform');
+    response.setHeader('Connection', 'keep-alive');
+    response.setHeader('X-Accel-Buffering', 'no');
+    response.flushHeaders?.();
+
+    const abortController = new AbortController();
+    const handleClose = () => {
+      abortController.abort();
+    };
+
+    request.on('close', handleClose);
+
+    try {
+      const result = await this.createCoachChatUseCase.executeStream(
+        {
+          authUserId: request.authUser?.id ?? '',
+          message: normalizedMessage,
+          signal: abortController.signal,
+        },
+        {
+          onDelta: (delta) => {
+            this.writeStreamEvent(response, 'delta', {
+              delta,
+            });
+          },
+        },
+      );
+
+      this.writeStreamEvent(response, 'completed', result);
+    } catch (error) {
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      this.writeStreamEvent(response, 'error', {
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Unable to stream coach response.',
+      });
+    } finally {
+      request.removeListener('close', handleClose);
+
+      if (!response.writableEnded) {
+        response.end();
+      }
     }
   }
 
@@ -429,7 +502,7 @@ export class AiController {
       motivationLevel: number;
       createdAt: string;
     };
-    nutritionProfile?: UserHealthContextNutritionProfile;
+    nutritionContext?: CoachNutritionContext;
     recentWorkoutLogs: Array<{
       id: string;
       trainingPlanId: string;
@@ -478,7 +551,7 @@ export class AiController {
             createdAt: context.latestCheckIn.createdAt.toISOString(),
           }
         : undefined,
-      nutritionProfile: context.nutritionProfile,
+      nutritionContext: context.nutritionContext,
       recentWorkoutLogs: context.recentWorkoutLogs.map((workoutLog) => ({
         id: workoutLog.id,
         trainingPlanId: workoutLog.trainingPlanId,
@@ -526,6 +599,15 @@ export class AiController {
           message: 'An unexpected error occurred.',
         });
     }
+  }
+
+  private writeStreamEvent(
+    response: Response,
+    event: string,
+    payload: Record<string, unknown>,
+  ): void {
+    response.write(`event: ${event}\n`);
+    response.write(`data: ${JSON.stringify(payload)}\n\n`);
   }
 
   private handleGetHistoryError(error: unknown): never {

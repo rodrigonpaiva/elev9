@@ -10,6 +10,14 @@ import { Button, Card, colors, Screen, Text } from '@elev9/ui';
 import { apiClient } from '../api/client';
 import { useAuth } from '../auth/auth-provider';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import {
+  getHomeResolverErrorMessage,
+  getNutritionPlanState,
+  getNutritionProfileState,
+  getLocalDateKey,
+  resolveHomeResolverDestination,
+  shouldShowDailyBriefingToday as shouldShowDailyBriefingTodayHelper,
+} from './home-resolver-helpers';
 
 const DAILY_BRIEFING_LAST_SHOWN_KEY = 'elev9.dailyBriefing.lastShownDate';
 
@@ -32,6 +40,11 @@ export function HomeResolverScreen() {
       const response = await apiClient.dashboard.getHome();
       const dashboard = response.dashboard;
 
+      if (!dashboard.user?.name) {
+        navigation.replace('CreateProfile');
+        return;
+      }
+
       if (!dashboard.fitnessProfile) {
         navigation.replace('CreateFitnessProfile');
         return;
@@ -46,22 +59,29 @@ export function HomeResolverScreen() {
         return;
       }
 
-      if (await shouldShowDailyBriefingToday()) {
+      const nutritionState = await resolveNutritionState();
+      const destination = resolveHomeResolverDestination({
+        hasUserProfile: true,
+        fitnessProfile: dashboard.fitnessProfile,
+        trainingPlan: dashboard.trainingPlan,
+        nutritionProfileState: nutritionState.profileState,
+        nutritionPlanState: nutritionState.planState,
+        nutritionGoal: nutritionState.nutritionGoal,
+        shouldShowDailyBriefingToday: await shouldShowDailyBriefingTodayHelper(
+          await AsyncStorage.getItem(DAILY_BRIEFING_LAST_SHOWN_KEY),
+          getLocalDateKey(new Date()),
+        ),
+      });
+
+      if (destination.screen === 'CoachDailyBriefing') {
         await markDailyBriefingShownToday();
-        navigation.replace('CoachDailyBriefing');
-        return;
       }
 
-      navigation.replace('MainTabs');
+      navigation.replace(
+        destination.screen,
+        'params' in destination ? destination.params : undefined,
+      );
     } catch (error) {
-      if (
-        error instanceof ApiClientError &&
-        error.code === 'USER_PROFILE_NOT_FOUND'
-      ) {
-        navigation.replace('CreateProfile');
-        return;
-      }
-
       if (
         error instanceof ApiClientError &&
         error.code === 'AUTH_INVALID_SESSION'
@@ -70,14 +90,34 @@ export function HomeResolverScreen() {
         return;
       }
 
-      if (error instanceof ApiClientError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage('Unable to set up your training space.');
-      }
+      setErrorMessage(getHomeResolverErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function resolveNutritionState(): Promise<{
+    profileState: 'exists' | 'missing' | 'unknown';
+    planState: 'exists' | 'missing' | 'unknown';
+    nutritionGoal: 'fat_loss' | 'maintenance' | 'muscle_gain' | null;
+  }> {
+    const [profileResult, planResult] = await Promise.allSettled([
+      apiClient.nutrition.getNutritionProfile(),
+      apiClient.nutrition.getCurrentNutritionPlan(),
+    ]);
+
+    const nutritionProfileState = getNutritionProfileState(profileResult);
+    const nutritionPlanState = getNutritionPlanState(planResult);
+    const nutritionProfile =
+      profileResult.status === 'fulfilled'
+        ? profileResult.value.nutritionProfile
+        : null;
+
+    return {
+      profileState: nutritionProfileState,
+      planState: nutritionPlanState,
+      nutritionGoal: nutritionProfile?.goal ?? null,
+    };
   }
 
   return (
@@ -112,28 +152,11 @@ export function HomeResolverScreen() {
   );
 }
 
-async function shouldShowDailyBriefingToday(): Promise<boolean> {
-  const todayKey = getLocalDateKey(new Date());
-  const lastShownDate = await AsyncStorage.getItem(
-    DAILY_BRIEFING_LAST_SHOWN_KEY,
-  );
-
-  return lastShownDate !== todayKey;
-}
-
 async function markDailyBriefingShownToday(): Promise<void> {
   await AsyncStorage.setItem(
     DAILY_BRIEFING_LAST_SHOWN_KEY,
     getLocalDateKey(new Date()),
   );
-}
-
-function getLocalDateKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
-  return `${year}-${month}-${day}`;
 }
 
 const styles = StyleSheet.create({

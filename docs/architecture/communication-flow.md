@@ -9,7 +9,6 @@ No MVP, a comunicação é deliberadamente simples:
 - app mobile para backend via HTTP
 - módulos internos via chamadas diretas
 - backend para MongoDB via Mongoose
-- backend para OpenAI via API
 
 Não há `Redis`, event bus, filas ou microservices distribuídos.
 
@@ -22,13 +21,9 @@ React Native App
    ->
 NestJS HTTP API
    ->
-Application Services / Use-Cases
+Application Services / Read Models
    ->
 MongoDB
-
-NestJS AI Agent Module
-   ->
-OpenAI API
 ```
 
 ---
@@ -51,7 +46,13 @@ POST /auth/login
 POST /users/profile
 GET  /training/today
 POST /progress/daily-check-in
-POST /ai/coach/message
+POST /ai/chat
+POST /ai/chat/stream
+GET  /ai/chat/history
+GET  /ai/coach-decision/today
+GET  /notifications/today
+GET  /personalization/today
+GET  /habits/today
 ```
 
 ---
@@ -71,7 +72,7 @@ Dentro do backend NestJS:
 - preferir dependências explícitas
 - evitar acoplamento circular
 - evitar que `Auth` conheça regras de domínio fitness/nutrition
-- centralizar lógica de adaptação no `AI Agent Module`
+- centralizar a lógica de adaptação e coach no conjunto de read models do produto
 
 ---
 
@@ -90,23 +91,33 @@ Dentro do backend NestJS:
 
 ## 6. AI Communication
 
-### Backend to OpenAI
+### Backend to Coach Read Models
 
-O `AI Agent Module`:
+The coach layer:
 
-1. coleta contexto do usuário
-2. monta `UserHealthContext`
-3. gera prompt
-4. chama a OpenAI API
-5. valida output
-6. persiste recomendação ou ajuste quando necessário
+1. collects the current user context
+2. builds `CoachDecision`, `NotificationDecision`, `PersonalizationSnapshot`, `HabitSnapshot`, and `Goal` reads
+3. exposes those read models to mobile
+4. lets the mobile app render coach home, briefing, memory, insights, chat, review, guidance, and nudges
 
-### AI Constraints in MVP
+### AI Constraints in the current implementation
 
-- prompts simples
-- sem multi-agent orchestration complexa
-- sem memória distribuída
-- sem fila assíncrona obrigatória
+- deterministic read models
+- prompt safety layer for injection detection, PII redaction, context minimization, and output validation
+- optional OpenAI-assisted chat generation behind a reliability layer
+- OpenAI Responses API with structured outputs and a centralized response parser
+- internal observability for request traces, token accounting, cost guardrails, and structured logs
+- optional streaming transport over the same chat use-case when the feature flag is enabled
+- internal prompt version registry, deterministic canary rollout, and rollback-ready provider selection
+- internal `AgentRuntime` orchestration with deterministic context selection, planning, execution, memory, and trace recording
+- internal `CoachExpertRegistry` metadata used by policy and planning before execution
+- internal `WorkoutExpert`, `NutritionExpert`, and `RecoveryExpert` metadata used by policy and planning before execution
+- internal `GoalExpert` metadata used by policy and planning before execution
+- internal `HabitExpert` metadata used by policy and planning before execution
+- internal `ProgressExpert` metadata used by policy and planning before execution
+- no exposed prompt internals
+- no distributed memory layer
+- no mandatory async queue
 
 ---
 
@@ -155,11 +166,9 @@ Progress Module
    ->
 DailyCheckIn saved
    ->
-AI Agent builds context
+Coach read model builds context
    ->
-OpenAI API
-   ->
-AIRecommendation / PlanAdjustment
+Coach guidance / PlanAdjustment
    ->
 Training or Nutrition update
 ```

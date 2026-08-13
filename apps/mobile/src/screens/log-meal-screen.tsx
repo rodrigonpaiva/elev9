@@ -17,7 +17,7 @@ import type {
   Meal,
   MealLogStatus,
   NutritionRecommendation,
-  TodayNutrition,
+  NutritionReadModel,
 } from '@elev9/types';
 import { Button, Text } from '@elev9/ui';
 
@@ -94,9 +94,8 @@ export function LogMealScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'LogMeal'>>();
   const { mealId } = route.params;
-  const [todayNutrition, setTodayNutrition] = useState<TodayNutrition | null>(
-    null,
-  );
+  const [todayNutrition, setTodayNutrition] =
+    useState<NutritionReadModel | null>(null);
   const [recommendations, setRecommendations] = useState<
     NutritionRecommendation[]
   >([]);
@@ -462,7 +461,7 @@ function LogMealStateView({
 
 function buildLogMealModel(input: {
   mealId: string;
-  todayNutrition: TodayNutrition;
+  todayNutrition: NutritionReadModel;
   recommendations: NutritionRecommendation[];
   selectedOption: CompletionOption;
 }): LogMealModel | null {

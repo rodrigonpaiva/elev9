@@ -13,15 +13,22 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { Text } from '@elev9/ui';
+import type { NutritionAction } from '@elev9/types';
 
+import { productAnalytics } from '../analytics/product-analytics';
 import { CoachInsightCard } from '../components/dashboard/coach-insight-card';
 import { RecoveryReadinessCard } from '../components/dashboard/recovery-readiness-card';
 import { TodaysWorkoutCard } from '../components/dashboard/todays-workout-card';
 import { TodaysNutritionCard } from '../components/dashboard/todays-nutrition-card';
 import { WeeklyProgressCard } from '../components/dashboard/weekly-progress-card';
+import { getCoachFirstName } from '../hooks/coach';
 import { useDashboard } from '../hooks/use-dashboard';
 import type { UseDashboardResult } from '../hooks/use-dashboard';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import {
+  getDailyCheckInAnalyticsCompletionState,
+  getDailyCheckInCtaLabel,
+} from './dashboard-daily-check-in-helpers';
 
 type DashboardScreenProps = {
   onOpenHistory?: () => void;
@@ -32,7 +39,33 @@ type DashboardScreenProps = {
 
 type DashboardState = 'loading' | 'error';
 
-const USER_NAME = 'Rodrigo';
+function getNutritionAnalyticsDestination(
+  action: NutritionAction,
+):
+  | 'nutrition_profile'
+  | 'nutrition_plan'
+  | 'today_meals'
+  | 'log_meal'
+  | 'hydration'
+  | 'none'
+  | 'unavailable' {
+  switch (action.type) {
+    case 'open_profile':
+      return 'nutrition_profile';
+    case 'create_plan':
+      return 'nutrition_plan';
+    case 'open_today_meals':
+      return 'today_meals';
+    case 'log_meal':
+      return 'log_meal';
+    case 'open_hydration':
+      return 'hydration';
+    case 'none':
+      return 'none';
+    default:
+      return 'unavailable';
+  }
+}
 
 const MOTIVATIONAL_MESSAGES = [
   "Let's build momentum today.",
@@ -63,6 +96,12 @@ export function DashboardScreen({
   const dashboard = useDashboard();
   const entrance = useRef(new Animated.Value(0)).current;
   const hasFocused = useRef(false);
+  const lastTrackedCheckInCtaState = useRef<'pending' | 'completed' | null>(
+    null,
+  );
+  const nutritionCardExposureTracked = useRef(false);
+  const nutritionLoadResultKey = useRef<string | null>(null);
+  const firstName = getCoachFirstName(dashboard.userName);
 
   const motivationalMessage = useMemo(() => {
     const index = Math.floor(Math.random() * MOTIVATIONAL_MESSAGES.length);
@@ -94,6 +133,73 @@ export function DashboardScreen({
     }, [dashboard.refresh]),
   );
 
+  useEffect(() => {
+    if (dashboard.isLoading || dashboard.error) {
+      return;
+    }
+
+    const completionState = getDailyCheckInAnalyticsCompletionState(dashboard);
+
+    if (!completionState) {
+      return;
+    }
+
+    if (lastTrackedCheckInCtaState.current === completionState) {
+      return;
+    }
+
+    lastTrackedCheckInCtaState.current = completionState;
+    productAnalytics.track('daily_check_in_cta_viewed', {
+      completionState,
+      entryPoint: 'dashboard',
+    });
+  }, [
+    dashboard.coach.actionTarget,
+    dashboard.dailyCheckIn.completedToday,
+    dashboard.error,
+    dashboard.isLoading,
+  ]);
+
+  useEffect(() => {
+    if (dashboard.nutrition.isLoading) {
+      return;
+    }
+
+    const availability =
+      dashboard.nutrition.data?.availability ?? 'not_available';
+    const freshness = dashboard.nutrition.data?.freshness ?? 'unknown';
+    const outcome = dashboard.nutrition.errorMessage ? 'failure' : 'success';
+    const resultKey = `${outcome}:${availability}:${freshness}`;
+
+    if (nutritionLoadResultKey.current !== resultKey) {
+      nutritionLoadResultKey.current = resultKey;
+      productAnalytics.track('nutrition_dashboard_load_result', {
+        outcome,
+        availability,
+        freshness,
+        source: 'canonical_read_model',
+        ...(dashboard.nutrition.errorMessage
+          ? { safeErrorCode: 'NUTRITION_LOAD_FAILED' as const }
+          : {}),
+      });
+    }
+
+    if (!nutritionCardExposureTracked.current) {
+      nutritionCardExposureTracked.current = true;
+      productAnalytics.track('nutrition_dashboard_card_viewed', {
+        screen: 'dashboard',
+        component: 'nutrition_card',
+        availability,
+        freshness,
+        source: 'canonical_read_model',
+      });
+    }
+  }, [
+    dashboard.nutrition.data,
+    dashboard.nutrition.errorMessage,
+    dashboard.nutrition.isLoading,
+  ]);
+
   const handleStartWorkout = useCallback(() => {
     if (!dashboard.workout.data || !dashboard.workout.todaysWorkout) {
       return;
@@ -109,13 +215,59 @@ export function DashboardScreen({
     onOpenTrainingPlan?.();
   }, [onOpenTrainingPlan]);
 
-  const handleCreateNutritionProfile = useCallback(() => {
-    onOpenProfile?.();
-  }, [onOpenProfile]);
+  const handleNutritionAction = useCallback(
+    (action: NutritionAction) => {
+      const destination = getNutritionAnalyticsDestination(action);
+      const outcome =
+        destination === 'unavailable' ? 'unavailable' : 'accepted';
+      productAnalytics.track('nutrition_dashboard_action_selected', {
+        actionType: action.type,
+        navigationDestination: destination,
+        outcome,
+      });
 
-  const handleOpenNutritionOverview = useCallback(() => {
-    navigation.navigate('NutritionOverview');
-  }, [navigation]);
+      switch (action.type) {
+        case 'open_profile':
+          navigation.navigate('CreateNutritionProfile');
+          return;
+        case 'create_plan':
+          navigation.navigate('NutritionPlan');
+          return;
+        case 'open_today_meals':
+          navigation.navigate('TodaysMeals');
+          return;
+        case 'log_meal':
+          if (action.mealId) {
+            navigation.navigate('LogMeal', { mealId: action.mealId });
+          } else {
+            navigation.navigate('TodaysMeals');
+          }
+          return;
+        case 'open_hydration':
+        case 'none':
+        default:
+          return;
+      }
+    },
+    [navigation],
+  );
+
+  const handleNutritionRetry = useCallback(() => {
+    const previousOutcome = dashboard.nutrition.errorMessage
+      ? 'failure'
+      : dashboard.nutrition.data?.availability === 'processing_failed'
+        ? 'processing_failed'
+        : 'not_available';
+    productAnalytics.track('nutrition_dashboard_retry_selected', {
+      source: 'dashboard_nutrition_card',
+      previousOutcome,
+    });
+    void dashboard.nutrition.retry();
+  }, [
+    dashboard.nutrition.data?.availability,
+    dashboard.nutrition.errorMessage,
+    dashboard.nutrition.retry,
+  ]);
 
   const handleOpenNutritionRecommendations = useCallback(() => {
     navigation.navigate('NutritionRecommendations');
@@ -133,13 +285,29 @@ export function DashboardScreen({
     navigation.navigate('CoachDailyBriefing');
   }, [navigation]);
 
+  const handleOpenRecovery = useCallback(() => {
+    productAnalytics.track('recovery_dashboard_cta_selected', {
+      entryPoint: 'dashboard',
+    });
+    navigation.navigate('Recovery');
+  }, [navigation]);
+
   const handleCoachCta = useCallback(() => {
     switch (dashboard.coach.actionTarget) {
       case 'workout':
         handleStartWorkout();
         return;
       case 'check_in':
-        navigation.navigate('DailyCheckInHistory');
+        productAnalytics.track('daily_check_in_cta_selected', {
+          completionState: dashboard.dailyCheckIn.completedToday
+            ? 'completed'
+            : 'pending',
+          entryPoint: 'dashboard',
+        });
+        navigation.navigate('DailyCheckIn', {
+          entryPoint: 'dashboard',
+          mode: dashboard.dailyCheckIn.completedToday ? 'edit' : 'create',
+        });
         return;
       case 'nutrition':
         handleOpenNutritionRecommendations();
@@ -150,6 +318,7 @@ export function DashboardScreen({
     }
   }, [
     dashboard.coach.actionTarget,
+    dashboard.dailyCheckIn.completedToday,
     handleOpenNutritionRecommendations,
     handleStartWorkout,
     navigation,
@@ -197,19 +366,28 @@ export function DashboardScreen({
             },
           ]}
         >
-          <DashboardHeader onOpenProfile={onOpenProfile} />
+          <DashboardHeader
+            firstName={firstName}
+            onOpenProfile={onOpenProfile}
+          />
 
-          <WelcomeSection motivationalMessage={motivationalMessage} />
+          <WelcomeSection
+            firstName={firstName}
+            motivationalMessage={motivationalMessage}
+          />
 
-          <DailyFocusCard focus={DAILY_FOCUS} />
+          <DailyFocusCard
+            focus={dashboard.coach.recommendedAction || DAILY_FOCUS}
+          />
           <DailyBriefingButton onPress={handleOpenDailyBriefing} />
 
           <DashboardCards
             dashboard={dashboard}
             onCoachCta={handleCoachCta}
-            onCreateNutritionProfile={handleCreateNutritionProfile}
+            onNutritionAction={handleNutritionAction}
+            onNutritionRetry={handleNutritionRetry}
             onOpenHistory={onOpenHistory}
-            onOpenNutritionOverview={handleOpenNutritionOverview}
+            onOpenRecovery={handleOpenRecovery}
             onOpenWeeklyReview={handleOpenWeeklyReview}
             onStartWorkout={handleStartWorkout}
             onViewAnalytics={handleViewAnalytics}
@@ -224,9 +402,10 @@ export function DashboardScreen({
 function DashboardCards({
   dashboard,
   onCoachCta,
-  onCreateNutritionProfile,
+  onNutritionAction,
+  onNutritionRetry,
   onOpenHistory,
-  onOpenNutritionOverview,
+  onOpenRecovery,
   onOpenWeeklyReview,
   onStartWorkout,
   onViewAnalytics,
@@ -234,9 +413,10 @@ function DashboardCards({
 }: {
   dashboard: UseDashboardResult;
   onCoachCta: () => void;
-  onCreateNutritionProfile: () => void;
+  onNutritionAction: (action: NutritionAction) => void;
+  onNutritionRetry: () => void;
   onOpenHistory?: () => void;
-  onOpenNutritionOverview: () => void;
+  onOpenRecovery: () => void;
   onOpenWeeklyReview: () => void;
   onStartWorkout: () => void;
   onViewAnalytics: () => void;
@@ -247,18 +427,22 @@ function DashboardCards({
       <CoachInsightCard
         badgeLabel={dashboard.coach.badgeLabel}
         coachDecision={dashboard.coach.data}
-        ctaLabel={dashboard.coach.ctaLabel}
+        ctaLabel={getDailyCheckInCtaLabel(dashboard)}
+        confidenceLevel={dashboard.coach.intelligence?.confidence.level ?? null}
         errorMessage={dashboard.coach.errorMessage}
         isLoading={dashboard.coach.isLoading}
         onPressCta={onCoachCta}
         onRetry={() => void dashboard.coach.retry()}
+        riskLevel={dashboard.coach.intelligence?.currentRisk?.level ?? null}
         recommendedAction={dashboard.coach.recommendedAction}
+        supportingEvidenceSummary={dashboard.coach.supportingEvidenceSummary}
       />
       <RecoveryReadinessCard
-        errorMessage={dashboard.recovery.errorMessage}
-        isLoading={dashboard.recovery.isLoading}
-        onRetry={() => void dashboard.recovery.retry()}
-        recoverySnapshot={dashboard.recovery.data}
+        errorMessage={dashboard.recoveryExperience.errorMessage}
+        isLoading={dashboard.recoveryExperience.isLoading}
+        onRetry={() => void dashboard.recoveryExperience.retry()}
+        onOpenRecovery={onOpenRecovery}
+        recoveryExperience={dashboard.recoveryExperience.data}
       />
       <TodaysWorkoutCard
         errorMessage={dashboard.workout.errorMessage}
@@ -272,18 +456,13 @@ function DashboardCards({
       <TodaysNutritionCard
         errorMessage={dashboard.nutrition.errorMessage}
         isLoading={dashboard.nutrition.isLoading}
-        onCreateNutritionProfile={onCreateNutritionProfile}
-        onOpenNutritionOverview={onOpenNutritionOverview}
-        onRetry={() => void dashboard.nutrition.retry()}
+        onAction={onNutritionAction}
+        onRetry={onNutritionRetry}
         todayNutrition={dashboard.nutrition.data}
-        workout={dashboard.workout.todaysWorkout}
       />
       <WeeklyProgressCard
         errorMessage={dashboard.progress.errorMessage}
         isLoading={dashboard.progress.isLoading}
-        nutritionAdherencePercentage={
-          dashboard.nutrition.data?.progress.adherencePercentage
-        }
         onRetry={() => void dashboard.progress.retry()}
         onOpenWeeklyReview={onOpenWeeklyReview}
         onViewAnalytics={onViewAnalytics}
@@ -296,7 +475,15 @@ function DashboardCards({
   );
 }
 
-function DashboardHeader({ onOpenProfile }: { onOpenProfile?: () => void }) {
+function DashboardHeader({
+  firstName,
+  onOpenProfile,
+}: {
+  firstName: string | null;
+  onOpenProfile?: () => void;
+}) {
+  const avatarInitial = firstName ? firstName.charAt(0).toUpperCase() : 'E';
+
   return (
     <View style={styles.header}>
       <Text accessibilityRole="text" style={styles.dateText}>
@@ -317,7 +504,7 @@ function DashboardHeader({ onOpenProfile }: { onOpenProfile?: () => void }) {
           importantForAccessibility="no"
           style={styles.avatarInitial}
         >
-          {USER_NAME.charAt(0)}
+          {avatarInitial}
         </Text>
       </Pressable>
     </View>
@@ -325,18 +512,20 @@ function DashboardHeader({ onOpenProfile }: { onOpenProfile?: () => void }) {
 }
 
 function WelcomeSection({
+  firstName,
   motivationalMessage,
 }: {
+  firstName: string | null;
   motivationalMessage: string;
 }) {
+  const greeting = firstName ? `${getGreeting()}, ${firstName}` : getGreeting();
+
   return (
     <View
-      accessibilityLabel={`${getGreeting()}, ${USER_NAME}. ${motivationalMessage}`}
+      accessibilityLabel={`${greeting}. ${motivationalMessage}`}
       style={styles.welcomeSection}
     >
-      <Text style={styles.headline}>
-        {getGreeting()}, {USER_NAME}
-      </Text>
+      <Text style={styles.headline}>{greeting}</Text>
       <Text style={styles.motivationalText}>{motivationalMessage}</Text>
     </View>
   );

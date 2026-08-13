@@ -74,6 +74,7 @@ describe('AiController', () => {
     } as unknown as jest.Mocked<GenerateCoachFeedbackUseCase>;
     createCoachChatUseCase = {
       execute: jest.fn(),
+      executeStream: jest.fn(),
     } as unknown as jest.Mocked<CreateCoachChatUseCase>;
     getCoachChatHistoryUseCase = {
       execute: jest.fn(),
@@ -146,6 +147,58 @@ describe('AiController', () => {
       conversationId: 'conversation_123',
       reply: "Your recovery signals suggest keeping today's session lighter.",
     });
+  });
+
+  it('streams chat deltas and completes the response', async () => {
+    createCoachChatUseCase.executeStream.mockImplementation(
+      async (_input, options) => {
+        options?.onDelta?.('Keep it light today.');
+
+        return {
+          conversationId: 'conversation_123',
+          reply: 'Keep it light today.',
+        };
+      },
+    );
+
+    const response = {
+      setHeader: jest.fn(),
+      flushHeaders: jest.fn(),
+      write: jest.fn(),
+      end: jest.fn(),
+      writableEnded: false,
+    } as never;
+
+    await controller.createCoachChatStream(
+      {
+        authUser: {
+          id: 'auth_user_123',
+          email: 'user@email.com',
+        },
+        on: jest.fn(),
+        removeListener: jest.fn(),
+      } as never,
+      response,
+      { message: 'Should I train today?' },
+    );
+
+    expect(createCoachChatUseCase.executeStream).toHaveBeenCalledWith(
+      {
+        authUserId: 'auth_user_123',
+        message: 'Should I train today?',
+        signal: expect.any(AbortSignal),
+      },
+      expect.objectContaining({
+        onDelta: expect.any(Function),
+      }),
+    );
+    expect(response.write).toHaveBeenCalledWith(
+      expect.stringContaining('event: delta'),
+    );
+    expect(response.write).toHaveBeenCalledWith(
+      expect.stringContaining('event: completed'),
+    );
+    expect(response.end).toHaveBeenCalled();
   });
 
   it('rejects invalid chat payloads with HTTP 400', async () => {
@@ -779,14 +832,6 @@ describe('AiController', () => {
         motivationLevel: 5,
         createdAt: new Date('2026-05-04T09:00:00.000Z'),
       },
-      nutritionProfile: {
-        goal: 'muscle_gain',
-        mealsPerDay: 4,
-        dietaryRestrictions: [],
-        allergies: [],
-        dislikedFoods: [],
-        preferredFoods: ['rice', 'eggs'],
-      },
       recentWorkoutLogs: [],
       generatedAt: new Date('2026-05-04T10:00:00.000Z'),
     });
@@ -812,19 +857,11 @@ describe('AiController', () => {
         motivationLevel: 5,
         createdAt: '2026-05-04T09:00:00.000Z',
       },
-      nutritionProfile: {
-        goal: 'muscle_gain',
-        mealsPerDay: 4,
-        dietaryRestrictions: [],
-        allergies: [],
-        dislikedFoods: [],
-        preferredFoods: ['rice', 'eggs'],
-      },
       generatedAt: '2026-05-04T10:00:00.000Z',
     });
   });
 
-  it('omits nutritionProfile in AI context when absent', async () => {
+  it('omits Nutrition context in AI context when absent', async () => {
     buildUserHealthContextService.build.mockResolvedValue({
       authUserId: 'auth_user_123',
       adherenceScore: 0,
@@ -845,7 +882,7 @@ describe('AiController', () => {
       },
     });
 
-    expect(result.nutritionProfile).toBeUndefined();
+    expect(result.nutritionContext).toBeUndefined();
   });
 
   it('uses the same auth guard on AI routes', () => {

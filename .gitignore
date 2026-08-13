@@ -66,6 +66,9 @@ node_modules/.cache/metro/
 # TypeScript
 # ----------------------
 *.tsbuildinfo
+packages/types/src/**/*.js
+packages/types/src/**/*.js.map
+packages/types/src/**/*.d.ts
 
 # ----------------------
 # Jest

@@ -27,6 +27,13 @@
         "profile": "development"
       }
     },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/mobile",
+        "command": "jest --config jest.config.cjs --runInBand"
+      }
+    },
     "export": {
       "executor": "@nx/expo:export",
       "outputs": ["{options.outputDir}"],

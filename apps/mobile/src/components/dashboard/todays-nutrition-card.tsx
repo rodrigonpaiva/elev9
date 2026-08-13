@@ -1,22 +1,30 @@
 import { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import type { TodayNutrition, TodayWorkout } from '@elev9/types';
+import type {
+  NutritionAction,
+  NutritionAvailability,
+  NutritionReadModel,
+} from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
+import {
+  buildNutritionCardModel,
+  getActionLabel,
+  getAvailabilityMessage,
+  getAvailabilityTitle,
+  type NutritionCardModel,
+} from './todays-nutrition-card-model';
+
 type TodaysNutritionCardProps = {
-  todayNutrition: TodayNutrition | null;
-  workout: TodayWorkout | null;
+  todayNutrition: NutritionReadModel | null;
   isLoading: boolean;
   errorMessage?: string | null;
   onRetry: () => void;
-  onCreateNutritionProfile: () => void;
-  onOpenNutritionOverview?: () => void;
+  onAction: (action: NutritionAction) => void;
 };
 
 type BadgeVariant = 'primary' | 'muted' | 'danger';
-type AdherenceLabel = 'On Track' | 'Needs Attention' | 'Off Track';
-
 const tokens = {
   card: '#ffffff',
   text: '#111827',
@@ -32,19 +40,17 @@ const tokens = {
 export const TodaysNutritionCard = memo(function TodaysNutritionCard({
   errorMessage,
   isLoading,
-  onCreateNutritionProfile,
-  onOpenNutritionOverview,
   onRetry,
   todayNutrition,
-  workout,
+  onAction,
 }: TodaysNutritionCardProps) {
   const model = useMemo(() => {
     if (!todayNutrition) {
       return null;
     }
 
-    return buildNutritionCardModel(todayNutrition, workout);
-  }, [todayNutrition, workout]);
+    return buildNutritionCardModel(todayNutrition);
+  }, [todayNutrition]);
 
   if (isLoading) {
     return <TodaysNutritionSkeleton />;
@@ -73,24 +79,36 @@ export const TodaysNutritionCard = memo(function TodaysNutritionCard({
   if (!model) {
     return (
       <View
-        accessibilityLabel="No nutrition plan available. Create your nutrition profile to receive personalized recommendations."
+        accessibilityLabel="Nutrition setup is not available. Open nutrition to continue."
         style={styles.card}
       >
         <View style={styles.emptyContent}>
           <Text style={styles.label}>NUTRITION</Text>
-          <Text style={styles.emptyTitle}>No nutrition plan available.</Text>
+          <Text style={styles.emptyTitle}>Nutrition setup is not ready.</Text>
           <Text style={styles.emptyMessage}>
-            Create your nutrition profile to receive personalized
-            recommendations.
+            Open Nutrition to finish setup and receive daily guidance.
           </Text>
           <Button
-            accessibilityLabel="Create nutrition profile"
-            label="Create Nutrition Profile"
-            onPress={onCreateNutritionProfile}
+            accessibilityLabel="Open nutrition setup"
+            label="Open Nutrition"
+            onPress={() => onAction({ type: 'open_profile' })}
             style={styles.primaryButton}
           />
         </View>
       </View>
+    );
+  }
+
+  if (todayNutrition?.availability !== 'available') {
+    return (
+      <NutritionAvailabilityState
+        action={model.action}
+        availability={todayNutrition?.availability ?? 'not_available'}
+        onAction={onAction}
+        onRetry={onRetry}
+        title={getAvailabilityTitle(todayNutrition?.availability)}
+        message={getAvailabilityMessage(todayNutrition?.availability)}
+      />
     );
   }
 
@@ -107,53 +125,118 @@ export const TodaysNutritionCard = memo(function TodaysNutritionCard({
 
       <View style={styles.caloriesGroup}>
         <Text style={styles.calories}>{model.caloriesLabel}</Text>
-        <Text style={styles.caloriesLabel}>Today&apos;s Target</Text>
+        <Text style={styles.caloriesLabel}>{model.calorieDetailLabel}</Text>
       </View>
 
-      <View
-        accessibilityElementsHidden
-        importantForAccessibility="no"
-        style={styles.macroRow}
-      >
-        {model.macros.map((macro) => (
-          <View key={macro.label} style={styles.macroItem}>
-            <Text style={styles.macroLabel}>{macro.label}</Text>
-            <Text style={styles.macroValue}>{macro.value}</Text>
-          </View>
-        ))}
-      </View>
+      {model.calorieProgress !== null ? (
+        <View
+          accessibilityLabel={`Calorie progress ${model.calorieProgress} percent`}
+          style={styles.progressTrack}
+        >
+          <View
+            style={[
+              styles.progressFill,
+              { width: `${model.calorieProgress}%` },
+            ]}
+          />
+        </View>
+      ) : null}
+
+      {model.macros.length > 0 ? (
+        <View style={styles.macroRow}>
+          {model.macros.map((macro) => (
+            <View key={macro.label} style={styles.macroItem}>
+              <Text style={styles.macroLabel}>{macro.label}</Text>
+              <Text style={styles.macroValue}>{macro.value}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
 
       <View style={styles.mealsSection}>
         <View style={styles.mealMetric}>
-          <Text style={styles.mealLabel}>Meals Remaining</Text>
-          <Text style={styles.mealValue}>{model.mealsRemainingLabel}</Text>
+          <Text style={styles.mealLabel}>Meals</Text>
+          <Text style={styles.mealValue}>{model.mealsLabel}</Text>
         </View>
         <View style={styles.mealDivider} />
         <View style={styles.mealMetric}>
           <Text style={styles.mealLabel}>Next Meal</Text>
           <Text numberOfLines={1} style={styles.mealValue}>
-            {model.nextMealLabel}
+            {model.nextMealLabel ?? 'Not available'}
           </Text>
         </View>
       </View>
 
-      <View style={styles.focusBox}>
-        <Text style={styles.focusLabel}>TODAY&apos;S FOCUS</Text>
-        <Text style={styles.focusText}>{model.focus}</Text>
-      </View>
-
-      {onOpenNutritionOverview ? (
-        <Button
-          accessibilityLabel="Open nutrition overview"
-          label="View Nutrition"
-          onPress={onOpenNutritionOverview}
-          variant="ghost"
-          style={styles.primaryButton}
-        />
+      {model.focusMessage ? (
+        <View style={styles.focusBox}>
+          <Text style={styles.focusLabel}>{model.focusLabel}</Text>
+          <Text style={styles.focusText}>{model.focusMessage}</Text>
+        </View>
       ) : null}
+
+      {model.freshnessLabel ? (
+        <Text
+          accessibilityLabel={model.freshnessLabel}
+          style={styles.freshness}
+        >
+          {model.freshnessLabel}
+        </Text>
+      ) : null}
+
+      <Button
+        accessibilityLabel={getActionLabel(model.action)}
+        label={getActionLabel(model.action)}
+        onPress={() => onAction(model.action)}
+        variant="ghost"
+        style={styles.primaryButton}
+      />
     </View>
   );
 });
+
+function NutritionAvailabilityState({
+  action,
+  availability,
+  message,
+  onAction,
+  onRetry,
+  title,
+}: {
+  action: NutritionAction;
+  availability: NutritionAvailability;
+  message: string;
+  onAction: (action: NutritionAction) => void;
+  onRetry: () => void;
+  title: string;
+}) {
+  const canRetry =
+    availability === 'not_available' || availability === 'processing_failed';
+
+  return (
+    <View accessibilityLabel={`${title}. ${message}`} style={styles.card}>
+      <View style={styles.emptyContent}>
+        <Text style={styles.label}>NUTRITION</Text>
+        <Text style={styles.emptyTitle}>{title}</Text>
+        <Text style={styles.emptyMessage}>{message}</Text>
+        <Button
+          accessibilityLabel={getActionLabel(action)}
+          label={getActionLabel(action)}
+          onPress={() => onAction(action)}
+          style={styles.primaryButton}
+        />
+        {canRetry ? (
+          <Button
+            accessibilityLabel="Retry loading nutrition data"
+            label="Try Again"
+            onPress={onRetry}
+            style={styles.primaryButton}
+            variant="ghost"
+          />
+        ) : null}
+      </View>
+    </View>
+  );
+}
 
 function TodaysNutritionSkeleton() {
   return (
@@ -181,107 +264,6 @@ function TodaysNutritionSkeleton() {
       </View>
     </View>
   );
-}
-
-function buildNutritionCardModel(
-  nutrition: TodayNutrition,
-  workout: TodayWorkout | null,
-) {
-  const targets = nutrition.macroTargets;
-  const adherence = getAdherence(nutrition.progress.adherencePercentage);
-  const mealsRemaining = getMealsRemaining(nutrition);
-  const nextMealLabel = nutrition.nextMeal
-    ? nutrition.nextMeal.title
-    : 'No meals remaining';
-  const focus = getNutritionFocus(nutrition, workout);
-
-  return {
-    adherence,
-    caloriesLabel: `${Math.round(targets.calories)} kcal`,
-    macros: [
-      { label: 'Protein', value: `${Math.round(targets.proteinGrams)}g` },
-      { label: 'Carbs', value: `${Math.round(targets.carbsGrams)}g` },
-      { label: 'Fat', value: `${Math.round(targets.fatGrams)}g` },
-    ],
-    mealsRemainingLabel: `${mealsRemaining} ${
-      mealsRemaining === 1 ? 'meal' : 'meals'
-    } remaining`,
-    nextMealLabel,
-    focus,
-    accessibilityLabel: `Nutrition target ${Math.round(
-      targets.calories,
-    )} calories. Protein ${Math.round(
-      targets.proteinGrams,
-    )} grams. ${mealsRemaining} ${
-      mealsRemaining === 1 ? 'meal' : 'meals'
-    } remaining.`,
-  };
-}
-
-function getAdherence(value: number): {
-  label: AdherenceLabel;
-  badgeVariant: BadgeVariant;
-} {
-  if (value >= 80) {
-    return { label: 'On Track', badgeVariant: 'primary' };
-  }
-
-  if (value >= 50) {
-    return { label: 'Needs Attention', badgeVariant: 'muted' };
-  }
-
-  return { label: 'Off Track', badgeVariant: 'danger' };
-}
-
-function getMealsRemaining(nutrition: TodayNutrition): number {
-  if (!nutrition.nextMeal) {
-    return 0;
-  }
-
-  const nextMealIndex = nutrition.meals.findIndex(
-    (meal) => meal.id === nutrition.nextMeal?.id,
-  );
-
-  if (nextMealIndex < 0) {
-    return 1;
-  }
-
-  return Math.max(0, nutrition.meals.length - nextMealIndex);
-}
-
-function getNutritionFocus(
-  nutrition: TodayNutrition,
-  workout: TodayWorkout | null,
-): string {
-  if (workout && isRecoveryWorkout(workout)) {
-    return 'Prioritize quality meals and hydration.';
-  }
-
-  if (workout?.intensity === 'high') {
-    return 'Increase hydration today.';
-  }
-
-  if (workout?.intensity === 'low') {
-    return 'Focus on recovery nutrition.';
-  }
-
-  if (nutrition.nutritionFocus.trim().length > 0) {
-    return nutrition.nutritionFocus;
-  }
-
-  if (nutrition.nextMeal?.type === 'lunch') {
-    return 'Prioritize protein at lunch.';
-  }
-
-  return 'Spread protein across all meals.';
-}
-
-function isRecoveryWorkout(workout: TodayWorkout): boolean {
-  const descriptor = `${workout.title} ${workout.focus} ${workout.format}`
-    .trim()
-    .toLowerCase();
-
-  return descriptor.includes('recovery') || descriptor.includes('mobility');
 }
 
 const styles = StyleSheet.create({
@@ -325,6 +307,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 21,
     fontWeight: '600',
+  },
+  progressTrack: {
+    height: 8,
+    overflow: 'hidden',
+    borderRadius: 999,
+    backgroundColor: tokens.softBorder,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
+    backgroundColor: tokens.text,
   },
   macroRow: {
     flexDirection: 'row',
@@ -399,6 +392,12 @@ const styles = StyleSheet.create({
     color: tokens.secondaryText,
     fontSize: 15,
     lineHeight: 21,
+    fontWeight: '600',
+  },
+  freshness: {
+    color: tokens.tertiaryText,
+    fontSize: 12,
+    lineHeight: 17,
     fontWeight: '600',
   },
   primaryButton: {

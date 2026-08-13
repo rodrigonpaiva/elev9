@@ -111,13 +111,6 @@ export class MongooseCoachFeedbackRepository implements CoachFeedbackRepository 
                     document.contextSnapshot.latestCheckIn.motivationLevel,
                 }
               : undefined,
-            nutritionProfile: document.contextSnapshot.nutritionProfile
-              ? {
-                  goal: document.contextSnapshot.nutritionProfile.goal,
-                  mealsPerDay:
-                    document.contextSnapshot.nutritionProfile.mealsPerDay,
-                }
-              : undefined,
           }
         : undefined,
       createdAt: document.createdAt,

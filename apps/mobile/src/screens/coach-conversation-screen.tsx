@@ -31,6 +31,7 @@ import {
   trackCoachConversationEvent,
   useCoachConversation,
 } from '../hooks/use-coach-conversation';
+import { resolveAutoSendConversationPrompt } from '../hooks/coach/coach-conversation-helpers';
 
 const conversationTokens = {
   background: '#ffffff',
@@ -94,15 +95,18 @@ export function CoachConversationScreen() {
   }, [conversation.isSending, conversation.messages.length]);
 
   useEffect(() => {
-    const initialPrompt = route.params?.initialPrompt?.trim();
-    const promptId = route.params?.promptId ?? initialPrompt;
+    const autoPrompt = resolveAutoSendConversationPrompt({
+      initialPrompt: route.params?.initialPrompt,
+      promptId: route.params?.promptId,
+      lastAutoPromptId: lastAutoPromptRef.current,
+    });
 
-    if (!initialPrompt || !promptId || lastAutoPromptRef.current === promptId) {
+    if (!autoPrompt) {
       return;
     }
 
-    lastAutoPromptRef.current = promptId;
-    void conversation.sendMessage(initialPrompt);
+    lastAutoPromptRef.current = autoPrompt.promptId;
+    void conversation.sendMessage(autoPrompt.prompt);
   }, [
     conversation.sendMessage,
     route.params?.initialPrompt,
@@ -148,13 +152,22 @@ export function CoachConversationScreen() {
         <ConversationHeader
           onInfo={() => navigation.navigate('CoachInsights')}
           onQuickQuestions={() => navigation.navigate('AskCoach')}
+          focus={conversation.context.focus}
+          persona={conversation.context.persona}
+          confidence={conversation.context.confidence}
           status={conversation.context.status}
+          topRecommendation={conversation.context.topRecommendation}
         />
 
         {!conversation.isContextBannerDismissed ? (
           <ContextBanner
             onDismiss={() => conversation.setContextBannerDismissed(true)}
+            confidence={conversation.context.confidence}
+            focus={conversation.context.focus}
             signals={conversation.context.signals}
+            summary={conversation.context.summary}
+            topRecommendation={conversation.context.topRecommendation}
+            risk={conversation.context.risk}
           />
         ) : null}
 
@@ -222,9 +235,17 @@ export function CoachConversationScreen() {
 const ConversationHeader = memo(function ConversationHeader({
   onInfo,
   onQuickQuestions,
+  confidence,
+  focus,
+  persona,
   status,
+  topRecommendation,
 }: {
+  confidence: string;
+  focus: string;
+  persona: string;
   status: string;
+  topRecommendation: string;
   onInfo: () => void;
   onQuickQuestions: () => void;
 }) {
@@ -236,6 +257,12 @@ const ConversationHeader = memo(function ConversationHeader({
       <View style={styles.headerCopy}>
         <Text style={styles.coachName}>Elev9 Coach</Text>
         <Text style={styles.coachStatus}>{status}</Text>
+        <Text style={styles.coachContext}>
+          {focus} · {confidence} · {persona}
+        </Text>
+        <Text style={styles.coachContextSecondary} numberOfLines={1}>
+          {topRecommendation}
+        </Text>
       </View>
       <View style={styles.headerActions}>
         <Pressable
@@ -277,14 +304,24 @@ const ConversationHeader = memo(function ConversationHeader({
 
 const ContextBanner = memo(function ContextBanner({
   onDismiss,
+  confidence,
+  focus,
   signals,
+  summary,
+  topRecommendation,
+  risk,
 }: {
+  confidence: string;
+  focus: string;
   signals: string[];
+  summary: string;
+  topRecommendation: string;
+  risk: string;
   onDismiss: () => void;
 }) {
   return (
     <View
-      accessibilityLabel={`Today's guidance is based on ${signals.join(', ')}.`}
+      accessibilityLabel={`Today's guidance is based on ${signals.join(', ')}. ${focus}. ${risk}. ${confidence}.`}
       style={styles.contextBanner}
     >
       <View style={styles.contextCopy}>
@@ -296,6 +333,8 @@ const ContextBanner = memo(function ContextBanner({
             </View>
           ))}
         </View>
+        <Text style={styles.contextSummary}>{summary}</Text>
+        <Text style={styles.contextRecommendation}>{topRecommendation}</Text>
       </View>
       <Pressable
         accessibilityLabel="Dismiss context banner"
@@ -653,6 +692,19 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: '600',
   },
+  coachContext: {
+    color: conversationTokens.text,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  coachContextSecondary: {
+    color: conversationTokens.secondaryText,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
+  },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -704,6 +756,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '800',
+  },
+  contextSummary: {
+    color: conversationTokens.text,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
+  },
+  contextRecommendation: {
+    color: conversationTokens.secondaryText,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '500',
   },
   dismissButton: {
     width: 30,

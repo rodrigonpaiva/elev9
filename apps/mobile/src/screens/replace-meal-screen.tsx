@@ -12,7 +12,7 @@ import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
-import type { Meal, MealOption, TodayNutrition } from '@elev9/types';
+import type { Meal, MealOption, NutritionReadModel } from '@elev9/types';
 import { Button, Text } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
@@ -71,9 +71,8 @@ export function ReplaceMealScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ReplaceMeal'>>();
   const { mealId } = route.params;
-  const [todayNutrition, setTodayNutrition] = useState<TodayNutrition | null>(
-    null,
-  );
+  const [todayNutrition, setTodayNutrition] =
+    useState<NutritionReadModel | null>(null);
   const [selectedReason, setSelectedReason] =
     useState<ReplacementReason>('Food unavailable');
   const [selectedAlternativeId, setSelectedAlternativeId] = useState<
@@ -614,7 +613,7 @@ function ReplaceMealStateView({
 
 function buildReplaceMealModel(input: {
   mealId: string;
-  todayNutrition: TodayNutrition;
+  todayNutrition: NutritionReadModel;
   reason: ReplacementReason;
 }): ReplaceMealModel | null {
   const meal = input.todayNutrition.meals.find(
