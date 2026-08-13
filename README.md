@@ -1,186 +1,212 @@
-## 🌍 Documentation
-
-- 🇵🇹 Portuguese (default)
-- 🇬🇧 English → [README.en.md](./README.en.md)
-- 🇫🇷 French → [README.fr.md](./README.fr.md)
-
 # Elev9 Coach
 
-Elev9 Coach is an MVP fitness coaching platform built as a spec-driven monorepo. The current scope focuses on adaptive coaching, recovery intelligence, nutrition guidance, goal and habit tracking, notifications, and a contextual AI Coach experience.
+> An Nx monorepo for an adaptive fitness-coaching MVP, with a NestJS API, an Expo mobile application, shared TypeScript contracts, and a deterministic-first Coach Intelligence layer.
 
-## Stack
+[English](./README.md) · [Français](./README.fr.md) · [Português do Brasil](./README.pt-BR.md) · [legacy English filename](./README.en.md)
 
-- Nx monorepo
-- NestJS
-- MongoDB / Mongoose
-- Expo React Native
-- TypeScript
-- Jest
+## Table of contents
+
+- [Purpose](#purpose)
+- [Implemented capabilities](#implemented-capabilities)
+- [Architecture](#architecture)
+- [Technology and requirements](#technology-and-requirements)
+- [Installation and configuration](#installation-and-configuration)
+- [Commands](#commands)
+- [Main flow](#main-flow)
+- [API surface](#api-surface)
+- [Tests and validation](#tests-and-validation)
+- [Repository structure](#repository-structure)
+- [Integrations](#integrations)
+- [Current status and limitations](#current-status-and-limitations)
+- [Evidence-based next steps](#evidence-based-next-steps)
+- [Contributing](#contributing)
+- [License](#license)
+- [Documentation map](#documentation-map)
+
+## Purpose
+
+Elev9 Coach addresses the fragmentation between workouts, recovery, nutrition, habits, goals, and progress. The MVP connects authentication, profiles, adaptive recommendations, activity logging, progress views, and a contextual Coach.
+
+Product positioning, target users, user journeys, and scope are documented in [docs/product](./docs/product/).
+
+## Implemented capabilities
+
+| Area                | Implemented scope                                                                                                                                                                            |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Authentication      | Registration, login, JWT session validation, and authenticated /me access                                                                                                                    |
+| User and fitness    | User-profile creation plus fitness-profile creation and retrieval                                                                                                                            |
+| Training            | Training-plan creation/retrieval and adaptive recommendations with today/current/history read models                                                                                         |
+| Progress            | Daily check-ins, workout logs, workout history, and progress summary                                                                                                                         |
+| Recovery            | Current/today/history read models, deterministic guidance, analytics, and mobile offline read caching                                                                                        |
+| Nutrition           | Profiles and plans, macro calculation, today’s nutrition, meal logs, replacement, recommendations, history, trends, and dashboard integration                                                |
+| Goals and habits    | Goal current/history/milestones/achievement/forecast views and habit snapshots, summaries, risks, history, and replay                                                                        |
+| Personalization     | Today/current/history views, behavioral patterns, and user profile read models                                                                                                               |
+| Notifications       | Today/current decisions, history, engagement summary, event recording, and replay                                                                                                            |
+| Dashboard           | Consolidated home view and adaptive-signal debug view                                                                                                                                        |
+| Coach Intelligence  | Cross-domain context, deterministic experts, explainability/evidence, safety/fallback policies, chat, briefing, insights, memory, weekly review, goal guidance, notifications, and ask-Coach |
+| Mobile product loop | Login/onboarding, dashboard, training, nutrition, recovery, progress, and Coach screens connected to the API client                                                                          |
+| Observability       | Correlated and structured logging with redaction, optional OpenTelemetry export, and an optional local Collector                                                                             |
+
+“Implemented” means supported by this repository. Production rollout, store distribution, and external operational guarantees are not inferred from source code alone.
 
 ## Architecture
 
-```text
-apps/
-  api/        NestJS backend
-  mobile/     Expo React Native app
+This is an Nx monorepo with a modular NestJS backend, an Expo/React Native client, and shared packages.
 
-packages/
-  types/      Shared public contracts
-  api-client/ Shared HTTP client
-  ui/         Shared mobile-oriented UI primitives
-```
+    apps/api/       NestJS modular monolith
+    apps/mobile/    Expo React Native application and native projects
+    apps/web/       Next-oriented workspace shell; targets currently empty
+    packages/types/ Shared domain and HTTP contracts
+    packages/api-client/ Shared typed HTTP client
+    packages/ui/    Shared mobile-oriented UI primitives
+    infra/          Optional OpenTelemetry Collector configuration
+    docs/           Specs, ADRs, product, validation, operations, roadmap
+    scripts/        Node CLI wrapper and Docker smoke helper
 
-Additional architectural notes live in [docs/architecture/overview.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/architecture/overview.md) and [docs/architecture/monorepo.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/architecture/monorepo.md).
+The API uses bounded contexts under apps/api/src/modules/, separating presentation, application use cases/services, domain entities/value objects/repositories, and infrastructure adapters. MongoDB access uses Mongoose repositories and schemas. The mobile app consumes shared contracts and the API client.
 
-## Architecture & Documentation
+The coaching design is deterministic-first: domain signals and policy engines produce explainable decisions; optional LLM/agent capabilities are guarded by configuration, safety checks, bounded execution, memory limits, tool limits, and fallback paths.
 
-The project follows a spec-driven architecture workflow.
+## Technology and requirements
 
-Specifications document workflows, contracts, rules, tasks, and tests. ADRs document the architectural decisions behind those flows. The current AI Coach layer now spans coach home, conversation, daily briefing, memory, explainability, ask coach, weekly review, goal guidance, and notifications. Repository-wide documentation governance is defined in [docs/specs/GOVERNANCE.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/GOVERNANCE.md), which keeps specs, ADR alignment, navigation consistency, placeholders, and documentation terminology in sync.
+- Nx 22.7.1, npm workspaces, TypeScript 5.7.x
+- NestJS 11, Node.js 22 LTS, MongoDB 7, Mongoose 8
+- Expo 54, React Native 0.81, React 19, NativeWind, React Navigation
+- Jest 29, Supertest, MongoDB Memory Server
+- JWT, bcrypt, optional OpenAI SDK and OpenTelemetry/OTLP
+- Docker and Docker Compose
 
-### Specifications
+Use Node.js 22 LTS (.nvmrc is provided), npm, Docker Compose, Expo tooling, and an emulator/simulator or physical device. Native builds additionally require platform SDKs. An OpenAI key is only required when the optional LLM path is enabled.
 
-- [System Specs](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/README.md)
-- [AI Module Specs](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/ai/README.md)
-- [Implementation Matrix](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/product/feature-matrix.md)
+## Installation and configuration
 
-### Architecture Decision Records
+Install from the repository root:
 
-- [ADR Index](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/adr/README.md)
+    npm install
+    cp .env.example .env
+    docker compose up -d mongo
 
-### Documentation Governance
+| Variable                                                                         | Required | Example/default                  | Purpose                                                   |
+| -------------------------------------------------------------------------------- | -------- | -------------------------------- | --------------------------------------------------------- |
+| PORT                                                                             | No       | 3000                             | API port                                                  |
+| MONGODB_URI                                                                      | Yes      | mongodb://localhost:27017/elev9  | MongoDB connection                                        |
+| JWT_SECRET                                                                       | Yes      | change-me                        | JWT signing secret                                        |
+| OBSERVABILITY\_\*                                                                | No       | See .env.example                 | OTLP export, resource, timeout, and diagnostic settings   |
+| AI*AGENT*\*                                                                      | No       | See .env.example                 | Agent enablement, memory, steps, tools, and timeouts      |
+| OPENAI_API_KEY / OPENAI_MODEL                                                    | Optional | Not set / implementation default | Optional LLM provider                                     |
+| AI*LLM*_, AI*COACH_MAX_EXPERTS, AI_EXPERT_TRACE*_, AI*AGENT_TRACE*_, AI*PROMPT*_ | Optional | See source/config tests          | Advanced LLM, expert, trace, prompt, and rollout controls |
 
-- [Documentation Governance](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/specs/GOVERNANCE.md)
+The complete baseline is [.env.example](./.env.example); Docker uses [.env.docker.example](./.env.docker.example). Never commit real secrets.
 
-### CI Validation
+For mobile:
 
-- [CI Validation Flow](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/ci.md)
+    cp apps/mobile/.env.example apps/mobile/.env
 
-### Pull Requests
+Set EXPO_PUBLIC_API_URL to an address reachable by the device, for example http://192.168.1.20:3000. A physical phone must not use localhost. EXPO_PUBLIC_DEMO_MODE and EXPO_PUBLIC_AI_COACH_INTELLIGENCE_ENABLED are optional client switches.
 
-- [Pull Request Guidelines](./docs/pull-requests.md)
+## Commands
 
-This documentation set covers the adaptive systems, dashboard explainability, and coach-centric mobile layers of the product.
+| Command                                     | Purpose                                      |
+| ------------------------------------------- | -------------------------------------------- |
+| npm run start:dev                           | Start the API from TypeScript in development |
+| npm run start                               | Build and start the API                      |
+| npm run mobile:start                        | Start Expo/Metro                             |
+| npm run dev:all                             | Run API, web, and mobile concurrently        |
+| npm run build                               | Build configured API and workspace packages  |
+| npm run lint                                | Run configured lint targets                  |
+| npm run format:check / npm run format       | Check/format with Prettier                   |
+| npm run test / npm run test:watch           | Run the API Jest suite                       |
+| npm run test:e2e                            | Run API end-to-end tests in band             |
+| npm run mobile:android / npm run mobile:ios | Launch Expo on Android/iOS                   |
+| npm run dev:web                             | Start the current web shell                  |
 
-## Features Implemented
+Direct Nx targets include npm exec nx run api:build, npm exec nx run api:test, npm exec nx run api:test:e2e, npm exec nx run mobile:start, npm exec nx run mobile:test, and npm exec nx run mobile:build.
 
-- Auth: register, login, session validation
-- Users: create user profile
-- Fitness: create and fetch active fitness profile
-- Training: create and fetch active training plan
-- Progress: workout logs and progress summary
-- Recovery: daily and historical readiness snapshots
-- Nutrition: plans, logs, recommendations, and meal replacement
-- Goals: current goal, forecast, milestones, and history
-- Habits: consistency snapshot, risk signals, and history
-- Personalization: today/current/history patterns and profile
-- Notifications: today/current decision, history, engagement summary, replay
-- Dashboard: consolidated home endpoint
-- AI Coach: home, conversation, daily briefing, memory, insights, ask coach, weekly review, goal guidance, notifications
-- Mobile: authenticated product experience across the main product loop
+Docker runtime:
 
-## Engineering Highlights
+    cp .env.docker.example .env
+    docker compose up --build
+    docker compose --profile observability up --build
 
-- Spec-driven development with explicit use-case documentation under `docs/specs/`
-- DDD-lite modular monolith with bounded contexts
-- Deterministic-first adaptive coaching architecture
-- Repository pattern across persistence boundaries
-- JWT-based authentication and protected endpoints
-- Shared contracts via `packages/types`
-- Shared HTTP client via `packages/api-client`
-- Shared UI base via `packages/ui`
-- Automated backend test coverage with Jest
-- Mobile app integrated into the same Nx workspace
+## Main flow
 
-## How To Run
+1. Mobile resolves its API URL and authenticates through /auth/register, /auth/login, and /auth/me.
+2. Onboarding creates user, fitness, training, and nutrition context as needed.
+3. The dashboard aggregates progress, recovery, training, nutrition, goals, habits, and personalization signals.
+4. Deterministic services calculate read models and adaptive recommendations with freshness, date, and timezone rules.
+5. Coach Intelligence assembles context, routes to domain experts, and applies safety/explainability policies.
+6. Persisted actions can feed later snapshots, trends, notifications, and Coach context.
 
-### 1. Install dependencies
+## API surface
 
-```bash
-npm install
-```
+The API has no documented global prefix. Main groups are /auth, /users, /fitness, /training, /training/adaptive, /progress, /recovery, /nutrition, /goals, /habits, /personalization, /notifications, /dashboard, /ai, /ai/coach-decision, and /health or /health/ready. Exact DTOs are in each module’s presentation/http/dto directory; shared public contracts are in [packages/types/src](./packages/types/src).
 
-### 2. Start MongoDB with Docker Compose
+## Tests and validation
 
-```bash
-docker compose up -d
-```
+The repository inventory contains 267 test files, including API application/domain/infrastructure and controller tests, mobile hook/analytics tests, and API E2E scenarios for auth, profiles, dashboard, training, progress, recovery, nutrition, and Coach flows.
 
-This starts a local MongoDB on port `27017` with a persistent Docker volume.
+    npm exec nx run api:build       passed
+    npm exec nx run api:test        219 suites, 1,368 tests passed
 
-### 3. Configure environment variables
+Jest reported a worker that required forced exit during teardown; no assertion failed. Mobile/native builds require their platform runtime and were not treated as validated by this API check. See [docs/ci.md](./docs/ci.md).
 
-Backend:
+## Repository structure
 
-```bash
-cp .env.example .env
-```
+    apps/api/src/modules/<context>/  presentation, application, domain, infrastructure
+    apps/api/src/common/             middleware and shared API concerns
+    apps/api/src/observability/      logging, redaction, OTLP, lifecycle
+    apps/api/src/shared/             replay, mappers, concurrency, dates
+    apps/api/test/e2e/                API end-to-end scenarios
+    apps/mobile/src/                  screens, navigation, hooks, API, storage, UI
+    packages/api-client/src/          typed API functions and HTTP client
+    packages/types/src/               shared contracts by domain
+    packages/ui/src/                  shared React Native primitives and theme
+    docs/                             product, specs, ADRs, validation, operations
 
-Set at least:
+## Integrations
 
-- `PORT=3000`
-- `MONGODB_URI=mongodb://localhost:27017/elev9`
-- `JWT_SECRET=change-me`
+- MongoDB 7 is the primary persistence service; local Compose uses the named mongo-data volume.
+- The mobile app uses Expo/Metro and committed Android/iOS projects under apps/mobile.
+- OpenAI is an optional LLM provider behind runtime configuration and safety/fallback services.
+- OpenTelemetry can target the Collector in [docker-compose.yml](./docker-compose.yml) and [infra/observability/otel-collector/config.yaml](./infra/observability/otel-collector/config.yaml).
+- EAS build profiles are in [eas.json](./eas.json); store submission or published builds are not confirmed.
 
-Mobile:
+## Current status and limitations
 
-```bash
-cp apps/mobile/.env.example apps/mobile/.env
-```
+This is an evolving, non-licensed MVP (UNLICENSED in package.json). Recent Git history covers structured observability, nutrition rollout gates, recovery intelligence, daily check-ins, Coach Intelligence, and the Nx/mobile baseline.
 
-Set:
+- The web project exists in Nx, but project.json currently defines no targets or confirmed production web surface.
+- Agent runtime, tools, OpenAI/LLM execution, and observability export are disabled by default.
+- Native mobile execution depends on local SDKs, devices/simulators, and network reachability to the API.
+- Production deployment, hosted MongoDB, store releases, external telemetry backends, and email infrastructure are not confirmed.
+- The API suite passes but reports a teardown worker warning; test isolation remains a maintenance item.
+- This checkout has no sources/ directory, so no reference files were available for this update.
 
-- `EXPO_PUBLIC_API_URL=http://YOUR_LOCAL_IP:3000`
-- `EXPO_PUBLIC_DEMO_MODE=true`
+## Evidence-based next steps
 
-Important:
+Existing operations, runbook, certification, and roadmap documents support these directions:
 
-- On a physical phone, do not use `localhost`
-- Use your computer local network IP, for example `http://192.168.1.20:3000`
+- Expand the currently empty web surface.
+- Continue mobile/native and end-to-end validation where device and database access are available.
+- Keep shared contracts, UI primitives, and documentation synchronized.
+- Continue operational hardening described in docs/operations/, docs/runbooks/, docs/certification/, and docs/roadmap/.
 
-### 4. Start the backend
+## Contributing
 
-```bash
-npm run start
-```
+Inspect the relevant module, specification, ADR, and tests before a change. Keep domain contracts in packages/types, HTTP access in packages/api-client, and reusable mobile primitives in packages/ui. Prefer Nx targets and update tests/documentation with behavior changes. See [docs/ci.md](./docs/ci.md) and [docs/pull-requests.md](./docs/pull-requests.md).
 
-### 5. Start the mobile app
+## License
 
-```bash
-npm run mobile:start
-```
+The root package.json declares UNLICENSED. No open-source license grant is identified; confirm intended licensing before redistribution.
 
-### 6. Run tests
+## Documentation map
 
-```bash
-npm run test
-```
-
-## Docker Runtime
-
-The Docker runtime remains local-first and development-oriented.
-Use `.env.docker.example` as a separate runtime template from the standard application environment flow.
-
-```bash
-cp .env.docker.example .env
-docker compose up --build
-./scripts/docker-smoke.sh
-```
-
-The compose setup builds the API image deterministically and starts MongoDB alongside the backend.
-The API runtime exposes explicit health/readiness endpoints, request correlation, and bootstrap logs so `docker logs elev9-api` stays useful during smoke validation.
-
-## Project Status
-
-Elev9 Coach is an evolving MVP with a fully implemented AI Coach experience in mobile and the supporting shared contracts across the workspace. The documentation now tracks the implemented product surfaces, current bounded contexts, and the remaining roadmap separately.
-
-## Demo
-
-A practical demo guide is available at [docs/demo/README.md](/Users/rodrigopaiva/Desktop/Travail/Portfolio/elev9/docs/demo/README.md).
-
-## Next Steps
-
-- Expand web surfaces beyond the current minimal shell
-- Increase end-to-end coverage in environments where mobile and database services can run freely
-- Continue extracting stable shared contracts and presentation primitives across apps
-- Keep the coach documentation aligned with implementation as new surfaces ship
+- [Product vision, scope, feature inventory, and target users](./docs/product/)
+- [Architecture overview and monorepo strategy](./docs/architecture/)
+- [System and domain specifications](./docs/specs/)
+- [Architecture Decision Records](./docs/adr/)
+- [Validation and certification](./docs/validation/)
+- [Operations, runbooks, and rollout material](./docs/operations/)
+- [Development roadmap](./docs/roadmap/)
+- [Demo guide](./docs/demo/README.md)
+- [CI validation flow](./docs/ci.md)
