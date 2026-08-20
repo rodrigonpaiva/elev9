@@ -124,6 +124,7 @@ export type RootStackParamList = {
     replacementBanner?: string;
     replacementToken?: string;
     startedAt?: number;
+    workoutSessionId?: string;
   };
   ExerciseDetail: {
     exercise: TodayWorkout['exercises'][number];
@@ -163,6 +164,7 @@ export type RootStackParamList = {
   };
   WorkoutCompletion: {
     trainingPlanId: string;
+    workoutSessionId?: string;
     workout: TodayWorkout;
     durationMinutes: number;
     completedExercises: Array<{

@@ -2,6 +2,48 @@ import { ApiClientError, type HttpClient } from './http-client';
 import { createProgressApi } from './progress-api';
 
 describe('createProgressApi', () => {
+  it('completes and re-reads a workout session through the public contract', async () => {
+    const response = { workoutSession: buildWorkoutSession('completed') };
+    const request = jest.fn().mockResolvedValue(response);
+    const api = createProgressApi(buildHttpClient(request));
+
+    await expect(
+      api.completeWorkout('507f1f77bcf86cd799439011'),
+    ).resolves.toEqual(response);
+    await expect(
+      api.getWorkoutSession('507f1f77bcf86cd799439011'),
+    ).resolves.toEqual(response);
+    expect(request).toHaveBeenNthCalledWith(1, {
+      method: 'POST',
+      path: '/progress/workout-sessions/507f1f77bcf86cd799439011/complete',
+    });
+    expect(request).toHaveBeenNthCalledWith(2, {
+      method: 'GET',
+      path: '/progress/workout-sessions/507f1f77bcf86cd799439011',
+    });
+  });
+  it('starts the explicit workout session through the public contract', async () => {
+    const response = {
+      workoutSession: buildWorkoutSession(),
+    };
+    const request = jest.fn().mockResolvedValue(response);
+    const api = createProgressApi(buildHttpClient(request));
+
+    await expect(
+      api.startWorkout({
+        trainingPlanId: '507f1f77bcf86cd799439011',
+        workoutDayIndex: 1,
+      }),
+    ).resolves.toEqual(response);
+    expect(request).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/progress/workout-sessions/start',
+      body: {
+        trainingPlanId: '507f1f77bcf86cd799439011',
+        workoutDayIndex: 1,
+      },
+    });
+  });
   it('submits only the public daily check-in signals', async () => {
     const request = jest.fn().mockResolvedValue({
       dailyCheckIn: buildDailyCheckIn(),
@@ -125,5 +167,21 @@ function buildDailyCheckIn() {
     timezone: 'UTC',
     createdAt: '2026-07-27T08:00:00.000Z',
     updatedAt: '2026-07-27T08:00:00.000Z',
+  };
+}
+
+function buildWorkoutSession(status: 'active' | 'completed' = 'active') {
+  return {
+    id: 'session_123',
+    userProfileId: 'user_123',
+    trainingPlanId: '507f1f77bcf86cd799439011',
+    workoutDayIndex: 1,
+    date: '2026-08-20',
+    status,
+    startedAt: '2026-08-20T08:00:00.000Z',
+    updatedAt: '2026-08-20T08:00:00.000Z',
+    ...(status === 'completed'
+      ? { completedAt: '2026-08-20T08:45:00.000Z' }
+      : {}),
   };
 }

@@ -73,6 +73,7 @@ export function WorkoutOverviewScreen() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const load = useCallback(async (options?: { refresh?: boolean }) => {
@@ -136,15 +137,34 @@ export function WorkoutOverviewScreen() {
     });
   }, [state.coachDecision, state.recoverySnapshot, state.workout]);
 
-  const handleStartWorkout = useCallback(() => {
+  const handleStartWorkout = useCallback(async () => {
     if (!state.trainingPlanId || !state.workout) {
       return;
     }
 
-    navigation.replace('ActiveWorkout', {
-      trainingPlanId: state.trainingPlanId,
-      workout: state.workout,
-    });
+    setIsStarting(true);
+    setErrorMessage(null);
+    try {
+      const response = await apiClient.progress.startWorkout({
+        trainingPlanId: state.trainingPlanId,
+        workoutDayIndex: state.workout.dayIndex,
+      });
+
+      navigation.replace('ActiveWorkout', {
+        trainingPlanId: state.trainingPlanId,
+        workout: state.workout,
+        startedAt: new Date(response.workoutSession.startedAt).getTime(),
+        workoutSessionId: response.workoutSession.id,
+      });
+    } catch (error) {
+      setErrorMessage(
+        error instanceof ApiClientError
+          ? error.message
+          : 'Unable to start workout.',
+      );
+    } finally {
+      setIsStarting(false);
+    }
   }, [navigation, state.trainingPlanId, state.workout]);
 
   const handleMaybeLater = useCallback(() => {
@@ -224,7 +244,8 @@ export function WorkoutOverviewScreen() {
             <Button
               accessibilityLabel={`Start workout. ${model.title}`}
               label="Start Workout"
-              onPress={handleStartWorkout}
+              onPress={() => void handleStartWorkout()}
+              loading={isStarting}
             />
             <Button
               accessibilityLabel="Maybe later"

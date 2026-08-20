@@ -1,5 +1,6 @@
 import type { DailyCheckIn } from '../../../progress/domain/entities/daily-check-in.entity';
 import type { RecoverySnapshot } from '../../domain/entities/recovery-snapshot.entity';
+import type { WorkoutLog } from '../../../progress/domain/entities/workout-log.entity';
 
 export function isRecoverySnapshotStaleForCheckIn(
   snapshot: RecoverySnapshot,
@@ -19,4 +20,21 @@ export function isRecoverySnapshotStaleForCheckIn(
   }
 
   return checkIn.updatedAt.getTime() > snapshotTimestamp;
+}
+
+export function isRecoverySnapshotStaleForWorkout(
+  snapshot: RecoverySnapshot,
+  workoutLog: WorkoutLog | null,
+): boolean {
+  if (!workoutLog) return false;
+
+  const generatedAt = snapshot.sourceContext?.generatedAt;
+  const snapshotTimestamp = generatedAt
+    ? new Date(generatedAt).getTime()
+    : snapshot.createdAt.getTime();
+
+  return (
+    !Number.isFinite(snapshotTimestamp) ||
+    workoutLog.updatedAt.getTime() > snapshotTimestamp
+  );
 }

@@ -21,7 +21,20 @@ import {
 } from '../../../../progress/domain/repositories/daily-check-in.repository';
 import { RecoveryDateService } from '../../services/recovery-date.service';
 import { isRecoverySnapshotStaleForCheckIn } from '../../services/recovery-freshness';
+import { isRecoverySnapshotStaleForWorkout } from '../../services/recovery-freshness';
 import { RecoveryObservabilityService } from '../../services/recovery-observability.service';
+import {
+  FITNESS_PROFILE_REPOSITORY,
+  FitnessProfileRepository,
+} from '../../../../fitness/domain/repositories/fitness-profile.repository';
+import {
+  TRAINING_PLAN_REPOSITORY,
+  TrainingPlanRepository,
+} from '../../../../training/domain/repositories/training-plan.repository';
+import {
+  WORKOUT_LOG_REPOSITORY,
+  WorkoutLogRepository,
+} from '../../../../progress/domain/repositories/workout-log.repository';
 
 @Injectable()
 export class GetCurrentRecoveryUseCase {
@@ -39,6 +52,15 @@ export class GetCurrentRecoveryUseCase {
     private readonly recoveryDateService: RecoveryDateService = new RecoveryDateService(),
     @Optional()
     private readonly observability?: RecoveryObservabilityService,
+    @Optional()
+    @Inject(FITNESS_PROFILE_REPOSITORY)
+    private readonly fitnessProfileRepository?: FitnessProfileRepository,
+    @Optional()
+    @Inject(TRAINING_PLAN_REPOSITORY)
+    private readonly trainingPlanRepository?: TrainingPlanRepository,
+    @Optional()
+    @Inject(WORKOUT_LOG_REPOSITORY)
+    private readonly workoutLogRepository?: WorkoutLogRepository,
   ) {}
 
   async execute(
@@ -82,7 +104,11 @@ export class GetCurrentRecoveryUseCase {
             })
           : null;
 
-        if (!isRecoverySnapshotStaleForCheckIn(latestSnapshot, todayCheckIn)) {
+        const latestWorkout = await this.findLatestWorkout(userProfile.id);
+        if (
+          !isRecoverySnapshotStaleForCheckIn(latestSnapshot, todayCheckIn) &&
+          !isRecoverySnapshotStaleForWorkout(latestSnapshot, latestWorkout)
+        ) {
           return { recoverySnapshot: latestSnapshot };
         }
 
@@ -118,5 +144,30 @@ export class GetCurrentRecoveryUseCase {
       this.observability?.recordRebuild('failure');
       throw error;
     }
+  }
+
+  private async findLatestWorkout(userProfileId: string) {
+    if (
+      !this.fitnessProfileRepository ||
+      !this.trainingPlanRepository ||
+      !this.workoutLogRepository
+    ) {
+      return null;
+    }
+    const fitness =
+      await this.fitnessProfileRepository.findActiveByUserProfileId(
+        userProfileId,
+      );
+    if (!fitness) return null;
+    const plan = await this.trainingPlanRepository.findActiveByFitnessProfileId(
+      fitness.id,
+    );
+    if (!plan) return null;
+    const workouts =
+      await this.workoutLogRepository.findByTrainingPlanIdsOrdered({
+        trainingPlanIds: [plan.id],
+        limit: 1,
+      });
+    return workouts[0] ?? null;
   }
 }

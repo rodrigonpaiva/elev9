@@ -26,3 +26,10 @@ export type RegisterUserResponse = {
     createdAt: string;
   };
 };
+
+export type ValidateSessionResponse = {
+  user: {
+    id: string;
+    email: string;
+  };
+};

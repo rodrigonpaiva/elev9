@@ -53,8 +53,13 @@ export function WorkoutCompletionScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'WorkoutCompletion'>>();
-  const { completedExercises, durationMinutes, trainingPlanId, workout } =
-    route.params;
+  const {
+    completedExercises,
+    durationMinutes,
+    trainingPlanId,
+    workout,
+    workoutSessionId,
+  } = route.params;
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadError, setHasLoadError] = useState(false);
   const [state, setState] = useState<CompletionState>({
@@ -104,9 +109,9 @@ export function WorkoutCompletionScreen() {
     setHasLoadError(false);
     setIsLoading(true);
 
-    const [logResult, coachResult, recoveryResult, nutritionResult] =
-      await Promise.allSettled([
-        mobileApiClient.progress.logWorkout({
+    const saveWorkout = async (): Promise<void> => {
+      try {
+        await mobileApiClient.progress.logWorkout({
           trainingPlanId,
           workoutDayIndex: workout.dayIndex,
           durationMinutes,
@@ -114,7 +119,19 @@ export function WorkoutCompletionScreen() {
           feedback: {
             difficulty: getFeedbackDifficulty(workout.intensity),
           },
-        }),
+        });
+      } catch (error) {
+        if (!isAlreadyLoggedError(error)) throw error;
+      }
+
+      if (workoutSessionId) {
+        await mobileApiClient.progress.completeWorkout(workoutSessionId);
+      }
+    };
+
+    const [logResult, coachResult, recoveryResult, nutritionResult] =
+      await Promise.allSettled([
+        saveWorkout(),
         apiClient.ai.getTodayCoachDecision(),
         apiClient.recovery.getTodayRecovery(),
         apiClient.nutrition.getTodayNutrition(),
@@ -141,7 +158,13 @@ export function WorkoutCompletionScreen() {
       workoutSaved,
     });
     setIsLoading(false);
-  }, [completedExercises, durationMinutes, trainingPlanId, workout]);
+  }, [
+    completedExercises,
+    durationMinutes,
+    trainingPlanId,
+    workout,
+    workoutSessionId,
+  ]);
 
   useEffect(() => {
     void loadCompletion();

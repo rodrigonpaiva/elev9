@@ -107,6 +107,27 @@ export type ProgressSummaryResponse = {
   };
 };
 
+export type StartWorkoutRequest = {
+  trainingPlanId: string;
+  workoutDayIndex: number;
+};
+
+export type StartWorkoutResponse = {
+  workoutSession: {
+    id: string;
+    userProfileId: string;
+    trainingPlanId: string;
+    workoutDayIndex: number;
+    date: string;
+    status: 'active' | 'completed';
+    startedAt: string;
+    updatedAt: string;
+    completedAt?: string;
+  };
+};
+
+export type CompleteWorkoutResponse = StartWorkoutResponse;
+
 export type WorkoutHistoryResponse = {
   workoutLogs: Array<{
     id: string;

@@ -16,6 +16,12 @@
         "cwd": "packages/api-client",
         "command": "node ../../scripts/run-node-cli.js ../../node_modules/eslint/bin/eslint.js src --ext .ts,.d.ts --config ../../.eslintrc.cjs"
       }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/run-node-cli.js node_modules/jest/bin/jest.js --config packages/api-client/jest.config.js --runInBand"
+      }
     }
   }
 }

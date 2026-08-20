@@ -153,6 +153,7 @@ export function ActiveWorkoutScreen() {
     if (isWorkoutComplete) {
       navigation.replace('WorkoutCompletion', {
         trainingPlanId,
+        workoutSessionId: route.params.workoutSessionId,
         workout,
         durationMinutes: getElapsedWorkoutMinutes(startedAt),
         completedExercises: buildCompletedExercises(workout, nextProgress),

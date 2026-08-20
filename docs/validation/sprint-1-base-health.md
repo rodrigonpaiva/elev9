@@ -66,6 +66,18 @@ Resultado: **16 suítes falharam e 56 testes falharam antes da execução dos ce
 
 Impacto: os fluxos críticos de registro, login/sessão, onboarding, treino, conclusão, check-in, Recovery, Nutrition, Coach, sessão expirada e dados incompletos não puderam ser funcionalmente certificados nesta execução. Não houve evidência de falha funcional, pois os testes não passaram da inicialização do MongoMemoryServer. A validação deve ser repetida em CI ou host com permissão de bind e Mongo disponível.
 
+### Revalidação para a Sprint 2 — 2026-08-20
+
+O comando oficial foi repetido em host autorizado, fora da sandbox restritiva:
+
+```bash
+npm exec nx run api:test:e2e --skip-nx-cache
+```
+
+Resultado: **17 suítes aprovadas e 60 testes aprovados**, em 21,18 s. Na sandbox, até um servidor Node trivial em `127.0.0.1` falhou com `EPERM`; no host autorizado o bind funcionou. A porta `27017` estava livre, havia aproximadamente 25 GiB livres e o diretório temporário era gravável. Não foi detectado `mongod` persistente local; o E2E iniciou o `mongod` efêmero do `MongoMemoryServer` com sucesso. Não foram observados erros de teardown na execução aprovada.
+
+Assim, a pendência funcional E2E da Sprint 1 foi revalidada no host autorizado. A execução continua dependente de runner/host com permissão de bind local e espaço para o binário e dados temporários do Mongo.
+
 ## Builds e lint
 
 - `npm run format:check`: aprovado, exit code 0.
@@ -123,15 +135,15 @@ Executar a home e os módulos com onboarding parcial, ausência de plano, ausên
 
 ## Status da sprint
 
-**Parcialmente concluída — bloqueada para fechamento funcional E2E.**
+**Concluída após revalidação E2E em host autorizado.**
 
-O baseline de formatação, lint, testes unitários da API/mobile e builds passou. A suíte completa da API passou com 219 suítes/1.368 testes, com aviso não bloqueante de worker/teardown; a suíte mobile passou com 22 suítes/104 testes. A Sprint 1 não pode ser marcada como concluída porque as 16 suítes E2E falharam na inicialização por restrição de bind do `MongoMemoryServer`, deixando os fluxos críticos sem validação funcional.
+O baseline de formatação, lint, testes unitários da API/mobile e builds passou. A suíte completa da API passou com 221 suítes/1.373 testes nesta revalidação; a suíte mobile passou com 22 suítes/104 testes. A execução E2E foi aprovada no host autorizado com 17 suítes/60 testes.
 
-Pendências para o fechamento definitivo:
+Pendências operacionais para a Sprint 2:
 
-- repetir `npm exec nx run api:test:e2e --skip-nx-cache` em CI/host com permissão de portas e MongoMemoryServer funcional;
-- confirmar os dez grupos de fluxos críticos listados acima;
-- investigar o aviso de worker que não encerra graciosamente na suíte da API;
+- manter o runner de CI com permissão de bind local, espaço e `TMPDIR` gravável;
+- confirmar os dez grupos de fluxos críticos listados acima no escopo da Sprint 2;
+- investigar separadamente o aviso histórico de worker que não encerra graciosamente na suíte da API;
 - manter a prevenção de regressão do `format:check` no CI.
 
-Recomendação para a Sprint 2: priorizar a execução E2E em ambiente compatível, corrigir o teardown dos testes e só então avançar para novas mudanças funcionais.
+Recomendação para a Sprint 2: executar os fluxos críticos no host autorizado e manter a restrição de infraestrutura registrada no CI.

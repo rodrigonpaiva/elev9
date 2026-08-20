@@ -56,7 +56,19 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       try {
         nextToken = await getAccessToken();
-        if (nextToken) await ensureSessionOwnerKey();
+        if (nextToken) {
+          try {
+            await apiClient.auth.me();
+            await ensureSessionOwnerKey();
+          } catch (error) {
+            if (error instanceof ApiClientError && error.status === 401) {
+              await clearAccessToken();
+              nextToken = null;
+            } else {
+              throw error;
+            }
+          }
+        }
       } catch (error) {
         console.error('AuthProvider bootstrap error:', error);
       } finally {

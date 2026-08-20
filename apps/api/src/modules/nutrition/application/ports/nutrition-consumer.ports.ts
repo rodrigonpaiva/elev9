@@ -81,6 +81,10 @@ export class NutritionConsumerProjectionService {
     private readonly nutritionLogRepository: NutritionLogRepository,
   ) {}
 
+  async execute(input: { authUserId: string }) {
+    return this.getCoachContext(input);
+  }
+
   async getCoachContext(
     input: NutritionCoachContextPort['execute'] extends (
       input: infer T,

@@ -8,6 +8,7 @@ import {
   HttpStatus,
   InternalServerErrorException,
   NotFoundException,
+  Param,
   Post,
   Optional,
   Query,
@@ -47,6 +48,16 @@ import {
   LogWorkoutError,
 } from '../../application/use-cases/log-workout/log-workout.errors';
 import { LogWorkoutUseCase } from '../../application/use-cases/log-workout/log-workout.use-case';
+import {
+  START_WORKOUT_ERROR_CODES,
+  StartWorkoutError,
+} from '../../application/use-cases/start-workout/start-workout.errors';
+import { StartWorkoutUseCase } from '../../application/use-cases/start-workout/start-workout.use-case';
+import {
+  COMPLETE_WORKOUT_ERROR_CODES,
+  CompleteWorkoutError,
+} from '../../application/use-cases/complete-workout/complete-workout.errors';
+import { CompleteWorkoutUseCase } from '../../application/use-cases/complete-workout/complete-workout.use-case';
 import { CreateDailyCheckInRequestDto } from './dto/create-daily-check-in.request.dto';
 import { CreateDailyCheckInResponseDto } from './dto/create-daily-check-in.response.dto';
 import { GetDailyCheckInHistoryQueryDto } from './dto/get-daily-check-in-history.query.dto';
@@ -58,6 +69,9 @@ import { GetWorkoutHistoryQueryDto } from './dto/get-workout-history.query.dto';
 import { GetWorkoutHistoryResponseDto } from './dto/get-workout-history.response.dto';
 import { LogWorkoutRequestDto } from './dto/log-workout.request.dto';
 import { LogWorkoutResponseDto } from './dto/log-workout.response.dto';
+import { StartWorkoutRequestDto } from './dto/start-workout.request.dto';
+import { StartWorkoutResponseDto } from './dto/start-workout.response.dto';
+import { CompleteWorkoutParamsDto } from './dto/complete-workout.params.dto';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -80,6 +94,10 @@ export class ProgressController {
     private readonly getWorkoutHistoryUseCase: GetWorkoutHistoryUseCase,
     @Optional()
     private readonly getTodayDailyCheckInUseCase?: GetTodayDailyCheckInUseCase,
+    @Optional()
+    private readonly startWorkoutUseCase?: StartWorkoutUseCase,
+    @Optional()
+    private readonly completeWorkoutUseCase?: CompleteWorkoutUseCase,
   ) {}
 
   @Post('daily-check-in')
@@ -152,6 +170,120 @@ export class ProgressController {
     } catch (error) {
       this.handleError(error);
     }
+  }
+
+  @Post('workout-sessions/start')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async startWorkout(
+    @Req() request: RequestWithAuthUser,
+    @Body() body: StartWorkoutRequestDto,
+  ): Promise<StartWorkoutResponseDto> {
+    if (!this.startWorkoutUseCase) {
+      throw new InternalServerErrorException('Workout start is unavailable.');
+    }
+
+    try {
+      const result = await this.startWorkoutUseCase.execute({
+        authUserId: request.authUser?.id ?? '',
+        trainingPlanId: body.trainingPlanId,
+        workoutDayIndex: body.workoutDayIndex,
+      });
+
+      return {
+        workoutSession: {
+          id: result.workoutSession.id,
+          userProfileId: result.workoutSession.userProfileId,
+          trainingPlanId: result.workoutSession.trainingPlanId,
+          workoutDayIndex: result.workoutSession.workoutDayIndex,
+          date: result.workoutSession.date,
+          status: result.workoutSession.status,
+          startedAt: result.workoutSession.startedAt.toISOString(),
+          updatedAt: result.workoutSession.updatedAt.toISOString(),
+          ...(result.workoutSession.completedAt
+            ? { completedAt: result.workoutSession.completedAt.toISOString() }
+            : {}),
+        },
+      };
+    } catch (error) {
+      this.handleStartWorkoutError(error);
+    }
+  }
+
+  @Post('workout-sessions/:sessionId/complete')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async completeWorkout(
+    @Req() request: RequestWithAuthUser,
+    @Param() params: CompleteWorkoutParamsDto,
+  ): Promise<StartWorkoutResponseDto> {
+    if (!this.completeWorkoutUseCase) {
+      throw new InternalServerErrorException(
+        'Workout completion is unavailable.',
+      );
+    }
+
+    try {
+      const result = await this.completeWorkoutUseCase.execute({
+        authUserId: request.authUser?.id ?? '',
+        sessionId: params.sessionId,
+      });
+      return this.toWorkoutSessionResponse(result.workoutSession);
+    } catch (error) {
+      this.handleCompleteWorkoutError(error);
+    }
+  }
+
+  @Get('workout-sessions/:sessionId')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async getWorkoutSession(
+    @Req() request: RequestWithAuthUser,
+    @Param() params: CompleteWorkoutParamsDto,
+  ): Promise<StartWorkoutResponseDto> {
+    if (!this.completeWorkoutUseCase) {
+      throw new InternalServerErrorException(
+        'Workout session lookup is unavailable.',
+      );
+    }
+
+    try {
+      const result = await this.completeWorkoutUseCase.get({
+        authUserId: request.authUser?.id ?? '',
+        sessionId: params.sessionId,
+      });
+      return this.toWorkoutSessionResponse(result.workoutSession);
+    } catch (error) {
+      this.handleCompleteWorkoutError(error);
+    }
+  }
+
+  private toWorkoutSessionResponse(session: {
+    id: string;
+    userProfileId: string;
+    trainingPlanId: string;
+    workoutDayIndex: number;
+    date: string;
+    status: 'active' | 'completed';
+    startedAt: Date;
+    updatedAt: Date;
+    completedAt?: Date;
+  }): StartWorkoutResponseDto {
+    return {
+      workoutSession: {
+        id: session.id,
+        userProfileId: session.userProfileId,
+        trainingPlanId: session.trainingPlanId,
+        workoutDayIndex: session.workoutDayIndex,
+        date: session.date,
+        status: session.status,
+        startedAt: session.startedAt.toISOString(),
+        updatedAt: session.updatedAt.toISOString(),
+        ...(session.completedAt
+          ? { completedAt: session.completedAt.toISOString() }
+          : {}),
+      },
+    };
   }
 
   @Get('summary')
@@ -366,6 +498,70 @@ export class ProgressController {
         throw new InternalServerErrorException({
           code: LOG_WORKOUT_ERROR_CODES.INTERNAL_ERROR,
           message: 'An unexpected error occurred.',
+        });
+    }
+  }
+
+  private handleStartWorkoutError(error: unknown): never {
+    if (!(error instanceof StartWorkoutError)) {
+      throw new InternalServerErrorException('An unexpected error occurred.');
+    }
+
+    switch (error.code) {
+      case START_WORKOUT_ERROR_CODES.INVALID_INPUT:
+      case START_WORKOUT_ERROR_CODES.WORKOUT_NOT_AVAILABLE:
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+        });
+      case START_WORKOUT_ERROR_CODES.USER_PROFILE_NOT_FOUND:
+      case START_WORKOUT_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND:
+      case START_WORKOUT_ERROR_CODES.TRAINING_PLAN_NOT_FOUND:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+        });
+      case START_WORKOUT_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+        });
+      case START_WORKOUT_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: error.code,
+          message: 'An unexpected error occurred.',
+        });
+    }
+  }
+
+  private handleCompleteWorkoutError(error: unknown): never {
+    if (!(error instanceof CompleteWorkoutError)) {
+      throw new InternalServerErrorException('An unexpected error occurred.');
+    }
+
+    switch (error.code) {
+      case COMPLETE_WORKOUT_ERROR_CODES.INVALID_INPUT:
+        throw new BadRequestException({
+          code: error.code,
+          message: error.message,
+        });
+      case COMPLETE_WORKOUT_ERROR_CODES.SESSION_NOT_FOUND:
+      case COMPLETE_WORKOUT_ERROR_CODES.SESSION_EXPIRED:
+        throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+        });
+      case COMPLETE_WORKOUT_ERROR_CODES.INVALID_SESSION:
+        throw new UnauthorizedException({
+          code: error.code,
+          message: error.message,
+        });
+      case COMPLETE_WORKOUT_ERROR_CODES.INTERNAL_ERROR:
+      default:
+        throw new InternalServerErrorException({
+          code: error.code,
+          message: error.message,
         });
     }
   }

@@ -19,8 +19,11 @@ import { GetTodayDailyCheckInUseCase } from './application/use-cases/get-today-d
 import { GetWorkoutHistoryUseCase } from './application/use-cases/get-workout-history/get-workout-history.use-case';
 import { GetProgressSummaryUseCase } from './application/use-cases/get-progress-summary/get-progress-summary.use-case';
 import { LogWorkoutUseCase } from './application/use-cases/log-workout/log-workout.use-case';
+import { StartWorkoutUseCase } from './application/use-cases/start-workout/start-workout.use-case';
+import { CompleteWorkoutUseCase } from './application/use-cases/complete-workout/complete-workout.use-case';
 import { DAILY_CHECK_IN_REPOSITORY } from './domain/repositories/daily-check-in.repository';
 import { WORKOUT_LOG_REPOSITORY } from './domain/repositories/workout-log.repository';
+import { WORKOUT_SESSION_REPOSITORY } from './domain/repositories/workout-session.repository';
 import { CLOCK } from './domain/services/clock.service';
 import { MongooseDailyCheckInRepository } from './infrastructure/mongoose/mongoose-daily-check-in.repository';
 import {
@@ -28,11 +31,16 @@ import {
   DailyCheckInSchema,
 } from './infrastructure/mongoose/daily-check-in.schema';
 import { MongooseWorkoutLogRepository } from './infrastructure/mongoose/mongoose-workout-log.repository';
+import { MongooseWorkoutSessionRepository } from './infrastructure/mongoose/mongoose-workout-session.repository';
 import { SystemClockService } from './infrastructure/system-clock.service';
 import {
   WORKOUT_LOG_MODEL_NAME,
   WorkoutLogSchema,
 } from './infrastructure/mongoose/workout-log.schema';
+import {
+  WORKOUT_SESSION_MODEL_NAME,
+  WorkoutSessionSchema,
+} from './infrastructure/mongoose/workout-session.schema';
 import { ProgressController } from './presentation/http/progress.controller';
 
 @Module({
@@ -51,6 +59,10 @@ import { ProgressController } from './presentation/http/progress.controller';
         schema: WorkoutLogSchema,
       },
       {
+        name: WORKOUT_SESSION_MODEL_NAME,
+        schema: WorkoutSessionSchema,
+      },
+      {
         name: DAILY_CHECK_IN_MODEL_NAME,
         schema: DailyCheckInSchema,
       },
@@ -66,6 +78,8 @@ import { ProgressController } from './presentation/http/progress.controller';
     GetWorkoutHistoryUseCase,
     GetProgressSummaryUseCase,
     LogWorkoutUseCase,
+    StartWorkoutUseCase,
+    CompleteWorkoutUseCase,
     {
       provide: CLOCK,
       useClass: SystemClockService,
@@ -77,6 +91,10 @@ import { ProgressController } from './presentation/http/progress.controller';
     {
       provide: WORKOUT_LOG_REPOSITORY,
       useClass: MongooseWorkoutLogRepository,
+    },
+    {
+      provide: WORKOUT_SESSION_REPOSITORY,
+      useClass: MongooseWorkoutSessionRepository,
     },
     {
       provide: DAILY_CHECK_IN_REPOSITORY,
