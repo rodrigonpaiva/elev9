@@ -6,6 +6,7 @@ import type {
   CoachIntelligenceSectionName,
   CoachIntelligenceWarning,
 } from '@elev9/types';
+import { hashSensitiveIdentifier } from '../../../../../common/security/redaction';
 
 export type CoachIntelligenceTraceStatus = 'RUNNING' | 'COMPLETED' | 'FAILED';
 
@@ -51,8 +52,8 @@ export class CoachIntelligenceObservabilityService {
     const startedAtMs = Date.now();
     const trace = this.freezeTrace({
       requestId: input.requestId,
-      authUserId: input.authUserId,
-      userProfileId: input.userProfileId,
+      authUserId: hashSensitiveIdentifier(input.authUserId),
+      userProfileId: hashSensitiveIdentifier(input.userProfileId),
       status: 'RUNNING',
       startedAt,
       partialResult: false,

@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 
 import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
+import { InternalEndpoint } from '../../../../common/decorators/internal-endpoint.decorator';
 import { GetCurrentNotificationUseCase } from '../../application/use-cases/get-current-notification/get-current-notification.use-case';
 import { GetEngagementSummaryUseCase } from '../../application/use-cases/get-engagement-summary/get-engagement-summary.use-case';
 import { GetNotificationHistoryUseCase } from '../../application/use-cases/get-notification-history/get-notification-history.use-case';
@@ -179,7 +180,7 @@ export class NotificationsController {
   }
 
   @Get('debug/:id/replay')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async replayNotificationDecision(
     @Req() request: RequestWithAuthUser,

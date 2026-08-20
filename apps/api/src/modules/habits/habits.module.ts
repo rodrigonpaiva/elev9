@@ -10,6 +10,7 @@ import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
 import { UsersModule } from '../users/users.module';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
+import { InternalEndpointGuard } from '../../common/guards/internal-endpoint.guard';
 import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { HabitConsistencyCalculatorService } from './application/services/habit-consistency-calculator.service';
 import { GetConsistencySummaryUseCase } from './application/use-cases/get-consistency-summary/get-consistency-summary.use-case';
@@ -63,6 +64,7 @@ import { HabitsController } from './presentation/http/habits.controller';
   ],
   providers: [
     AuthSessionGuard,
+    InternalEndpointGuard,
     PlatformDateService,
     HabitConsistencyCalculatorService,
     BuildHabitSnapshotUseCase,

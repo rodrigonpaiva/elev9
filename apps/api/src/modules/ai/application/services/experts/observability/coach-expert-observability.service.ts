@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { hashSensitiveIdentifier } from '../../../../../../common/security/redaction';
 
 import type { AgentPolicyEvaluation } from '../../agent/policies/agent-policy.types';
 import type { CoachExpertCompositionResult } from '../composition/coach-expert-composition.types';
@@ -98,7 +99,9 @@ export class CoachExpertObservabilityService {
     const trace = this.buildTrace({
       traceId: input.requestId,
       requestId: input.requestId,
-      conversationId: input.conversationId,
+      conversationId: input.conversationId
+        ? hashSensitiveIdentifier(input.conversationId)
+        : undefined,
       intent: input.intent,
       selectedDomains: input.selectedDomains,
       candidateExpertIds,
@@ -136,7 +139,9 @@ export class CoachExpertObservabilityService {
       status: 'RUNNING',
       metadata: this.freezeValue({
         requestId: input.requestId,
-        conversationId: input.conversationId,
+        conversationId: input.conversationId
+          ? hashSensitiveIdentifier(input.conversationId)
+          : undefined,
         intent: input.intent,
         selectedDomains: [...input.selectedDomains],
         routeConfidence: input.routingDecision.confidence,

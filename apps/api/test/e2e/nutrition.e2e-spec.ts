@@ -237,6 +237,11 @@ describe('Nutrition E2E', () => {
       .expect(400);
 
     await request(app.getHttpServer())
+      .get('/nutrition/history?from=2026-08-20&to=2026-01-01')
+      .set('Authorization', `Bearer ${user.token}`)
+      .expect(400);
+
+    await request(app.getHttpServer())
       .get('/nutrition/today')
       .set('Authorization', 'Bearer invalid-token')
       .expect(401);

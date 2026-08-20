@@ -12,7 +12,7 @@ describe('requestRuntimeLoggingMiddleware', () => {
     const request = {
       headers: { 'x-request-id': 'request-123' },
       method: 'GET',
-      originalUrl: '/health',
+      originalUrl: '/nutrition/history?email=person@example.com&token=secret',
       url: '/health',
     } as unknown as Request;
 
@@ -35,10 +35,38 @@ describe('requestRuntimeLoggingMiddleware', () => {
     expect(next).toHaveBeenCalled();
     expect(infoSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        '[Request] requestId=request-123 method=GET path=/health status=200 durationMs=',
+        '[Request] requestId=request-123 method=GET path=/nutrition/history status=200 durationMs=',
       ),
     );
+    expect(infoSpy.mock.calls[0]?.[0]).not.toContain('person@example.com');
+    expect(infoSpy.mock.calls[0]?.[0]).not.toContain('secret');
 
+    infoSpy.mockRestore();
+  });
+
+  it('does not log query parameters from runtime URLs', () => {
+    const finishHandlers: Array<() => void> = [];
+    const infoSpy = jest.spyOn(console, 'info').mockImplementation(() => {});
+    const request = {
+      headers: { 'x-request-id': 'request-123' },
+      method: 'GET',
+      originalUrl: '/coach?prompt=private-health-data',
+      url: '/coach?prompt=private-health-data',
+    } as unknown as Request;
+    const response = {
+      statusCode: 400,
+      setHeader: jest.fn(),
+      on: jest.fn((event: string, handler: () => void) => {
+        if (event === 'finish') finishHandlers.push(handler);
+        return response;
+      }),
+    } as unknown as Response;
+
+    requestRuntimeLoggingMiddleware(request, response, jest.fn());
+    finishHandlers[0]?.();
+
+    expect(infoSpy.mock.calls[0]?.[0]).toContain('path=/coach');
+    expect(infoSpy.mock.calls[0]?.[0]).not.toContain('private-health-data');
     infoSpy.mockRestore();
   });
 

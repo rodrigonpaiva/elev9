@@ -1,9 +1,12 @@
 import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
+  ArrayMaxSize,
   IsArray,
   IsIn,
   IsInt,
+  IsMongoId,
+  IsNotEmpty,
   IsOptional,
   IsString,
   Max,
@@ -14,16 +17,20 @@ import {
 
 class CompletedExerciseDto {
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(120)
   name!: string;
 
   @Type(() => Number)
   @IsInt()
   @Min(0)
+  @Max(1000)
   setsDone!: number;
 
   @Type(() => Number)
   @IsInt()
   @Min(0)
+  @Max(1000)
   repsDone!: number;
 }
 
@@ -38,11 +45,14 @@ class WorkoutFeedbackDto {
 }
 
 export class LogWorkoutRequestDto {
-  @IsString()
+  @IsMongoId()
+  @IsNotEmpty()
   trainingPlanId!: string;
 
   @Type(() => Number)
   @IsInt()
+  @Min(0)
+  @Max(1000)
   workoutDayIndex!: number;
 
   @Type(() => Number)
@@ -53,6 +63,7 @@ export class LogWorkoutRequestDto {
 
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(100)
   @ValidateNested({ each: true })
   @Type(() => CompletedExerciseDto)
   completedExercises!: CompletedExerciseDto[];

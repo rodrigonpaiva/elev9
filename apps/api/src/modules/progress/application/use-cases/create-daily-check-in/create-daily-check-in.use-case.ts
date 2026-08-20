@@ -73,7 +73,6 @@ export class CreateDailyCheckInUseCase {
 
       this.logger.log({
         event: 'daily_check_in_upserted',
-        userProfileId: userProfile.id,
         localDate: day.localDate,
         timezone: day.timezone,
       });
@@ -86,13 +85,11 @@ export class CreateDailyCheckInUseCase {
           });
           this.logger.log({
             event: 'daily_check_in_recovery_recalculated',
-            userProfileId: userProfile.id,
             localDate: day.localDate,
           });
         } catch {
           this.logger.error({
             event: 'daily_check_in_recovery_recalculation_failed',
-            userProfileId: userProfile.id,
             localDate: day.localDate,
           });
           throw new CreateDailyCheckInError(

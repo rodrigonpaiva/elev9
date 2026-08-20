@@ -1,9 +1,10 @@
 import type { NextFunction, Response } from 'express';
 
 import type { RequestWithCorrelationId } from '../http/request-with-correlation.interface';
+import { sanitizeRequestPath } from '../security/redaction';
 
 function getRequestPath(request: RequestWithCorrelationId): string {
-  return request.originalUrl.split('?')[0];
+  return sanitizeRequestPath(request.originalUrl);
 }
 
 function formatDurationMs(startTime: number): number {

@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   IsArray,
   IsIn,
   IsInt,
@@ -7,6 +8,7 @@ import {
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -27,10 +29,12 @@ class TrainingAvailabilityDto {
 
 class FitnessLimitationDto {
   @IsString()
+  @MaxLength(80)
   type!: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(240)
   description?: string;
 
   @IsIn(['low', 'medium', 'high'])
@@ -62,6 +66,7 @@ export class CreateFitnessProfileRequestDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   @ValidateNested({ each: true })
   @Type(() => FitnessLimitationDto)
   limitations?: FitnessLimitationDto[];

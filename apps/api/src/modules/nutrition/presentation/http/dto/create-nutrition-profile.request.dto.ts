@@ -1,11 +1,13 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMaxSize,
   IsArray,
   IsIn,
   IsInt,
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -22,20 +24,28 @@ export class CreateNutritionProfileRequestDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @ArrayMaxSize(20)
+  @MaxLength(100, { each: true })
   dietaryRestrictions?: string[];
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @ArrayMaxSize(20)
+  @MaxLength(100, { each: true })
   allergies?: string[];
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @ArrayMaxSize(20)
+  @MaxLength(100, { each: true })
   dislikedFoods?: string[];
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @ArrayMaxSize(20)
+  @MaxLength(100, { each: true })
   preferredFoods?: string[];
 }

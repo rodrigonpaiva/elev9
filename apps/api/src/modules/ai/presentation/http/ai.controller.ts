@@ -17,6 +17,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
+import { InternalEndpoint } from '../../../../common/decorators/internal-endpoint.decorator';
 import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
 import {
   CREATE_COACH_CHAT_ERROR_CODES,
@@ -121,7 +122,7 @@ export class AiController {
   @HttpCode(HttpStatus.OK)
   async createCoachChat(
     @Req() request: RequestWithAuthUser,
-    @Body() body?: CreateCoachChatRequestDto | Record<string, unknown>,
+    @Body() body: CreateCoachChatRequestDto,
   ): Promise<CreateCoachChatResponseDto> {
     const message = (body as { message?: unknown } | undefined)?.message;
     const normalizedMessage = typeof message === 'string' ? message : '';
@@ -154,7 +155,7 @@ export class AiController {
   async createCoachChatStream(
     @Req() request: RequestWithAuthUser,
     @Res({ passthrough: true }) response: Response,
-    @Body() body?: CreateCoachChatRequestDto | Record<string, unknown>,
+    @Body() body: CreateCoachChatRequestDto,
   ): Promise<void> {
     const message = (body as { message?: unknown } | undefined)?.message;
     const normalizedMessage = typeof message === 'string' ? message : '';
@@ -247,7 +248,7 @@ export class AiController {
   }
 
   @Get('chat/debug/history')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async getCoachChatDebugHistory(
     @Req() request: RequestWithAuthUser,
@@ -272,7 +273,7 @@ export class AiController {
   }
 
   @Get('chat/debug/memory')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async getCoachChatMemoryDebug(
     @Req() request: RequestWithAuthUser,
@@ -295,7 +296,7 @@ export class AiController {
   }
 
   @Get('chat/debug/prompt')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async getCoachChatPromptDebug(
     @Req() request: RequestWithAuthUser,
@@ -318,7 +319,7 @@ export class AiController {
   }
 
   @Get('chat/debug/reply-path')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async getCoachChatReplyPathDebug(
     @Req() request: RequestWithAuthUser,
@@ -341,7 +342,7 @@ export class AiController {
   }
 
   @Get('chat/debug')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async getCoachChatDebugIndex(
     @Req() request: RequestWithAuthUser,
@@ -412,7 +413,7 @@ export class AiController {
   }
 
   @Get('debug/coach-feedback')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async getCoachFeedbackDebugHistory(
     @Req() request: RequestWithAuthUser,
@@ -437,7 +438,7 @@ export class AiController {
   }
 
   @Get('debug/coach-feedback/:id/replay')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async replayCoachFeedback(
     @Req() request: RequestWithAuthUser,

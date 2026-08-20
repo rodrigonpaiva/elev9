@@ -147,6 +147,24 @@ describe('Progress Daily Check-in E2E', () => {
     expect(response.body).not.toHaveProperty('sourceContext');
   });
 
+  it('does not accept a client-supplied owner identifier', async () => {
+    const token = await registerAndGetToken(
+      'daily-check-in-owner-injection-e2e@email.com',
+    );
+
+    await request(app.getHttpServer())
+      .post('/progress/daily-check-in')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        energyLevel: 4,
+        sleepQuality: 4,
+        muscleSoreness: 2,
+        motivationLevel: 4,
+        userProfileId: 'another-user-profile',
+      })
+      .expect(400);
+  });
+
   async function registerAndGetToken(email: string): Promise<string> {
     await request(app.getHttpServer())
       .post('/auth/register')

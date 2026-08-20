@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 
 import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
+import { InternalEndpoint } from '../../../../common/decorators/internal-endpoint.decorator';
 import {
   HABIT_READ_ERROR_CODES,
   HabitReadError,
@@ -156,7 +157,7 @@ export class HabitsController {
   }
 
   @Get('debug/:id/replay')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async replayHabitSnapshot(
     @Req() request: RequestWithAuthUser,

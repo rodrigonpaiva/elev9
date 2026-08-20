@@ -78,7 +78,6 @@ export class GetCurrentCoachDecisionUseCase {
 
         this.logger.log({
           event: 'coach_stale_decision_rejected',
-          userProfileId: userProfile.id,
           localDate: latestDecision.date,
         });
       }

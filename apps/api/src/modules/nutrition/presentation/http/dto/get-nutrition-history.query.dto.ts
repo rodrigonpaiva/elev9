@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -19,6 +20,7 @@ export class GetNutritionHistoryQueryDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(512)
   cursor?: string;
 
   @IsOptional()

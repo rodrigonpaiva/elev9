@@ -143,6 +143,22 @@ describe('Workout Completion E2E', () => {
       .expect(404);
 
     await request(app.getHttpServer())
+      .post(`/progress/workout-sessions/${started.id}/complete`)
+      .set('Authorization', `Bearer ${other.token}`)
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .post('/progress/workout-logs')
+      .set('Authorization', `Bearer ${other.token}`)
+      .send({
+        trainingPlanId: owner.trainingPlanId,
+        workoutDayIndex: 1,
+        durationMinutes: 30,
+        completedExercises: [{ name: 'push_up', setsDone: 1, repsDone: 8 }],
+      })
+      .expect(404);
+
+    await request(app.getHttpServer())
       .post('/progress/workout-sessions/not-an-id/complete')
       .set('Authorization', `Bearer ${owner.token}`)
       .expect(400);

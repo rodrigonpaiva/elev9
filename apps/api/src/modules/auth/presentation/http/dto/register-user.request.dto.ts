@@ -16,10 +16,12 @@ export class RegisterUserRequestDto {
 
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsEmail()
+  @MaxLength(254)
   email!: string;
 
   @IsString()
   @MinLength(8)
+  @MaxLength(128)
   @Matches(/[A-Z]/)
   @Matches(/[a-z]/)
   @Matches(/[0-9]/)

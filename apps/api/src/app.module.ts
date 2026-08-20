@@ -17,6 +17,7 @@ import { ProgressModule } from './modules/progress/progress.module';
 import { TrainingModule } from './modules/training/training.module';
 import { UsersModule } from './modules/users/users.module';
 import { ObservabilityModule } from './observability/observability.module';
+import { RateLimitModule } from './common/rate-limit/rate-limit.module';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ function getMongoDbUri(): string {
 @Module({
   imports: [
     ObservabilityModule,
+    RateLimitModule,
     MongooseModule.forRoot(getMongoDbUri()),
     AiModule,
     AuthModule,

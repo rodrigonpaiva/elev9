@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 
 import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
+import { InternalEndpoint } from '../../../../common/decorators/internal-endpoint.decorator';
 import {
   GET_CURRENT_COACH_DECISION_ERROR_CODES,
   GetCurrentCoachDecisionError,
@@ -121,7 +122,7 @@ export class CoachDecisionController {
   }
 
   @Get('debug/:id/replay')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async replayCoachDecision(
     @Req() request: RequestWithAuthUser,

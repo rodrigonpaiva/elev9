@@ -25,6 +25,7 @@ import { TrainingModule } from '../training/training.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PersonalizationModule } from '../personalization/personalization.module';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
+import { InternalEndpointGuard } from '../../common/guards/internal-endpoint.guard';
 import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { BuildUserHealthContextService } from './application/services/context-builder/build-user-health-context.service';
 import { CoachChatContextLoaderService } from './application/services/chat/coach-chat-context-loader.service';
@@ -184,6 +185,7 @@ import { OpenAiLlmProvider } from './infrastructure/llm/openai-llm.provider';
   ],
   providers: [
     AuthSessionGuard,
+    InternalEndpointGuard,
     PlatformDateService,
     BuildUserHealthContextService,
     CoachIntelligenceConfigService,

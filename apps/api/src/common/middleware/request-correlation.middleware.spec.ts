@@ -43,4 +43,16 @@ describe('requestCorrelationMiddleware', () => {
     expect(response.setHeader).toHaveBeenCalledWith('x-request-id', 'test-123');
     expect(next).toHaveBeenCalledTimes(1);
   });
+
+  it('hashes an unsafe incoming request id instead of echoing it', () => {
+    const request = {
+      get: jest.fn().mockReturnValue('person@example.com'),
+    } as unknown as RequestWithCorrelationId;
+    const response = createResponse();
+
+    requestCorrelationMiddleware(request, response, createNext());
+
+    expect(request.requestId).toMatch(/^redacted-[a-f0-9]{16}$/);
+    expect(request.requestId).not.toContain('person@example.com');
+  });
 });

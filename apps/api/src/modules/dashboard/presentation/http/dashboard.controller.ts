@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 
 import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
+import { InternalEndpoint } from '../../../../common/decorators/internal-endpoint.decorator';
 import {
   GET_HOME_DASHBOARD_ERROR_CODES,
   GetHomeDashboardError,
@@ -62,7 +63,7 @@ export class DashboardController {
   }
 
   @Get('home/debug')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async getHomeDashboardDebug(
     @Req() request: RequestWithAuthUser,

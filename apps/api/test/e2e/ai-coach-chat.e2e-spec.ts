@@ -90,18 +90,35 @@ describe('AI Coach Chat E2E', () => {
       { role: 'assistant', content: second.reply },
     ]);
 
-    const debug = await request(app.getHttpServer())
+    const previousNodeEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    await request(app.getHttpServer())
       .get('/ai/chat/debug/reply-path')
       .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-    expect(debug.body.replyPath).toEqual(
-      expect.objectContaining({
-        source: 'heuristic',
-        fallbackActivated: true,
-        fallbackReason: 'llm_disabled',
-      }),
-    );
-    expect(JSON.stringify(debug.body)).not.toContain('OPENAI_API_KEY');
+      .expect(404);
+
+    process.env.NODE_ENV = 'development';
+    try {
+      await request(app.getHttpServer())
+        .get('/ai/chat/debug/reply-path')
+        .expect(401);
+
+      const debug = await request(app.getHttpServer())
+        .get('/ai/chat/debug/reply-path')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+      expect(debug.body.replyPath).toEqual(
+        expect.objectContaining({
+          source: 'heuristic',
+          fallbackActivated: true,
+          fallbackReason: 'llm_disabled',
+        }),
+      );
+      expect(JSON.stringify(debug.body)).not.toContain('OPENAI_API_KEY');
+    } finally {
+      if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = previousNodeEnv;
+    }
   });
 
   it('supports a user with an incomplete context through the deterministic fallback', async () => {
@@ -157,12 +174,18 @@ describe('AI Coach Chat E2E', () => {
 
     await request(app.getHttpServer())
       .post('/ai/chat')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ message: 'x'.repeat(1001) })
+      .expect(400);
+
+    await request(app.getHttpServer())
+      .post('/ai/chat')
       .send({ message: 'valid' })
       .expect(401);
 
     const expiredToken = sign(
       { sub: 'expired-coach-user' },
-      process.env.JWT_SECRET ?? 'dev-secret',
+      process.env.JWT_SECRET as string,
       { expiresIn: -1 },
     );
     await request(app.getHttpServer())

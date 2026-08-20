@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 
 import { AuthSessionGuard } from '../../../users/presentation/http/guards/auth-session.guard';
+import { InternalEndpoint } from '../../../../common/decorators/internal-endpoint.decorator';
 import {
   PERSONALIZATION_READ_ERROR_CODES,
   PersonalizationReadError,
@@ -162,7 +163,7 @@ export class PersonalizationController {
   }
 
   @Get('debug/:id/replay')
-  @UseGuards(AuthSessionGuard)
+  @InternalEndpoint()
   @HttpCode(HttpStatus.OK)
   async replayPersonalizationSnapshot(
     @Req() request: RequestWithAuthUser,

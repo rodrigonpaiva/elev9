@@ -201,7 +201,7 @@ describe('Auth and onboarding E2E', () => {
 
     const expiredToken = sign(
       { sub: owner.id, email: owner.email },
-      process.env.JWT_SECRET ?? 'dev-secret',
+      process.env.JWT_SECRET as string,
       { expiresIn: -1 },
     );
     const expired = await request(app.getHttpServer())

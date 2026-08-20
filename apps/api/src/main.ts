@@ -7,6 +7,8 @@ import { requestCorrelationMiddleware } from './common/middleware/request-correl
 import { requestLoggingMiddleware } from './common/middleware/request-logging.middleware';
 import { AppModule } from './app.module';
 import { requestRuntimeLoggingMiddleware } from './common/middleware/request-runtime-logging.middleware';
+import { formatSafeError } from './common/security/redaction';
+import { createCorsOrigin } from './config/security.config';
 
 function resolvePort(): number {
   const rawPort = process.env.PORT ?? '3000';
@@ -20,16 +22,12 @@ function resolvePort(): number {
 }
 
 function formatBootstrapError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
+  return formatSafeError(error);
 }
 
 async function bootstrap(): Promise<void> {
   const port = resolvePort();
-  const nodeEnv = process.env.NODE_ENV ?? 'development';
+  const nodeEnv = process.env.NODE_ENV?.trim().toLowerCase() ?? 'unset';
 
   console.info('[Bootstrap] Starting Elev9 API...');
   console.info(`[Bootstrap] Runtime mode: NODE_ENV=${nodeEnv}`);
@@ -47,7 +45,7 @@ async function bootstrap(): Promise<void> {
   app.use(requestCorrelationMiddleware);
   app.use(requestLoggingMiddleware);
   app.enableCors({
-    origin: true,
+    origin: createCorsOrigin({ nodeEnv }),
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
@@ -71,9 +69,6 @@ async function bootstrap(): Promise<void> {
 }
 
 void bootstrap().catch((error: unknown) => {
-  console.error(
-    `[Bootstrap] Startup failed: ${formatBootstrapError(error)}`,
-    error,
-  );
+  console.error(`[Bootstrap] Startup failed: ${formatBootstrapError(error)}`);
   process.exit(1);
 });

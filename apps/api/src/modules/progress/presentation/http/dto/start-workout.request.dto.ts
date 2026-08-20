@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsMongoId, Min } from 'class-validator';
+import { IsInt, IsMongoId, Max, Min } from 'class-validator';
 
 export class StartWorkoutRequestDto {
   @IsMongoId()
@@ -8,5 +8,6 @@ export class StartWorkoutRequestDto {
   @Type(() => Number)
   @IsInt()
   @Min(0)
+  @Max(1000)
   workoutDayIndex!: number;
 }

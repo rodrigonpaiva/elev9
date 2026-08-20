@@ -9,6 +9,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { RecoveryModule } from '../recovery/recovery.module';
 import { UsersModule } from '../users/users.module';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
+import { InternalEndpointGuard } from '../../common/guards/internal-endpoint.guard';
 import { PersonalizationCalculatorService } from './application/services/personalization-calculator.service';
 import { BuildBehavioralPatternsUseCase } from './application/use-cases/build-behavioral-patterns/build-behavioral-patterns.use-case';
 import { BuildPersonalizationSnapshotUseCase } from './application/use-cases/build-personalization-snapshot/build-personalization-snapshot.use-case';
@@ -67,6 +68,7 @@ import { PersonalizationController } from './presentation/http/personalization.c
   controllers: [PersonalizationController],
   providers: [
     AuthSessionGuard,
+    InternalEndpointGuard,
     PlatformDateService,
     PersonalizationCalculatorService,
     BuildPersonalizationSnapshotUseCase,

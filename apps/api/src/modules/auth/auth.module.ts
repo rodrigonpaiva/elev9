@@ -18,13 +18,14 @@ import { BcryptPasswordHasherService } from './infrastructure/security/bcrypt-pa
 import { JwtAccessTokenSignerService } from './infrastructure/security/jwt-access-token-signer.service';
 import { JwtAccessTokenVerifierService } from './infrastructure/security/jwt-access-token-verifier.service';
 import { AuthController } from './presentation/http/auth.controller';
-
-const JWT_ACCESS_TOKEN_SECRET = process.env.JWT_SECRET ?? 'dev-secret';
+import { resolveJwtSecret } from '../../config/security.config';
 
 @Module({
   imports: [
-    JwtModule.register({
-      secret: JWT_ACCESS_TOKEN_SECRET,
+    JwtModule.registerAsync({
+      useFactory: () => ({
+        secret: resolveJwtSecret(),
+      }),
     }),
     MongooseModule.forFeature([
       {

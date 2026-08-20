@@ -12,6 +12,7 @@ import { RecoveryModule } from '../recovery/recovery.module';
 import { TrainingModule } from '../training/training.module';
 import { UsersModule } from '../users/users.module';
 import { AuthSessionGuard } from '../users/presentation/http/guards/auth-session.guard';
+import { InternalEndpointGuard } from '../../common/guards/internal-endpoint.guard';
 import { PlatformDateService } from '../../shared/date/platform-date.service';
 import { NotificationDecisionCalculatorService } from './application/services/notification-decision-calculator.service';
 import { BuildNotificationDecisionUseCase } from './application/use-cases/build-notification-decision/build-notification-decision.use-case';
@@ -72,6 +73,7 @@ import { NotificationFatiguePolicyService } from './application/services/notific
   ],
   providers: [
     AuthSessionGuard,
+    InternalEndpointGuard,
     PlatformDateService,
     NotificationDecisionCalculatorService,
     NotificationFatiguePolicyService,

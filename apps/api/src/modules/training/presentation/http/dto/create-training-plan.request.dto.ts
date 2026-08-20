@@ -1,6 +1,7 @@
-import { IsString } from 'class-validator';
+import { IsMongoId, IsNotEmpty } from 'class-validator';
 
 export class CreateTrainingPlanRequestDto {
-  @IsString()
+  @IsMongoId()
+  @IsNotEmpty()
   fitnessProfileId!: string;
 }

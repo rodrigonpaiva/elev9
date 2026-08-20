@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { AgentRuntimeConfigService } from '../agent-runtime.config';
+import { hashSensitiveIdentifier } from '../../../../../../common/security/redaction';
 import type { AgentContextDomain, AgentIntent } from '../agent.types';
 import type { AgentExecutionStrategy } from '../planning/agent-planning.types';
 import type {
@@ -56,7 +57,7 @@ export class AgentTraceService {
     const trace = this.buildTrace({
       traceId: requestId,
       requestId,
-      conversationId: input.request.conversationId,
+      conversationId: hashSensitiveIdentifier(input.request.conversationId),
       userIdHash: input.request.sessionMetadata.userIdHash,
       requestTimestamp: input.requestTimestamp,
       runtimeEnabled: input.runtimeEnabled,
@@ -68,7 +69,7 @@ export class AgentTraceService {
       summary: {
         traceId: requestId,
         requestId,
-        conversationId: input.request.conversationId,
+        conversationId: hashSensitiveIdentifier(input.request.conversationId),
         userIdHash: input.request.sessionMetadata.userIdHash,
         requestTimestamp: input.requestTimestamp,
         runtimeEnabled: input.runtimeEnabled,
@@ -493,7 +494,7 @@ export class AgentTraceService {
     return {
       traceId: input.traceId,
       requestId: input.requestId,
-      conversationId: input.conversationId,
+      conversationId: hashSensitiveIdentifier(input.conversationId),
       userIdHash: input.userIdHash,
       requestTimestamp: input.requestTimestamp,
       runtimeEnabled: input.runtimeEnabled,
