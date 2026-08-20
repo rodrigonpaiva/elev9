@@ -23,6 +23,23 @@ describe('AiPromptInjectionDetectorService', () => {
 });
 
 describe('AiSafetyService', () => {
+  it('blocks context and prompt payloads above the configured limits', () => {
+    const config = mockConfig();
+    config.getMaxContextChars = jest.fn().mockReturnValue(100);
+    config.getMaxPromptChars = jest.fn().mockReturnValue(120);
+    const service = createService(mockMetrics(), config);
+
+    const result = service.preparePrompt(
+      mockPrompt([
+        { role: 'system', content: 'x'.repeat(80) },
+        { role: 'user', content: 'y'.repeat(80) },
+      ]),
+    );
+
+    expect(result.blocked).toBe(true);
+    expect(result.blockedReason).toBe('input_limit');
+  });
+
   it('sanitizes prompts, redacts sensitive data, and tracks metadata', () => {
     const metrics = mockMetrics();
     const service = createService(metrics);
@@ -241,9 +258,12 @@ describe('AiLlmConfigService', () => {
   });
 });
 
-function createService(metrics: jest.Mocked<AiSafetyMetrics> = mockMetrics()) {
+function createService(
+  metrics: jest.Mocked<AiSafetyMetrics> = mockMetrics(),
+  config: AiLlmConfigService = mockConfig(),
+) {
   return new AiSafetyService(
-    mockConfig(),
+    config,
     new AiPromptInjectionDetectorService(),
     metrics,
   );
@@ -277,6 +297,8 @@ function mockConfig(): AiLlmConfigService {
     getCircuitThreshold: jest.fn().mockReturnValue(5),
     getCircuitResetMs: jest.fn().mockReturnValue(60000),
     getMaxResponseChars: jest.fn().mockReturnValue(4000),
+    getMaxContextChars: jest.fn().mockReturnValue(10000),
+    getMaxPromptChars: jest.fn().mockReturnValue(12000),
     isStreamingEnabled: jest.fn().mockReturnValue(false),
     isStructuredOutputsEnabled: jest.fn().mockReturnValue(true),
     isToolCallingEnabled: jest.fn().mockReturnValue(false),

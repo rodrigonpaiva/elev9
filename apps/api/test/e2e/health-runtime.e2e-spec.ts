@@ -84,6 +84,9 @@ describe('Health Runtime E2E', () => {
       service: 'api',
       checks: {
         mongo: 'up',
+        configuration: 'valid',
+        llm: 'disabled',
+        redis: 'not_required',
       },
       timestamp: expect.any(String),
     });

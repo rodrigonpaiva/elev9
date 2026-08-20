@@ -73,6 +73,7 @@ export class AiLlmReliabilityService {
     const model = prompt.metadata?.model ?? this.config.getModel();
     const timeoutMs = this.config.getTimeoutMs();
     const maxRetries = this.config.getMaxRetries();
+    const deadline = Date.now() + timeoutMs;
     const now = Date.now();
 
     if (!this.isProviderReady(now)) {
@@ -144,9 +145,15 @@ export class AiLlmReliabilityService {
     let attempt = 0;
 
     while (attempt <= maxRetries) {
+      const remainingMs = deadline - Date.now();
+
+      if (remainingMs <= 0) {
+        throw new LLMTimeoutError();
+      }
+
       const attemptStartedAt = Date.now();
       const attemptController = this.createAttemptController(
-        timeoutMs,
+        Math.min(timeoutMs, remainingMs),
         prompt.signal,
       );
       const emittedDelta = { value: false };
@@ -253,7 +260,7 @@ export class AiLlmReliabilityService {
       } catch (error) {
         attemptController.cleanup();
 
-        const normalized = this.normalizeError(error, attemptController);
+        let normalized = this.normalizeError(error, attemptController);
 
         this.onFailure();
 
@@ -281,25 +288,33 @@ export class AiLlmReliabilityService {
         if (
           normalized.retryable &&
           attempt < maxRetries &&
-          !emittedDelta.value
+          !emittedDelta.value &&
+          this.circuitState.status !== 'open'
         ) {
-          this.observability.recordRetry({
-            requestId,
-            conversationId: prompt.trace?.conversationId,
-            userIdHash: prompt.trace?.userIdHash,
-            provider,
-            model,
-            promptVersion: prompt.promptVersion,
-            safetyVersion: prompt.metadata?.safetyVersion ?? 'unknown',
-            retryCount: attempt + 1,
-            fallbackUsed: false,
-            startTime: new Date().toISOString(),
-            attempt: attempt + 1,
-            errorCode: normalized.code,
-          });
-          await this.sleep(this.backoffMs(attempt));
-          attempt += 1;
-          continue;
+          const backoffMs = this.backoffMs(attempt);
+          const remainingAfterFailure = deadline - Date.now();
+
+          if (remainingAfterFailure > backoffMs) {
+            this.observability.recordRetry({
+              requestId,
+              conversationId: prompt.trace?.conversationId,
+              userIdHash: prompt.trace?.userIdHash,
+              provider,
+              model,
+              promptVersion: prompt.promptVersion,
+              safetyVersion: prompt.metadata?.safetyVersion ?? 'unknown',
+              retryCount: attempt + 1,
+              fallbackUsed: false,
+              startTime: new Date().toISOString(),
+              attempt: attempt + 1,
+              errorCode: normalized.code,
+            });
+            await this.sleep(backoffMs);
+            attempt += 1;
+            continue;
+          }
+
+          normalized = new LLMTimeoutError();
         }
 
         if (input.streaming) {

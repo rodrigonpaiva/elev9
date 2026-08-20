@@ -198,6 +198,7 @@ export class OpenAiLlmProvider implements AiLlmProvider {
     input: OpenAiResponseInputItem[];
     text: ReturnType<OpenAiResponseParserService['getResponseFormat']>;
     temperature: number;
+    max_output_tokens: number;
     stream?: boolean;
   } {
     return {
@@ -205,6 +206,7 @@ export class OpenAiLlmProvider implements AiLlmProvider {
       input: this.toResponseInput(input.messages),
       text: this.responseParser.getResponseFormat(),
       temperature: 0.2,
+      max_output_tokens: this.config.getMaxCompletionTokens(),
       ...(input.stream ? { stream: true } : {}),
     };
   }

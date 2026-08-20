@@ -64,6 +64,7 @@ describe('OpenAiLlmProvider', () => {
     expect(responsesCreateMock).toHaveBeenCalledWith(
       {
         model: 'gpt-5.5',
+        max_output_tokens: 800,
         input: [
           {
             type: 'message',
@@ -234,6 +235,7 @@ function mockConfig(): AiLlmConfigService {
     getProvider: jest.fn().mockReturnValue('openai'),
     getModel: jest.fn().mockReturnValue('gpt-5.5'),
     getApiKey: jest.fn().mockReturnValue('test-openai-key'),
+    getMaxCompletionTokens: jest.fn().mockReturnValue(800),
   } as unknown as AiLlmConfigService;
 }
 

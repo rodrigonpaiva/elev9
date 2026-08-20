@@ -2,6 +2,7 @@ import { AiLlmConfigService } from './ai-llm-config.service';
 import {
   LLMAuthenticationError,
   LLMConfigurationError,
+  LLMRateLimitError,
   LLMTimeoutError,
   LLMUnavailableError,
 } from './ai-llm.errors';
@@ -44,6 +45,33 @@ describe('AiLlmReliabilityService', () => {
     expect(provider.generateReply).toHaveBeenCalledTimes(1);
   });
 
+  it('does not exceed the global timeout across retries and backoff', async () => {
+    const provider = mockProvider({
+      generateReply: jest.fn((_input) => {
+        return new Promise((_: never, reject) => {
+          _input.signal?.addEventListener('abort', () => {
+            reject(new Error('aborted'));
+          });
+        });
+      }),
+    });
+    const observability = mockObservability();
+    const service = createService(
+      provider,
+      { timeoutMs: 100, maxRetries: 3 },
+      observability,
+    );
+
+    const promise = service.generateReply(mockPrompt());
+    const assertion = expect(promise).rejects.toBeInstanceOf(LLMTimeoutError);
+
+    await jest.advanceTimersByTimeAsync(100);
+
+    await assertion;
+    expect(provider.generateReply).toHaveBeenCalledTimes(1);
+    expect(observability.recordRetry).not.toHaveBeenCalled();
+  });
+
   it('retries transient failures and succeeds on a later attempt', async () => {
     const provider = mockProvider({
       generateReply: jest
@@ -75,6 +103,23 @@ describe('AiLlmReliabilityService', () => {
     await assertion;
     expect(provider.generateReply).toHaveBeenCalledTimes(2);
     expect(observability.recordRetry).toHaveBeenCalledTimes(1);
+    expect(observability.recordRetry).toHaveBeenCalledWith(
+      expect.objectContaining({ requestId: 'request-1' }),
+    );
+  });
+
+  it('does not retry provider quota errors', async () => {
+    const provider = mockProvider({
+      generateReply: jest.fn().mockRejectedValue(apiError({ status: 429 })),
+    });
+    const observability = mockObservability();
+    const service = createService(provider, { maxRetries: 3 }, observability);
+
+    await expect(service.generateReply(mockPrompt())).rejects.toBeInstanceOf(
+      LLMRateLimitError,
+    );
+    expect(provider.generateReply).toHaveBeenCalledTimes(1);
+    expect(observability.recordRetry).not.toHaveBeenCalled();
   });
 
   it('exhausts retries and raises an unavailable error for repeated transient failures', async () => {
@@ -333,6 +378,15 @@ describe('AiLlmConfigService', () => {
   it('rejects invalid timeout configuration', () => {
     process.env.AI_LLM_TIMEOUT_MS = '-1';
 
+    expect(() => new AiLlmConfigService()).toThrow(LLMConfigurationError);
+  });
+
+  it('rejects timeout and retry values above the operational maximum', () => {
+    process.env.AI_LLM_TIMEOUT_MS = '15001';
+    expect(() => new AiLlmConfigService()).toThrow(LLMConfigurationError);
+
+    process.env.AI_LLM_TIMEOUT_MS = '15000';
+    process.env.AI_LLM_MAX_RETRIES = '4';
     expect(() => new AiLlmConfigService()).toThrow(LLMConfigurationError);
   });
 

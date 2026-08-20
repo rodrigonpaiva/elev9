@@ -43,12 +43,32 @@ export type AiLlmUsageReportProviderUsage = Record<string, number>;
 
 export type AiLlmUsageReportModelUsage = Record<string, number>;
 
+export type AiLlmErrorCategory =
+  | 'validation'
+  | 'authentication'
+  | 'quota'
+  | 'timeout'
+  | 'provider_unavailable'
+  | 'provider_error'
+  | 'circuit_open'
+  | 'fallback'
+  | 'configuration';
+
+export type AiLlmUsageReportErrors = Partial<
+  Record<AiLlmErrorCategory, number>
+>;
+
 export type AiLlmUsageReport = {
   day: string;
   requests: number;
+  successes: number;
   failures: number;
+  retries: number;
   safetyBlocks: number;
   fallbacks: number;
+  circuitOpen: number;
+  quotaExceeded: number;
+  timeouts: number;
   totalLatencyMs: number;
   averageLatencyMs: number;
   p95LatencyMs: number | 'unknown';
@@ -58,6 +78,7 @@ export type AiLlmUsageReport = {
   estimatedCost: number;
   providerUsage: AiLlmUsageReportProviderUsage;
   modelUsage: AiLlmUsageReportModelUsage;
+  errorsByCategory: AiLlmUsageReportErrors;
 };
 
 export type AiLlmObservabilityRequestContext = {

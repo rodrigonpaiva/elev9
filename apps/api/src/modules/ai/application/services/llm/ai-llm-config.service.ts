@@ -41,10 +41,12 @@ export class AiLlmConfigService {
   private readonly timeoutMs = this.readInteger('AI_LLM_TIMEOUT_MS', 15000, {
     min: 1,
     allowZero: false,
+    max: 15000,
   });
   private readonly maxRetries = this.readInteger('AI_LLM_MAX_RETRIES', 2, {
     min: 0,
     allowZero: true,
+    max: 3,
   });
   private readonly circuitThreshold = this.readInteger(
     'AI_LLM_CIRCUIT_THRESHOLD',
@@ -69,6 +71,16 @@ export class AiLlmConfigService {
       min: 1,
       allowZero: false,
     },
+  );
+  private readonly maxContextChars = this.readInteger(
+    'AI_LLM_MAX_CONTEXT_CHARS',
+    10000,
+    { min: 1, allowZero: false },
+  );
+  private readonly maxPromptChars = this.readInteger(
+    'AI_LLM_MAX_PROMPT_CHARS',
+    12000,
+    { min: 1, allowZero: false },
   );
   private readonly observabilityMaxTraces = this.readInteger(
     'AI_LLM_OBSERVABILITY_MAX_TRACES',
@@ -119,8 +131,20 @@ export class AiLlmConfigService {
   private readonly maxPromptTokens = this.readOptionalInteger(
     'AI_LLM_MAX_PROMPT_TOKENS',
   );
-  private readonly maxCompletionTokens = this.readOptionalInteger(
+  private readonly maxCompletionTokens = this.readInteger(
     'AI_LLM_MAX_COMPLETION_TOKENS',
+    800,
+    { min: 1, allowZero: false },
+  );
+  private readonly maxRequestsPerUser = this.readInteger(
+    'AI_LLM_MAX_REQUESTS_PER_USER',
+    20,
+    { min: 1, allowZero: false },
+  );
+  private readonly quotaWindowMs = this.readInteger(
+    'AI_LLM_QUOTA_WINDOW_MS',
+    60000,
+    { min: 1, allowZero: false },
   );
   private readonly maxRequestCost = this.readOptionalDecimal(
     'AI_LLM_MAX_REQUEST_COST',
@@ -190,6 +214,14 @@ export class AiLlmConfigService {
     return this.maxResponseChars;
   }
 
+  getMaxContextChars(): number {
+    return this.maxContextChars;
+  }
+
+  getMaxPromptChars(): number {
+    return this.maxPromptChars;
+  }
+
   getObservabilityMaxTraces(): number {
     return this.observabilityMaxTraces;
   }
@@ -230,8 +262,16 @@ export class AiLlmConfigService {
     return this.maxPromptTokens;
   }
 
-  getMaxCompletionTokens(): number | undefined {
+  getMaxCompletionTokens(): number {
     return this.maxCompletionTokens;
+  }
+
+  getMaxRequestsPerUser(): number {
+    return this.maxRequestsPerUser;
+  }
+
+  getQuotaWindowMs(): number {
+    return this.quotaWindowMs;
   }
 
   getMaxRequestCost(): number | undefined {
@@ -317,7 +357,7 @@ export class AiLlmConfigService {
   private readInteger(
     key: string,
     fallback: number,
-    options: { min: number; allowZero: boolean },
+    options: { min: number; allowZero: boolean; max?: number },
   ): number {
     const raw = this.readString(key, String(fallback));
 
@@ -331,7 +371,11 @@ export class AiLlmConfigService {
       throw new LLMConfigurationError(`Invalid value for ${key}.`);
     }
 
-    if ((!options.allowZero && value === 0) || value < options.min) {
+    if (
+      (!options.allowZero && value === 0) ||
+      value < options.min ||
+      (options.max !== undefined && value > options.max)
+    ) {
       throw new LLMConfigurationError(`Invalid value for ${key}.`);
     }
 

@@ -130,10 +130,16 @@ export class AiLlmService {
     });
 
     if (safety.blocked) {
+      const blockReason =
+        safety.blockedReason === 'input_limit'
+          ? 'input_limit'
+          : `risk:${safety.assessment.riskLevel}`;
       this.logger.warn(
-        `prompt blocked: ${safety.assessment.riskLevel} ${
-          safety.assessment.triggers.join(',') || 'none'
-        }`,
+        safety.blockedReason === 'input_limit'
+          ? 'prompt blocked: input_limit'
+          : `prompt blocked: ${safety.assessment.riskLevel} ${
+              safety.assessment.triggers.join(',') || 'none'
+            }`,
       );
       this.observabilityService.recordSafetyBlock({
         requestId,
@@ -144,7 +150,7 @@ export class AiLlmService {
         promptVersion: safety.metadata.promptVersion,
         safetyVersion: safety.metadata.safetyVersion,
         classification: safety.metadata.classification,
-        reason: `risk:${safety.assessment.riskLevel}`,
+        reason: blockReason,
       });
       this.observabilityService.recordFallback({
         requestId,
@@ -159,7 +165,7 @@ export class AiLlmService {
         startTime,
         durationMs: 0,
         errorCode: 'LLM_GUARDRAIL',
-        reason: `risk:${safety.assessment.riskLevel}`,
+        reason: blockReason,
       });
       return null;
     }

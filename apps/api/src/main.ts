@@ -21,12 +21,44 @@ function resolvePort(): number {
   return port;
 }
 
+function resolveShutdownTimeout(): number {
+  const rawTimeout = process.env.GRACEFUL_SHUTDOWN_TIMEOUT_MS?.trim();
+  if (!rawTimeout) return 10_000;
+
+  const timeout = Number(rawTimeout);
+  if (!/^\d+$/.test(rawTimeout) || !Number.isSafeInteger(timeout)) {
+    throw new Error('GRACEFUL_SHUTDOWN_TIMEOUT_MS must be a valid integer.');
+  }
+
+  return timeout;
+}
+
 function formatBootstrapError(error: unknown): string {
   return formatSafeError(error);
 }
 
+function installShutdownDeadline(
+  app: { getHttpServer: () => { closeAllConnections?: () => void } },
+  timeoutMs: number,
+): void {
+  const server = app.getHttpServer();
+  const enforceDeadline = (): void => {
+    const timer = setTimeout(() => {
+      // Nest closes the listener and providers through enableShutdownHooks.
+      // This final guard prevents keep-alive clients from extending shutdown
+      // indefinitely; it does not expose an error response or secret.
+      server.closeAllConnections?.();
+    }, timeoutMs);
+    timer.unref?.();
+  };
+
+  process.once('SIGTERM', enforceDeadline);
+  process.once('SIGINT', enforceDeadline);
+}
+
 async function bootstrap(): Promise<void> {
   const port = resolvePort();
+  const shutdownTimeoutMs = resolveShutdownTimeout();
   const nodeEnv = process.env.NODE_ENV?.trim().toLowerCase() ?? 'unset';
 
   console.info('[Bootstrap] Starting Elev9 API...');
@@ -41,6 +73,10 @@ async function bootstrap(): Promise<void> {
   console.info('[Bootstrap] Request logging enabled');
 
   app.enableShutdownHooks();
+  installShutdownDeadline(app, shutdownTimeoutMs);
+  console.info(
+    `[Bootstrap] Graceful shutdown enabled with timeout=${shutdownTimeoutMs}ms`,
+  );
 
   app.use(requestCorrelationMiddleware);
   app.use(requestLoggingMiddleware);

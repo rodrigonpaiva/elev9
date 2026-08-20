@@ -51,6 +51,7 @@ export type AiSafetyPreparedPrompt = {
   prompt: AiLlmPrompt;
   metadata: AiSafetyMetadata;
   blocked: boolean;
+  blockedReason?: 'safety' | 'input_limit';
   assessment: AiPromptInjectionAssessment;
 };
 

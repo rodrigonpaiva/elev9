@@ -100,6 +100,46 @@ describe('AiLlmObservabilityService', () => {
     expect(lifecycle).not.toHaveProperty('rawPrompt');
   });
 
+  it('emits stable error categories without sensitive identity fields', async () => {
+    const metrics = mockMetrics();
+    const service = createService(metrics);
+    const context = baseRequestContext();
+    service.recordRequest(context);
+
+    await expect(
+      service.observeAttempt({ ...context, attempt: 1 }, async () => {
+        throw Object.assign(new Error('provider details must not be logged'), {
+          status: 401,
+        });
+      }),
+    ).rejects.toBeDefined();
+
+    service.recordFallback({
+      ...context,
+      durationMs: 20,
+      errorCode: 'LLM_RATE_LIMIT',
+      reason: 'quota',
+    });
+
+    const report = service.snapshotUsageReport();
+    expect(report.errorsByCategory).toMatchObject({
+      authentication: 1,
+      fallback: 1,
+    });
+    expect(report.failures).toBe(1);
+    expect(report.quotaExceeded).toBe(1);
+
+    const serializedLogs = (Logger.prototype.log as jest.Mock).mock.calls
+      .flat()
+      .filter((value): value is string => typeof value === 'string')
+      .join('\n');
+    expect(serializedLogs).toContain('request-1');
+    expect(serializedLogs).toContain('"operation":"llm"');
+    expect(serializedLogs).not.toContain('conversation-1');
+    expect(serializedLogs).not.toContain('user-hash-1');
+    expect(serializedLogs).not.toContain('provider details must not be logged');
+  });
+
   it('prunes traces beyond the configured limit while preserving report aggregation', () => {
     const metrics = mockMetrics();
     const service = createService(metrics, {

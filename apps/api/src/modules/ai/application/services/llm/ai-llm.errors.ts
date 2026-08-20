@@ -34,7 +34,7 @@ export class LLMCancelledError extends AiLlmError {
 
 export class LLMRateLimitError extends AiLlmError {
   constructor(message = 'OpenAI rate limit reached.', cause?: unknown) {
-    super('LLM_RATE_LIMIT', message, true, cause);
+    super('LLM_RATE_LIMIT', message, false, cause);
   }
 }
 

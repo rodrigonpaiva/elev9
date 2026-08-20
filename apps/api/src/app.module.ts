@@ -18,8 +18,11 @@ import { TrainingModule } from './modules/training/training.module';
 import { UsersModule } from './modules/users/users.module';
 import { ObservabilityModule } from './observability/observability.module';
 import { RateLimitModule } from './common/rate-limit/rate-limit.module';
+import { validateRuntimeConfiguration } from './config/runtime.config';
 
 dotenv.config();
+
+validateRuntimeConfiguration();
 
 function getMongoDbUri(): string {
   const mongoDbUri = process.env.MONGODB_URI;

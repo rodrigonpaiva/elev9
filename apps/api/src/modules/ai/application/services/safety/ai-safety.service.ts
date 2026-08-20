@@ -38,6 +38,13 @@ export class AiSafetyService {
     );
     const promptClassification = this.resolvePromptClassification(assessment);
     const shouldBlock = this.shouldBlockPrompt(assessment);
+    const rawPromptSizeChars = this.countPromptChars(sanitizedMessages);
+    const rawContextSizeChars = this.countPromptChars(
+      sanitizedMessages.slice(0, -1),
+    );
+    const inputLimitExceeded =
+      rawPromptSizeChars > this.maxPromptChars() ||
+      rawContextSizeChars > this.maxContextChars();
     const minimized = this.minimizeMessages(sanitizedMessages);
     const promptSizeChars = this.countPromptChars(minimized.messages);
     const contextSizeChars = this.countPromptChars(
@@ -61,7 +68,8 @@ export class AiSafetyService {
       redactionCount,
       removedMessageCount: minimized.removedMessageCount,
       assessment,
-      classification: shouldBlock ? 'BLOCKED' : promptClassification,
+      classification:
+        shouldBlock || inputLimitExceeded ? 'BLOCKED' : promptClassification,
       experimentId: prompt.metadata?.experimentId,
       canaryBucket: prompt.metadata?.canaryBucket,
       canaryPercentage: prompt.metadata?.canaryPercentage,
@@ -130,7 +138,7 @@ export class AiSafetyService {
       });
     }
 
-    if (shouldBlock) {
+    if (shouldBlock || inputLimitExceeded) {
       this.metrics.recordBlockedPrompt({
         promptVersion: metadata.promptVersion,
         safetyVersion: metadata.safetyVersion,
@@ -143,7 +151,9 @@ export class AiSafetyService {
         removedMessageCount: minimized.removedMessageCount,
         riskLevel: assessment.riskLevel,
         classification: 'BLOCKED',
-        reason: `risk:${assessment.riskLevel}`,
+        reason: inputLimitExceeded
+          ? 'input_limit'
+          : `risk:${assessment.riskLevel}`,
       });
     }
 
@@ -160,7 +170,12 @@ export class AiSafetyService {
         },
       },
       metadata,
-      blocked: shouldBlock,
+      blocked: shouldBlock || inputLimitExceeded,
+      blockedReason: inputLimitExceeded
+        ? 'input_limit'
+        : shouldBlock
+          ? 'safety'
+          : undefined,
       assessment,
     };
   }
@@ -525,7 +540,11 @@ export class AiSafetyService {
   }
 
   private maxPromptChars(): number {
-    return Math.max(4000, this.config.getMaxResponseChars() * 3);
+    return this.config.getMaxPromptChars();
+  }
+
+  private maxContextChars(): number {
+    return this.config.getMaxContextChars();
   }
 
   private buildInspectionText(messages: AiLlmMessage[]): string {

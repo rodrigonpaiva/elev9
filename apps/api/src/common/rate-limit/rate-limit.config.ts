@@ -98,7 +98,30 @@ function parseBoolean(value: string | undefined): boolean | undefined {
 
 function isNonProductionEnvironment(nodeEnv?: string): boolean {
   const normalized = nodeEnv?.trim().toLowerCase();
-  return normalized === 'development' || normalized === 'test';
+  return (
+    normalized === 'development' || normalized === 'test' || normalized === 'ci'
+  );
+}
+
+function readPositiveInteger(
+  key: string,
+  fallback: number,
+  maximum: number,
+): number {
+  const raw = process.env[key]?.trim();
+
+  if (!raw) return fallback;
+  if (!/^\d+$/.test(raw)) {
+    throw new Error(`${key} must be a positive integer.`);
+  }
+
+  const value = Number(raw);
+
+  if (!Number.isSafeInteger(value) || value <= 0 || value > maximum) {
+    throw new Error(`${key} is outside the allowed range.`);
+  }
+
+  return value;
 }
 
 export function resolveRateLimitConfig(options?: {
@@ -130,10 +153,26 @@ export function resolveRateLimitConfig(options?: {
     throw new Error('RATE_LIMIT_STORE must be memory or redis.');
   }
 
+  const llmQuotaMax = readPositiveInteger(
+    'AI_LLM_MAX_REQUESTS_PER_USER',
+    20,
+    10000,
+  );
+  const llmQuotaWindowMs = readPositiveInteger(
+    'AI_LLM_QUOTA_WINDOW_MS',
+    MINUTE,
+    86400000,
+  );
+  const policies = DEFAULT_RATE_LIMIT_POLICIES.map((policy) =>
+    policy.id === 'ai.chat'
+      ? { ...policy, max: llmQuotaMax, windowMs: llmQuotaWindowMs }
+      : policy,
+  );
+
   return {
     enabled: resolvedEnabled,
     store,
-    policies: DEFAULT_RATE_LIMIT_POLICIES,
+    policies,
   };
 }
 

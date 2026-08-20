@@ -21,15 +21,21 @@ import {
   AiLlmObservabilitySuccessContext,
   AiLlmRequestLifecycle,
   AiLlmUsageReport,
+  AiLlmErrorCategory,
 } from './ai-llm-observability.types';
 
 const UNKNOWN = 'unknown';
 
 type UsageReportAccumulator = {
   requests: number;
+  successes: number;
   failures: number;
+  retries: number;
   safetyBlocks: number;
   fallbacks: number;
+  circuitOpen: number;
+  quotaExceeded: number;
+  timeouts: number;
   totalLatencyMs: number;
   latencies: number[];
   promptTokens: number;
@@ -38,6 +44,7 @@ type UsageReportAccumulator = {
   estimatedCost: number;
   providerUsage: Record<string, number>;
   modelUsage: Record<string, number>;
+  errorsByCategory: Partial<Record<AiLlmErrorCategory, number>>;
   updatedAtMs: number;
 };
 
@@ -189,8 +196,7 @@ export class AiLlmObservabilityService {
       };
     } catch (error) {
       const durationMs = Date.now() - startedAt;
-      const failureReason =
-        error instanceof Error ? error.name : 'UnknownFailure';
+      const errorCategory = this.resolveErrorCategory(error);
 
       this.recordLatency({
         requestId: context.requestId,
@@ -206,7 +212,7 @@ export class AiLlmObservabilityService {
       this.recordProviderFailure({
         ...context,
         durationMs,
-        errorCode: failureReason,
+        errorCode: errorCategory,
       });
       this.logStructured('llm_failure', {
         timestamp: new Date().toISOString(),
@@ -218,7 +224,7 @@ export class AiLlmObservabilityService {
         durationMs,
         retryCount: context.retryCount,
         fallbackUsed: context.fallbackUsed,
-        errorCode: failureReason,
+        errorCategory,
       });
 
       throw error instanceof Error
@@ -230,6 +236,21 @@ export class AiLlmObservabilityService {
   recordRetry(context: AiLlmObservabilityRetryContext): void {
     this.pruneRetentionState();
     this.metrics.recordRetry(context);
+    this.incrementReport({
+      requestId: context.requestId,
+      provider: context.provider,
+      model: context.model,
+      latencyMs: 0,
+      timestampMs: Date.now(),
+      countRequest: false,
+      countFailure: false,
+      countRetry: true,
+      errorCategory: this.resolveErrorCategory(context.errorCode),
+      countSafetyBlock: false,
+      countFallback: false,
+      countSuccess: false,
+      estimatedCost: 'unknown',
+    });
     this.updateLifecycle(context.requestId, (current) => ({
       ...current,
       retryCount: context.attempt,
@@ -274,9 +295,11 @@ export class AiLlmObservabilityService {
       timestampMs: Date.now(),
       countRequest: false,
       countFailure: false,
+      errorCategory: 'fallback',
       countSafetyBlock: false,
       countFallback: true,
       countSuccess: false,
+      countQuotaExceeded: context.errorCode === 'LLM_RATE_LIMIT',
       tokens: undefined,
       estimatedCost: 'unknown',
     });
@@ -329,6 +352,21 @@ export class AiLlmObservabilityService {
   recordCircuitOpen(context: AiLlmObservabilityCircuitContext): void {
     this.pruneRetentionState();
     this.metrics.recordCircuitOpen(context);
+    this.incrementReport({
+      requestId: context.requestId,
+      provider: context.provider,
+      model: context.model,
+      latencyMs: 0,
+      timestampMs: Date.now(),
+      countRequest: false,
+      countFailure: false,
+      errorCategory: 'circuit_open',
+      countSafetyBlock: false,
+      countFallback: false,
+      countSuccess: false,
+      countCircuitOpen: true,
+      estimatedCost: 'unknown',
+    });
     this.logStructured('llm_circuit_open', {
       timestamp: new Date().toISOString(),
       requestId: context.requestId,
@@ -428,9 +466,14 @@ export class AiLlmObservabilityService {
     return {
       day,
       requests: report.requests,
+      successes: report.successes,
       failures: report.failures,
+      retries: report.retries,
       safetyBlocks: report.safetyBlocks,
       fallbacks: report.fallbacks,
+      circuitOpen: report.circuitOpen,
+      quotaExceeded: report.quotaExceeded,
+      timeouts: report.timeouts,
       totalLatencyMs: report.totalLatencyMs,
       averageLatencyMs: report.requests
         ? Math.round(report.totalLatencyMs / report.requests)
@@ -442,6 +485,7 @@ export class AiLlmObservabilityService {
       estimatedCost: Number(report.estimatedCost.toFixed(4)),
       providerUsage: { ...report.providerUsage },
       modelUsage: { ...report.modelUsage },
+      errorsByCategory: { ...report.errorsByCategory },
     };
   }
 
@@ -505,10 +549,12 @@ export class AiLlmObservabilityService {
       latencyMs: 0,
       timestampMs: Date.now(),
       countRequest: false,
-      countFailure: false,
+      countFailure: true,
+      errorCategory: this.resolveErrorCategory(context.errorCode),
       countSafetyBlock: false,
       countFallback: false,
       countSuccess: false,
+      countQuotaExceeded: context.errorCode === 'LLM_RATE_LIMIT',
       tokens: undefined,
       estimatedCost: 'unknown',
     });
@@ -576,9 +622,13 @@ export class AiLlmObservabilityService {
     timestampMs: number;
     countRequest: boolean;
     countFailure: boolean;
+    countRetry?: boolean;
+    errorCategory?: AiLlmErrorCategory;
     countSafetyBlock: boolean;
     countFallback: boolean;
     countSuccess: boolean;
+    countCircuitOpen?: boolean;
+    countQuotaExceeded?: boolean;
     tokens?: AiLlmTokenUsage;
     estimatedCost: number | 'unknown';
   }): void {
@@ -594,8 +644,20 @@ export class AiLlmObservabilityService {
         (report.modelUsage[input.model] ?? 0) + 1;
     }
 
+    if (input.countSuccess) report.successes += 1;
+
     if (input.countFailure) {
       report.failures += 1;
+    }
+
+    if (input.countRetry) report.retries += 1;
+    if (input.countCircuitOpen) report.circuitOpen += 1;
+    if (input.countQuotaExceeded) report.quotaExceeded += 1;
+
+    if (input.errorCategory) {
+      report.errorsByCategory[input.errorCategory] =
+        (report.errorsByCategory[input.errorCategory] ?? 0) + 1;
+      if (input.errorCategory === 'timeout') report.timeouts += 1;
     }
 
     if (input.countSafetyBlock) {
@@ -635,9 +697,14 @@ export class AiLlmObservabilityService {
   private emptyAccumulator(): UsageReportAccumulator {
     return {
       requests: 0,
+      successes: 0,
       failures: 0,
+      retries: 0,
       safetyBlocks: 0,
       fallbacks: 0,
+      circuitOpen: 0,
+      quotaExceeded: 0,
+      timeouts: 0,
       totalLatencyMs: 0,
       latencies: [],
       promptTokens: 0,
@@ -646,6 +713,7 @@ export class AiLlmObservabilityService {
       estimatedCost: 0,
       providerUsage: {},
       modelUsage: {},
+      errorsByCategory: {},
       updatedAtMs: Date.now(),
     };
   }
@@ -830,11 +898,65 @@ export class AiLlmObservabilityService {
   }
 
   private logStructured(event: string, payload: Record<string, unknown>): void {
+    const { conversationId, userIdHash, ...safePayload } = payload;
+
     this.logger.log(
       JSON.stringify({
         event,
-        ...payload,
+        operation: 'llm',
+        authenticated: Boolean(userIdHash && userIdHash !== UNKNOWN),
+        ...safePayload,
       }),
     );
+  }
+
+  private resolveErrorCategory(error: unknown): AiLlmErrorCategory {
+    const status =
+      error && typeof error === 'object' && 'status' in error
+        ? Number((error as { status: unknown }).status)
+        : undefined;
+    const code =
+      typeof error === 'string'
+        ? error
+        : error && typeof error === 'object' && 'code' in error
+          ? String((error as { code: unknown }).code)
+          : error && typeof error === 'object' && 'name' in error
+            ? String((error as { name: unknown }).name)
+            : '';
+
+    const stableCategories: AiLlmErrorCategory[] = [
+      'validation',
+      'authentication',
+      'quota',
+      'timeout',
+      'provider_unavailable',
+      'provider_error',
+      'circuit_open',
+      'fallback',
+      'configuration',
+    ];
+
+    if (stableCategories.includes(code as AiLlmErrorCategory)) {
+      return code as AiLlmErrorCategory;
+    }
+
+    if (status === 401 || status === 403) return 'authentication';
+    if (status === 429) return 'quota';
+    if (typeof status === 'number' && status >= 500) {
+      return 'provider_unavailable';
+    }
+    if (code.includes('TIMEOUT')) return 'timeout';
+    if (code.includes('AUTHENTICATION') || code.includes('Permission')) {
+      return 'authentication';
+    }
+    if (code.includes('RATE_LIMIT') || code.includes('429')) return 'quota';
+    if (code.includes('GUARDRAIL') || code.includes('BadRequest')) {
+      return 'validation';
+    }
+    if (code.includes('CONFIGURATION')) return 'configuration';
+    if (code.includes('UNAVAILABLE') || code.includes('Connection')) {
+      return 'provider_unavailable';
+    }
+    return 'provider_error';
   }
 }

@@ -42,4 +42,28 @@ describe('rate limit configuration', () => {
     expect(findRateLimitPolicy('GET', '/health')).toBeUndefined();
     expect(DEFAULT_RATE_LIMIT_POLICIES.length).toBeGreaterThan(1);
   });
+
+  it('applies the configured LLM quota to the existing independent policy', () => {
+    const previousMax = process.env.AI_LLM_MAX_REQUESTS_PER_USER;
+    const previousWindow = process.env.AI_LLM_QUOTA_WINDOW_MS;
+    process.env.AI_LLM_MAX_REQUESTS_PER_USER = '7';
+    process.env.AI_LLM_QUOTA_WINDOW_MS = '120000';
+
+    try {
+      const config = resolveRateLimitConfig({ nodeEnv: 'test' });
+      expect(
+        config.policies.find((policy) => policy.id === 'ai.chat'),
+      ).toMatchObject({
+        max: 7,
+        windowMs: 120000,
+      });
+    } finally {
+      if (previousMax === undefined)
+        delete process.env.AI_LLM_MAX_REQUESTS_PER_USER;
+      else process.env.AI_LLM_MAX_REQUESTS_PER_USER = previousMax;
+      if (previousWindow === undefined)
+        delete process.env.AI_LLM_QUOTA_WINDOW_MS;
+      else process.env.AI_LLM_QUOTA_WINDOW_MS = previousWindow;
+    }
+  });
 });
