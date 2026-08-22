@@ -58,24 +58,21 @@ npm run mobile:start
 
 Si `localhost` ne fonctionne pas sur un appareil physique, utilisez l’adresse IP locale de votre machine.
 
-## Utilisateur de test
+## Environnement de démonstration
 
-Le dépôt ne fournit pas de compte de démonstration codé en dur.
+Le dépôt ne fournit pas d’identifiants de démonstration et l’application ne
+crée ni ne provisionne de compte demo. Les identifiants doivent être fournis
+hors dépôt par le responsable d’un environnement demo dédié et jetable :
 
-Approche recommandée pour la démo :
+- `EXPO_PUBLIC_DEMO_MODE=true`
+- `EXPO_PUBLIC_DEMO_API_URL=<URL de l’API demo dédiée>`
+- `EXPO_PUBLIC_DEMO_EMAIL=<e-mail du compte demo dédié>`
+- `EXPO_PUBLIC_DEMO_PASSWORD=<mot de passe du compte demo dédié>`
 
-1. Créer un utilisateur via l’endpoint backend `POST /auth/register`
-2. Utiliser les mêmes identifiants sur l’écran de login mobile
-
-Exemple de payload d’inscription :
-
-```json
-{
-  "name": "Demo User",
-  "email": "demo@elev9.local",
-  "password": "StrongPass123"
-}
-```
+L’URL demo doit correspondre à `EXPO_PUBLIC_API_URL` pour ce build. N’utilisez
+pas de credentials de production, de compte réel ni l’endpoint d’inscription.
+Le reset distant nécessite un propriétaire autorisé, car le dépôt ne possède
+pas d’endpoint sûr de reset demo.
 
 ## Flow démontrable
 
@@ -83,9 +80,9 @@ Exemple de payload d’inscription :
 
 1. Démarrer le backend
 2. Démarrer l’application mobile
-3. Créer un utilisateur via l’API
+3. Fournir les variables de l’environnement demo hors dépôt
 4. Se connecter via l’application mobile
-5. Montrer le chargement du dashboard authentifié
+5. Montrer le dashboard demo pré-provisionné
 
 ### Parcours technique plus complet
 

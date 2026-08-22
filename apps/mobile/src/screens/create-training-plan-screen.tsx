@@ -16,7 +16,12 @@ import {
 } from '@elev9/ui';
 
 import { mobileApiClient } from '../api/client';
+import {
+  getOnboardingErrorCategory,
+  trackOnboardingEvent,
+} from '../analytics/onboarding-analytics';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { OnboardingProgress } from '../components/onboarding-progress';
 
 export function CreateTrainingPlanScreen() {
   const navigation =
@@ -32,10 +37,13 @@ export function CreateTrainingPlanScreen() {
 
     try {
       await mobileApiClient.training.createPlan({ fitnessProfileId });
-      navigation.replace('CreateNutritionProfile', {
-        prefillGoal: mapFitnessGoalToNutritionGoal(goal),
-      });
+      trackOnboardingEvent('plan_created');
+      navigation.replace('HomeResolver');
     } catch (error) {
+      trackOnboardingEvent('onboarding_error', {
+        stage: 'training_plan',
+        errorCategory: getOnboardingErrorCategory(error),
+      });
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
@@ -58,6 +66,7 @@ export function CreateTrainingPlanScreen() {
             Elev9 will build a plan based on your goal and training setup.
           </Text>
         </View>
+        <OnboardingProgress stage="training_plan" />
 
         <Card style={styles.card}>
           <Text variant="title">Ready to train</Text>
@@ -89,27 +98,13 @@ export function CreateTrainingPlanScreen() {
             label="Generate my plan"
             onPress={handleCreateTrainingPlan}
             loading={isSubmitting}
+            disabled={isSubmitting}
             style={styles.fullButton}
           />
         </Card>
       </View>
     </Screen>
   );
-}
-
-function mapFitnessGoalToNutritionGoal(
-  goal: 'lose_weight' | 'gain_muscle' | 'maintain' | undefined,
-) {
-  switch (goal) {
-    case 'lose_weight':
-      return 'fat_loss';
-    case 'gain_muscle':
-      return 'muscle_gain';
-    case 'maintain':
-      return 'maintenance';
-    default:
-      return undefined;
-  }
 }
 
 const styles = StyleSheet.create({

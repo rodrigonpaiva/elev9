@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -7,7 +7,12 @@ import { ApiClientError } from '@elev9/api-client';
 import { Button, Card, Input, Screen, Text, colors } from '@elev9/ui';
 
 import { mobileApiClient } from '../api/client';
+import {
+  getOnboardingErrorCategory,
+  trackOnboardingEvent,
+} from '../analytics/onboarding-analytics';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { OnboardingProgress } from '../components/onboarding-progress';
 
 export function CreateProfileScreen() {
   const navigation =
@@ -15,6 +20,10 @@ export function CreateProfileScreen() {
   const [name, setName] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    trackOnboardingEvent('profile_started');
+  }, []);
 
   const trimmedName = name.trim();
   const isValid = trimmedName.length >= 2 && trimmedName.length <= 80;
@@ -38,8 +47,13 @@ export function CreateProfileScreen() {
       await mobileApiClient.users.createProfile({
         name: trimmedName,
       });
+      trackOnboardingEvent('profile_completed');
       navigation.replace('HomeResolver');
     } catch (error) {
+      trackOnboardingEvent('onboarding_error', {
+        stage: 'profile',
+        errorCategory: getOnboardingErrorCategory(error),
+      });
       if (error instanceof ApiClientError) {
         setErrorMessage(error.message);
       } else {
@@ -62,6 +76,7 @@ export function CreateProfileScreen() {
             Start with your name so Elev9 can personalize your coaching.
           </Text>
         </View>
+        <OnboardingProgress stage="profile" />
 
         <Card style={styles.card}>
           <View style={styles.sectionHeader}>
@@ -86,7 +101,7 @@ export function CreateProfileScreen() {
             label="Continue"
             onPress={handleCreateProfile}
             loading={isSubmitting}
-            disabled={!isValid}
+            disabled={!isValid || isSubmitting}
             style={styles.fullButton}
           />
         </Card>

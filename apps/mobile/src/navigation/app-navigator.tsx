@@ -27,6 +27,7 @@ import { ExerciseDetailScreen } from '../screens/exercise-detail-screen';
 import { ExerciseReplacementScreen } from '../screens/exercise-replacement-screen';
 import { HomeResolverScreen } from '../screens/home-resolver-screen';
 import { LoginScreen } from '../screens/login-screen';
+import { RegisterScreen } from '../screens/register-screen';
 import { LogMealScreen } from '../screens/log-meal-screen';
 import { MainTabsScreen } from '../screens/main-tabs-screen';
 import { MealDetailScreen } from '../screens/meal-detail-screen';
@@ -48,6 +49,7 @@ import { WorkoutSessionDetailScreen } from '../screens/workout-history-screen';
 
 export type RootStackParamList = {
   Login: undefined;
+  Register: undefined;
   HomeResolver: undefined;
   CreateProfile: undefined;
   CreateFitnessProfile: undefined;
@@ -534,11 +536,18 @@ export function AppNavigator() {
             />
           </>
         ) : (
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
+          <>
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{ headerShown: false }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

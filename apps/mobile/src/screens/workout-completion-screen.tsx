@@ -14,6 +14,12 @@ import type {
 import { Button, Text } from '@elev9/ui';
 
 import { apiClient, mobileApiClient } from '../api/client';
+import {
+  getOnboardingErrorCategory,
+  onboardingAnalytics,
+  trackOnboardingEvent,
+} from '../analytics/onboarding-analytics';
+import { useAuth } from '../auth/auth-provider';
 import type { RootStackParamList } from '../navigation/app-navigator';
 
 type CompletionState = {
@@ -52,6 +58,7 @@ const tokens = {
 export function WorkoutCompletionScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { signOut } = useAuth();
   const route = useRoute<RouteProp<RootStackParamList, 'WorkoutCompletion'>>();
   const {
     completedExercises,
@@ -142,6 +149,27 @@ export function WorkoutCompletionScreen() {
       (logResult.status === 'rejected' &&
         isAlreadyLoggedError(logResult.reason));
 
+    const sessionExpiredResult = [
+      logResult,
+      coachResult,
+      recoveryResult,
+      nutritionResult,
+    ].find(
+      (result) =>
+        result.status === 'rejected' &&
+        result.reason instanceof ApiClientError &&
+        (result.reason.code === 'AUTH_INVALID_SESSION' ||
+          result.reason.status === 401),
+    );
+
+    if (sessionExpiredResult) {
+      trackOnboardingEvent('session_expired_during_onboarding', {
+        stage: 'workout',
+      });
+      await signOut({ preserveOnboardingProgress: true });
+      return;
+    }
+
     setState({
       coachDecision:
         coachResult.status === 'fulfilled'
@@ -157,6 +185,16 @@ export function WorkoutCompletionScreen() {
           : null,
       workoutSaved,
     });
+    if (workoutSaved && onboardingAnalytics.getContext()) {
+      trackOnboardingEvent('first_workout_completed');
+    } else if (onboardingAnalytics.getContext()) {
+      trackOnboardingEvent('onboarding_error', {
+        stage: 'workout',
+        errorCategory: getOnboardingErrorCategory(
+          logResult.status === 'rejected' ? logResult.reason : null,
+        ),
+      });
+    }
     setIsLoading(false);
   }, [
     completedExercises,
@@ -164,6 +202,7 @@ export function WorkoutCompletionScreen() {
     trainingPlanId,
     workout,
     workoutSessionId,
+    signOut,
   ]);
 
   useEffect(() => {

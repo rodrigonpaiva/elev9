@@ -4,6 +4,8 @@ import { StyleSheet, View } from 'react-native';
 import type { TodayWorkout } from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
+import { resolveWorkoutAvailabilityState } from '../../screens/workout-activation-helpers';
+
 type TodaysWorkoutCardProps = {
   workout: TodayWorkout | null;
   isLoading: boolean;
@@ -47,11 +49,17 @@ export const TodaysWorkoutCard = memo(function TodaysWorkoutCard({
     return buildWorkoutCardModel(workout, recoveryStatus);
   }, [recoveryStatus, workout]);
 
-  if (isLoading) {
+  const availabilityState = resolveWorkoutAvailabilityState({
+    errorMessage,
+    hasWorkout: Boolean(model),
+    isLoading,
+  });
+
+  if (availabilityState === 'loading') {
     return <TodaysWorkoutSkeleton />;
   }
 
-  if (errorMessage) {
+  if (availabilityState === 'error') {
     return (
       <View accessibilityLabel="Workout unavailable." style={styles.card}>
         <View style={styles.errorContent}>

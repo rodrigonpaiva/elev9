@@ -58,24 +58,21 @@ npm run mobile:start
 
 If `localhost` does not work on a physical device, use your machine's local network IP.
 
-## Test User
+## Demo Environment
 
-The repository does not ship with a hardcoded demo account.
+The repository does not ship with demo credentials and the mobile app does not
+register or provision a demo account. Credentials must be supplied out of
+band by the owner of a dedicated, disposable demo environment:
 
-Recommended demo approach:
+- `EXPO_PUBLIC_DEMO_MODE=true`
+- `EXPO_PUBLIC_DEMO_API_URL=<dedicated demo API URL>`
+- `EXPO_PUBLIC_DEMO_EMAIL=<dedicated demo account email>`
+- `EXPO_PUBLIC_DEMO_PASSWORD=<dedicated demo account password>`
 
-1. Register a user through the backend endpoint `POST /auth/register`
-2. Use the same credentials on the mobile login screen
-
-Example registration payload:
-
-```json
-{
-  "name": "Demo User",
-  "email": "demo@elev9.local",
-  "password": "StrongPass123"
-}
-```
+The demo API URL must match `EXPO_PUBLIC_API_URL` for that demo build. Do not
+use production credentials, a real user account, or the registration endpoint.
+Remote reset/cleanup requires an authorized environment owner because this
+repository has no safe demo-reset endpoint.
 
 ## Demonstrable Flow
 
@@ -83,9 +80,9 @@ Example registration payload:
 
 1. Start backend
 2. Start mobile app
-3. Register a user through API
+3. Provide the approved demo environment variables out of band
 4. Log in through the mobile app
-5. Show authenticated dashboard loading
+5. Show the pre-provisioned demo dashboard
 
 ### Better technical walkthrough
 

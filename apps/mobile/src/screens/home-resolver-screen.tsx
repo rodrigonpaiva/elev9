@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, AppState, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,15 +9,25 @@ import { Button, Card, colors, Screen, Text } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
 import { useAuth } from '../auth/auth-provider';
+import {
+  getOnboardingErrorCategory,
+  onboardingAnalytics,
+  trackOnboardingEvent,
+  type OnboardingAnalyticsStage,
+} from '../analytics/onboarding-analytics';
 import type { RootStackParamList } from '../navigation/app-navigator';
 import {
   getHomeResolverErrorMessage,
-  getNutritionPlanState,
-  getNutritionProfileState,
   getLocalDateKey,
   resolveHomeResolverDestination,
   shouldShowDailyBriefingToday as shouldShowDailyBriefingTodayHelper,
 } from './home-resolver-helpers';
+import {
+  clearOnboardingProgress,
+  loadOnboardingProgress,
+  saveOnboardingProgress,
+} from '../storage/onboarding-progress-storage';
+import { ensureSessionOwnerKey } from '../storage/session-owner-storage';
 
 const DAILY_BRIEFING_LAST_SHOWN_KEY = 'elev9.dailyBriefing.lastShownDate';
 
@@ -27,10 +37,47 @@ export function HomeResolverScreen() {
   const { signOut } = useAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const onboardingActive = useRef(false);
+  const lastStage = useRef<OnboardingAnalyticsStage>('home');
 
   useEffect(() => {
-    void resolveNextScreen();
+    void (async () => {
+      await restoreProgressContext();
+      await resolveNextScreen();
+    })();
+
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (
+        onboardingActive.current &&
+        (nextState === 'background' || nextState === 'inactive')
+      ) {
+        trackOnboardingEvent('onboarding_abandoned', {
+          stage: lastStage.current,
+        });
+      }
+    });
+
+    return () => subscription.remove();
   }, []);
+
+  async function restoreProgressContext(): Promise<void> {
+    const ownerKey = await ensureSessionOwnerKey();
+    const mode = onboardingAnalytics.getContext()?.mode ?? 'real';
+    const progress = await loadOnboardingProgress(ownerKey, mode);
+    if (!progress) return;
+
+    onboardingAnalytics.resume({
+      flowSessionId: progress.flowSessionId,
+      mode: progress.mode,
+    });
+    trackOnboardingEvent(
+      'onboarding_resumed',
+      {
+        resumeReason: 'app_reopened',
+      },
+      mode,
+    );
+  }
 
   async function resolveNextScreen() {
     setIsLoading(true);
@@ -41,16 +88,19 @@ export function HomeResolverScreen() {
       const dashboard = response.dashboard;
 
       if (!dashboard.user?.name) {
+        startOnboardingStage('profile');
         navigation.replace('CreateProfile');
         return;
       }
 
       if (!dashboard.fitnessProfile) {
+        startOnboardingStage('fitness_profile');
         navigation.replace('CreateFitnessProfile');
         return;
       }
 
       if (!dashboard.trainingPlan) {
+        startOnboardingStage('training_plan');
         navigation.replace('CreateTrainingPlan', {
           fitnessProfileId: dashboard.fitnessProfile.id,
           goal: dashboard.fitnessProfile.goal,
@@ -59,19 +109,29 @@ export function HomeResolverScreen() {
         return;
       }
 
-      const nutritionState = await resolveNutritionState();
       const destination = resolveHomeResolverDestination({
         hasUserProfile: true,
         fitnessProfile: dashboard.fitnessProfile,
         trainingPlan: dashboard.trainingPlan,
-        nutritionProfileState: nutritionState.profileState,
-        nutritionPlanState: nutritionState.planState,
-        nutritionGoal: nutritionState.nutritionGoal,
+        nutritionProfileState: 'unknown',
+        nutritionPlanState: 'unknown',
         shouldShowDailyBriefingToday: await shouldShowDailyBriefingTodayHelper(
           await AsyncStorage.getItem(DAILY_BRIEFING_LAST_SHOWN_KEY),
           getLocalDateKey(new Date()),
         ),
       });
+
+      if (
+        onboardingAnalytics.getContext() &&
+        !onboardingAnalytics.hasEmitted('home_reached')
+      ) {
+        trackOnboardingEvent('home_reached');
+        if (onboardingAnalytics.getContext()?.mode === 'real') {
+          trackOnboardingEvent('onboarding_completed');
+        }
+        await clearOnboardingProgress();
+        onboardingActive.current = false;
+      }
 
       if (destination.screen === 'CoachDailyBriefing') {
         await markDailyBriefingShownToday();
@@ -86,38 +146,51 @@ export function HomeResolverScreen() {
         error instanceof ApiClientError &&
         error.code === 'AUTH_INVALID_SESSION'
       ) {
-        await signOut();
+        trackOnboardingEvent('session_expired_during_onboarding', {
+          stage: lastStage.current,
+        });
+        await signOut({ preserveOnboardingProgress: true });
         return;
       }
 
+      if (onboardingAnalytics.getContext()) {
+        trackOnboardingEvent('onboarding_error', {
+          stage: lastStage.current,
+          errorCategory: getOnboardingErrorCategory(error),
+        });
+      }
       setErrorMessage(getHomeResolverErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function resolveNutritionState(): Promise<{
-    profileState: 'exists' | 'missing' | 'unknown';
-    planState: 'exists' | 'missing' | 'unknown';
-    nutritionGoal: 'fat_loss' | 'maintenance' | 'muscle_gain' | null;
-  }> {
-    const [profileResult, planResult] = await Promise.allSettled([
-      apiClient.nutrition.getNutritionProfile(),
-      apiClient.nutrition.getCurrentNutritionPlan(),
-    ]);
+  function startOnboardingStage(stage: OnboardingAnalyticsStage): void {
+    const wasStarted = onboardingAnalytics.hasEmitted('onboarding_started');
+    const context = onboardingAnalytics.ensureContext('real');
+    lastStage.current = stage;
+    onboardingActive.current = true;
+    void ensureSessionOwnerKey().then((ownerKey) =>
+      saveOnboardingProgress({
+        ownerKey,
+        mode: context.mode,
+        stage:
+          stage === 'fitness_profile'
+            ? 'fitness_profile'
+            : stage === 'training_plan'
+              ? 'training_plan'
+              : 'profile',
+        flowSessionId: context.flowSessionId,
+      }),
+    );
 
-    const nutritionProfileState = getNutritionProfileState(profileResult);
-    const nutritionPlanState = getNutritionPlanState(planResult);
-    const nutritionProfile =
-      profileResult.status === 'fulfilled'
-        ? profileResult.value.nutritionProfile
-        : null;
-
-    return {
-      profileState: nutritionProfileState,
-      planState: nutritionPlanState,
-      nutritionGoal: nutritionProfile?.goal ?? null,
-    };
+    if (!wasStarted) {
+      trackOnboardingEvent('onboarding_started');
+    } else if (!onboardingAnalytics.hasEmitted('onboarding_resumed')) {
+      trackOnboardingEvent('onboarding_resumed', {
+        resumeReason: 'partial_state',
+      });
+    }
   }
 
   return (

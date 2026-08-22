@@ -4,6 +4,41 @@ import type {
 } from '../features/daily-check-in/models/daily-check-in-analytics';
 
 export type ProductAnalyticsEventMap = {
+  onboarding_started: OnboardingAnalyticsEventBase;
+  onboarding_completed: OnboardingAnalyticsEventBase;
+  registration_started: OnboardingAnalyticsEventBase;
+  registration_completed: OnboardingAnalyticsEventBase;
+  profile_started: OnboardingAnalyticsEventBase;
+  profile_completed: OnboardingAnalyticsEventBase;
+  nutrition_started: OnboardingAnalyticsEventBase;
+  nutrition_completed: OnboardingAnalyticsEventBase;
+  plan_created: OnboardingAnalyticsEventBase;
+  onboarding_resumed: OnboardingAnalyticsEventBase & {
+    resumeReason: 'partial_state' | 'app_reopened';
+  };
+  onboarding_abandoned: OnboardingAnalyticsEventBase & {
+    stage: OnboardingAnalyticsStage;
+  };
+  home_reached: OnboardingAnalyticsEventBase;
+  first_workout_started: OnboardingAnalyticsEventBase;
+  first_workout_completed: OnboardingAnalyticsEventBase;
+  onboarding_error: OnboardingAnalyticsEventBase & {
+    stage: OnboardingAnalyticsStage;
+    errorCategory:
+      | 'network'
+      | 'authentication'
+      | 'validation'
+      | 'conflict'
+      | 'not_found'
+      | 'server'
+      | 'unknown';
+  };
+  session_expired_during_onboarding: OnboardingAnalyticsEventBase & {
+    stage: OnboardingAnalyticsStage;
+  };
+  demo_started: OnboardingAnalyticsEventBase;
+  demo_completed: OnboardingAnalyticsEventBase;
+  demo_reset: OnboardingAnalyticsEventBase;
   nutrition_dashboard_card_viewed: {
     screen: 'dashboard';
     component: 'nutrition_card';
@@ -175,6 +210,23 @@ export type ProductAnalyticsEventMap = {
   };
 };
 
+export type OnboardingAnalyticsMode = 'real' | 'demo';
+export type OnboardingAnalyticsStage =
+  | 'login'
+  | 'registration'
+  | 'profile'
+  | 'fitness_profile'
+  | 'training_plan'
+  | 'nutrition'
+  | 'home'
+  | 'workout';
+
+type OnboardingAnalyticsEventBase = {
+  schemaVersion: 'onboarding-activation.v1';
+  flowSessionId: string;
+  mode: OnboardingAnalyticsMode;
+};
+
 export type ProductAnalyticsEventName = keyof ProductAnalyticsEventMap;
 
 export interface ProductAnalytics {
@@ -212,6 +264,41 @@ export const PRODUCT_ANALYTICS_FORBIDDEN_PROPERTIES = [
 const PRODUCT_ANALYTICS_ALLOWED_PROPERTIES: {
   [EventName in ProductAnalyticsEventName]: readonly string[];
 } = {
+  onboarding_started: ['schemaVersion', 'flowSessionId', 'mode'],
+  onboarding_completed: ['schemaVersion', 'flowSessionId', 'mode'],
+  registration_started: ['schemaVersion', 'flowSessionId', 'mode'],
+  registration_completed: ['schemaVersion', 'flowSessionId', 'mode'],
+  profile_started: ['schemaVersion', 'flowSessionId', 'mode'],
+  profile_completed: ['schemaVersion', 'flowSessionId', 'mode'],
+  nutrition_started: ['schemaVersion', 'flowSessionId', 'mode'],
+  nutrition_completed: ['schemaVersion', 'flowSessionId', 'mode'],
+  plan_created: ['schemaVersion', 'flowSessionId', 'mode'],
+  onboarding_resumed: [
+    'schemaVersion',
+    'flowSessionId',
+    'mode',
+    'resumeReason',
+  ],
+  onboarding_abandoned: ['schemaVersion', 'flowSessionId', 'mode', 'stage'],
+  home_reached: ['schemaVersion', 'flowSessionId', 'mode'],
+  first_workout_started: ['schemaVersion', 'flowSessionId', 'mode'],
+  first_workout_completed: ['schemaVersion', 'flowSessionId', 'mode'],
+  onboarding_error: [
+    'schemaVersion',
+    'flowSessionId',
+    'mode',
+    'stage',
+    'errorCategory',
+  ],
+  session_expired_during_onboarding: [
+    'schemaVersion',
+    'flowSessionId',
+    'mode',
+    'stage',
+  ],
+  demo_started: ['schemaVersion', 'flowSessionId', 'mode'],
+  demo_completed: ['schemaVersion', 'flowSessionId', 'mode'],
+  demo_reset: ['schemaVersion', 'flowSessionId', 'mode'],
   nutrition_dashboard_card_viewed: [
     'screen',
     'component',

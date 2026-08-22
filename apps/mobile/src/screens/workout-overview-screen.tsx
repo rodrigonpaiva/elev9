@@ -21,7 +21,14 @@ import type {
 import { Badge, Button, Text } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
+import {
+  getOnboardingErrorCategory,
+  onboardingAnalytics,
+  trackOnboardingEvent,
+} from '../analytics/onboarding-analytics';
+import { useAuth } from '../auth/auth-provider';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { canStartWorkout } from './workout-activation-helpers';
 
 type TrainingPlan = TrainingPlanResponse['trainingPlan'];
 type Exercise = TodayWorkout['exercises'][number];
@@ -63,6 +70,7 @@ export function WorkoutOverviewScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'WorkoutOverview'>>();
+  const { signOut } = useAuth();
   const initialWorkout = route.params.workout;
   const initialTrainingPlanId = route.params.trainingPlanId;
   const [state, setState] = useState<WorkoutOverviewState>({
@@ -106,6 +114,12 @@ export function WorkoutOverviewScreen() {
             ? recoveryResult.value.recoverySnapshot
             : null,
       });
+    } else if (isAuthError(trainingResult.reason)) {
+      trackOnboardingEvent('session_expired_during_onboarding', {
+        stage: 'workout',
+      });
+      await signOut({ preserveOnboardingProgress: true });
+      return;
     } else if (isEmptyTrainingError(trainingResult.reason)) {
       setState({
         trainingPlanId: null,
@@ -114,6 +128,12 @@ export function WorkoutOverviewScreen() {
         recoverySnapshot: null,
       });
     } else {
+      if (onboardingAnalytics.getContext()) {
+        trackOnboardingEvent('onboarding_error', {
+          stage: 'workout',
+          errorCategory: getOnboardingErrorCategory(trainingResult.reason),
+        });
+      }
       setErrorMessage('Workout unavailable.');
     }
 
@@ -138,7 +158,13 @@ export function WorkoutOverviewScreen() {
   }, [state.coachDecision, state.recoverySnapshot, state.workout]);
 
   const handleStartWorkout = useCallback(async () => {
-    if (!state.trainingPlanId || !state.workout) {
+    if (
+      !canStartWorkout({
+        hasWorkout: Boolean(state.workout),
+        isStarting,
+        trainingPlanId: state.trainingPlanId,
+      })
+    ) {
       return;
     }
 
@@ -150,6 +176,10 @@ export function WorkoutOverviewScreen() {
         workoutDayIndex: state.workout.dayIndex,
       });
 
+      if (onboardingAnalytics.getContext()) {
+        trackOnboardingEvent('first_workout_started');
+      }
+
       navigation.replace('ActiveWorkout', {
         trainingPlanId: state.trainingPlanId,
         workout: state.workout,
@@ -157,6 +187,23 @@ export function WorkoutOverviewScreen() {
         workoutSessionId: response.workoutSession.id,
       });
     } catch (error) {
+      if (
+        error instanceof ApiClientError &&
+        (error.code === 'AUTH_INVALID_SESSION' || error.status === 401)
+      ) {
+        trackOnboardingEvent('session_expired_during_onboarding', {
+          stage: 'workout',
+        });
+        await signOut({ preserveOnboardingProgress: true });
+        return;
+      }
+
+      if (onboardingAnalytics.getContext()) {
+        trackOnboardingEvent('onboarding_error', {
+          stage: 'workout',
+          errorCategory: getOnboardingErrorCategory(error),
+        });
+      }
       setErrorMessage(
         error instanceof ApiClientError
           ? error.message
@@ -165,7 +212,7 @@ export function WorkoutOverviewScreen() {
     } finally {
       setIsStarting(false);
     }
-  }, [navigation, state.trainingPlanId, state.workout]);
+  }, [isStarting, navigation, signOut, state.trainingPlanId, state.workout]);
 
   const handleMaybeLater = useCallback(() => {
     navigation.goBack();
@@ -246,6 +293,7 @@ export function WorkoutOverviewScreen() {
               label="Start Workout"
               onPress={() => void handleStartWorkout()}
               loading={isStarting}
+              disabled={isStarting}
             />
             <Button
               accessibilityLabel="Maybe later"
@@ -629,6 +677,13 @@ function toTitleCase(value: string): string {
 function isEmptyTrainingError(error: unknown): boolean {
   return (
     error instanceof ApiClientError && error.code === 'TRAINING_PLAN_NOT_FOUND'
+  );
+}
+
+function isAuthError(error: unknown): boolean {
+  return (
+    error instanceof ApiClientError &&
+    (error.code === 'AUTH_INVALID_SESSION' || error.status === 401)
   );
 }
 

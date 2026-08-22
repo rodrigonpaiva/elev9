@@ -21,6 +21,7 @@ import {
 
 import { mobileApiClient } from '../api/client';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { OnboardingProgress } from '../components/onboarding-progress';
 
 export function CreateFitnessProfileScreen() {
   const navigation =
@@ -135,6 +136,7 @@ export function CreateFitnessProfileScreen() {
             Add enough detail for Elev9 to shape your first plan.
           </Text>
         </View>
+        <OnboardingProgress stage="fitness_profile" />
 
         <Card style={styles.card}>
           <View style={styles.sectionHeader}>
@@ -237,7 +239,7 @@ export function CreateFitnessProfileScreen() {
             label="Continue"
             onPress={handleCreateFitnessProfile}
             loading={isSubmitting}
-            disabled={!validation.isValid}
+            disabled={!validation.isValid || isSubmitting}
             style={styles.fullButton}
           />
         </Card>

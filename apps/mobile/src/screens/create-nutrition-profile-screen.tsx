@@ -1,4 +1,10 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
@@ -9,6 +15,10 @@ import type { NutritionGoal } from '@elev9/types';
 import { Button, Card, Input, Screen, Text, colors } from '@elev9/ui';
 
 import { apiClient } from '../api/client';
+import {
+  getOnboardingErrorCategory,
+  trackOnboardingEvent,
+} from '../analytics/onboarding-analytics';
 import type { RootStackParamList } from '../navigation/app-navigator';
 
 const NUTRITION_GOAL_OPTIONS = [
@@ -48,6 +58,10 @@ export function CreateNutritionProfileScreen() {
   const [preferredFoodsText, setPreferredFoodsText] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    trackOnboardingEvent('nutrition_started');
+  }, []);
 
   const canSubmit = selectedGoal !== null && mealsPerDay !== null;
 
@@ -104,8 +118,13 @@ export function CreateNutritionProfileScreen() {
       });
 
       await apiClient.nutrition.createNutritionPlan();
+      trackOnboardingEvent('nutrition_completed');
       navigation.replace('HomeResolver');
     } catch (error) {
+      trackOnboardingEvent('onboarding_error', {
+        stage: 'nutrition',
+        errorCategory: getOnboardingErrorCategory(error),
+      });
       setErrorMessage(getNutritionSetupErrorMessage(error));
     } finally {
       setIsSubmitting(false);

@@ -1,16 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ApiClientError } from '@elev9/api-client';
 import { Button, Card, Input, Screen, Text } from '@elev9/ui';
 import { colors } from '@elev9/ui';
 
 import { useAuth } from '../auth/auth-provider';
+import type { RootStackParamList } from '../navigation/app-navigator';
 
-const isDemoModeEnabled =
-  __DEV__ || process.env.EXPO_PUBLIC_DEMO_MODE === 'true';
+import { getDemoConfig, isDemoConfigurationValid } from '../auth/demo-config';
+import { currentApiBaseUrl } from '../api/client';
+
+const demoConfig = getDemoConfig();
+const isDemoModeEnabled = isDemoConfigurationValid(
+  demoConfig,
+  currentApiBaseUrl,
+);
 
 export function LoginScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signIn, signInDemo } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -126,6 +137,13 @@ export function LoginScreen() {
               label="Sign in"
               loading={isSubmitting}
               onPress={handleLogin}
+              style={styles.button}
+            />
+            <Button
+              label="Create account"
+              onPress={() => navigation.navigate('Register')}
+              variant="secondary"
+              disabled={isSubmitting || isDemoSubmitting}
               style={styles.button}
             />
             {isDemoModeEnabled ? (

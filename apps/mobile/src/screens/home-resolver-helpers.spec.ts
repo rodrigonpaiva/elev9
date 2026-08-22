@@ -77,7 +77,7 @@ describe('home-resolver helpers', () => {
     });
   });
 
-  it('routes nutrition setup before main tabs and preserves the prefill goal', () => {
+  it('routes to the home flow without requiring nutrition setup', () => {
     expect(
       resolveHomeResolverDestination({
         hasUserProfile: true,
@@ -88,10 +88,7 @@ describe('home-resolver helpers', () => {
         nutritionGoal: 'fat_loss',
         shouldShowDailyBriefingToday: true,
       }),
-    ).toEqual({
-      screen: 'CreateNutritionProfile',
-      params: { prefillGoal: 'fat_loss' },
-    });
+    ).toEqual({ screen: 'CoachDailyBriefing' });
 
     expect(
       resolveHomeResolverDestination({
@@ -102,10 +99,7 @@ describe('home-resolver helpers', () => {
         nutritionPlanState: 'missing',
         shouldShowDailyBriefingToday: true,
       }),
-    ).toEqual({
-      screen: 'CreateNutritionProfile',
-      params: { prefillGoal: 'muscle_gain' },
-    });
+    ).toEqual({ screen: 'CoachDailyBriefing' });
   });
 
   it('routes to the daily briefing once per day and then to main tabs', () => {

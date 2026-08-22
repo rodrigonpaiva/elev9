@@ -64,20 +64,6 @@ export function resolveHomeResolverDestination(input: {
     };
   }
 
-  if (
-    input.nutritionProfileState === 'missing' ||
-    input.nutritionPlanState === 'missing'
-  ) {
-    return {
-      screen: 'CreateNutritionProfile',
-      params: {
-        prefillGoal:
-          input.nutritionGoal ??
-          mapFitnessGoalToNutritionGoal(input.fitnessProfile.goal),
-      },
-    };
-  }
-
   if (input.shouldShowDailyBriefingToday) {
     return { screen: 'CoachDailyBriefing' };
   }
