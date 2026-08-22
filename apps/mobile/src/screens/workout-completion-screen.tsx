@@ -21,12 +21,24 @@ import {
 } from '../analytics/onboarding-analytics';
 import { useAuth } from '../auth/auth-provider';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { clearActiveWorkoutSession } from '../storage/active-workout-session-storage';
+import { getSessionOwnerKey } from '../storage/session-owner-storage';
+import { clearRecoveryCacheForOwner } from '../features/recovery/cache/recovery-cache';
+import {
+  trackDailyWorkoutCompletionConfirmed,
+  trackDailyWorkoutError,
+  trackDailyWorkoutRecoveryPending,
+  trackDailyWorkoutRetry,
+  trackDailyWorkoutSessionExpired,
+} from '../analytics/daily-workout-analytics';
+import { getSessionMode } from '../storage/session-mode-storage';
 
 type CompletionState = {
   coachDecision: CoachDecision | null;
   recoverySnapshot: RecoverySnapshot | null;
   nutrition: NutritionReadModel | null;
   workoutSaved: boolean;
+  recoveryPending: boolean;
 };
 
 type SummaryMetric = {
@@ -69,11 +81,15 @@ export function WorkoutCompletionScreen() {
   } = route.params;
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoadError, setHasLoadError] = useState(false);
+  const [saveErrorCategory, setSaveErrorCategory] = useState<
+    'network' | 'authentication' | 'validation' | 'server' | 'unknown' | null
+  >(null);
   const [state, setState] = useState<CompletionState>({
     coachDecision: null,
     recoverySnapshot: null,
     nutrition: null,
     workoutSaved: false,
+    recoveryPending: false,
   });
 
   const handleBackToDashboard = useCallback(() => {
@@ -100,114 +116,174 @@ export function WorkoutCompletionScreen() {
     navigation.navigate('AskCoach');
   }, [navigation]);
 
-  const loadCompletion = useCallback(async () => {
-    if (!workout) {
-      setHasLoadError(true);
-      setIsLoading(false);
-      return;
-    }
-
-    if (completedExercises.length === 0) {
-      setHasLoadError(false);
-      setIsLoading(false);
-      return;
-    }
-
-    setHasLoadError(false);
-    setIsLoading(true);
-
-    const saveWorkout = async (): Promise<void> => {
-      try {
-        await mobileApiClient.progress.logWorkout({
-          trainingPlanId,
-          workoutDayIndex: workout.dayIndex,
-          durationMinutes,
-          completedExercises,
-          feedback: {
-            difficulty: getFeedbackDifficulty(workout.intensity),
-          },
+  const loadCompletion = useCallback(
+    async (isRetry = false, retryTarget: 'save' | 'recovery' = 'save') => {
+      const mode = (await getSessionMode()) ?? 'real';
+      if (isRetry) {
+        trackDailyWorkoutRetry({
+          mode,
+          stage: 'completion',
+          retryTarget,
         });
+      }
+      if (!workout) {
+        setHasLoadError(true);
+        setIsLoading(false);
+        return;
+      }
+
+      if (completedExercises.length === 0) {
+        setHasLoadError(false);
+        setIsLoading(false);
+        return;
+      }
+
+      setHasLoadError(false);
+      setSaveErrorCategory(null);
+      setIsLoading(true);
+      let operationRecoveryPending = false;
+
+      const saveWorkout = async (): Promise<void> => {
+        try {
+          const logResponse = await mobileApiClient.progress.logWorkout({
+            trainingPlanId,
+            workoutDayIndex: workout.dayIndex,
+            durationMinutes,
+            completedExercises,
+            feedback: {
+              difficulty: getFeedbackDifficulty(workout.intensity),
+            },
+          });
+          operationRecoveryPending = logResponse.recoveryPending;
+        } catch (error) {
+          if (!isAlreadyLoggedError(error)) throw error;
+        }
+
+        if (workoutSessionId) {
+          await mobileApiClient.progress.completeWorkout(workoutSessionId);
+        }
+
+        await clearRecoveryCacheForOwner(await getSessionOwnerKey());
+      };
+
+      let logResult: PromiseSettledResult<void>;
+      try {
+        await saveWorkout();
+        logResult = { status: 'fulfilled', value: undefined };
       } catch (error) {
-        if (!isAlreadyLoggedError(error)) throw error;
+        logResult = { status: 'rejected', reason: error };
       }
 
-      if (workoutSessionId) {
-        await mobileApiClient.progress.completeWorkout(workoutSessionId);
+      const [coachResult, recoveryResult, nutritionResult] =
+        logResult.status === 'fulfilled'
+          ? await Promise.allSettled([
+              apiClient.ai.getTodayCoachDecision(),
+              apiClient.recovery.getTodayRecovery(),
+              apiClient.nutrition.getTodayNutrition(),
+            ])
+          : [
+              { status: 'rejected', reason: logResult.reason } as const,
+              { status: 'rejected', reason: logResult.reason } as const,
+              { status: 'rejected', reason: logResult.reason } as const,
+            ];
+
+      const workoutSaved =
+        logResult.status === 'fulfilled' ||
+        (logResult.status === 'rejected' &&
+          isAlreadyLoggedError(logResult.reason));
+
+      const sessionExpiredResult = [
+        logResult,
+        coachResult,
+        recoveryResult,
+        nutritionResult,
+      ].find(
+        (result) =>
+          result.status === 'rejected' &&
+          result.reason instanceof ApiClientError &&
+          (result.reason.code === 'AUTH_INVALID_SESSION' ||
+            result.reason.status === 401),
+      );
+
+      if (sessionExpiredResult) {
+        trackDailyWorkoutSessionExpired({ mode, stage: 'completion' });
+        trackOnboardingEvent('session_expired_during_onboarding', {
+          stage: 'workout',
+        });
+        await signOut({
+          preserveActiveWorkoutSession: true,
+          preserveOnboardingProgress: true,
+        });
+        return;
       }
-    };
 
-    const [logResult, coachResult, recoveryResult, nutritionResult] =
-      await Promise.allSettled([
-        saveWorkout(),
-        apiClient.ai.getTodayCoachDecision(),
-        apiClient.recovery.getTodayRecovery(),
-        apiClient.nutrition.getTodayNutrition(),
-      ]);
+      if (workoutSaved) {
+        await clearActiveWorkoutSession();
+      }
 
-    const workoutSaved =
-      logResult.status === 'fulfilled' ||
-      (logResult.status === 'rejected' &&
-        isAlreadyLoggedError(logResult.reason));
-
-    const sessionExpiredResult = [
-      logResult,
-      coachResult,
-      recoveryResult,
-      nutritionResult,
-    ].find(
-      (result) =>
-        result.status === 'rejected' &&
-        result.reason instanceof ApiClientError &&
-        (result.reason.code === 'AUTH_INVALID_SESSION' ||
-          result.reason.status === 401),
-    );
-
-    if (sessionExpiredResult) {
-      trackOnboardingEvent('session_expired_during_onboarding', {
-        stage: 'workout',
+      setState({
+        coachDecision:
+          coachResult.status === 'fulfilled'
+            ? coachResult.value.coachDecision
+            : null,
+        recoverySnapshot:
+          recoveryResult.status === 'fulfilled'
+            ? recoveryResult.value.recoverySnapshot
+            : null,
+        nutrition:
+          nutritionResult.status === 'fulfilled'
+            ? nutritionResult.value.todayNutrition
+            : null,
+        workoutSaved,
+        recoveryPending:
+          workoutSaved &&
+          (operationRecoveryPending || recoveryResult.status === 'rejected'),
       });
-      await signOut({ preserveOnboardingProgress: true });
-      return;
-    }
-
-    setState({
-      coachDecision:
-        coachResult.status === 'fulfilled'
-          ? coachResult.value.coachDecision
-          : null,
-      recoverySnapshot:
-        recoveryResult.status === 'fulfilled'
-          ? recoveryResult.value.recoverySnapshot
-          : null,
-      nutrition:
-        nutritionResult.status === 'fulfilled'
-          ? nutritionResult.value.todayNutrition
-          : null,
-      workoutSaved,
-    });
-    if (workoutSaved && onboardingAnalytics.getContext()) {
-      trackOnboardingEvent('first_workout_completed');
-    } else if (onboardingAnalytics.getContext()) {
-      trackOnboardingEvent('onboarding_error', {
-        stage: 'workout',
-        errorCategory: getOnboardingErrorCategory(
-          logResult.status === 'rejected' ? logResult.reason : null,
-        ),
-      });
-    }
-    setIsLoading(false);
-  }, [
-    completedExercises,
-    durationMinutes,
-    trainingPlanId,
-    workout,
-    workoutSessionId,
-    signOut,
-  ]);
+      setHasLoadError(!workoutSaved);
+      if (!workoutSaved && logResult.status === 'rejected') {
+        const errorCategory = getCompletionErrorCategory(logResult.reason);
+        setSaveErrorCategory(errorCategory);
+        trackDailyWorkoutError({
+          mode,
+          stage: 'completion',
+          errorCategory,
+        });
+      }
+      if (workoutSaved) {
+        trackDailyWorkoutCompletionConfirmed(mode);
+      }
+      if (workoutSaved && recoveryResult.status === 'rejected') {
+        trackDailyWorkoutRecoveryPending(mode);
+      }
+      if (workoutSaved && onboardingAnalytics.getContext()) {
+        trackOnboardingEvent('first_workout_completed');
+      } else if (onboardingAnalytics.getContext()) {
+        trackOnboardingEvent('onboarding_error', {
+          stage: 'workout',
+          errorCategory: getOnboardingErrorCategory(
+            logResult.status === 'rejected' ? logResult.reason : null,
+          ),
+        });
+      }
+      setIsLoading(false);
+    },
+    [
+      completedExercises,
+      durationMinutes,
+      trainingPlanId,
+      workout,
+      workoutSessionId,
+      signOut,
+    ],
+  );
 
   useEffect(() => {
     void loadCompletion();
   }, [loadCompletion]);
+
+  const handleRetry = useCallback(() => {
+    void loadCompletion(true, state.recoveryPending ? 'recovery' : 'save');
+  }, [loadCompletion, state.recoveryPending]);
 
   const model = useMemo(
     () =>
@@ -275,9 +351,13 @@ export function WorkoutCompletionScreen() {
 
     return (
       <WorkoutCompletionStateView
-        title="Unable to load workout summary."
-        actionLabel="Return to Dashboard"
-        onAction={handleBackToDashboard}
+        title={
+          hasLoadError
+            ? getCompletionErrorTitle(saveErrorCategory)
+            : 'Unable to load workout summary.'
+        }
+        actionLabel={hasLoadError ? 'Retry' : 'Return to Dashboard'}
+        onAction={hasLoadError ? handleRetry : handleBackToDashboard}
       />
     );
   }
@@ -290,6 +370,9 @@ export function WorkoutCompletionScreen() {
           style={styles.stack}
         >
           <AchievementHero />
+          {state.recoveryPending ? (
+            <RecoveryPendingNotice onRetry={handleRetry} />
+          ) : null}
           <SummaryGrid metrics={model.metrics} />
           <Highlights highlights={model.highlights} />
           <CoachFeedback feedback={coachFeedback} />
@@ -463,6 +546,22 @@ function WorkoutCompletionStateView({
         />
       </View>
     </SafeAreaView>
+  );
+}
+
+function RecoveryPendingNotice({ onRetry }: { onRetry: () => void }) {
+  return (
+    <View
+      accessibilityLabel="Workout saved. Recovery update is pending. Retry available."
+      style={styles.recoveryPending}
+    >
+      <Text style={styles.recoveryPendingTitle}>Recovery update pending</Text>
+      <Text style={styles.recoveryPendingMessage}>
+        Your workout is saved. Recovery could not be refreshed yet; retry to
+        load the latest result.
+      </Text>
+      <Button label="Retry Recovery" onPress={onRetry} variant="ghost" />
+    </View>
   );
 }
 
@@ -654,6 +753,43 @@ function isAlreadyLoggedError(error: unknown): boolean {
   );
 }
 
+function getCompletionErrorCategory(
+  error: unknown,
+): 'network' | 'authentication' | 'validation' | 'server' | 'unknown' {
+  if (error instanceof ApiClientError) {
+    if (error.status === 401 || error.code === 'AUTH_INVALID_SESSION') {
+      return 'authentication';
+    }
+    if (error.status === 400 || error.status === 409) return 'validation';
+    if (error.status !== undefined && error.status >= 500) return 'server';
+    if (error.status === undefined) return 'network';
+  }
+  return 'unknown';
+}
+
+function getCompletionErrorTitle(
+  category:
+    | 'network'
+    | 'authentication'
+    | 'validation'
+    | 'server'
+    | 'unknown'
+    | null,
+): string {
+  switch (category) {
+    case 'network':
+      return 'Connection unavailable.';
+    case 'authentication':
+      return 'Session expired.';
+    case 'validation':
+      return 'Workout needs attention.';
+    case 'server':
+      return 'Workout processing is delayed.';
+    default:
+      return 'Unable to save workout.';
+  }
+}
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -813,6 +949,25 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: 12,
+  },
+  recoveryPending: {
+    gap: 7,
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: '#fcd34d',
+    backgroundColor: '#fffbeb',
+    padding: 16,
+  },
+  recoveryPendingTitle: {
+    color: '#92400e',
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '800',
+  },
+  recoveryPendingMessage: {
+    color: '#78350f',
+    fontSize: 13,
+    lineHeight: 19,
   },
   state: {
     flex: 1,

@@ -116,6 +116,16 @@ describe('Workout Completion E2E', () => {
   it('is idempotent when completing a session twice', async () => {
     const flow = await createTrainingFlow('completion-idempotent');
     const started = await start(flow);
+    await request(app.getHttpServer())
+      .post('/progress/workout-logs')
+      .set('Authorization', `Bearer ${flow.token}`)
+      .send({
+        trainingPlanId: flow.trainingPlanId,
+        workoutDayIndex: 1,
+        durationMinutes: 30,
+        completedExercises: [{ name: 'push_up', setsDone: 1, repsDone: 8 }],
+      })
+      .expect(201);
     const first = await request(app.getHttpServer())
       .post(`/progress/workout-sessions/${started.id}/complete`)
       .set('Authorization', `Bearer ${flow.token}`)

@@ -13,6 +13,24 @@ export class WorkoutSessionSchemaClass {
   completedAt?: Date;
   createdAt!: Date;
   updatedAt!: Date;
+  replacements!: Array<{
+    exerciseIndex: number;
+    originalExercise: {
+      name: string;
+      sets: number;
+      reps: string;
+      restSeconds: number;
+    };
+    replacementExercise: {
+      name: string;
+      sets: number;
+      reps: string;
+      restSeconds: number;
+    };
+    reason: string;
+    idempotencyKey: string;
+    replacedAt: Date;
+  }>;
 }
 
 export const WORKOUT_SESSION_MODEL_NAME = 'WorkoutSession';
@@ -26,6 +44,30 @@ export const WorkoutSessionSchema = new Schema<WorkoutSessionSchemaClass>(
     date: { type: String, required: true },
     status: { type: String, required: true, default: 'active' },
     completedAt: { type: Date, required: false },
+    replacements: {
+      type: [
+        {
+          exerciseIndex: { type: Number, required: true },
+          originalExercise: {
+            name: { type: String, required: true },
+            sets: { type: Number, required: true },
+            reps: { type: String, required: true },
+            restSeconds: { type: Number, required: true },
+          },
+          replacementExercise: {
+            name: { type: String, required: true },
+            sets: { type: Number, required: true },
+            reps: { type: String, required: true },
+            restSeconds: { type: Number, required: true },
+          },
+          reason: { type: String, required: true },
+          idempotencyKey: { type: String, required: true },
+          replacedAt: { type: Date, required: true },
+        },
+      ],
+      required: true,
+      default: [],
+    },
   },
   {
     collection: WORKOUT_SESSION_COLLECTION_NAME,

@@ -72,6 +72,12 @@ import { LogWorkoutResponseDto } from './dto/log-workout.response.dto';
 import { StartWorkoutRequestDto } from './dto/start-workout.request.dto';
 import { StartWorkoutResponseDto } from './dto/start-workout.response.dto';
 import { CompleteWorkoutParamsDto } from './dto/complete-workout.params.dto';
+import { ReplaceWorkoutExerciseRequestDto } from './dto/replace-workout-exercise.request.dto';
+import { ReplaceWorkoutExerciseUseCase } from '../../application/use-cases/replace-workout-exercise/replace-workout-exercise.use-case';
+import {
+  ReplaceWorkoutExerciseError,
+  REPLACE_WORKOUT_EXERCISE_ERROR_CODES,
+} from '../../application/use-cases/replace-workout-exercise/replace-workout-exercise.errors';
 
 type RequestWithAuthUser = {
   authUser?: {
@@ -98,6 +104,8 @@ export class ProgressController {
     private readonly startWorkoutUseCase?: StartWorkoutUseCase,
     @Optional()
     private readonly completeWorkoutUseCase?: CompleteWorkoutUseCase,
+    @Optional()
+    private readonly replaceWorkoutExerciseUseCase?: ReplaceWorkoutExerciseUseCase,
   ) {}
 
   @Post('daily-check-in')
@@ -156,6 +164,7 @@ export class ProgressController {
       });
 
       return {
+        recoveryPending: result.recoveryPending,
         workoutLog: {
           id: result.workoutLog.id,
           trainingPlanId: result.workoutLog.trainingPlanId,
@@ -203,6 +212,10 @@ export class ProgressController {
           ...(result.workoutSession.completedAt
             ? { completedAt: result.workoutSession.completedAt.toISOString() }
             : {}),
+          replacements: result.workoutSession.replacements.map((item) => ({
+            ...item,
+            replacedAt: item.replacedAt.toISOString(),
+          })),
         },
       };
     } catch (error) {
@@ -231,6 +244,35 @@ export class ProgressController {
       return this.toWorkoutSessionResponse(result.workoutSession);
     } catch (error) {
       this.handleCompleteWorkoutError(error);
+    }
+  }
+
+  @Post('workout-sessions/:sessionId/replacements')
+  @UseGuards(AuthSessionGuard)
+  @HttpCode(HttpStatus.OK)
+  async replaceWorkoutExercise(
+    @Req() request: RequestWithAuthUser,
+    @Param() params: CompleteWorkoutParamsDto,
+    @Body() body: ReplaceWorkoutExerciseRequestDto,
+  ): Promise<StartWorkoutResponseDto> {
+    if (!this.replaceWorkoutExerciseUseCase) {
+      throw new InternalServerErrorException(
+        'Workout replacement is unavailable.',
+      );
+    }
+    try {
+      const result = await this.replaceWorkoutExerciseUseCase.execute({
+        authUserId: request.authUser?.id ?? '',
+        sessionId: params.sessionId,
+        exerciseIndex: body.exerciseIndex,
+        currentExerciseName: body.currentExerciseName,
+        replacementExercise: body.replacementExercise,
+        reason: body.reason,
+        idempotencyKey: body.idempotencyKey,
+      });
+      return this.toWorkoutSessionResponse(result.workoutSession);
+    } catch (error) {
+      this.handleReplaceWorkoutExerciseError(error);
     }
   }
 
@@ -268,6 +310,24 @@ export class ProgressController {
     startedAt: Date;
     updatedAt: Date;
     completedAt?: Date;
+    replacements: Array<{
+      exerciseIndex: number;
+      originalExercise: {
+        name: string;
+        sets: number;
+        reps: string;
+        restSeconds: number;
+      };
+      replacementExercise: {
+        name: string;
+        sets: number;
+        reps: string;
+        restSeconds: number;
+      };
+      reason: string;
+      idempotencyKey: string;
+      replacedAt: Date;
+    }>;
   }): StartWorkoutResponseDto {
     return {
       workoutSession: {
@@ -282,8 +342,35 @@ export class ProgressController {
         ...(session.completedAt
           ? { completedAt: session.completedAt.toISOString() }
           : {}),
+        replacements: session.replacements.map((item) => ({
+          ...item,
+          replacedAt: item.replacedAt.toISOString(),
+        })),
       },
     };
+  }
+
+  private handleReplaceWorkoutExerciseError(error: unknown): never {
+    if (!(error instanceof ReplaceWorkoutExerciseError)) throw error;
+    const status =
+      error.code === REPLACE_WORKOUT_EXERCISE_ERROR_CODES.SESSION_NOT_FOUND
+        ? HttpStatus.NOT_FOUND
+        : error.code ===
+              REPLACE_WORKOUT_EXERCISE_ERROR_CODES.SESSION_COMPLETED ||
+            error.code === REPLACE_WORKOUT_EXERCISE_ERROR_CODES.CONFLICT
+          ? HttpStatus.CONFLICT
+          : error.code === REPLACE_WORKOUT_EXERCISE_ERROR_CODES.INVALID_SESSION
+            ? HttpStatus.UNAUTHORIZED
+            : HttpStatus.BAD_REQUEST;
+    const exception = new BadRequestException(error.message);
+    exception.message = error.message;
+    if (status === HttpStatus.NOT_FOUND)
+      throw new NotFoundException(error.message);
+    if (status === HttpStatus.CONFLICT)
+      throw new ConflictException(error.message);
+    if (status === HttpStatus.UNAUTHORIZED)
+      throw new UnauthorizedException(error.message);
+    throw exception;
   }
 
   @Get('summary')
@@ -479,6 +566,12 @@ export class ProgressController {
           message: error.message,
           details: error.details,
         });
+      case LOG_WORKOUT_ERROR_CODES.RECOVERY_RECALCULATION_FAILED:
+        throw new ConflictException({
+          code: error.code,
+          message: error.message,
+          details: error.details,
+        });
       case LOG_WORKOUT_ERROR_CODES.USER_PROFILE_NOT_FOUND:
       case LOG_WORKOUT_ERROR_CODES.FITNESS_PROFILE_NOT_FOUND:
       case LOG_WORKOUT_ERROR_CODES.TRAINING_PLAN_NOT_FOUND:
@@ -549,6 +642,11 @@ export class ProgressController {
       case COMPLETE_WORKOUT_ERROR_CODES.SESSION_NOT_FOUND:
       case COMPLETE_WORKOUT_ERROR_CODES.SESSION_EXPIRED:
         throw new NotFoundException({
+          code: error.code,
+          message: error.message,
+        });
+      case COMPLETE_WORKOUT_ERROR_CODES.WORKOUT_LOG_REQUIRED:
+        throw new ConflictException({
           code: error.code,
           message: error.message,
         });

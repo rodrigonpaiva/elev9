@@ -14,6 +14,7 @@ export type LogWorkoutRequest = {
 };
 
 export type LogWorkoutResponse = {
+  recoveryPending: boolean;
   workoutLog: {
     id: string;
     trainingPlanId: string;
@@ -112,6 +113,39 @@ export type StartWorkoutRequest = {
   workoutDayIndex: number;
 };
 
+export type WorkoutExerciseSnapshot = {
+  name: string;
+  sets: number;
+  reps: string;
+  restSeconds: number;
+};
+
+export type WorkoutReplacementReason =
+  | 'no_equipment'
+  | 'too_difficult'
+  | 'too_easy'
+  | 'discomfort'
+  | 'preference';
+
+export type WorkoutSessionReplacement = {
+  exerciseIndex: number;
+  originalExercise: WorkoutExerciseSnapshot;
+  replacementExercise: WorkoutExerciseSnapshot;
+  reason: WorkoutReplacementReason;
+  idempotencyKey: string;
+  replacedAt: string;
+};
+
+export type ReplaceWorkoutExerciseRequest = {
+  exerciseIndex: number;
+  currentExerciseName: string;
+  replacementExercise: WorkoutExerciseSnapshot;
+  reason: WorkoutReplacementReason;
+  idempotencyKey: string;
+};
+
+export type ReplaceWorkoutExerciseResponse = StartWorkoutResponse;
+
 export type StartWorkoutResponse = {
   workoutSession: {
     id: string;
@@ -123,6 +157,7 @@ export type StartWorkoutResponse = {
     startedAt: string;
     updatedAt: string;
     completedAt?: string;
+    replacements: WorkoutSessionReplacement[];
   };
 };
 

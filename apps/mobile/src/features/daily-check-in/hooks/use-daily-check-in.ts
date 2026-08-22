@@ -10,6 +10,8 @@ import type {
 
 import { apiClient } from '../../../api/client';
 import { useAuth } from '../../../auth/auth-provider';
+import { clearRecoveryCacheForOwner } from '../../recovery/cache/recovery-cache';
+import { getSessionOwnerKey } from '../../../storage/session-owner-storage';
 import {
   mapDailyCheckInError,
   resolveDailyCheckInMode,
@@ -112,6 +114,8 @@ export function useDailyCheckIn(): UseDailyCheckInResult {
 
         try {
           const response = await apiClient.progress.submitDailyCheckIn(values);
+
+          await clearRecoveryCacheForOwner(await getSessionOwnerKey());
 
           if (mountedRef.current) {
             setTodayState({

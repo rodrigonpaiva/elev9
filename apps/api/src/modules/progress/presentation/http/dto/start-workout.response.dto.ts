@@ -9,5 +9,23 @@ export class StartWorkoutResponseDto {
     startedAt: string;
     updatedAt: string;
     completedAt?: string;
+    replacements: Array<{
+      exerciseIndex: number;
+      originalExercise: {
+        name: string;
+        sets: number;
+        reps: string;
+        restSeconds: number;
+      };
+      replacementExercise: {
+        name: string;
+        sets: number;
+        reps: string;
+        restSeconds: number;
+      };
+      reason: string;
+      idempotencyKey: string;
+      replacedAt: string;
+    }>;
   };
 }

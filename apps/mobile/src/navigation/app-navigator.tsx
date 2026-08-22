@@ -127,6 +127,7 @@ export type RootStackParamList = {
     replacementToken?: string;
     startedAt?: number;
     workoutSessionId?: string;
+    resumeFromStorage?: boolean;
   };
   ExerciseDetail: {
     exercise: TodayWorkout['exercises'][number];
@@ -144,6 +145,7 @@ export type RootStackParamList = {
         completedSets: boolean[];
       }>;
       startedAt: number;
+      workoutSessionId?: string;
     };
   };
   ExerciseReplacement: {
@@ -154,6 +156,7 @@ export type RootStackParamList = {
       completedSets: boolean[];
     }>;
     startedAt: number;
+    workoutSessionId?: string;
   };
   RestTimer: {
     exerciseName: string;
@@ -163,6 +166,7 @@ export type RootStackParamList = {
     reps: string;
     restSeconds: number;
     isWorkoutComplete: boolean;
+    workoutSessionId?: string;
   };
   WorkoutCompletion: {
     trainingPlanId: string;

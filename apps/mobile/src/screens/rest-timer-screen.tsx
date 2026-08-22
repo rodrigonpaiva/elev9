@@ -9,6 +9,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button, Text } from '@elev9/ui';
 
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { getRestTimerRemaining } from '../storage/active-workout-session-helpers';
+import { updateActiveWorkoutSession } from '../storage/active-workout-session-storage';
+import { getSessionMode } from '../storage/session-mode-storage';
+import { getSessionOwnerKey } from '../storage/session-owner-storage';
 
 type HapticEvent = 'rest_start' | 'ten_seconds' | 'rest_complete';
 
@@ -26,6 +30,17 @@ const tokens = {
   skeletonSoft: '#f5f7fb',
 } as const;
 
+async function clearPersistedTimer(): Promise<void> {
+  const ownerKey = await getSessionOwnerKey();
+  const mode = await getSessionMode();
+  if (!ownerKey || !mode) return;
+
+  await updateActiveWorkoutSession(ownerKey, mode, (current) => ({
+    ...current,
+    timer: null,
+  }));
+}
+
 export function RestTimerScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -38,6 +53,7 @@ export function RestTimerScreen() {
     reps,
     restSeconds,
     totalSets,
+    workoutSessionId,
   } = route.params;
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -47,6 +63,76 @@ export function RestTimerScreen() {
   const [remainingSeconds, setRemainingSeconds] = useState(restSeconds);
   const tenSecondHapticFired = useRef(false);
   const completionHandled = useRef(false);
+  const timerHydrationStarted = useRef(false);
+  const timerHydrated = useRef(false);
+
+  useEffect(() => {
+    if (!workoutSessionId || timerHydrationStarted.current) return;
+    timerHydrationStarted.current = true;
+
+    void (async () => {
+      try {
+        const ownerKey = await getSessionOwnerKey();
+        const mode = await getSessionMode();
+        if (!ownerKey || !mode) return;
+
+        const { loadActiveWorkoutSession } =
+          await import('../storage/active-workout-session-storage');
+        const snapshot = await loadActiveWorkoutSession(ownerKey, mode);
+        const timer = snapshot?.timer;
+        if (!timer || snapshot.workoutSessionId !== workoutSessionId) return;
+
+        const remaining = getRestTimerRemaining(timer, Date.now());
+        setIsPaused(timer.status === 'paused');
+        setRemainingSeconds(remaining);
+        setTargetEndAt(
+          timer.status === 'running' && timer.targetEndAt !== null
+            ? timer.targetEndAt
+            : Date.now() + remaining * 1000,
+        );
+      } finally {
+        timerHydrated.current = true;
+      }
+    })();
+  }, [workoutSessionId]);
+
+  useEffect(() => {
+    if (!workoutSessionId || !timerHydrated.current) return;
+
+    void (async () => {
+      const ownerKey = await getSessionOwnerKey();
+      const mode = await getSessionMode();
+      if (!ownerKey || !mode) return;
+
+      await updateActiveWorkoutSession(ownerKey, mode, (current) => ({
+        ...current,
+        timer: {
+          exerciseName,
+          nextExerciseName,
+          nextSetNumber,
+          totalSets,
+          reps,
+          restSeconds,
+          isWorkoutComplete,
+          targetEndAt: isPaused ? null : targetEndAt,
+          remainingSeconds,
+          status: isPaused ? 'paused' : 'running',
+        },
+      }));
+    })();
+  }, [
+    exerciseName,
+    isPaused,
+    isWorkoutComplete,
+    nextExerciseName,
+    nextSetNumber,
+    remainingSeconds,
+    reps,
+    restSeconds,
+    targetEndAt,
+    totalSets,
+    workoutSessionId,
+  ]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -64,6 +150,7 @@ export function RestTimerScreen() {
 
     completionHandled.current = true;
     triggerHaptic('rest_complete');
+    void clearPersistedTimer();
     navigation.goBack();
   }, [navigation]);
 

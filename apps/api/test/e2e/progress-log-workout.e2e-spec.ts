@@ -94,6 +94,7 @@ describe('Progress Log Workout E2E', () => {
       .expect(201);
 
     expect(response.body).toEqual({
+      recoveryPending: false,
       workoutLog: {
         id: expect.any(String),
         trainingPlanId,

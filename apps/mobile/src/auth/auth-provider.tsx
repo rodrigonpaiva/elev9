@@ -31,6 +31,7 @@ import {
   getSessionOwnerKey,
 } from '../storage/session-owner-storage';
 import { clearOnboardingProgress } from '../storage/onboarding-progress-storage';
+import { clearActiveWorkoutSession } from '../storage/active-workout-session-storage';
 import {
   clearSessionMode,
   getSessionMode,
@@ -50,7 +51,10 @@ type AuthContextValue = {
   signIn(input: { email: string; password: string }): Promise<void>;
   signUp(input: RegisterUserRequest): Promise<void>;
   signInDemo(): Promise<void>;
-  signOut(options?: { preserveOnboardingProgress?: boolean }): Promise<void>;
+  signOut(options?: {
+    preserveOnboardingProgress?: boolean;
+    preserveActiveWorkoutSession?: boolean;
+  }): Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -186,6 +190,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
         setStatus('loading');
         const preserveOnboardingProgress =
           options?.preserveOnboardingProgress === true;
+        const preserveActiveWorkoutSession =
+          options?.preserveActiveWorkoutSession === true;
         const wasDemo = onboardingAnalytics.getContext()?.mode === 'demo';
 
         if (wasDemo && !preserveOnboardingProgress) {
@@ -212,10 +218,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
               }
             } finally {
               try {
-                await clearDailyCheckInOfflineStorage();
+                if (!preserveActiveWorkoutSession) {
+                  await clearActiveWorkoutSession();
+                }
               } finally {
-                setAccessTokenState(null);
-                setStatus('unauthenticated');
+                try {
+                  await clearDailyCheckInOfflineStorage();
+                } finally {
+                  setAccessTokenState(null);
+                  setStatus('unauthenticated');
+                }
               }
             }
           }

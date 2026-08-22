@@ -9,6 +9,7 @@ import type { TodayWorkout } from '@elev9/types';
 import { Button, Text } from '@elev9/ui';
 
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { apiClient } from '../api/client';
 
 type Exercise = TodayWorkout['exercises'][number];
 type ReplacementReason =
@@ -77,8 +78,14 @@ export function ExerciseReplacementScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route =
     useRoute<RouteProp<RootStackParamList, 'ExerciseReplacement'>>();
-  const { exerciseIndex, progress, startedAt, trainingPlanId, workout } =
-    route.params;
+  const {
+    exerciseIndex,
+    progress,
+    startedAt,
+    trainingPlanId,
+    workout,
+    workoutSessionId,
+  } = route.params;
   const currentExercise = workout.exercises[exerciseIndex];
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -87,6 +94,8 @@ export function ExerciseReplacementScreen() {
   const [selectedAlternativeName, setSelectedAlternativeName] = useState<
     string | null
   >(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -137,22 +146,52 @@ export function ExerciseReplacementScreen() {
     navigation.goBack();
   }, [navigation]);
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
     if (!selectedAlternative) {
+      return;
+    }
+
+    setSubmitError(null);
+    setIsSubmitting(true);
+    let confirmedExercise = selectedAlternative.exercise;
+    try {
+      if (workoutSessionId) {
+        const response = await apiClient.progress.replaceWorkoutExercise(
+          workoutSessionId,
+          {
+            exerciseIndex,
+            currentExerciseName: currentExercise?.name ?? '',
+            replacementExercise: selectedAlternative.exercise,
+            reason: selectedReason ?? 'preference',
+            idempotencyKey: `replacement-${workoutSessionId}-${exerciseIndex}-${selectedAlternative.exercise.name}`,
+          },
+        );
+        const persisted = response.workoutSession.replacements.find(
+          (item) => item.exerciseIndex === exerciseIndex,
+        );
+        confirmedExercise = persisted?.replacementExercise ?? confirmedExercise;
+      }
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to save this replacement. Try again.',
+      );
+      setIsSubmitting(false);
       return;
     }
 
     const updatedWorkout: TodayWorkout = {
       ...workout,
       exercises: workout.exercises.map((exercise, index) =>
-        index === exerciseIndex ? selectedAlternative.exercise : exercise,
+        index === exerciseIndex ? confirmedExercise : exercise,
       ),
     };
     const updatedProgress = progress.map((item, index) =>
       index === exerciseIndex
         ? {
             completedSets: Array.from(
-              { length: selectedAlternative.exercise.sets },
+              { length: confirmedExercise.sets },
               () => false,
             ),
           }
@@ -166,15 +205,20 @@ export function ExerciseReplacementScreen() {
       replacementBanner: 'Workout updated successfully.',
       replacementToken: `${Date.now()}-${selectedAlternative.exercise.name}`,
       startedAt,
+      workoutSessionId,
     });
+    setIsSubmitting(false);
   }, [
+    currentExercise,
     exerciseIndex,
     navigation,
     progress,
     selectedAlternative,
+    selectedReason,
     startedAt,
     trainingPlanId,
     workout,
+    workoutSessionId,
   ]);
 
   if (isLoading) {
@@ -225,9 +269,13 @@ export function ExerciseReplacementScreen() {
             <Button
               accessibilityLabel="Use this exercise"
               disabled={!selectedAlternative}
+              loading={isSubmitting}
               label="Use This Exercise"
               onPress={handleConfirm}
             />
+            {submitError ? (
+              <Text style={styles.errorText}>{submitError}</Text>
+            ) : null}
             <Button
               accessibilityLabel="Keep original exercise"
               label="Keep Original Exercise"
@@ -747,6 +795,11 @@ const styles = StyleSheet.create({
   },
   actions: {
     gap: 12,
+  },
+  errorText: {
+    color: '#b91c1c',
+    fontSize: 13,
+    textAlign: 'center',
   },
   state: {
     flex: 1,

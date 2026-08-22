@@ -21,6 +21,7 @@ import { GetProgressSummaryUseCase } from './application/use-cases/get-progress-
 import { LogWorkoutUseCase } from './application/use-cases/log-workout/log-workout.use-case';
 import { StartWorkoutUseCase } from './application/use-cases/start-workout/start-workout.use-case';
 import { CompleteWorkoutUseCase } from './application/use-cases/complete-workout/complete-workout.use-case';
+import { ReplaceWorkoutExerciseUseCase } from './application/use-cases/replace-workout-exercise/replace-workout-exercise.use-case';
 import { DAILY_CHECK_IN_REPOSITORY } from './domain/repositories/daily-check-in.repository';
 import { WORKOUT_LOG_REPOSITORY } from './domain/repositories/workout-log.repository';
 import { WORKOUT_SESSION_REPOSITORY } from './domain/repositories/workout-session.repository';
@@ -80,6 +81,7 @@ import { ProgressController } from './presentation/http/progress.controller';
     LogWorkoutUseCase,
     StartWorkoutUseCase,
     CompleteWorkoutUseCase,
+    ReplaceWorkoutExerciseUseCase,
     {
       provide: CLOCK,
       useClass: SystemClockService,

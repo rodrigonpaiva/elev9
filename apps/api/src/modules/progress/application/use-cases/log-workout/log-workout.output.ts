@@ -1,4 +1,5 @@
 export type LogWorkoutOutput = {
+  recoveryPending: boolean;
   workoutLog: {
     id: string;
     trainingPlanId: string;

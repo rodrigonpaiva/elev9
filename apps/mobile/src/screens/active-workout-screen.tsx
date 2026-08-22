@@ -1,14 +1,32 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { ApiClientError } from '@elev9/api-client';
 import type { TodayWorkout } from '@elev9/types';
 import { Badge, Button, Text } from '@elev9/ui';
 
+import { apiClient } from '../api/client';
+import {
+  trackDailyWorkoutError,
+  trackDailyWorkoutRetry,
+  trackDailyWorkoutSessionExpired,
+} from '../analytics/daily-workout-analytics';
+import { useAuth } from '../auth/auth-provider';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import { getRestTimerRemaining } from '../storage/active-workout-session-helpers';
+import {
+  clearActiveWorkoutSession,
+  loadActiveWorkoutSession,
+  saveActiveWorkoutSession,
+  type ActiveWorkoutMode,
+  type ActiveWorkoutSessionInput,
+} from '../storage/active-workout-session-storage';
+import { getSessionMode } from '../storage/session-mode-storage';
+import { getSessionOwnerKey } from '../storage/session-owner-storage';
 
 type Exercise = TodayWorkout['exercises'][number];
 type WorkoutPhase = 'exercise' | 'paused' | 'complete';
@@ -54,12 +72,22 @@ export function ActiveWorkoutScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ActiveWorkout'>>();
+  const { signOut } = useAuth();
   const { trainingPlanId } = route.params;
+  const sessionContextRef = useRef<{
+    ownerKey: string;
+    mode: ActiveWorkoutMode;
+  } | null>(null);
+  const hydrationStartedRef = useRef(false);
   const [workout, setWorkout] = useState(route.params.workout);
   const [startedAt, setStartedAt] = useState(
     () => route.params.startedAt ?? Date.now(),
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<
+    'local' | 'syncing' | 'synced' | 'error'
+  >('local');
   const [exerciseIndex, setExerciseIndex] = useState(0);
   const [phase, setPhase] = useState<WorkoutPhase>('exercise');
   const [replacementBanner, setReplacementBanner] = useState<string | null>(
@@ -72,6 +100,195 @@ export function ActiveWorkoutScreen() {
         completedSets: Array.from({ length: exercise.sets }, () => false),
       })),
   );
+
+  const persistSnapshot = useCallback(
+    async (overrides: Partial<ActiveWorkoutSessionInput> = {}) => {
+      const context = sessionContextRef.current;
+      const workoutSessionId = route.params.workoutSessionId;
+      if (!context || !workoutSessionId) return;
+
+      await saveActiveWorkoutSession({
+        ownerKey: context.ownerKey,
+        mode: context.mode,
+        workoutSessionId,
+        trainingPlanId,
+        workoutDayIndex: workout.dayIndex,
+        workout,
+        exerciseIndex,
+        progress,
+        phase,
+        startedAt,
+        timer: null,
+        lastSynchronizedAt: null,
+        syncStatus,
+        ...overrides,
+      });
+    },
+    [
+      exerciseIndex,
+      phase,
+      progress,
+      route.params.workoutSessionId,
+      startedAt,
+      syncStatus,
+      trainingPlanId,
+      workout,
+    ],
+  );
+
+  useEffect(() => {
+    if (hydrationStartedRef.current) return;
+    hydrationStartedRef.current = true;
+    let mounted = true;
+
+    void (async () => {
+      const ownerKey = await getSessionOwnerKey();
+      const mode = await getSessionMode();
+      const workoutSessionId = route.params.workoutSessionId;
+
+      if (!ownerKey || !mode || !workoutSessionId) {
+        if (mounted) setIsHydrated(true);
+        return;
+      }
+
+      sessionContextRef.current = {
+        ownerKey,
+        mode: mode as ActiveWorkoutMode,
+      };
+      const stored = await loadActiveWorkoutSession(
+        ownerKey,
+        mode as ActiveWorkoutMode,
+      );
+
+      if (stored && stored.workoutSessionId === workoutSessionId && mounted) {
+        setWorkout(stored.workout);
+        setStartedAt(stored.startedAt);
+        setExerciseIndex(stored.exerciseIndex);
+        setProgress(stored.progress);
+        setPhase(stored.phase);
+        setSyncStatus(stored.syncStatus);
+      }
+
+      try {
+        const response =
+          await apiClient.progress.getWorkoutSession(workoutSessionId);
+        if (response.workoutSession.status === 'completed') {
+          await clearActiveWorkoutSession();
+          if (mounted) {
+            navigation.replace('MainTabs', { initialTab: 'history' });
+          }
+          return;
+        }
+
+        if (mounted && response.workoutSession.replacements.length > 0) {
+          const replacements = response.workoutSession.replacements;
+          setWorkout((currentWorkout) => ({
+            ...currentWorkout,
+            exercises: currentWorkout.exercises.map((exercise, index) => {
+              const replacement = replacements.find(
+                (item) => item.exerciseIndex === index,
+              );
+              return replacement?.replacementExercise ?? exercise;
+            }),
+          }));
+        }
+
+        if (mounted) setSyncStatus('synced');
+        if (stored) {
+          await saveActiveWorkoutSession({
+            ...stored,
+            workout: response.workoutSession.replacements.reduce(
+              (currentWorkout, replacement) => ({
+                ...currentWorkout,
+                exercises: currentWorkout.exercises.map((exercise, index) =>
+                  index === replacement.exerciseIndex
+                    ? replacement.replacementExercise
+                    : exercise,
+                ),
+              }),
+              stored.workout,
+            ),
+            lastSynchronizedAt: new Date().toISOString(),
+            syncStatus: 'synced',
+          });
+        } else {
+          await persistSnapshot({
+            lastSynchronizedAt: new Date().toISOString(),
+            syncStatus: 'synced',
+          });
+        }
+
+        if (stored?.timer && mounted) {
+          const timer = stored.timer;
+          const remaining = getRestTimerRemaining(timer, Date.now());
+
+          if (remaining > 0) {
+            navigation.replace('RestTimer', {
+              exerciseName: timer.exerciseName,
+              nextExerciseName: timer.nextExerciseName,
+              nextSetNumber: timer.nextSetNumber,
+              totalSets: timer.totalSets,
+              reps: timer.reps,
+              isWorkoutComplete: timer.isWorkoutComplete,
+              restSeconds: timer.restSeconds,
+              workoutSessionId,
+            });
+            return;
+          }
+
+          await saveActiveWorkoutSession({
+            ...stored,
+            timer: null,
+            syncStatus: 'synced',
+          });
+        }
+      } catch (error) {
+        if (
+          error instanceof ApiClientError &&
+          (error.code === 'AUTH_INVALID_SESSION' || error.status === 401)
+        ) {
+          trackDailyWorkoutSessionExpired({
+            mode: sessionContextRef.current?.mode ?? 'real',
+            stage: 'workout',
+          });
+          await signOut({
+            preserveActiveWorkoutSession: true,
+            preserveOnboardingProgress: true,
+          });
+          return;
+        }
+
+        if (mounted) setSyncStatus('error');
+        trackDailyWorkoutError({
+          mode: sessionContextRef.current?.mode ?? 'real',
+          stage: 'workout',
+          errorCategory:
+            error instanceof ApiClientError
+              ? getWorkoutErrorCategory(error)
+              : 'unknown',
+        });
+      } finally {
+        if (mounted) setIsHydrated(true);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [navigation, persistSnapshot, route.params.workoutSessionId, signOut]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    void persistSnapshot();
+  }, [
+    exerciseIndex,
+    isHydrated,
+    persistSnapshot,
+    phase,
+    progress,
+    startedAt,
+    workout,
+  ]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -151,6 +368,11 @@ export function ActiveWorkoutScreen() {
     });
 
     if (isWorkoutComplete) {
+      void persistSnapshot({
+        exerciseIndex: nextExerciseIndex,
+        phase: 'complete',
+        progress: nextProgress,
+      });
       navigation.replace('WorkoutCompletion', {
         trainingPlanId,
         workoutSessionId: route.params.workoutSessionId,
@@ -163,6 +385,11 @@ export function ActiveWorkoutScreen() {
       setProgress(nextProgress);
       setExerciseIndex(nextExerciseIndex);
       setPhase('exercise');
+      void persistSnapshot({
+        exerciseIndex: nextExerciseIndex,
+        phase: 'exercise',
+        progress: nextProgress,
+      });
     }
 
     navigation.navigate('RestTimer', {
@@ -173,6 +400,7 @@ export function ActiveWorkoutScreen() {
       reps: nextExercise.reps,
       restSeconds: model.exercise.restSeconds,
       totalSets: nextExercise.sets,
+      workoutSessionId: route.params.workoutSessionId,
     });
   }, [
     exerciseIndex,
@@ -182,6 +410,8 @@ export function ActiveWorkoutScreen() {
     startedAt,
     trainingPlanId,
     workout,
+    persistSnapshot,
+    route.params.workoutSessionId,
   ]);
 
   const handlePreviousExercise = useCallback(() => {
@@ -207,7 +437,8 @@ export function ActiveWorkoutScreen() {
 
   const handlePause = useCallback(() => {
     setPhase('paused');
-  }, []);
+    void persistSnapshot({ phase: 'paused' });
+  }, [persistSnapshot]);
 
   const handleExercisePress = useCallback(() => {
     if (!model) {
@@ -218,7 +449,6 @@ export function ActiveWorkoutScreen() {
       exercise: model.exercise,
       workoutContext: {
         title: workout.title,
-        focus: workout.focus,
         format: workout.format,
         intensity: workout.intensity,
       },
@@ -228,6 +458,7 @@ export function ActiveWorkoutScreen() {
         exerciseIndex,
         progress,
         startedAt,
+        workoutSessionId: route.params.workoutSessionId,
       },
     });
   }, [
@@ -235,6 +466,7 @@ export function ActiveWorkoutScreen() {
     model,
     navigation,
     progress,
+    route.params.workoutSessionId,
     startedAt,
     trainingPlanId,
     workout,
@@ -247,31 +479,90 @@ export function ActiveWorkoutScreen() {
       exerciseIndex,
       progress,
       startedAt,
+      workoutSessionId: route.params.workoutSessionId,
     });
-  }, [exerciseIndex, navigation, progress, startedAt, trainingPlanId, workout]);
+  }, [
+    exerciseIndex,
+    navigation,
+    progress,
+    route.params.workoutSessionId,
+    startedAt,
+    trainingPlanId,
+    workout,
+  ]);
 
   const handleResume = useCallback(() => {
     setPhase('exercise');
-  }, []);
+    void persistSnapshot({ phase: 'exercise' });
+  }, [persistSnapshot]);
 
   const handleFinishWorkout = useCallback(() => {
+    void persistSnapshot({ phase: 'complete' });
     navigation.replace('WorkoutCompletion', {
       trainingPlanId,
+      workoutSessionId: route.params.workoutSessionId,
       workout,
       durationMinutes: getElapsedWorkoutMinutes(startedAt),
       completedExercises: buildCompletedExercises(workout, progress),
     });
-  }, [navigation, progress, startedAt, trainingPlanId, workout]);
+  }, [
+    navigation,
+    persistSnapshot,
+    progress,
+    startedAt,
+    trainingPlanId,
+    workout,
+  ]);
 
-  const handleRetry = useCallback(() => {
-    setExerciseIndex(0);
-    setPhase('exercise');
-    setIsLoading(true);
+  const handleRetry = useCallback(async () => {
+    const workoutSessionId = route.params.workoutSessionId;
+    if (!workoutSessionId) return;
 
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 220);
-  }, []);
+    trackDailyWorkoutRetry({
+      mode: sessionContextRef.current?.mode ?? 'real',
+      stage: 'workout',
+      retryTarget: 'sync',
+    });
+    setSyncStatus('syncing');
+    try {
+      const response =
+        await apiClient.progress.getWorkoutSession(workoutSessionId);
+      if (response.workoutSession.status === 'completed') {
+        await clearActiveWorkoutSession();
+        navigation.replace('MainTabs', { initialTab: 'history' });
+        return;
+      }
+      setSyncStatus('synced');
+      await persistSnapshot({
+        lastSynchronizedAt: new Date().toISOString(),
+        syncStatus: 'synced',
+      });
+    } catch (error) {
+      if (
+        error instanceof ApiClientError &&
+        (error.code === 'AUTH_INVALID_SESSION' || error.status === 401)
+      ) {
+        trackDailyWorkoutSessionExpired({
+          mode: sessionContextRef.current?.mode ?? 'real',
+          stage: 'workout',
+        });
+        await signOut({
+          preserveActiveWorkoutSession: true,
+          preserveOnboardingProgress: true,
+        });
+        return;
+      }
+      setSyncStatus('error');
+      trackDailyWorkoutError({
+        mode: sessionContextRef.current?.mode ?? 'real',
+        stage: 'workout',
+        errorCategory:
+          error instanceof ApiClientError
+            ? getWorkoutErrorCategory(error)
+            : 'unknown',
+      });
+    }
+  }, [navigation, persistSnapshot, route.params.workoutSessionId, signOut]);
 
   if (isLoading) {
     return <ActiveWorkoutSkeleton />;
@@ -332,6 +623,13 @@ export function ActiveWorkoutScreen() {
                 {replacementBanner}
               </Text>
             </View>
+          ) : null}
+          {syncStatus !== 'synced' ? (
+            <WorkoutSyncNotice
+              isRetrying={syncStatus === 'syncing'}
+              onRetry={() => void handleRetry()}
+              status={syncStatus}
+            />
           ) : null}
           <Prescription exercise={model.exercise} />
           <CoachGuidance guidance={model.guidance} />
@@ -407,6 +705,43 @@ const WorkoutHeader = memo(function WorkoutHeader({
       <Text style={styles.exerciseCounter}>
         Exercise {exerciseIndex + 1} of {exerciseCount}
       </Text>
+    </View>
+  );
+});
+
+const WorkoutSyncNotice = memo(function WorkoutSyncNotice({
+  isRetrying,
+  onRetry,
+  status,
+}: {
+  status: 'local' | 'syncing' | 'error';
+  isRetrying: boolean;
+  onRetry: () => void;
+}) {
+  const isError = status === 'error';
+  return (
+    <View
+      accessibilityLabel={
+        isError
+          ? 'Workout sync failed. Progress is saved locally. Retry available.'
+          : 'Workout progress is saved locally and server confirmation is pending.'
+      }
+      style={isError ? styles.syncNoticeError : styles.syncNotice}
+    >
+      <Text style={styles.syncNoticeTitle}>
+        {isError ? 'Connection unavailable' : 'Progress saved on this device'}
+      </Text>
+      <Text style={styles.syncNoticeMessage}>
+        {isError
+          ? 'Your confirmed server progress is safe. Retry to check the session before continuing.'
+          : 'Server confirmation happens when the session is synchronized.'}
+      </Text>
+      <Button
+        disabled={isRetrying}
+        label={isRetrying ? 'Retrying…' : 'Retry Sync'}
+        onPress={onRetry}
+        variant="ghost"
+      />
     </View>
   );
 });
@@ -699,6 +1034,18 @@ function formatRest(restSeconds: number): string {
   return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes} min`;
 }
 
+function getWorkoutErrorCategory(
+  error: ApiClientError,
+): 'network' | 'authentication' | 'validation' | 'server' | 'unknown' {
+  if (error.status === 401 || error.code === 'AUTH_INVALID_SESSION') {
+    return 'authentication';
+  }
+  if (error.status === 400 || error.status === 409) return 'validation';
+  if (error.status !== undefined && error.status >= 500) return 'server';
+  if (error.status === undefined) return 'network';
+  return 'unknown';
+}
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -900,6 +1247,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
     fontWeight: '700',
+  },
+  syncNotice: {
+    gap: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: tokens.border,
+    backgroundColor: tokens.surface,
+    padding: 16,
+  },
+  syncNoticeError: {
+    gap: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    backgroundColor: '#fef2f2',
+    padding: 16,
+  },
+  syncNoticeTitle: {
+    color: tokens.text,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '800',
+  },
+  syncNoticeMessage: {
+    color: tokens.secondaryText,
+    fontSize: 13,
+    lineHeight: 19,
   },
   state: {
     flex: 1,

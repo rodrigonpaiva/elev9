@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Animated, {
   interpolate,
   interpolateColor,
@@ -15,7 +16,6 @@ import Animated, {
 import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '@elev9/ui';
-import { Text } from '@elev9/ui';
 
 import { CoachHomeScreen } from './coach-home-screen';
 import { CurrentWorkoutScreen } from './current-workout-screen';
@@ -24,6 +24,12 @@ import { ProfileScreen } from './profile-screen';
 import { ProgressSummaryScreen } from './progress-summary-screen';
 import { WorkoutHistoryScreen } from './workout-history-screen';
 import type { RootStackParamList } from '../navigation/app-navigator';
+import {
+  loadActiveWorkoutSession,
+  type ActiveWorkoutMode,
+} from '../storage/active-workout-session-storage';
+import { getSessionMode } from '../storage/session-mode-storage';
+import { getSessionOwnerKey } from '../storage/session-owner-storage';
 
 type MainTabKey =
   | 'home'
@@ -87,10 +93,39 @@ const themeAlpha = {
 };
 
 export function MainTabsScreen() {
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'MainTabs'>>();
+  const resumeChecked = useRef(false);
   const [activeTab, setActiveTab] = useState<MainTabKey>(
     route.params?.initialTab ?? 'home',
   );
+
+  useEffect(() => {
+    if (resumeChecked.current) return;
+    resumeChecked.current = true;
+
+    void (async () => {
+      const ownerKey = await getSessionOwnerKey();
+      const mode = await getSessionMode();
+      if (!ownerKey || !mode) return;
+
+      const snapshot = await loadActiveWorkoutSession(
+        ownerKey,
+        mode as ActiveWorkoutMode,
+      );
+      if (!snapshot) return;
+
+      navigation.replace('ActiveWorkout', {
+        trainingPlanId: snapshot.trainingPlanId,
+        workout: snapshot.workout,
+        initialProgress: snapshot.progress,
+        startedAt: snapshot.startedAt,
+        workoutSessionId: snapshot.workoutSessionId,
+        resumeFromStorage: true,
+      });
+    })();
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.root} edges={['bottom']}>

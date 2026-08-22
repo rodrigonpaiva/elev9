@@ -1,4 +1,7 @@
-import { WorkoutSession } from '../entities/workout-session.entity';
+import {
+  WorkoutSession,
+  WorkoutSessionReplacement,
+} from '../entities/workout-session.entity';
 
 export interface CreateWorkoutSessionRepositoryInput {
   userProfileId: string;
@@ -17,6 +20,10 @@ export interface WorkoutSessionRepository {
   }): Promise<WorkoutSession | null>;
   create(input: CreateWorkoutSessionRepositoryInput): Promise<WorkoutSession>;
   complete(id: string, completedAt: Date): Promise<WorkoutSession | null>;
+  replaceExercise(input: {
+    sessionId: string;
+    replacement: WorkoutSessionReplacement;
+  }): Promise<WorkoutSession | null>;
 }
 
 export const WORKOUT_SESSION_REPOSITORY = Symbol('WORKOUT_SESSION_REPOSITORY');

@@ -44,6 +44,33 @@ describe('createProgressApi', () => {
       },
     });
   });
+
+  it('persists a replacement through the session-scoped contract', async () => {
+    const response = { workoutSession: buildWorkoutSession() };
+    const request = jest.fn().mockResolvedValue(response);
+    const api = createProgressApi(buildHttpClient(request));
+    const input = {
+      exerciseIndex: 0,
+      currentExerciseName: 'Bench Press',
+      replacementExercise: {
+        name: 'Push Up',
+        sets: 3,
+        reps: '8',
+        restSeconds: 60,
+      },
+      reason: 'no_equipment' as const,
+      idempotencyKey: 'replacement-1',
+    };
+
+    await expect(
+      api.replaceWorkoutExercise('507f1f77bcf86cd799439011', input),
+    ).resolves.toEqual(response);
+    expect(request).toHaveBeenCalledWith({
+      method: 'POST',
+      path: '/progress/workout-sessions/507f1f77bcf86cd799439011/replacements',
+      body: input,
+    });
+  });
   it('submits only the public daily check-in signals', async () => {
     const request = jest.fn().mockResolvedValue({
       dailyCheckIn: buildDailyCheckIn(),

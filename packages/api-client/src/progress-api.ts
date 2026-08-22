@@ -8,6 +8,8 @@ import type {
   StartWorkoutRequest,
   StartWorkoutResponse,
   CompleteWorkoutResponse,
+  ReplaceWorkoutExerciseRequest,
+  ReplaceWorkoutExerciseResponse,
 } from '@elev9/types';
 
 import type { HttpClient } from './http-client';
@@ -47,11 +49,22 @@ export function createProgressApi(httpClient: HttpClient) {
       path: `/progress/workout-sessions/${sessionId}`,
     });
 
+  const replaceWorkoutExercise = (
+    sessionId: string,
+    input: ReplaceWorkoutExerciseRequest,
+  ): Promise<ReplaceWorkoutExerciseResponse> =>
+    httpClient.request<ReplaceWorkoutExerciseResponse>({
+      method: 'POST',
+      path: `/progress/workout-sessions/${sessionId}/replacements`,
+      body: input,
+    });
+
   return {
     submitDailyCheckIn,
     startWorkout,
     completeWorkout,
     getWorkoutSession,
+    replaceWorkoutExercise,
     /** @deprecated Use submitDailyCheckIn. */
     createDailyCheckIn: submitDailyCheckIn,
     getTodayDailyCheckIn(): Promise<GetTodayDailyCheckInResponse> {

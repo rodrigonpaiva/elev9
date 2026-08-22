@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 
 import {
   USER_PROFILE_REPOSITORY,
@@ -9,6 +9,10 @@ import {
   WORKOUT_SESSION_REPOSITORY,
   WorkoutSessionRepository,
 } from '../../../domain/repositories/workout-session.repository';
+import {
+  WORKOUT_LOG_REPOSITORY,
+  WorkoutLogRepository,
+} from '../../../domain/repositories/workout-log.repository';
 import {
   COMPLETE_WORKOUT_ERROR_CODES,
   CompleteWorkoutError,
@@ -22,6 +26,9 @@ export class CompleteWorkoutUseCase {
     @Inject(WORKOUT_SESSION_REPOSITORY)
     private readonly workoutSessionRepository: WorkoutSessionRepository,
     @Inject(CLOCK) private readonly clock: Clock,
+    @Optional()
+    @Inject(WORKOUT_LOG_REPOSITORY)
+    private readonly workoutLogRepository?: WorkoutLogRepository,
   ) {}
 
   async get(input: { authUserId: string; sessionId: string }) {
@@ -38,6 +45,21 @@ export class CompleteWorkoutUseCase {
         COMPLETE_WORKOUT_ERROR_CODES.SESSION_EXPIRED,
         'Workout session has expired.',
       );
+    }
+
+    if (this.workoutLogRepository) {
+      const workoutLog =
+        await this.workoutLogRepository.findByTrainingPlanDayAndDate({
+          trainingPlanId: session.trainingPlanId,
+          workoutDayIndex: session.workoutDayIndex,
+          date: session.date,
+        });
+      if (!workoutLog) {
+        throw new CompleteWorkoutError(
+          COMPLETE_WORKOUT_ERROR_CODES.WORKOUT_LOG_REQUIRED,
+          'Workout log is pending. Retry the exercise registration before completing the session.',
+        );
+      }
     }
 
     const completed = await this.workoutSessionRepository.complete(

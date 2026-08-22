@@ -208,6 +208,32 @@ export type ProductAnalyticsEventMap = {
   daily_check_in_pending_discarded: {
     source: 'draft' | 'pending';
   };
+  daily_workout_error: {
+    mode: 'real' | 'demo';
+    stage: 'home' | 'workout' | 'timer' | 'completion';
+    errorCategory:
+      | 'network'
+      | 'authentication'
+      | 'validation'
+      | 'server'
+      | 'unknown';
+  };
+  daily_workout_retry_selected: {
+    mode: 'real' | 'demo';
+    stage: 'home' | 'workout' | 'timer' | 'completion';
+    retryTarget: 'load' | 'sync' | 'save' | 'recovery';
+  };
+  daily_workout_session_expired: {
+    mode: 'real' | 'demo';
+    stage: 'workout' | 'timer' | 'completion';
+  };
+  daily_workout_recovery_pending: {
+    mode: 'real' | 'demo';
+    stage: 'completion';
+  };
+  daily_workout_completion_confirmed: {
+    mode: 'real' | 'demo';
+  };
 };
 
 export type OnboardingAnalyticsMode = 'real' | 'demo';
@@ -384,6 +410,11 @@ const PRODUCT_ANALYTICS_ALLOWED_PROPERTIES: {
   daily_check_in_sync_succeeded: ['trigger', 'attemptNumber'],
   daily_check_in_sync_failed: ['trigger', 'attemptNumber', 'errorCategory'],
   daily_check_in_pending_discarded: ['source'],
+  daily_workout_error: ['mode', 'stage', 'errorCategory'],
+  daily_workout_retry_selected: ['mode', 'stage', 'retryTarget'],
+  daily_workout_session_expired: ['mode', 'stage'],
+  daily_workout_recovery_pending: ['mode', 'stage'],
+  daily_workout_completion_confirmed: ['mode'],
 };
 
 type ProductAnalyticsProvider = ProductAnalytics & {

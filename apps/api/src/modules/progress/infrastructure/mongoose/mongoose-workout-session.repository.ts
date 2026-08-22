@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { WorkoutSession } from '../../domain/entities/workout-session.entity';
+import {
+  WorkoutSession,
+  WorkoutSessionReplacement,
+} from '../../domain/entities/workout-session.entity';
 import {
   CreateWorkoutSessionRepositoryInput,
   WorkoutSessionRepository,
@@ -63,12 +66,55 @@ export class MongooseWorkoutSessionRepository implements WorkoutSessionRepositor
   ): Promise<WorkoutSession | null> {
     const document = await this.workoutSessionModel
       .findByIdAndUpdate(
-        id,
+        { _id: id, status: 'active' },
         { $set: { status: 'completed', completedAt } },
         { new: true },
       )
       .exec();
 
+    if (document) return this.toEntity(document as WorkoutSessionDocument);
+
+    const alreadyCompleted = await this.workoutSessionModel
+      .findOne({ _id: id, status: 'completed' })
+      .exec();
+    return alreadyCompleted
+      ? this.toEntity(alreadyCompleted as WorkoutSessionDocument)
+      : null;
+  }
+
+  async replaceExercise(input: {
+    sessionId: string;
+    replacement: WorkoutSessionReplacement;
+  }): Promise<WorkoutSession | null> {
+    const existing = await this.workoutSessionModel
+      .findById(input.sessionId)
+      .exec();
+    if (!existing) return null;
+    const sameRequest = existing.replacements?.find(
+      (item) => item.idempotencyKey === input.replacement.idempotencyKey,
+    );
+    if (sameRequest) return this.toEntity(existing as WorkoutSessionDocument);
+    if (
+      existing.replacements?.some(
+        (item) => item.exerciseIndex === input.replacement.exerciseIndex,
+      )
+    ) {
+      return null;
+    }
+
+    const document = await this.workoutSessionModel
+      .findOneAndUpdate(
+        {
+          _id: input.sessionId,
+          status: 'active',
+          'replacements.exerciseIndex': {
+            $ne: input.replacement.exerciseIndex,
+          },
+        },
+        { $push: { replacements: input.replacement } },
+        { new: true },
+      )
+      .exec();
     return document ? this.toEntity(document as WorkoutSessionDocument) : null;
   }
 
@@ -83,6 +129,11 @@ export class MongooseWorkoutSessionRepository implements WorkoutSessionRepositor
       startedAt: document.createdAt,
       updatedAt: document.updatedAt,
       completedAt: document.completedAt,
+      replacements: (document.replacements ?? []).map((item) => ({
+        ...item,
+        reason: item.reason as WorkoutSessionReplacement['reason'],
+        replacedAt: new Date(item.replacedAt),
+      })),
     });
   }
 

@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
 
 import {
   FITNESS_PROFILE_REPOSITORY,
@@ -16,6 +16,7 @@ import {
   WORKOUT_LOG_REPOSITORY,
   WorkoutLogRepository,
 } from '../../../domain/repositories/workout-log.repository';
+import { BuildRecoverySnapshotUseCase } from '../../../../recovery/application/use-cases/build-recovery-snapshot/build-recovery-snapshot.use-case';
 import { CLOCK, Clock } from '../../../domain/services/clock.service';
 import { LOG_WORKOUT_ERROR_CODES, LogWorkoutError } from './log-workout.errors';
 import { LogWorkoutInput } from './log-workout.input';
@@ -37,6 +38,8 @@ export class LogWorkoutUseCase {
     private readonly workoutLogRepository: WorkoutLogRepository,
     @Inject(CLOCK)
     private readonly clock: Clock,
+    @Optional()
+    private readonly buildRecoverySnapshotUseCase?: BuildRecoverySnapshotUseCase,
   ) {}
 
   async execute(input: LogWorkoutInput): Promise<LogWorkoutOutput> {
@@ -142,7 +145,20 @@ export class LogWorkoutUseCase {
         date,
       });
 
+      let recoveryPending = false;
+      if (this.buildRecoverySnapshotUseCase) {
+        try {
+          await this.buildRecoverySnapshotUseCase.execute({
+            authUserId,
+            date,
+          });
+        } catch {
+          recoveryPending = true;
+        }
+      }
+
       return {
+        recoveryPending,
         workoutLog: {
           id: workoutLog.id,
           trainingPlanId: workoutLog.trainingPlanId,

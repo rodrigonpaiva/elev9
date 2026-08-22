@@ -1,4 +1,23 @@
 export type WorkoutSessionStatus = 'active' | 'completed';
+export type WorkoutSessionExercise = {
+  name: string;
+  sets: number;
+  reps: string;
+  restSeconds: number;
+};
+export type WorkoutSessionReplacement = {
+  exerciseIndex: number;
+  originalExercise: WorkoutSessionExercise;
+  replacementExercise: WorkoutSessionExercise;
+  reason:
+    | 'no_equipment'
+    | 'too_difficult'
+    | 'too_easy'
+    | 'discomfort'
+    | 'preference';
+  idempotencyKey: string;
+  replacedAt: Date;
+};
 
 export type WorkoutSessionProps = {
   id: string;
@@ -10,6 +29,7 @@ export type WorkoutSessionProps = {
   startedAt: Date;
   updatedAt: Date;
   completedAt?: Date;
+  replacements?: WorkoutSessionReplacement[];
 };
 
 export class WorkoutSession {
@@ -22,6 +42,7 @@ export class WorkoutSession {
   readonly startedAt: Date;
   readonly updatedAt: Date;
   readonly completedAt?: Date;
+  readonly replacements: WorkoutSessionReplacement[];
 
   constructor(props: WorkoutSessionProps) {
     this.id = props.id;
@@ -33,5 +54,6 @@ export class WorkoutSession {
     this.startedAt = props.startedAt;
     this.updatedAt = props.updatedAt;
     this.completedAt = props.completedAt;
+    this.replacements = props.replacements ?? [];
   }
 }

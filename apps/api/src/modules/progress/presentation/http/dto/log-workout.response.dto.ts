@@ -1,4 +1,5 @@
 export class LogWorkoutResponseDto {
+  recoveryPending!: boolean;
   workoutLog!: {
     id: string;
     trainingPlanId: string;
